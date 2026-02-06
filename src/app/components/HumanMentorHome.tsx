@@ -1,0 +1,585 @@
+import React from 'react';
+import { ArrowLeft, Search, Star, GraduationCap, Briefcase, User, Loader2 } from 'lucide-react';
+import { ImageWithFallback } from "./figma/ImageWithFallback";
+import imgRavi from "figma:asset/ee75b3f7fd75b317c92ab5dcaa912db9eddbf3e7.png";
+import imgRiya from "figma:asset/0aaa9a026db3fff583a4d805f37def4bf33531fe.png";
+import imgSarah from "figma:asset/1febea968fb6ef6c5fe4a446aa07bfe8857031ea.png";
+import imgPhonePe from "figma:asset/68a29cc3e202d7b0aeb6edd06b3ee07b4bb5a8cd.png";
+import imgAmazonPay from "figma:asset/4653de0e1c461ac1033869badee2bf8229548fac.png";
+
+// Unique SVG for Flask/Chemistry icon as it's not standard in Lucide
+const FlaskIcon = () => (
+  <svg width="20" height="21" viewBox="0 0 20 21" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M10.8333 2.16667V5.5M10.8333 2.16667H6.66667M10.8333 2.16667H15M6.66667 5.5H15M8.70583 5.5L4.54583 13.5183C3.96333 14.6417 3.67167 15.2033 3.75417 15.6883C3.82667 16.115 4.07 16.4858 4.4175 16.7C4.81167 16.9433 5.44333 16.9433 6.70833 16.9433H15.0417C16.3067 16.9433 16.9383 16.9433 17.3325 16.7C17.68 16.4858 17.9233 16.115 17.9958 15.6883C18.0783 15.2033 17.7867 14.6417 17.2042 13.5183L13.0442 5.5" stroke="black" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+  </svg>
+);
+
+// Payment Icons
+const IconGooglePay = () => (
+  <svg width="43" height="16" viewBox="0 0 43 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M20.3376 7.81655V12.5067H18.7497V0.924161H22.9612C23.4639 0.914322 23.9637 0.997863 24.4318 1.16996C24.8999 1.34206 25.3269 1.59932 25.6884 1.92688C26.0534 2.23455 26.3439 2.61187 26.5404 3.0335C26.7369 3.45512 26.8348 3.91127 26.8275 4.37128C26.838 4.83376 26.7416 5.29289 26.545 5.71719C26.3483 6.1415 26.0561 6.52096 25.6884 6.82955C24.9519 7.48755 24.0429 7.81625 22.9612 7.81563H20.3376V7.81655ZM20.3376 2.35014V6.39335H23.0007C23.2926 6.40145 23.5832 6.35238 23.8537 6.24926C24.1242 6.14614 24.3688 5.99125 24.5719 5.79449C24.7738 5.61052 24.9343 5.39048 25.0439 5.14738C25.1536 4.90428 25.21 4.64305 25.21 4.37914C25.21 4.11523 25.1536 3.854 25.0439 3.61089C24.9343 3.36779 24.7738 3.14775 24.5719 2.96378C24.3714 2.76288 24.1276 2.60419 23.8568 2.49824C23.5859 2.39229 23.2941 2.34149 23.0007 2.34922H20.3376V2.35014Z" fill="#5F6368"/>
+    <path d="M30.4867 4.32323C31.6604 4.32323 32.5869 4.61711 33.2661 5.20488C33.9454 5.79264 34.2847 6.59851 34.284 7.62248V12.5067H32.7651V11.4069H32.6961C32.0385 12.3126 31.164 12.7654 30.0725 12.7654C29.1407 12.7654 28.3612 12.5067 27.7339 11.9891C27.4329 11.7516 27.1922 11.4541 27.0294 11.1184C26.8667 10.7826 26.7859 10.4171 26.793 10.0484C26.793 9.22836 27.1238 8.57621 27.7852 8.09195C28.4467 7.60769 29.3298 7.36495 30.4345 7.36372C31.3774 7.36372 32.1539 7.52544 32.7641 7.8489V7.50881C32.7659 7.25745 32.708 7.00887 32.5945 6.78109C32.4811 6.55331 32.315 6.35204 32.1082 6.19188C31.6883 5.83689 31.141 5.64319 30.5755 5.6494C29.6885 5.6494 28.9866 5.99996 28.4697 6.70109L27.0711 5.87582C27.8405 4.84076 28.979 4.32323 30.4867 4.32323ZM28.4323 10.0807C28.4312 10.2701 28.4784 10.457 28.57 10.6258C28.6617 10.7946 28.795 10.9404 28.9589 11.0511C29.3101 11.31 29.7461 11.4471 30.1928 11.4393C30.8629 11.4382 31.5052 11.1883 31.979 10.7443C32.505 10.2804 32.7681 9.73604 32.7681 9.1113C32.2729 8.74164 31.5825 8.55681 30.6968 8.55681C30.0518 8.55681 29.5139 8.70252 29.0832 8.99394C28.6483 9.28967 28.4323 9.64917 28.4323 10.0807Z" fill="#5F6368"/>
+    <path d="M43.003 4.58199L37.7006 16H36.0613L38.029 12.0049L34.5424 4.58199H36.2685L38.7885 10.2748H38.823L41.274 4.58199H43.003Z" fill="#5F6368"/>
+    <path d="M13.9207 6.80552C13.9213 6.35208 13.8804 5.89943 13.7984 5.45255H7.10141V8.01525H10.9372C10.8587 8.42455 10.6925 8.81472 10.4488 9.16224C10.205 9.50976 9.88869 9.80743 9.51884 10.0373V11.7008H11.8081C13.1485 10.5428 13.9207 8.83036 13.9207 6.80552Z" fill="#4285F4"/>
+    <path d="M7.10141 13.3079C9.0178 13.3079 10.6314 12.7183 11.8081 11.7017L9.51884 10.0382C8.88169 10.443 8.06108 10.6741 7.10141 10.6741C5.24912 10.6741 3.67695 9.50407 3.11476 7.92745H0.756497V9.64177C1.34756 10.7438 2.25389 11.6702 3.37429 12.3176C4.4947 12.965 5.78509 13.3079 7.10141 13.3079Z" fill="#34A853"/>
+    <path d="M3.11476 7.92745C2.81754 7.10129 2.81754 6.20662 3.11476 5.38047V3.66615H0.756497C0.259276 4.59322 0.00032365 5.6164 0.00032365 6.65396C0.00032365 7.69152 0.259276 8.7147 0.756497 9.64177L3.11476 7.92745Z" fill="#FBBC04"/>
+    <path d="M7.10141 2.63386C8.11413 2.61836 9.0927 2.97689 9.82558 3.63195L11.8524 1.7328C10.5672 0.601699 8.86455 -0.0192956 7.10141 0C5.78509 5.62122e-05 4.4947 0.342914 3.37429 0.990296C2.25389 1.63768 1.34756 2.5641 0.756497 3.66615L3.11476 5.38047C3.67695 3.80385 5.24912 2.63386 7.10141 2.63386Z" fill="#EA4335"/>
+  </svg>
+);
+
+const IconPaytm = () => (
+  <svg width="43" height="16" viewBox="0 0 43 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <g transform="translate(13, 2) scale(1.2)">
+      <path d="M4.13468 0.922819C4.3793 0.79109 4.50161 0.725226 4.62392 0.659361C6.32401 -0.312142 8.5011 -0.205112 9.95658 0.947519C10.1033 1.06278 10.1767 1.07102 10.3235 0.972218C10.4214 0.898121 10.5314 0.840489 10.6293 0.766391C11.7667 0.0171811 13.2711 -0.205112 14.6777 0.214775C16.1576 0.659362 16.9526 1.4415 16.9649 2.5365C16.9893 4.8994 16.9771 7.25406 16.9771 9.61695C16.9771 10.4567 16.2066 10.9836 14.9712 10.9836C14.482 10.9836 13.9928 10.9589 13.5035 10.9919C13.0021 11.0248 12.8553 10.9178 12.8553 10.5638C12.8798 8.2585 12.8675 5.95323 12.8675 3.64797C12.8675 3.54917 12.8675 3.45861 12.8675 3.35981C12.8553 2.82466 12.5373 2.60237 11.779 2.57767C11.094 2.55297 10.617 2.8329 10.5437 3.30218C10.5314 3.40921 10.5437 3.52447 10.5437 3.6315C10.5437 5.62391 10.5437 7.60808 10.5437 9.60049C10.5437 10.4732 9.79758 10.9836 8.50111 10.9754C7.84064 10.9672 6.94779 11.173 6.56863 10.8848C6.23839 10.6379 6.45855 10.0533 6.45855 9.61695C6.45855 7.57515 6.45855 5.52511 6.45855 3.48331C6.45855 2.7588 5.76139 2.38831 4.85631 2.6353C4.29369 2.79173 4.11022 3.09635 4.11022 3.49154C4.12245 5.40162 4.11022 7.30346 4.11022 9.21353C4.11022 9.36173 4.11022 9.51816 4.11022 9.66635C4.07353 10.465 3.31521 10.9672 2.14105 10.9754C1.65181 10.9836 1.16258 10.9507 0.673345 10.9836C0.147417 11.0166 -0.0115843 10.9178 0.000646573 10.5391C0.0251083 7.30346 0.0128782 4.06786 0.0128782 0.824023C0.0128782 0.68406 0.0251091 0.552331 0.0128782 0.412369C-0.0115836 0.231241 0.0984936 0.17361 0.367573 0.17361C1.49281 0.181843 2.60582 0.181843 3.73106 0.17361C4.01237 0.17361 4.14691 0.223008 4.12245 0.428835C4.09799 0.57703 4.12245 0.708759 4.13468 0.922819Z" fill="#02B9EF"/>
+      <path d="M9.7117 5.22299C9.7117 6.35092 9.7117 7.47062 9.7117 8.59855C9.69947 10.064 8.56199 10.8215 6.3849 10.8297C5.43089 10.8297 4.46465 10.838 3.51064 10.8297C1.57816 10.8133 0.159382 9.94878 0.0615347 8.64795C-0.0118505 7.71761 -0.0240812 6.77904 0.0493041 5.8487C0.147151 4.51494 1.66378 3.57637 3.66964 3.55991C4.19557 3.55167 4.73373 3.55991 5.25966 3.55991C5.77335 3.55167 5.96905 3.35408 5.95682 3.02475C5.95682 2.69543 5.73666 2.54724 5.24743 2.5637C4.69704 2.57194 4.14665 2.57194 3.59626 2.5637C2.25086 2.54724 1.50478 2.05325 1.51701 1.16408C1.51701 0.801823 1.27239 0.316071 1.62709 0.102011C1.93286 -0.079117 2.63002 0.0361471 3.15595 0.0361471C4.5258 0.027914 5.88343 0.0361471 7.25329 0.0361471C8.70876 0.0361471 9.69947 0.703026 9.7117 1.691C9.72393 2.86009 9.7117 4.04566 9.7117 5.22299ZM5.96905 7.0919C5.96905 6.95193 5.96905 6.8202 5.96905 6.68024C5.96905 5.84047 5.96905 5.84047 4.7215 5.8734C4.09772 5.88987 3.75526 6.10393 3.74303 6.54028C3.7308 6.88607 3.7308 7.22363 3.74303 7.56942C3.75526 8.1622 4.14665 8.31863 5.41866 8.34333C6.36044 8.35979 5.88343 7.9152 5.96905 7.66821C6.01797 7.48708 5.95682 7.28126 5.96905 7.0919Z" fill="#06306F"/>
+      <path d="M9.69165 4.29088C9.69165 5.55054 9.71611 6.81844 9.67942 8.0781C9.65496 9.0496 9.31249 9.93054 7.91817 10.4492C7.35555 10.6551 6.74401 10.7703 6.108 10.7786C4.70145 10.795 3.2949 10.7786 1.88835 10.795C1.54589 10.795 1.4725 10.7127 1.48473 10.5069C1.50919 10.1611 1.4725 9.82351 1.49696 9.47772C1.52143 8.81908 2.26751 8.31686 3.24598 8.29216C3.88199 8.27569 4.50576 8.28393 5.14177 8.29216C5.65546 8.29216 5.93677 8.1522 5.93677 7.78171C5.93677 7.40299 5.66769 7.27126 5.154 7.26302C4.29783 7.24656 3.44167 7.32889 2.59774 7.16423C1.14227 6.87607 0.0781816 6.06099 0.041489 5.04833C-0.0318963 3.44287 0.0170287 1.83742 0.00479783 0.231973C0.00479783 0.0508454 0.0904132 -0.00678516 0.359492 0.00144792C1.36242 0.009681 2.35313 0.0179141 3.35606 0.00144792C3.79637 -0.00678516 3.73521 0.157876 3.73521 0.339003C3.73521 1.54927 3.73521 2.7513 3.73521 3.96156C3.73521 4.48848 4.10214 4.7684 4.78707 4.78487C5.59431 4.80133 5.949 4.57904 5.949 4.02742C5.949 2.80893 5.96123 1.5822 5.93677 0.363703C5.93677 0.0755452 6.04685 -0.00678516 6.47493 0.00144792C7.36778 0.0261472 8.27287 0.0343802 9.16572 0.00144792C9.65496 -0.0150182 9.72834 0.108477 9.71611 0.396635C9.67942 1.68923 9.69165 2.99006 9.69165 4.29088Z" fill="#06306F"/>
+    </g>
+  </svg>
+);
+
+interface HumanMentorHomeProps {
+  onBack: () => void;
+}
+
+interface Mentor {
+  name: string;
+  description: string;
+  image: string;
+  rating: string;
+  studentsHelped: string;
+  subject: string;
+  experience: string;
+}
+
+interface MentorCardProps extends Mentor {
+  onBook: () => void;
+}
+
+const MentorCard = ({ name, description, image, rating, studentsHelped, subject, experience, onBook }: MentorCardProps) => {
+  return (
+    <div className="bg-white rounded-[20px] shadow-[0px_4px_50px_5px_rgba(0,0,0,0.05)] overflow-hidden flex flex-col h-full hover:shadow-lg transition-shadow">
+      {/* Image Section */}
+      <div className="relative h-[252px] w-full shrink-0 overflow-hidden">
+        <ImageWithFallback src={image} alt={name} className="w-full h-full object-cover object-top hover:scale-105 transition-transform duration-500" />
+        
+        {/* Rating Badge */}
+        <div className="absolute top-6 right-6 bg-[#FACC15] px-2.5 py-1 rounded-[10px] flex items-center gap-1 shadow-sm">
+          <Star className="w-3.5 h-3.5 fill-black text-black" />
+          <span className="text-[12px] font-['Poppins'] font-semibold text-black">{rating}</span>
+        </div>
+      </div>
+
+      {/* Content Section */}
+      <div className="p-6 flex flex-col flex-1 gap-4">
+        <div>
+          <h3 className="text-[24px] font-['Poppins'] font-semibold text-black mb-2">{name}</h3>
+          <p className="text-[16px] font-['Poppins'] text-black/70 leading-normal line-clamp-3">
+            {description}
+          </p>
+        </div>
+
+        {/* Info Tags */}
+        <div className="flex flex-col gap-3 mt-auto">
+          {/* Row 1: Students & Subject */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2.5">
+              <GraduationCap className="w-5 h-5 text-black" />
+              <span className="text-[12px] font-['Poppins'] text-black">{studentsHelped} Students helped</span>
+            </div>
+            <div className="flex items-center gap-2.5">
+              <FlaskIcon />
+              <span className="text-[12px] font-['Poppins'] text-black text-right">{subject}</span>
+            </div>
+          </div>
+
+          {/* Row 2: Experience */}
+          <div className="flex items-center gap-2.5">
+            <Briefcase className="w-5 h-5 text-black" />
+            <span className="text-[12px] font-['Poppins'] text-black">{experience} experience</span>
+          </div>
+        </div>
+
+        {/* Action Button */}
+        <button 
+          onClick={onBook}
+          className="w-full h-[42px] mt-2 bg-[#003566] text-white rounded-[20px] font-['Poppins'] font-medium text-[14px] hover:bg-[#00284d] transition-colors border-2 border-transparent"
+        >
+          Book a Session
+        </button>
+      </div>
+    </div>
+  );
+};
+
+export function HumanMentorHome({ onBack }: HumanMentorHomeProps) {
+  const [selectedMentor, setSelectedMentor] = React.useState<Mentor | null>(null);
+  const [selectedSlot, setSelectedSlot] = React.useState<string>("18-10-25 | 7:00 PM");
+  const [selectedDuration, setSelectedDuration] = React.useState<string>("1 hour");
+  
+  // Payment Modal States
+  const [showPaymentModal, setShowPaymentModal] = React.useState(false);
+  const [showProcessingModal, setShowProcessingModal] = React.useState(false);
+  const [showSuccessModal, setShowSuccessModal] = React.useState(false);
+  const [showFailedModal, setShowFailedModal] = React.useState(false);
+  const [paymentMethod, setPaymentMethod] = React.useState<'UPI' | 'Bank'>('UPI');
+  const [selectedApp, setSelectedApp] = React.useState<string | null>('Google Pay');
+  const [upiId, setUpiId] = React.useState<string>("");
+
+  const mentors = [
+    {
+      name: "Ravi Kumar",
+      description: "Dedicated Math tutor helping students simplify complex problems and build confidence in quantitative reasoning.",
+      image: imgRavi,
+      rating: "4.5",
+      studentsHelped: "980+",
+      subject: "Maths",
+      experience: "6 years"
+    },
+    {
+      name: "Dr. Riya Nair",
+      description: "Passionate physics educator who simplifies complex theories with visual explanations and real-world connections",
+      image: imgRiya,
+      rating: "4.5",
+      studentsHelped: "1,120+",
+      subject: "Physics (IIT-JEE, NEET)",
+      experience: "9 years"
+    },
+    {
+      name: "Sarah Thomas",
+      description: "Certified IELTS trainer boosting confidence & band scores with personalized strategies.",
+      image: imgSarah,
+      rating: "4.5",
+      studentsHelped: "870+",
+      subject: "IELTS (English)",
+      experience: "5 years"
+    }
+  ];
+
+  const timeSlots = [
+    "18-10-25 | 7:00 PM",
+    "22-10-25 | 6:00 PM",
+    "25-10-25 | 8:00 PM"
+  ];
+
+  const durationOptions = [
+    "1 hour",
+    "2 hours",
+    "3 hours"
+  ];
+
+  const handleBookClick = (mentor: Mentor) => {
+    setSelectedMentor(mentor);
+    setSelectedSlot("18-10-25 | 7:00 PM");
+    setSelectedDuration("1 hour");
+    setShowPaymentModal(false);
+    setShowProcessingModal(false);
+    setShowSuccessModal(false);
+    setShowFailedModal(false);
+    setUpiId("");
+  };
+
+  const handleBookingConfirm = () => {
+    // Close booking modal, open payment modal
+    setShowPaymentModal(true);
+  };
+
+  const handlePaymentConfirm = () => {
+    // Close payment modal, open processing modal
+    setShowPaymentModal(false);
+    setShowProcessingModal(true);
+    
+    // Simulate processing time then show success or failure
+    setTimeout(() => {
+      setShowProcessingModal(false);
+      // Simulate random failure (30% chance of failure for demo purposes)
+      // or check if UPI ID contains 'fail' for manual testing
+      const shouldFail = Math.random() < 0.3 || upiId.toLowerCase().includes('fail');
+      
+      if (shouldFail) {
+        setShowFailedModal(true);
+      } else {
+        setShowSuccessModal(true);
+      }
+    }, 2000);
+  };
+
+  const handleTryAgain = () => {
+    setShowFailedModal(false);
+    setShowPaymentModal(true);
+  };
+
+  const handleCloseModal = () => {
+    setSelectedMentor(null);
+    setShowPaymentModal(false);
+    setShowProcessingModal(false);
+    setShowSuccessModal(false);
+    setShowFailedModal(false);
+  };
+
+  return (
+    <div className="w-full animate-in fade-in zoom-in-95 duration-300 relative">
+      {/* Back Breadcrumb */}
+      <button 
+        onClick={onBack}
+        className="flex items-center gap-2 text-black/60 hover:text-black mb-6 transition-colors group w-fit"
+      >
+        <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
+        <span className="text-[14px] font-['Poppins']">Mentor Support</span>
+      </button>
+
+      {/* Header */}
+      <div className="mb-8">
+        <h1 className="text-[40px] font-['Poppins'] font-medium text-black mb-2">Human Mentor</h1>
+        <p className="text-[14px] font-['Poppins'] text-black/60">
+          Learn directly from real mentors who guide, motivate, and inspire.
+        </p>
+      </div>
+
+      {/* Search Bar */}
+      <div className="bg-white rounded-[12px] p-4 mb-12 shadow-[0px_4px_60px_5px_rgba(0,0,0,0.05)] flex items-center gap-4">
+        <Search className="w-6 h-6 text-black/40" />
+        <input 
+          type="text" 
+          placeholder="Search by Name/Subject/Exam/Language" 
+          className="flex-1 bg-transparent border-none outline-none font-['Poppins'] text-[16px] placeholder:text-black/40"
+        />
+      </div>
+
+      {/* Mentors Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        {mentors.map((mentor, index) => (
+          <MentorCard 
+            key={index} 
+            {...mentor} 
+            onBook={() => handleBookClick(mentor)} 
+          />
+        ))}
+      </div>
+
+      {/* Modal Overlay */}
+      {selectedMentor && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/20 backdrop-blur-sm" onClick={handleCloseModal}></div>
+          
+          {showSuccessModal ? (
+            // --- SUCCESS MODAL ---
+            <div className="bg-white rounded-[20px] shadow-[0px_4px_50px_5px_rgba(0,0,0,0.1)] w-full max-w-[500px] p-[32px] z-10 animate-in fade-in zoom-in-95 duration-200 flex flex-col items-center justify-center text-center">
+              <h2 className="text-[24px] font-['Poppins'] font-semibold text-black mb-6 w-full text-left">Payment Successful</h2>
+              
+              <div className="mb-6 relative">
+                {/* Green Badge */}
+                <svg width="174" height="174" viewBox="0 0 254 243" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M254 121.549C254 134.468 237.823 144.673 234.039 156.33C230.116 168.412 237.069 186.149 229.75 196.206C222.358 206.363 203.29 205.196 193.133 212.588C183.077 219.906 178.336 238.442 166.254 242.365C154.597 246.15 139.919 234.065 127 234.065C114.081 234.065 99.4035 246.15 87.7464 242.365C75.6644 238.442 70.9232 219.906 60.8667 212.588C50.7099 205.196 31.6421 206.363 24.2501 196.206C16.9313 186.15 23.8841 168.412 19.9615 156.33C16.1765 144.673 0 134.468 0 121.549C0 108.63 16.1765 98.4258 19.9615 86.7686C23.8844 74.6867 16.9316 56.9489 24.2504 46.8925C31.6424 36.7356 50.7099 37.9027 60.867 30.511C70.9235 23.1922 75.6648 4.65696 87.7464 0.734014C99.4035 -3.05099 114.081 9.03411 127 9.03411C139.919 9.03411 154.597 -3.05099 166.254 0.734014C178.336 4.65696 183.077 23.1922 193.134 30.511C203.29 37.903 222.358 36.7356 229.75 46.8928C237.069 56.9493 230.116 74.687 234.039 86.7689C237.824 98.4255 254 108.63 254 121.549Z" fill="#65A34E"/>
+                  {/* Checkmark */}
+                  <path d="M108.025 181.295L62.6615 140.071L79.1392 121.938L105.375 145.779L167.036 70.1747L186.023 85.6606L108.025 181.295Z" fill="white"/>
+                </svg>
+              </div>
+
+              <h3 className="text-[20px] font-['Poppins'] font-medium text-black mb-4">Your session has been successfully booked.</h3>
+              <p className="text-[16px] font-['Poppins'] text-black/80 leading-relaxed mb-8 max-w-[400px]">
+                You'll receive a notification before 10 minutes of your scheduled session time. Get ready to learn with your mentor!
+              </p>
+
+              <button 
+                onClick={handleCloseModal}
+                className="px-8 h-[42px] rounded-[20px] bg-[#003566] text-white font-['Poppins'] font-medium text-[14px] hover:bg-[#00284d] transition-colors"
+              >
+                Go to Dashboard
+              </button>
+            </div>
+          ) : showFailedModal ? (
+            // --- FAILED MODAL ---
+            <div className="bg-white rounded-[20px] shadow-[0px_4px_50px_5px_rgba(0,0,0,0.1)] w-full max-w-[640px] p-[24px] z-10 animate-in fade-in zoom-in-95 duration-200 flex flex-col items-center justify-center text-center">
+               <h2 className="text-[24px] font-['Poppins'] font-semibold text-black mb-6 w-full text-center">Payment Failed</h2>
+               
+               <div className="mb-6">
+                 <svg width="254" height="244" viewBox="0 0 254 244" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-[200px] h-[200px]">
+                    <path d="M254 121.549C254 134.468 237.823 144.673 234.039 156.33C230.116 168.412 237.069 186.149 229.75 196.206C222.358 206.363 203.29 205.196 193.133 212.588C183.077 219.906 178.336 238.442 166.254 242.365C154.597 246.15 139.919 234.065 127 234.065C114.081 234.065 99.4035 246.15 87.7464 242.365C75.6644 238.442 70.9232 219.906 60.8667 212.588C50.7099 205.196 31.6421 206.363 24.2501 196.206C16.9313 186.15 23.8841 168.412 19.9615 156.33C16.1765 144.673 0 134.468 0 121.549C0 108.63 16.1765 98.4258 19.9615 86.7686C23.8844 74.6867 16.9316 56.9489 24.2504 46.8925C31.6424 36.7356 50.7099 37.9027 60.867 30.511C70.9235 23.1922 75.6648 4.65696 87.7464 0.734014C99.4035 -3.05099 114.081 9.03411 127 9.03411C139.919 9.03411 154.597 -3.05099 166.254 0.734014C178.336 4.65696 183.077 23.1922 193.134 30.511C203.29 37.903 222.358 36.7356 229.75 46.8928C237.069 56.9493 230.116 74.687 234.039 86.7689C237.824 98.4255 254 108.63 254 121.549Z" fill="#FF5E5E"/>
+                    <path d="M169.213 148.089L143.124 122L169.213 95.9114C169.713 95.4053 169.993 94.7227 169.993 94.0114C169.993 93.3001 169.713 92.6174 169.213 92.1114L156.889 79.7871C156.385 79.2833 155.702 79.0003 154.989 79.0003C154.276 79.0003 153.593 79.2833 153.089 79.7871L127 105.876L100.911 79.7871C100.407 79.2833 99.7237 79.0003 99.0111 79.0003C98.2985 79.0003 97.615 79.2833 97.1111 79.7871L84.7868 92.1114C84.283 92.6154 84 93.2988 84 94.0114C84 94.724 84.283 95.4074 84.7868 95.9114L110.876 122L84.7868 148.089C84.283 148.593 84 149.277 84 149.989C84 150.702 84.283 151.385 84.7868 151.889L97.1111 164.213C97.615 164.717 98.2985 165 99.0111 165C99.7237 165 100.407 164.717 100.911 164.213L127 138.125L153.089 164.213C153.593 164.717 154.276 165 154.989 165C155.702 165 156.385 164.717 156.889 164.213L169.213 151.889C169.717 151.385 170 150.702 170 149.989C170 149.277 169.717 148.593 169.213 148.089Z" fill="white"/>
+                 </svg>
+               </div>
+
+               <h3 className="text-[20px] font-['Poppins'] font-medium text-black mb-4">Something went wrong while processing your payment.</h3>
+               <p className="text-[16px] font-['Poppins'] text-black/80 leading-relaxed mb-8 max-w-[400px]">
+                 Please try again or use a different payment method.<br/> Your session hasn’t been booked yet
+               </p>
+
+               <button 
+                 onClick={handleTryAgain}
+                 className="px-8 h-[42px] rounded-[20px] bg-[#003566] text-white font-['Poppins'] font-medium text-[14px] hover:bg-[#00284d] transition-colors"
+               >
+                 Try Again
+               </button>
+            </div>
+          ) : showProcessingModal ? (
+            // --- PROCESSING MODAL ---
+            <div className="bg-white rounded-[20px] shadow-[0px_4px_50px_5px_rgba(0,0,0,0.1)] w-full max-w-[500px] p-[32px] z-10 animate-in fade-in zoom-in-95 duration-200 flex flex-col items-center justify-center">
+              {paymentMethod === 'Bank' ? (
+                // Bank Gateway View
+                <>
+                  <h2 className="text-[24px] font-['Poppins'] font-semibold text-black mb-6 w-full text-left">Bank Payment</h2>
+                  <div className="flex items-center gap-3 w-full">
+                    <p className="text-[16px] font-['Poppins'] text-black/80">Heading towards payment gateway</p>
+                    <Loader2 className="w-5 h-5 animate-spin text-black/60" />
+                  </div>
+                </>
+              ) : (
+                // UPI Processing View
+                <>
+                  <h2 className="text-[24px] font-['Poppins'] font-semibold text-black mb-6 w-full text-left">UPI Payment</h2>
+                  
+                  <div className="w-full mb-8">
+                    <p className="text-[16px] font-['Poppins'] text-black/80 leading-relaxed">
+                      A payment request has been sent to the below UPI ID:
+                    </p>
+                    <p className="text-[16px] font-['Poppins'] font-semibold text-black mt-1">
+                      {upiId || "andrew@sbiybl"}
+                    </p>
+                  </div>
+
+                  <div className="flex items-center gap-3">
+                    <p className="text-[16px] font-['Poppins'] text-black">Processing the payment</p>
+                    <Loader2 className="w-6 h-6 animate-spin text-black/60" />
+                  </div>
+                </>
+              )}
+            </div>
+          ) : showPaymentModal ? (
+            // --- PAYMENT MODAL ---
+            <div className="bg-white rounded-[20px] shadow-[0px_4px_50px_5px_rgba(0,0,0,0.1)] w-full max-w-[640px] p-[32px] z-10 animate-in fade-in zoom-in-95 duration-200">
+              <h2 className="text-[24px] font-['Poppins'] font-semibold text-black mb-6">Choose Mode of Payment</h2>
+              
+              {/* Payment Method Toggle */}
+              <div className="bg-[#e8ecf2] p-1 rounded-[4px] flex mb-6">
+                <button 
+                  onClick={() => setPaymentMethod('UPI')}
+                  className={`flex-1 h-[42px] rounded-[4px] font-['Poppins'] font-semibold text-[16px] transition-all ${
+                    paymentMethod === 'UPI' 
+                      ? 'bg-[#c9e5ff] text-black' 
+                      : 'bg-transparent text-black/60 hover:bg-gray-200'
+                  }`}
+                >
+                  UPI
+                </button>
+                <button 
+                  onClick={() => setPaymentMethod('Bank')}
+                  className={`flex-1 h-[42px] rounded-[4px] font-['Poppins'] font-medium text-[16px] transition-all ${
+                    paymentMethod === 'Bank' 
+                      ? 'bg-[#c9e5ff] text-black font-semibold' 
+                      : 'bg-transparent text-black hover:bg-gray-200'
+                  }`}
+                >
+                  Bank Account
+                </button>
+              </div>
+
+              {/* UPI Options */}
+              {paymentMethod === 'UPI' && (
+                <div className="flex flex-col gap-4">
+                  <div>
+                    <p className="text-[16px] font-['Poppins'] text-black mb-2">Choose App</p>
+                    <div className="flex gap-4">
+                      {[
+                        { name: 'Google Pay', icon: <IconGooglePay /> },
+                        { name: 'Paytm', icon: <IconPaytm /> },
+                        { name: 'PhonePe', img: imgPhonePe },
+                        { name: 'Amazon Pay', img: imgAmazonPay }
+                      ].map((app) => (
+                        <button 
+                          key={app.name}
+                          onClick={() => setSelectedApp(app.name)}
+                          className={`w-[80px] h-[52px] rounded-[8px] flex items-center justify-center border transition-all ${
+                            selectedApp === app.name 
+                              ? 'border-[#003566] border-2 bg-blue-50' 
+                              : 'border-[#f6f6f6] hover:border-gray-300'
+                          }`}
+                        >
+                          {app.icon ? app.icon : <img src={app.img} alt={app.name} className="w-[24px] h-[24px]" />}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="relative text-center my-2">
+                    <div className="absolute inset-0 flex items-center">
+                      <div className="w-full border-t border-gray-300"></div>
+                    </div>
+                    <span className="relative bg-white px-4 text-[16px] text-gray-500 font-['Poppins']">OR</span>
+                  </div>
+
+                  <div>
+                    <p className="text-[16px] font-['Poppins'] text-black mb-2">Enter UPI ID</p>
+                    <div className="relative">
+                      <input 
+                        type="text" 
+                        value={upiId}
+                        onChange={(e) => setUpiId(e.target.value)}
+                        placeholder="example@ybl"
+                        className="w-full h-[39px] border border-gray-300 rounded-[10px] px-3 font-['Poppins'] text-[14px] outline-none focus:border-[#003566] focus:ring-1 focus:ring-[#003566]"
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Bank Account Form */}
+              {paymentMethod === 'Bank' && (
+                <div className="flex flex-col gap-4">
+                  <div>
+                    <p className="text-[16px] font-['Poppins'] text-black mb-2">Account Holder Name</p>
+                    <input 
+                      type="text" 
+                      placeholder="Enter your name"
+                      className="w-full h-[39px] border border-black/40 rounded-[10px] px-3 font-['Poppins'] text-[14px] text-black/60 outline-none focus:border-[#003566] focus:ring-1 focus:ring-[#003566] placeholder:text-black/60"
+                    />
+                  </div>
+
+                  <div>
+                    <p className="text-[16px] font-['Poppins'] text-black mb-2">Bank Name</p>
+                    <input 
+                      type="text" 
+                      placeholder="Enter your bank name"
+                      className="w-full h-[39px] border border-black/40 rounded-[10px] px-3 font-['Poppins'] text-[14px] text-black/60 outline-none focus:border-[#003566] focus:ring-1 focus:ring-[#003566] placeholder:text-black/60"
+                    />
+                  </div>
+
+                  <div>
+                    <p className="text-[16px] font-['Poppins'] text-black mb-2">Account Number</p>
+                    <input 
+                      type="text" 
+                      placeholder="Enter your bank account number"
+                      className="w-full h-[39px] border border-black/40 rounded-[10px] px-3 font-['Poppins'] text-[14px] text-black/60 outline-none focus:border-[#003566] focus:ring-1 focus:ring-[#003566] placeholder:text-black/60"
+                    />
+                  </div>
+
+                  <div>
+                    <p className="text-[16px] font-['Poppins'] text-black mb-2">Re-Enter Account Number</p>
+                    <input 
+                      type="text" 
+                      placeholder="Re-enter your bank account number"
+                      className="w-full h-[39px] border border-black/40 rounded-[10px] px-3 font-['Poppins'] text-[14px] text-black/60 outline-none focus:border-[#003566] focus:ring-1 focus:ring-[#003566] placeholder:text-black/60"
+                    />
+                  </div>
+
+                  <div>
+                    <p className="text-[16px] font-['Poppins'] text-black mb-2">Bank IFSC Code</p>
+                    <input 
+                      type="text" 
+                      placeholder="Enter your bank IFSC code"
+                      className="w-full h-[39px] border border-black/40 rounded-[10px] px-3 font-['Poppins'] text-[14px] text-black/60 outline-none focus:border-[#003566] focus:ring-1 focus:ring-[#003566] placeholder:text-black/60"
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* Amount Display */}
+              <div className="bg-[#f1f5f9] rounded-[10px] px-6 py-3 flex items-center justify-between mt-6 mb-6">
+                <span className="text-[16px] font-['Poppins'] font-semibold text-black">Amount:</span>
+                <span className="text-[32px] font-['Poppins'] font-semibold text-black">₹500</span>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex items-center gap-6 w-[385px] mx-auto">
+                <button 
+                  onClick={handleCloseModal}
+                  className="flex-1 h-[42px] rounded-[20px] border border-[#cc3636] text-[#cc3636] font-['Poppins'] font-medium text-[14px] hover:bg-red-50 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button 
+                  onClick={handlePaymentConfirm}
+                  className="flex-1 h-[42px] rounded-[20px] bg-[#003566] text-white font-['Poppins'] font-medium text-[14px] hover:bg-[#00284d] transition-colors"
+                >
+                  Pay ₹500
+                </button>
+              </div>
+            </div>
+          ) : (
+            // --- BOOKING DETAILS MODAL ---
+            <div className="bg-white rounded-[20px] shadow-[0px_4px_50px_5px_rgba(0,0,0,0.1)] w-full max-w-[895px] h-[552px] overflow-hidden flex animate-in fade-in zoom-in-95 duration-200">
+              {/* Left Side - Image */}
+              <div className="w-[305px] h-full relative shrink-0">
+                <ImageWithFallback src={selectedMentor.image} alt={selectedMentor.name} className="w-full h-full object-cover" />
+                <div className="absolute top-6 right-6 bg-[#FACC15] px-2.5 py-1 rounded-[10px] flex items-center gap-1 shadow-sm">
+                  <Star className="w-3.5 h-3.5 fill-black text-black" />
+                  <span className="text-[12px] font-['Poppins'] font-semibold text-black">{selectedMentor.rating}</span>
+                </div>
+              </div>
+
+              {/* Right Side - Form */}
+              <div className="flex-1 p-8 flex flex-col h-full overflow-y-auto">
+                <h2 className="text-[32px] font-['Poppins'] font-semibold text-black mb-1">{selectedMentor.name}</h2>
+                <p className="text-[16px] font-['Poppins'] text-black/60 mb-6">{selectedMentor.subject}</p>
+
+                <div className="flex flex-col gap-6">
+                  {/* Time Slots */}
+                  <div>
+                    <h3 className="text-[16px] font-['Poppins'] font-medium text-black mb-3">Available slots</h3>
+                    <div className="flex flex-wrap gap-3">
+                      {timeSlots.map((slot) => (
+                        <button
+                          key={slot}
+                          onClick={() => setSelectedSlot(slot)}
+                          className={`px-4 py-2 rounded-[8px] font-['Poppins'] text-[14px] border transition-all ${
+                            selectedSlot === slot
+                              ? 'bg-[#003566] text-white border-[#003566]'
+                              : 'bg-white text-black/80 border-black/10 hover:border-[#003566]'
+                          }`}
+                        >
+                          {slot}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Duration */}
+                  <div>
+                    <h3 className="text-[16px] font-['Poppins'] font-medium text-black mb-3">Duration</h3>
+                    <div className="flex flex-wrap gap-3">
+                      {durationOptions.map((duration) => (
+                        <button
+                          key={duration}
+                          onClick={() => setSelectedDuration(duration)}
+                          className={`px-4 py-2 rounded-[8px] font-['Poppins'] text-[14px] border transition-all ${
+                            selectedDuration === duration
+                              ? 'bg-[#003566] text-white border-[#003566]'
+                              : 'bg-white text-black/80 border-black/10 hover:border-[#003566]'
+                          }`}
+                        >
+                          {duration}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Footer Actions */}
+                <div className="mt-auto pt-8 flex items-center justify-between">
+                  <div>
+                    <p className="text-[14px] font-['Poppins'] text-black/60">Total Amount</p>
+                    <p className="text-[24px] font-['Poppins'] font-semibold text-black">₹500</p>
+                  </div>
+                  
+                  <div className="flex items-center gap-4">
+                    <button 
+                      onClick={handleCloseModal}
+                      className="px-8 h-[42px] rounded-[20px] border border-[#cc3636] text-[#cc3636] font-['Poppins'] font-medium text-[14px] hover:bg-red-50 transition-colors"
+                    >
+                      Cancel
+                    </button>
+                    <button 
+                      onClick={handleBookingConfirm}
+                      className="px-8 h-[42px] rounded-[20px] bg-[#003566] text-white font-['Poppins'] font-medium text-[14px] hover:bg-[#00284d] transition-colors"
+                    >
+                      Proceed to Pay
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
