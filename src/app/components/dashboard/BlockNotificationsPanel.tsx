@@ -15,7 +15,9 @@ export function BlockNotificationsPanel({ onClose, isBlocked, onToggle }: BlockN
         <h2 className="text-[24px] font-medium text-white">Block Notifications</h2>
         <button
           onClick={onClose}
-          className="w-[32px] h-[32px] flex items-center justify-center hover:opacity-70 transition-opacity"
+          type="button"
+          className="w-[32px] h-[32px] flex items-center justify-center hover:opacity-70 transition-opacity cursor-pointer relative z-50"
+          aria-label="Close"
         >
           <X className="w-6 h-6 text-white" />
         </button>

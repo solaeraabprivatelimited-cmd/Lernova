@@ -88,7 +88,9 @@ export function MessagesPanel({ onClose, currentUserId, currentUserName, current
         <h3 className="font-['Poppins'] font-medium text-[24px] text-white leading-normal">Messages</h3>
         <button 
           onClick={onClose}
-          className="w-[32px] h-[32px] flex items-center justify-center hover:opacity-80 transition-opacity"
+          type="button"
+          className="w-[32px] h-[32px] flex items-center justify-center hover:opacity-80 transition-opacity cursor-pointer relative z-50"
+          aria-label="Close"
         >
           <X className="w-7 h-7 text-white" strokeWidth={2} />
         </button>

@@ -187,9 +187,14 @@ function TimerOverlay({ onClose }: { onClose: () => void }) {
       {/* Header */}
       <div className="flex items-center justify-between w-full">
         <h2 className="font-['Poppins'] font-medium text-[24px] text-white">Focus Timer</h2>
-        <div onClick={onClose}>
+        <button 
+          onClick={onClose}
+          type="button"
+          className="relative z-50 cursor-pointer hover:opacity-80 transition-opacity"
+          aria-label="Close"
+        >
           <IconParkOutlineCloseOne />
-        </div>
+        </button>
       </div>
 
       {/* Set Timer Section */}
@@ -321,9 +326,14 @@ function NotesOverlay({ onClose }: { onClose: () => void }) {
       {/* Header */}
       <div className="flex items-center justify-between w-full">
         <h2 className="font-['Poppins'] font-medium text-[24px] text-white">Notes</h2>
-        <div onClick={onClose}>
+        <button 
+          onClick={onClose}
+          type="button"
+          className="relative z-50 cursor-pointer hover:opacity-80 transition-opacity"
+          aria-label="Close"
+        >
           <IconParkOutlineCloseOne />
-        </div>
+        </button>
       </div>
 
       {/* Search Bar */}

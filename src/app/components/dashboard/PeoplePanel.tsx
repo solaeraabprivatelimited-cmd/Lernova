@@ -97,7 +97,9 @@ export function PeoplePanel({
           <h2 className="text-[24px] font-medium text-white">People</h2>
           <button
             onClick={onClose}
-            className="text-white/70 hover:text-white transition-colors"
+            type="button"
+            className="text-white/70 hover:text-white transition-colors cursor-pointer relative z-50"
+            aria-label="Close"
           >
             <X className="w-8 h-8" />
           </button>
