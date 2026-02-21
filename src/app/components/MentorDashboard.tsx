@@ -1,0 +1,3181 @@
+import React, { useState, useRef, useEffect } from 'react';
+import svgPaths from '../../imports/svg-awezib197y';
+import svgWellness from '../../imports/svg-fui5khiao7';
+import { CommunityView as MentorCommunityView } from './dashboard/CommunityView';
+import { MentorProfileSettings } from './dashboard/MentorProfileSettings';
+import { ImageWithFallback } from './figma/ImageWithFallback';
+import { Building2, AlignLeft, Lock, Globe, Hash, Link2 } from 'lucide-react';
+import imgChatAvatar from 'figma:asset/798eac6e288222603807db12d070c52d1a145785.png';
+import imgUserAvatar from 'figma:asset/1d3b37310d86db33d00fb05038f712cfa0e01556.png';
+import imgSayHi from 'figma:asset/5e91c4f0fbdda278a8c62c9c5428eca49ba69e08.png';
+import svgMic from '../../imports/svg-xoj20dj40s';
+import svgMicLarge from '../../imports/svg-x88i2k0erj';
+import imgResThumb from 'figma:asset/f0a250ad1361e9247b086e20f69a2980c11fcc14.png';
+import imgResAuthor from 'figma:asset/d0b5e8618139abd2e6c665600d3134442c6ea4a3.png';
+import imgResAttach from 'figma:asset/605a593a8aec5bcd93a6caef17da90dbf55364dc.png';
+import svgWellRes from '../../imports/svg-spu5c0og85';
+import svgWellResFill from '../../imports/svg-ux77gu3q65';
+import imgWcAvatar from 'figma:asset/798eac6e288222603807db12d070c52d1a145785.png';
+import imgWcSendMask from 'figma:asset/e1dadbc98b774e2ab4d6bd1189e0b24dd17951cb.png';
+
+interface MentorDashboardProps {
+  onLogout: () => void;
+}
+
+// ────────────────────────────────────────────────────────────────────────────────
+// SVG Icon helpers
+// ────────────────────────────────────────────────────────────────────────────────
+
+function LearnovaLogo() {
+  return (
+    <div className="flex items-center gap-2">
+      <div className="size-[35px] shrink-0">
+        <svg className="block size-full" fill="none" viewBox="0 0 35 35">
+          <path d={svgPaths.p3781200} fill="#003566" />
+          <path d={svgPaths.p1c6f2500} stroke="#003566" strokeWidth="0.245515" />
+          <path d={svgPaths.p31318300} fill="#003566" />
+          <path d={svgPaths.p275764f0} stroke="#003566" strokeWidth="0.23811" />
+          <circle cx="17.5" cy="17.5" r="15.8594" stroke="#003566" strokeWidth="3.28125" />
+          <g clipPath="url(#clip0_m)">
+            <path clipRule="evenodd" d={svgPaths.p2338ef00} fill="#F77F00" fillRule="evenodd" />
+          </g>
+          <g clipPath="url(#clip1_m)">
+            <path clipRule="evenodd" d={svgPaths.p17aefc80} fill="#F77F00" fillRule="evenodd" />
+          </g>
+          <defs>
+            <clipPath id="clip0_m">
+              <rect fill="white" height="10.5795" transform="translate(10.4914 20.704) rotate(-11.508)" width="10.5795" />
+            </clipPath>
+            <clipPath id="clip1_m">
+              <rect fill="white" height="10.2012" transform="translate(11.5055 10.7851) rotate(-11.508)" width="10.2012" />
+            </clipPath>
+          </defs>
+        </svg>
+      </div>
+      <span className="font-['Righteous'] text-[#003566] text-[20px]">Learnova</span>
+    </div>
+  );
+}
+
+function BellIcon() {
+  return (
+    <svg fill="none" viewBox="0 0 24 24" className="w-6 h-6" stroke="black" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M15 17h5l-1.405-1.405A2.032 2.032 0 0 1 18 14.158V11a6.002 6.002 0 0 0-4-5.659V5a2 2 0 1 0-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 1 1-6 0v-1m6 0H9" />
+    </svg>
+  );
+}
+
+function CreateSessionIcon() {
+  return (
+    <svg fill="none" viewBox="0 0 24 24" className="w-5 h-5 shrink-0">
+      <path d={svgPaths.p155fb3f0} fill="#003566" />
+    </svg>
+  );
+}
+
+function SessionRequestsIcon() {
+  return (
+    <svg fill="none" viewBox="0 0 24 24" className="w-5 h-5 shrink-0" stroke="black" strokeOpacity="0.6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d={svgPaths.p16a0cd00} />
+    </svg>
+  );
+}
+
+function StudyRoomIcon() {
+  return (
+    <svg fill="none" viewBox="0 0 20 20" className="w-5 h-5 shrink-0">
+      <path d={svgPaths.p12a85400} fill="black" fillOpacity="0.6" />
+    </svg>
+  );
+}
+
+function WorldChatIcon() {
+  return (
+    <svg fill="none" viewBox="0 0 24 24" className="w-5 h-5 shrink-0" stroke="black" strokeOpacity="0.6" strokeWidth="2" strokeLinecap="round">
+      <path d={svgPaths.p39188800} />
+    </svg>
+  );
+}
+
+function WellnessIcon() {
+  return (
+    <svg fill="none" viewBox="0 0 21 22" className="w-5 h-5 shrink-0">
+      <path d={svgPaths.p2ab57600} fill="black" fillOpacity="0.6" />
+    </svg>
+  );
+}
+
+function CommunityIcon() {
+  return (
+    <svg fill="none" viewBox="0 0 22 22" className="w-5 h-5 shrink-0">
+      <path d={svgPaths.p7213140} fill="black" fillOpacity="0.6" />
+    </svg>
+  );
+}
+
+function DeleteIcon() {
+  return (
+    <svg fill="none" viewBox="0 0 20 20" className="w-5 h-5 shrink-0">
+      <path d={svgPaths.p1b39c5c0} fill="#CC3636" />
+    </svg>
+  );
+}
+
+function EditIcon() {
+  return (
+    <svg fill="none" viewBox="0 0 20 20" className="w-5 h-5 shrink-0">
+      <g>
+        <path d={svgPaths.p3991c040} stroke="#003566" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" />
+        <path d={svgPaths.pf7b8300} stroke="#003566" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" />
+      </g>
+    </svg>
+  );
+}
+
+function UserIcon() {
+  return (
+    <svg fill="none" viewBox="0 0 18 18" className="w-4 h-4 shrink-0" stroke="black" strokeOpacity="0.8" strokeWidth="2" strokeLinejoin="round">
+      <path d={svgPaths.p36395980} />
+      <path d={svgPaths.p372d2a00} />
+    </svg>
+  );
+}
+
+// ────────────────────────────────────────────────────────────────────────────────
+// Types
+// ────────────────────────────────────────────────────────────────────────────────
+
+type NavItem = 'create-session' | 'session-requests' | 'study-room' | 'world-chat' | 'wellness' | 'community' | 'profile';
+
+interface TimeSlot {
+  id: string;
+  datetime: string;
+}
+
+interface SessionPost {
+  id: string;
+  mentorName: string;
+  rate: string;
+  timeSlots: TimeSlot[];
+  hours: number[];
+}
+
+// ────────────────────────────────────────────────────────────────────────────────
+// Create / Edit Modal
+// ────────────────────────────────────────────────────────────────────────────────
+
+interface SessionModalProps {
+  mode: 'create' | 'edit';
+  initial?: SessionPost;
+  onSave: (s: SessionPost) => void;
+  onClose: () => void;
+}
+
+function SessionModal({ mode, initial, onSave, onClose }: SessionModalProps) {
+  const blank: SessionPost = {
+    id: Date.now().toString(),
+    mentorName: 'Jack Sparrow',
+    rate: '₹500/hr',
+    timeSlots: [{ id: '1', datetime: '' }],
+    hours: [1],
+  };
+
+  const [form, setForm] = useState<SessionPost>(initial ?? blank);
+  const [newSlot, setNewSlot] = useState('');
+  const [rateInput, setRateInput] = useState(initial?.rate.replace('₹', '').replace('/hr', '') ?? '500');
+  const [hoursInput, setHoursInput] = useState<string>(initial?.hours.join(', ') ?? '1, 2, 3');
+  const [error, setError] = useState('');
+
+  const addSlot = () => {
+    if (!newSlot.trim()) return;
+    setForm(f => ({ ...f, timeSlots: [...f.timeSlots, { id: Date.now().toString(), datetime: newSlot.trim() }] }));
+    setNewSlot('');
+  };
+
+  const removeSlot = (id: string) => {
+    setForm(f => ({ ...f, timeSlots: f.timeSlots.filter(s => s.id !== id) }));
+  };
+
+  const handleSave = () => {
+    setError('');
+    if (!form.mentorName.trim()) { setError('Mentor name is required.'); return; }
+    if (!rateInput.trim() || isNaN(Number(rateInput))) { setError('Enter a valid rate (numbers only).'); return; }
+    if (form.timeSlots.length === 0) { setError('Add at least one time slot.'); return; }
+    const parsedHours = hoursInput.split(',').map(h => Number(h.trim())).filter(h => !isNaN(h) && h > 0);
+    if (parsedHours.length === 0) { setError('Enter at least one valid number of hours.'); return; }
+    onSave({ ...form, rate: `₹${rateInput}/hr`, hours: parsedHours });
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+      <div className="bg-white rounded-[20px] shadow-[0px_4px_50px_5px_rgba(0,0,0,0.15)] w-full max-w-[560px] p-8 flex flex-col gap-6">
+        <div className="flex items-start justify-between">
+          <div>
+            <p className="font-['Poppins'] font-medium text-[24px] text-black">
+              {mode === 'create' ? 'Create New Session' : 'Edit Session'}
+            </p>
+            <p className="font-['Poppins'] text-[13px] text-[rgba(0,0,0,0.6)]">Fill in your session details below.</p>
+          </div>
+          <button onClick={onClose} className="text-[rgba(0,0,0,0.4)] hover:text-black transition-colors text-2xl leading-none mt-1">×</button>
+        </div>
+
+        {/* Mentor Name */}
+        <div className="flex flex-col gap-2">
+          <label className="font-['Poppins'] text-[14px] text-black">Mentor Name</label>
+          <div className="border border-[rgba(0,0,0,0.2)] rounded-[10px] px-3 h-[39px] flex items-center">
+            <input
+              className="flex-1 font-['Poppins'] text-[14px] outline-none"
+              value={form.mentorName}
+              onChange={e => setForm(f => ({ ...f, mentorName: e.target.value }))}
+              placeholder="e.g. Jack Sparrow"
+            />
+          </div>
+        </div>
+
+        {/* Rate */}
+        <div className="flex flex-col gap-2">
+          <label className="font-['Poppins'] text-[14px] text-black">Rate (₹/hr)</label>
+          <div className="border border-[rgba(0,0,0,0.2)] rounded-[10px] px-3 h-[39px] flex items-center gap-2">
+            <span className="font-['Poppins'] text-[14px] text-[rgba(0,0,0,0.5)]">₹</span>
+            <input
+              className="flex-1 font-['Poppins'] text-[14px] outline-none"
+              value={rateInput}
+              onChange={e => setRateInput(e.target.value)}
+              placeholder="500"
+              type="number"
+              min="0"
+            />
+            <span className="font-['Poppins'] text-[14px] text-[rgba(0,0,0,0.5)]">/hr</span>
+          </div>
+        </div>
+
+        {/* Time Slots */}
+        <div className="flex flex-col gap-2">
+          <label className="font-['Poppins'] text-[14px] text-black">Date & Time Slots</label>
+          <div className="flex flex-wrap gap-2">
+            {form.timeSlots.map(slot => (
+              <div key={slot.id} className="flex items-center gap-1 border border-[rgba(0,0,0,0.2)] rounded-[10px] px-3 py-1">
+                <span className="font-['Poppins'] text-[13px]">{slot.datetime}</span>
+                <button onClick={() => removeSlot(slot.id)} className="text-[#cc3636] ml-1 leading-none text-sm">×</button>
+              </div>
+            ))}
+          </div>
+          <div className="flex gap-2">
+            <div className="flex-1 border border-[rgba(0,0,0,0.2)] rounded-[10px] px-3 h-[39px] flex items-center">
+              <input
+                className="w-full font-['Poppins'] text-[13px] outline-none"
+                value={newSlot}
+                onChange={e => setNewSlot(e.target.value)}
+                onKeyDown={e => e.key === 'Enter' && addSlot()}
+                placeholder="e.g. 18-10-25 | 7:00 PM"
+              />
+            </div>
+            <button
+              onClick={addSlot}
+              className="h-[39px] px-4 bg-[#003566] text-white rounded-[10px] font-['Poppins'] text-[13px] hover:bg-[#00284d] transition-colors"
+            >
+              Add
+            </button>
+          </div>
+        </div>
+
+        {/* Number of Hours */}
+        <div className="flex flex-col gap-2">
+          <label className="font-['Poppins'] text-[14px] text-black">Available Hours (comma-separated)</label>
+          <div className="border border-[rgba(0,0,0,0.2)] rounded-[10px] px-3 h-[39px] flex items-center">
+            <input
+              className="flex-1 font-['Poppins'] text-[14px] outline-none"
+              value={hoursInput}
+              onChange={e => setHoursInput(e.target.value)}
+              placeholder="1, 2, 3"
+            />
+          </div>
+        </div>
+
+        {error && <p className="font-['Poppins'] text-[13px] text-[#cc3636] -mt-3">{error}</p>}
+
+        {/* Actions */}
+        <div className="flex justify-end gap-3 pt-1">
+          <button
+            onClick={onClose}
+            className="h-[42px] px-6 border border-[rgba(0,0,0,0.3)] rounded-[20px] font-['Poppins'] text-[14px] text-[rgba(0,0,0,0.6)] hover:bg-gray-50 transition-colors"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleSave}
+            className="h-[42px] px-8 bg-[#003566] rounded-[20px] font-['Poppins'] text-[14px] text-white hover:bg-[#00284d] transition-colors"
+          >
+            {mode === 'create' ? 'Create Session' : 'Save Changes'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ────────────────────────────────────────────────────────────────────────────────
+// Confirm Delete Modal
+// ────────────────────────────────────────────────────────────────────────────────
+
+function DeleteModal({ onConfirm, onCancel }: { onConfirm: () => void; onCancel: () => void }) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+      <div className="bg-white rounded-[20px] shadow-[0px_4px_50px_5px_rgba(0,0,0,0.15)] w-full max-w-[400px] p-8 flex flex-col gap-6 items-center text-center">
+        <div className="w-[60px] h-[60px] rounded-full bg-[#fde8e8] flex items-center justify-center">
+          <DeleteIcon />
+        </div>
+        <div>
+          <p className="font-['Poppins'] font-medium text-[20px] text-black">Delete Session?</p>
+          <p className="font-['Poppins'] text-[13px] text-[rgba(0,0,0,0.6)] mt-1">This action cannot be undone. Your session post will be permanently removed.</p>
+        </div>
+        <div className="flex gap-3 w-full">
+          <button
+            onClick={onCancel}
+            className="flex-1 h-[42px] border border-[rgba(0,0,0,0.3)] rounded-[20px] font-['Poppins'] text-[14px] text-[rgba(0,0,0,0.6)] hover:bg-gray-50 transition-colors"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={onConfirm}
+            className="flex-1 h-[42px] bg-[#cc3636] rounded-[20px] font-['Poppins'] text-[14px] text-white hover:bg-[#b02e2e] transition-colors"
+          >
+            Delete
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ────────────────────────────────────────────────────────────────────────────────
+// Session Card
+// ────────────────────────────────────────────────────────────────────────────────
+
+interface SessionCardProps {
+  session: SessionPost;
+  onDelete: () => void;
+  onEdit: () => void;
+}
+
+function SessionCard({ session, onDelete, onEdit }: SessionCardProps) {
+  return (
+    <div className="bg-white rounded-[20px] shadow-[0px_4px_29.4px_0px_rgba(0,0,0,0.1)] p-8 flex flex-col gap-6">
+      {/* Top row */}
+      <div className="flex flex-wrap gap-6 items-start justify-between">
+        {/* Mentor info */}
+        <div className="bg-white rounded-[10px] shadow-[0px_4px_29.4px_0px_rgba(0,0,0,0.1)] px-4 py-3 flex items-center justify-between gap-6 min-w-[220px]">
+          <div className="flex items-center gap-2">
+            <div className="bg-[#e5e7eb] rounded-[4px] size-[27px] flex items-center justify-center">
+              <UserIcon />
+            </div>
+            <span className="font-['Poppins'] font-medium text-[16px] text-[rgba(0,0,0,0.8)]">{session.mentorName}</span>
+          </div>
+          <span className="font-['Poppins'] font-medium text-[16px] text-[rgba(0,0,0,0.8)]">{session.rate}</span>
+        </div>
+
+        {/* Date & Time Slots */}
+        <div className="flex flex-col gap-2">
+          <p className="font-['Poppins'] font-medium text-[16px] text-[rgba(0,0,0,0.8)]">Date and Time Slots</p>
+          <div className="flex flex-wrap gap-2">
+            {session.timeSlots.map(slot => (
+              <div key={slot.id} className="border border-[rgba(0,0,0,0.2)] rounded-[10px] px-3 h-[39px] flex items-center">
+                <span className="font-['Poppins'] font-medium text-[14px] text-[rgba(0,0,0,0.8)]">{slot.datetime}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Number of Hours */}
+        <div className="flex flex-col gap-2">
+          <p className="font-['Poppins'] font-medium text-[16px] text-[rgba(0,0,0,0.8)]">Number of Hours</p>
+          <div className="flex gap-2 flex-wrap">
+            {session.hours.map((h, i) => (
+              <div key={i} className="border border-[rgba(0,0,0,0.2)] rounded-[10px] px-3 h-[39px] flex items-center">
+                <span className="font-['Poppins'] font-medium text-[14px] text-[rgba(0,0,0,0.8)]">{h} {h === 1 ? 'hour' : 'hours'}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Actions */}
+      <div className="flex justify-end gap-4">
+        <button
+          onClick={onDelete}
+          className="flex items-center gap-1.5 h-[42px] px-6 border border-[#cc3636] rounded-[20px] hover:bg-[#fde8e8] transition-colors"
+        >
+          <DeleteIcon />
+          <span className="font-['Poppins'] font-medium text-[14px] text-[#cc3636]">Delete</span>
+        </button>
+        <button
+          onClick={onEdit}
+          className="flex items-center gap-1.5 h-[42px] px-6 border border-[#003566] rounded-[20px] hover:bg-[#e8f0fa] transition-colors"
+        >
+          <EditIcon />
+          <span className="font-['Poppins'] font-medium text-[14px] text-[#003566]">Edit</span>
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ────────────────────────────────────────────────────────────────────────────────
+// Create Session — Date & Time Modal  (Figma: "Book a Session")
+// ────────────────────────────────────────────────────────────────────────────────
+
+const MONTH_NAMES = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+const DAY_LABELS  = ['SU','MO','TU','WE','TH','FR','SA'];
+
+const TIME_SLOTS = [
+  '09:00 AM','09:30 AM','10:00 AM','10:30 AM',
+  '11:00 AM','11:30 AM','12:00 PM','12:30 PM',
+  '01:00 PM','01:30 PM','02:00 PM','02:30 PM',
+  '03:00 PM','03:30 PM','04:00 PM','04:30 PM',
+  '05:00 PM','05:30 PM','06:00 PM','06:30 PM',
+];
+
+interface SelectedSlot { id: string; date: Date; time: string; }
+
+interface CreateSessionDateTimeModalProps {
+  title?: string;
+  initialSlots?: SelectedSlot[];
+  onNext: (slots: SelectedSlot[]) => void;
+  onClose: () => void;
+}
+
+function CreateSessionDateTimeModal({ title = 'Create Session', initialSlots = [], onNext, onClose }: CreateSessionDateTimeModalProps) {
+  const today = new Date();
+  const [viewYear,  setViewYear]  = useState(today.getFullYear());
+  const [viewMonth, setViewMonth] = useState(today.getMonth());
+  const [selDate,   setSelDate]   = useState<Date | null>(null);
+  const [selTime,   setSelTime]   = useState<string | null>(null);
+  const [slots,     setSlots]     = useState<SelectedSlot[]>(initialSlots);
+  const MAX_SLOTS = 3;
+  const timeScrollRef = useRef<HTMLDivElement>(null);
+
+  // Build calendar grid for current viewMonth/viewYear
+  const firstDay  = new Date(viewYear, viewMonth, 1).getDay();
+  const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
+  const prevDays  = new Date(viewYear, viewMonth, 0).getDate();
+
+  // flat 42-cell grid
+  const cells: { day: number; month: 'prev'|'cur'|'next' }[] = [];
+  for (let i = firstDay - 1; i >= 0; i--) cells.push({ day: prevDays - i, month: 'prev' });
+  for (let d = 1; d <= daysInMonth; d++)  cells.push({ day: d,             month: 'cur'  });
+  const remaining = 42 - cells.length;
+  for (let d = 1; d <= remaining; d++)    cells.push({ day: d,             month: 'next' });
+
+  const prevMonth = () => {
+    if (viewMonth === 0) { setViewMonth(11); setViewYear(y => y - 1); }
+    else setViewMonth(m => m - 1);
+  };
+  const nextMonth = () => {
+    if (viewMonth === 11) { setViewMonth(0); setViewYear(y => y + 1); }
+    else setViewMonth(m => m + 1);
+  };
+
+  const isSameDay = (a: Date, b: Date) =>
+    a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
+
+  const isToday = (d: Date) => isSameDay(d, today);
+
+  const isSelected = (d: Date) => selDate ? isSameDay(d, selDate) : false;
+
+  const addCurrentSlot = () => {
+    if (!selDate || !selTime) return;
+    if (slots.length >= MAX_SLOTS) return;
+    // prevent duplicate
+    const dup = slots.find(s => isSameDay(s.date, selDate) && s.time === selTime);
+    if (dup) return;
+    setSlots(prev => [...prev, { id: Date.now().toString(), date: new Date(selDate), time: selTime }]);
+  };
+
+  const removeSlot = (id: string) => setSlots(prev => prev.filter(s => s.id !== id));
+
+  const formatSlotDate = (d: Date) =>
+    `${MONTH_NAMES[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()}`;
+
+  const handleNext = () => {
+    if (slots.length === 0) return;
+    onNext(slots);
+  };
+
+  // derive display label for right panel
+  const selDayLabel = selDate
+    ? `${['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'][selDate.getDay()]}, ${MONTH_NAMES[selDate.getMonth()]} ${selDate.getDate()}`
+    : 'Select a date';
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+      <div className="bg-white rounded-[20px] shadow-[0px_4px_50px_5px_rgba(0,0,0,0.1)] w-full max-w-[700px] p-8 flex flex-col gap-6">
+
+        {/* ── Header ─────────────────────────────────────────── */}
+        <div className="flex items-start justify-between w-full">
+          <div className="flex flex-col gap-1">
+            <p className="font-['Poppins'] font-semibold text-[24px] text-black">{title}</p>
+            <p className="font-['Poppins'] font-semibold text-[16px] text-black">Select Date and Time Slots</p>
+          </div>
+          <button onClick={onClose} className="hover:opacity-60 transition-opacity">
+            <svg fill="none" viewBox="0 0 25 25" className="w-[30px] h-[30px]">
+              <circle cx="12.469" cy="12.469" r="11.719" stroke="black" strokeWidth="1.5"/>
+              <path d="M16.688 8.25L8.25 16.688M8.25 8.25L16.688 16.688" stroke="black" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5"/>
+            </svg>
+          </button>
+        </div>
+
+        {/* ── Calendar + Time Picker ──────────────────────────── */}
+        <div className="flex gap-6 w-full">
+
+          {/* Calendar */}
+          <div className="bg-white rounded-[5px] shadow-[0px_4px_50px_5px_rgba(0,0,0,0.1)] pb-8 pt-4 px-6 flex flex-col gap-[23px] shrink-0 w-[305px]">
+            {/* Month nav */}
+            <div className="flex items-center justify-between w-full">
+              <button onClick={prevMonth} className="hover:opacity-60 transition-opacity">
+                <svg fill="none" viewBox="0 0 24 24" className="w-6 h-6">
+                  <path d="M17 14L12 9L7 14" stroke="black" strokeLinecap="round" strokeLinejoin="round" strokeOpacity="0.6" strokeWidth="2" transform="rotate(-90 12 12)"/>
+                </svg>
+              </button>
+              <p className="font-['Poppins'] font-medium text-[16px] text-[rgba(0,0,0,0.8)]">
+                {MONTH_NAMES[viewMonth]} {viewYear}
+              </p>
+              <button onClick={nextMonth} className="hover:opacity-60 transition-opacity">
+                <svg fill="none" viewBox="0 0 24 24" className="w-6 h-6">
+                  <path d="M17 14L12 9L7 14" stroke="black" strokeLinecap="round" strokeLinejoin="round" strokeOpacity="0.6" strokeWidth="2" transform="rotate(90 12 12)"/>
+                </svg>
+              </button>
+            </div>
+
+            {/* Day labels */}
+            <div className="grid grid-cols-7 gap-y-4">
+              {DAY_LABELS.map(d => (
+                <p key={d} className="font-['Poppins'] font-semibold text-[12px] text-[rgba(0,0,0,0.6)] text-center">{d}</p>
+              ))}
+
+              {/* Calendar cells */}
+              {cells.map((cell, i) => {
+                const isCurrentMonth = cell.month === 'cur';
+                const cellDate = new Date(
+                  cell.month === 'prev' ? (viewMonth === 0 ? viewYear - 1 : viewYear) : cell.month === 'next' ? (viewMonth === 11 ? viewYear + 1 : viewYear) : viewYear,
+                  cell.month === 'prev' ? (viewMonth === 0 ? 11 : viewMonth - 1) : cell.month === 'next' ? (viewMonth === 11 ? 0 : viewMonth + 1) : viewMonth,
+                  cell.day
+                );
+                const selected = isSelected(cellDate);
+                const todayCell = isToday(cellDate);
+                return (
+                  <button
+                    key={i}
+                    onClick={() => isCurrentMonth && setSelDate(cellDate)}
+                    disabled={!isCurrentMonth}
+                    className="flex items-center justify-center"
+                  >
+                    <span className={`w-[26px] h-[26px] flex items-center justify-center rounded-full font-['Poppins'] font-medium text-[12px] transition-colors
+                      ${selected ? 'bg-[#003566] text-white' : ''}
+                      ${!selected && todayCell && isCurrentMonth ? 'border border-[#003566] text-[#003566]' : ''}
+                      ${!selected && !todayCell && isCurrentMonth ? 'text-black hover:bg-[#c9e5ff]' : ''}
+                      ${!isCurrentMonth ? 'text-[rgba(0,0,0,0.3)]' : ''}
+                    `}>
+                      {cell.day}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Time slot picker */}
+          <div className="flex-1 flex flex-col gap-4">
+            <div>
+              <p className="font-['Poppins'] font-medium text-[14px] text-[rgba(0,0,0,0.8)]">{selDayLabel}</p>
+              {selDate && <p className="font-['Poppins'] font-medium text-[12px] text-[rgba(0,0,0,0.6)]">Select from available time slots.</p>}
+            </div>
+
+            {/* Scrollable time list */}
+            <div ref={timeScrollRef} className="flex flex-col gap-3 overflow-y-auto max-h-[270px] pr-2 relative"
+              style={{ scrollbarWidth: 'thin', scrollbarColor: '#003566 rgba(0,0,0,0.2)' }}>
+              {TIME_SLOTS.map(t => {
+                const active = selTime === t;
+                return (
+                  <button
+                    key={t}
+                    onClick={() => setSelTime(t)}
+                    disabled={!selDate}
+                    className={`w-full rounded-[5px] px-3 py-[5px] text-left transition-colors border font-['Poppins'] text-[12px]
+                      ${active
+                        ? 'bg-[#dff0ff] border-[#003566] font-semibold text-[#003566]'
+                        : 'border-[rgba(0,0,0,0.6)] text-[rgba(0,0,0,0.8)] hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed'
+                      }`}
+                  >
+                    {t}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+
+        {/* ── Selected Slots ──────────────────────────────────── */}
+        <div className="flex flex-col gap-[10px] w-full">
+          <p className="font-['Poppins'] font-medium text-[14px] text-[rgba(0,0,0,0.8)]">
+            Selected Slots ({slots.length}/{MAX_SLOTS})
+          </p>
+
+          {/* Existing slot cards */}
+          {slots.map(slot => (
+            <div key={slot.id} className="bg-white rounded-[5px] shadow-[0px_4px_50px_0px_rgba(0,0,0,0.1)] flex items-center justify-between p-[10px] w-full">
+              <div className="flex flex-col gap-0.5">
+                <p className="font-['Poppins'] font-medium text-[12px] text-[rgba(0,0,0,0.8)]">{formatSlotDate(slot.date)}</p>
+                <p className="font-['Poppins'] font-medium text-[12px] text-[rgba(0,0,0,0.6)]">{slot.time}</p>
+              </div>
+              <button onClick={() => removeSlot(slot.id)} className="hover:opacity-60 transition-opacity">
+                <svg fill="none" viewBox="0 0 24 24" className="w-6 h-6">
+                  <path d="M8 8L12 12M12 12L16 16M12 12L16 8M12 12L8 16" stroke="black" strokeLinecap="round" strokeOpacity="0.6" strokeWidth="2"/>
+                </svg>
+              </button>
+            </div>
+          ))}
+
+          {/* Add slot button */}
+          {slots.length < MAX_SLOTS && (
+            <button
+              onClick={addCurrentSlot}
+              disabled={!selDate || !selTime}
+              className="bg-white rounded-[5px] border border-dashed border-[rgba(0,0,0,0.2)] shadow-[0px_4px_50px_0px_rgba(0,0,0,0.1)] flex items-center justify-center p-[10px] w-full hover:bg-gray-50 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              <svg fill="none" viewBox="0 0 24 24" className="w-6 h-6">
+                <path d="M18 12.998H13V17.998C13 18.263 12.895 18.518 12.707 18.705C12.52 18.893 12.265 18.998 12 18.998C11.735 18.998 11.48 18.893 11.293 18.705C11.105 18.518 11 18.263 11 17.998V12.998H6C5.735 12.998 5.48 12.893 5.293 12.705C5.105 12.518 5 12.263 5 11.998C5 11.733 5.105 11.478 5.293 11.291C5.48 11.103 5.735 10.998 6 10.998H11V5.998C11 5.733 11.105 5.478 11.293 5.291C11.48 5.103 11.735 4.998 12 4.998C12.265 4.998 12.52 5.103 12.707 5.291C12.895 5.478 13 5.733 13 5.998V10.998H18C18.265 10.998 18.52 11.103 18.707 11.291C18.895 11.478 19 11.733 19 11.998C19 12.263 18.895 12.518 18.707 12.705C18.52 12.893 18.265 12.998 18 12.998Z" fill="black" fillOpacity="0.6"/>
+              </svg>
+            </button>
+          )}
+        </div>
+
+        {/* ── Footer Buttons ──────────────────────────────────── */}
+        <div className="flex items-center justify-end gap-4 w-full">
+          <button
+            onClick={onClose}
+            className="h-[42px] px-6 border border-[#cc3636] rounded-[20px] font-['Poppins'] font-medium text-[14px] text-[#cc3636] hover:bg-[#fde8e8] transition-colors"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleNext}
+            disabled={slots.length === 0}
+            className="h-[42px] px-8 bg-[#003566] rounded-[20px] font-['Poppins'] font-medium text-[14px] text-white hover:bg-[#00284d] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          >
+            Next
+          </button>
+        </div>
+
+      </div>
+    </div>
+  );
+}
+
+// ────────────────────────────────────────────────────────────────────────────────
+// Create Session — Step 2: Fees, Payment Mode, Session Hours
+// ────────────────────────────────────────────────────────────────────────────────
+
+interface CreateSessionDetailsModalProps {
+  title?: string;
+  slots: SelectedSlot[];
+  initialFee?: string;
+  initialPaymentMode?: 'upi' | 'bank' | null;
+  initialHours?: number | null;
+  onBack: () => void;
+  onClose: () => void;
+  onPost: (fee: string, paymentMode: string, hours: number) => void;
+}
+
+function CreateSessionDetailsModal({ title = 'Create Session', slots, initialFee = '', initialPaymentMode = null, initialHours = null, onBack, onClose, onPost }: CreateSessionDetailsModalProps) {
+  const [fee, setFee] = useState(initialFee);
+  const [paymentMode, setPaymentMode] = useState<'upi' | 'bank' | null>(initialPaymentMode ?? null);
+  const [sessionHours, setSessionHours] = useState<number | null>(initialHours ?? null);
+  const [error, setError] = useState('');
+
+  const paymentOptions = [
+    { id: 'upi',  label: 'UPI' },
+    { id: 'bank', label: 'Bank Account' },
+  ];
+
+  const handlePost = () => {
+    setError('');
+    if (!fee.trim() || isNaN(Number(fee)) || Number(fee) <= 0) {
+      setError('Please enter a valid fee per hour.');
+      return;
+    }
+    if (!paymentMode) {
+      setError('Please select a payment mode.');
+      return;
+    }
+    if (!sessionHours) {
+      setError('Please select the max session duration.');
+      return;
+    }
+    onPost(fee, paymentMode, sessionHours);
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+      <div className="bg-white rounded-[20px] shadow-[0px_4px_50px_5px_rgba(0,0,0,0.1)] w-full max-w-[642px] p-8 flex flex-col gap-4">
+
+        {/* Header */}
+        <div className="flex flex-col gap-[5px] w-full">
+          <div className="flex items-center justify-between w-full">
+            <button onClick={onBack} className="font-['Poppins'] text-[16px] text-black hover:text-[#003566] transition-colors">
+              &lt;Back
+            </button>
+            <button onClick={onClose} className="hover:opacity-60 transition-opacity">
+              <svg fill="none" viewBox="0 0 25 25" className="w-[30px] h-[30px]">
+                <path d="M16.6875 8.25L8.25 16.6875M8.25 8.25L16.6875 16.6875"
+                  stroke="black" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5"/>
+                <path d="M12.4688 24.1875C18.9408 24.1875 24.1875 18.9408 24.1875 12.4688C24.1875 5.99666 18.9408 0.75 12.4688 0.75C5.99666 0.75 0.75 5.99666 0.75 12.4688C0.75 18.9408 5.99666 24.1875 12.4688 24.1875Z"
+                  stroke="black" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5"/>
+              </svg>
+            </button>
+          </div>
+          <p className="font-['Poppins'] font-semibold text-[24px] text-black">{title}</p>
+        </div>
+
+        {/* Fees per hour */}
+        <div className="flex flex-col gap-[10px] w-full">
+          <label className="font-['Poppins'] text-[16px] text-black">Fees per hour</label>
+          <div className="h-[39px] rounded-[10px] w-full border border-[rgba(0,0,0,0.4)] flex items-center gap-[10px] px-[10px]">
+            <svg fill="none" viewBox="0 0 24 24" className="w-6 h-6 shrink-0">
+              <path d="M17.12 9.88C16.5577 9.31774 15.7952 9.00187 15 9.00187C14.2048 9.00187 13.4423 9.31774 12.88 9.88C12.3177 10.4423 12.0019 11.2048 12.0019 12C12.0019 12.7952 12.3177 13.5577 12.88 14.12C13.1584 14.3984 13.4889 14.6192 13.8527 14.7699C14.2164 14.9206 14.6063 14.9981 15 14.9981C15.3937 14.9981 15.7836 14.9206 16.1473 14.7699C16.5111 14.6192 16.8416 14.3984 17.12 14.12C17.3984 13.8416 17.6192 13.5111 17.7699 13.1473C17.9206 12.7836 17.9981 12.3937 17.9981 12C17.9981 11.6063 17.9206 11.2164 17.7699 10.8527C17.6192 10.4889 17.3984 10.1584 17.12 9.88ZM7 6V18H23V6H7ZM21 14C20.47 14 19.96 14.21 19.59 14.59C19.21 14.96 19 15.47 19 16H11C11 15.47 10.79 14.96 10.41 14.59C10.04 14.21 9.53 14 9 14V10C9.53 10 10.04 9.79 10.41 9.41C10.79 9.04 11 8.53 11 8H19C19 8.53 19.21 9.04 19.59 9.41C19.96 9.79 20.47 10 21 10V14ZM5 8H3C2.45 8 2 7.55 2 7C2 6.45 2.45 6 3 6H5V8ZM5 13H2C1.45 13 1 12.55 1 12C1 11.45 1.45 11 2 11H5V13ZM5 18H1C0.448 18 0 17.55 0 17C0 16.45 0.448 16 1 16H5V18Z" fill="black"/>
+            </svg>
+            <input
+              type="number" min="0"
+              value={fee}
+              onChange={e => setFee(e.target.value)}
+              placeholder="Enter fees per hour"
+              className="flex-1 bg-transparent font-['Poppins'] text-[14px] text-[rgba(0,0,0,0.7)] placeholder:text-[rgba(0,0,0,0.4)] outline-none"
+            />
+          </div>
+        </div>
+
+        {/* Payment Mode */}
+        <div className="flex flex-col gap-[10px] w-full">
+          <div>
+            <p className="font-['Poppins'] text-[16px] text-black">Select your preferred payment mode</p>
+            <p className="font-['Poppins'] text-[12px] text-[rgba(0,0,0,0.8)]">Choose how you'd like to receive your payment.</p>
+          </div>
+          <div className="flex gap-4 w-full">
+            {paymentOptions.map(opt => {
+              const active = paymentMode === opt.id;
+              return (
+                <button
+                  key={opt.id}
+                  onClick={() => setPaymentMode(opt.id as 'upi' | 'bank')}
+                  className={`flex-1 flex items-center gap-2 px-4 py-[10px] rounded-[5px] border border-[rgba(0,0,0,0.6)] transition-colors ${active ? 'bg-white' : 'bg-white hover:bg-gray-50'}`}
+                >
+                  <svg viewBox="0 0 20 20" className="w-5 h-5 shrink-0">
+                    <circle cx="10" cy="10" r="10" fill={active ? '#003566' : '#D9D9D9'} />
+                  </svg>
+                  <span className={`font-['Poppins'] text-[16px] ${active ? 'text-[rgba(0,0,0,0.7)]' : 'text-[rgba(0,0,0,0.6)]'}`}>{opt.label}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Max session hours */}
+        <div className="flex flex-col gap-[10px] w-full">
+          <label className="font-['Poppins'] text-[16px] text-black">Max. no. of session time(in hrs)</label>
+          <div className="flex gap-4">
+            {[1, 2, 3].map(h => {
+              const active = sessionHours === h;
+              return (
+                <button
+                  key={h}
+                  onClick={() => setSessionHours(h)}
+                  className={`flex items-center gap-2 px-4 py-[10px] rounded-[5px] border border-[rgba(0,0,0,0.6)] transition-colors ${active ? 'bg-[#dff0ff]' : 'bg-white hover:bg-gray-50'}`}
+                >
+                  <svg viewBox="0 0 20 20" className="w-5 h-5 shrink-0">
+                    <circle cx="10" cy="10" r="10" fill={active ? '#003566' : '#D9D9D9'} />
+                  </svg>
+                  <span className={`font-['Poppins'] text-[16px] ${active ? 'text-black' : 'text-[rgba(0,0,0,0.6)]'}`}>{h}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {error && <p className="font-['Poppins'] text-[13px] text-[#cc3636] -mt-2">{error}</p>}
+
+        {/* Footer */}
+        <div className="flex items-center justify-end gap-4 w-full pt-2">
+          <button onClick={onClose} className="h-[42px] px-6 border border-[#cc3636] rounded-[20px] font-['Poppins'] font-medium text-[14px] text-[#cc3636] hover:bg-[#fde8e8] transition-colors">
+            Cancel
+          </button>
+          <button onClick={handlePost} className="h-[42px] px-6 bg-[#003566] rounded-[20px] font-['Poppins'] font-medium text-[14px] text-white hover:bg-[#00284d] transition-colors">
+            Post Session
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ────────────────────────────────────────────────────────────────────────────────
+// Success Toast — "Session Successfully Posted"
+// ────────────────────────────────────────────────────────────────────────────────
+
+function SuccessToast({ onClose }: { onClose: () => void }) {
+  useEffect(() => {
+    const t = setTimeout(onClose, 4000);
+    return () => clearTimeout(t);
+  }, [onClose]);
+
+  return (
+    <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-[60] bg-white rounded-[20px] shadow-[0px_4px_50px_5px_rgba(0,0,0,0.1)] flex items-center gap-6 px-8 py-5" style={{ minWidth: 380 }}>
+      <svg viewBox="0 0 55 52.6395" className="w-[55px] h-[52px] shrink-0">
+        <path d="M55 26.3197C55 29.1171 51.4972 31.3267 50.6777 33.8509C49.8282 36.4671 51.3338 40.3079 49.749 42.4855C48.1484 44.6848 44.0196 44.4321 41.8202 46.0328C39.6426 47.6175 38.616 51.6311 35.9999 52.4805C33.4757 53.3001 30.2974 50.6833 27.5 50.6833C24.7026 50.6833 21.5244 53.3001 19.0002 52.4805C16.384 51.6311 15.3574 47.6175 13.1798 46.0328C10.9805 44.4321 6.85163 44.6849 5.25101 42.4856C3.66623 40.308 5.17175 36.4671 4.32237 33.851C3.50278 31.3268 0 29.1171 0 26.3197C0 23.5223 3.50278 21.3127 4.32237 18.7885C5.17182 16.1723 3.66629 12.3315 5.25108 10.1539C6.8517 7.95456 10.9805 8.20727 13.1799 6.60672C15.3574 5.02193 16.3841 1.0084 19.0002 0.15894C21.5244 -0.660647 24.7026 1.9562 27.5 1.9562C30.2974 1.9562 33.4757 -0.660647 35.9999 0.15894C38.616 1.0084 39.6427 5.02193 41.8203 6.60672C44.0196 8.20734 48.1484 7.95457 49.7491 10.154C51.3338 12.3315 49.8283 16.1724 50.6777 18.7885C51.4973 21.3126 55 23.5223 55 26.3197Z" fill="#70AF53"/>
+        <path d="M23.3919 39.2567L13.569 30.3301L17.137 26.4037L22.8179 31.5662L36.1697 15.1951L40.2812 18.5484L23.3919 39.2567Z" fill="white"/>
+      </svg>
+      <div className="flex items-center justify-between flex-1 gap-6">
+        <p className="font-['Poppins'] font-medium text-[16px] text-black">Session Successfully Posted</p>
+        <button onClick={onClose} className="hover:opacity-60 transition-opacity shrink-0">
+          <svg fill="none" viewBox="0 0 26 26" className="w-[30px] h-[30px]">
+            <path d="M16.9375 8.5L8.5 16.9375M8.5 8.5L16.9375 16.9375" stroke="#FF5E5E" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"/>
+            <path d="M12.7188 24.4375C19.1908 24.4375 24.4375 19.1908 24.4375 12.7188C24.4375 6.24666 19.1908 1 12.7188 1C6.24666 1 1 6.24666 1 12.7188C1 19.1908 6.24666 24.4375 12.7188 24.4375Z" stroke="#FF5E5E" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ────────────────────────────────────────────────────────────────────────────────
+// Create Session View
+// ────────────────────────────────────────────────────────────────────────────────
+
+const DEFAULT_SESSIONS: SessionPost[] = [
+  {
+    id: '1',
+    mentorName: 'Ravi Kumar',
+    rate: '₹500/hr',
+    timeSlots: [
+      { id: 'a', datetime: '18-10-25 | 7:00 PM' },
+      { id: 'b', datetime: '22-10-25 | 6:00 PM' },
+      { id: 'c', datetime: '25-10-25 | 8:00 PM' },
+    ],
+    hours: [1, 2, 3],
+  },
+];
+
+// Parse a stored "dd-mm-yy | H:MM AM/PM" string into a SelectedSlot
+function parseExistingSlot(slot: TimeSlot): SelectedSlot {
+  try {
+    const [datePart, timePart] = slot.datetime.split(' | ');
+    const [d, m, y] = datePart.split('-').map(Number);
+    const fullYear = y < 100 ? 2000 + y : y;
+    return { id: slot.id, date: new Date(fullYear, m - 1, d), time: timePart };
+  } catch {
+    return { id: slot.id, date: new Date(), time: '09:00 AM' };
+  }
+}
+
+function CreateSessionView() {
+  const [sessions, setSessions] = useState<SessionPost[]>(DEFAULT_SESSIONS);
+
+  // ── Create flow ──────────────────────────────────────
+  const [showCreateStep1, setShowCreateStep1] = useState(false);
+  const [createPendingSlots, setCreatePendingSlots] = useState<SelectedSlot[]>([]);
+  const [showCreateStep2, setShowCreateStep2] = useState(false);
+
+  // ── Edit flow ────────────────────────────────────────
+  const [sessionBeingEdited, setSessionBeingEdited] = useState<SessionPost | null>(null);
+  const [showEditStep1, setShowEditStep1] = useState(false);
+  const [editPendingSlots, setEditPendingSlots] = useState<SelectedSlot[]>([]);
+  const [showEditStep2, setShowEditStep2] = useState(false);
+
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [showSuccess, setShowSuccess] = useState(false);
+
+  // ── Create handlers ──────────────────────────────────
+  const handleCreateNext = (slots: SelectedSlot[]) => {
+    setCreatePendingSlots(slots);
+    setShowCreateStep1(false);
+    setShowCreateStep2(true);
+  };
+  const handleCreateBack = () => { setShowCreateStep2(false); setShowCreateStep1(true); };
+  const handleCreate = (fee: string, _pm: string, hours: number) => {
+    const timeSlots: TimeSlot[] = createPendingSlots.map(s => ({
+      id: s.id,
+      datetime: `${s.date.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: '2-digit' })} | ${s.time}`,
+    }));
+    setSessions(prev => [...prev, { id: Date.now().toString(), mentorName: 'Jack Sparrow', rate: `₹${fee}/hr`, timeSlots, hours: [hours] }]);
+    setCreatePendingSlots([]);
+    setShowCreateStep2(false);
+    setShowSuccess(true);
+  };
+  const closeCreate = () => { setShowCreateStep1(false); setShowCreateStep2(false); setCreatePendingSlots([]); };
+
+  // ── Edit handlers ────────────────────────────────────
+  const openEdit = (session: SessionPost) => {
+    setSessionBeingEdited(session);
+    setEditPendingSlots(session.timeSlots.map(parseExistingSlot));
+    setShowEditStep1(true);
+  };
+  const handleEditNext = (slots: SelectedSlot[]) => {
+    setEditPendingSlots(slots);
+    setShowEditStep1(false);
+    setShowEditStep2(true);
+  };
+  const handleEditBack = () => { setShowEditStep2(false); setShowEditStep1(true); };
+  const handleEditPost = (fee: string, _pm: string, hours: number) => {
+    if (!sessionBeingEdited) return;
+    const timeSlots: TimeSlot[] = editPendingSlots.map(s => ({
+      id: s.id,
+      datetime: `${s.date.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: '2-digit' })} | ${s.time}`,
+    }));
+    setSessions(prev => prev.map(p => p.id === sessionBeingEdited.id
+      ? { ...p, rate: `₹${fee}/hr`, timeSlots, hours: [hours] }
+      : p
+    ));
+    setSessionBeingEdited(null);
+    setEditPendingSlots([]);
+    setShowEditStep2(false);
+    setShowSuccess(true);
+  };
+  const closeEdit = () => { setShowEditStep1(false); setShowEditStep2(false); setSessionBeingEdited(null); setEditPendingSlots([]); };
+
+  const handleDelete = (id: string) => {
+    setSessions(prev => prev.filter(s => s.id !== id));
+    setDeletingId(null);
+  };
+
+  // Pre-fill values for edit Step 2
+  const editInitialFee   = sessionBeingEdited?.rate.replace('₹','').replace('/hr','') ?? '';
+  const editInitialHours = sessionBeingEdited?.hours[0] ?? null;
+
+  return (
+    <div className="flex flex-col gap-6">
+      {/* Page header */}
+      <div className="flex items-start justify-between">
+        <div>
+          <p className="font-['Poppins'] font-medium text-[40px] text-black leading-tight">Create Session</p>
+          <p className="font-['Poppins'] text-[14px] text-[rgba(0,0,0,0.6)]">Define your session details and get ready to teach.</p>
+        </div>
+        <button
+          onClick={() => setShowCreateStep1(true)}
+          className="w-[49px] h-[49px] bg-[#003566] rounded-[12px] flex items-center justify-center hover:bg-[#00284d] transition-colors shrink-0"
+        >
+          <svg fill="none" viewBox="0 0 49 49" className="w-full h-full">
+            <rect fill="#003566" height="49" rx="12" width="49" />
+            <path d={svgPaths.p36014500} fill="white" />
+          </svg>
+        </button>
+      </div>
+
+      {/* Session list */}
+      {sessions.length > 0 ? (
+        <div className="flex flex-col gap-4">
+          <p className="font-['Poppins'] text-[16px] text-black">Active Session Post{sessions.length > 1 ? 's' : ''}:</p>
+          {sessions.map(session => (
+            <SessionCard
+              key={session.id}
+              session={session}
+              onDelete={() => setDeletingId(session.id)}
+              onEdit={() => openEdit(session)}
+            />
+          ))}
+        </div>
+      ) : (
+        <div className="flex flex-col items-center justify-center py-20 gap-4 text-center">
+          <div className="w-[70px] h-[70px] bg-[#c9e5ff] rounded-full flex items-center justify-center">
+            <CreateSessionIcon />
+          </div>
+          <p className="font-['Poppins'] font-medium text-[18px] text-[rgba(0,0,0,0.6)]">No active sessions yet</p>
+          <p className="font-['Poppins'] text-[14px] text-[rgba(0,0,0,0.4)] max-w-[300px]">Click the + button to create your first session post and start teaching.</p>
+        </div>
+      )}
+
+      {/* ── CREATE Step 1 ── */}
+      {showCreateStep1 && (
+        <CreateSessionDateTimeModal
+          title="Create Session"
+          onNext={handleCreateNext}
+          onClose={closeCreate}
+        />
+      )}
+      {/* ── CREATE Step 2 ── */}
+      {showCreateStep2 && (
+        <CreateSessionDetailsModal
+          title="Create Session"
+          slots={createPendingSlots}
+          onBack={handleCreateBack}
+          onClose={closeCreate}
+          onPost={handleCreate}
+        />
+      )}
+
+      {/* ── EDIT Step 1 ── */}
+      {showEditStep1 && (
+        <CreateSessionDateTimeModal
+          title="Edit Session"
+          initialSlots={editPendingSlots}
+          onNext={handleEditNext}
+          onClose={closeEdit}
+        />
+      )}
+      {/* ── EDIT Step 2 ── */}
+      {showEditStep2 && (
+        <CreateSessionDetailsModal
+          title="Edit Session"
+          slots={editPendingSlots}
+          initialFee={editInitialFee}
+          initialHours={editInitialHours}
+          onBack={handleEditBack}
+          onClose={closeEdit}
+          onPost={handleEditPost}
+        />
+      )}
+
+      {/* ── Delete modal ── */}
+      {deletingId && (
+        <DeleteModal onConfirm={() => handleDelete(deletingId)} onCancel={() => setDeletingId(null)} />
+      )}
+
+      {/* ── Success toast ── */}
+      {showSuccess && <SuccessToast onClose={() => setShowSuccess(false)} />}
+    </div>
+  );
+}
+
+// ────────────────────────────────────────────────────────────────────────────────
+// Session Requests View
+// ────────────────────────────────────────────────────────────────────────────────
+
+type RequestStatus = 'pending' | 'accepted' | 'postponed' | 'completed';
+type FilterTab    = 'requests' | 'upcoming' | 'postponed' | 'completed';
+
+interface SessionRequest {
+  id: string;
+  student: string;
+  datetime: string;
+  hours: number;
+  status: RequestStatus;
+  canJoin?: boolean;
+  newDatetime?: string;   // postponed: rescheduled time
+  oldDatetime?: string;   // postponed: original time
+}
+
+const INITIAL_REQUESTS: SessionRequest[] = [
+  { id: '1', student: 'Anjali Singh', datetime: '28/10/25  |  9:00PM', hours: 2, status: 'pending',  canJoin: false },
+  { id: '2', student: 'Rahul Verma',  datetime: '27/10/25  |  5:00PM', hours: 1, status: 'pending',  canJoin: false },
+  { id: '3', student: 'Krishna',      datetime: '25/10/25  |  4:00PM', hours: 3, status: 'pending',  canJoin: false },
+  { id: '4', student: 'Tharun',       datetime: '24/10/25  |  3:00PM', hours: 2, status: 'pending',  canJoin: false },
+  // Pre-seeded Upcoming demo rows (gray = not yet time, blue = ready to join)
+  { id: '5', student: 'Anjali Singh', datetime: '28/10/25  |  9:00PM', hours: 2, status: 'accepted',  canJoin: false },
+  { id: '6', student: 'Rahul Verma',  datetime: '27/10/25  |  5:00PM', hours: 1, status: 'accepted',  canJoin: true  },
+  // Pre-seeded Postponed demo rows
+  { id: '7', student: 'Anjali Singh', datetime: '28/10/25  |  9:00PM', hours: 2, status: 'postponed', newDatetime: '30/10/25  |  9:00PM', oldDatetime: '28/10/25  |  9:00PM' },
+  { id: '8', student: 'Rahul Verma',  datetime: '27/10/25  |  5:00PM', hours: 1, status: 'postponed', newDatetime: '29/10/25  |  5:00PM', oldDatetime: '27/10/25  |  5:00PM' },
+  // Pre-seeded Completed demo rows
+  { id: '9',  student: 'Anjali Singh', datetime: '28/10/25  |  9:00PM', hours: 2, status: 'completed' },
+  { id: '10', student: 'Rahul Verma',  datetime: '27/10/25  |  5:00PM', hours: 1, status: 'completed' },
+  { id: '11', student: 'Krishna',      datetime: '25/10/25  |  4:00PM', hours: 3, status: 'completed' },
+  { id: '12', student: 'Tharun',       datetime: '24/10/25  |  3:00PM', hours: 2, status: 'completed' },
+];
+
+function TickIcon() {
+  return (
+    <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 16 16">
+      <path d="M2.75 8.75L6.25 12.25L13.25 4.75"
+        stroke="#34B161" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5"/>
+    </svg>
+  );
+}
+
+function ClockIconSR() {
+  return (
+    <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 13.5 13.5">
+      <path d="M0.75 6.75C0.75 7.53793 0.905195 8.31815 1.20672 9.0461C1.50825 9.77405 1.95021 10.4355 2.50736 10.9926C3.06451 11.5498 3.72595 11.9917 4.4539 12.2933C5.18185 12.5948 5.96207 12.75 6.75 12.75C7.53793 12.75 8.31815 12.5948 9.0461 12.2933C9.77405 11.9917 10.4355 11.5498 10.9926 10.9926C11.5498 10.4355 11.9917 9.77405 12.2933 9.0461C12.5948 8.31815 12.75 7.53793 12.75 6.75C12.75 5.1587 12.1179 3.63258 10.9926 2.50736C9.86742 1.38214 8.3413 0.75 6.75 0.75C5.1587 0.75 3.63258 1.38214 2.50736 2.50736C1.38214 3.63258 0.75 5.1587 0.75 6.75Z"
+        stroke="#CC3636" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5"/>
+      <path d="M6.75 3.41667V6.75L8.75 8.75"
+        stroke="#CC3636" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5"/>
+    </svg>
+  );
+}
+
+function CalendarIconSR() {
+  return (
+    <svg className="w-[18px] h-[18px] shrink-0" fill="none" viewBox="0 0 18 18">
+      <path d="M14.25 3H12.75V2.25C12.75 2.05109 12.671 1.86032 12.5303 1.71967C12.3897 1.57902 12.1989 1.5 12 1.5C11.8011 1.5 11.6103 1.57902 11.4697 1.71967C11.329 1.86032 11.25 2.05109 11.25 2.25V3H6.75V2.25C6.75 2.05109 6.67098 1.86032 6.53033 1.71967C6.38968 1.57902 6.19891 1.5 6 1.5C5.80109 1.5 5.61032 1.57902 5.46967 1.71967C5.32902 1.86032 5.25 2.05109 5.25 2.25V3H3.75C3.15326 3 2.58097 3.23705 2.15901 3.65901C1.73705 4.08097 1.5 4.65326 1.5 5.25V14.25C1.5 14.8467 1.73705 15.419 2.15901 15.841C2.58097 16.2629 3.15326 16.5 3.75 16.5H14.25C14.8467 16.5 15.419 16.2629 15.841 15.841C16.2629 15.419 16.5 14.8467 16.5 14.25V5.25C16.5 4.65326 16.2629 4.08097 15.841 3.65901C15.419 3.23705 14.8467 3 14.25 3ZM15 14.25C15 14.4489 14.921 14.6397 14.7803 14.7803C14.6397 14.921 14.4489 15 14.25 15H3.75C3.55109 15 3.36032 14.921 3.21967 14.7803C3.07902 14.6397 3 14.4489 3 14.25V9H15V14.25ZM15 7.5H3V5.25C3 5.05109 3.07902 4.86032 3.21967 4.71967C3.36032 4.57902 3.55109 4.5 3.75 4.5H5.25V5.25C5.25 5.44891 5.32902 5.63968 5.46967 5.78033C5.61032 5.92098 5.80109 6 6 6C6.19891 6 6.38968 5.92098 6.53033 5.78033C6.67098 5.63968 6.75 5.44891 6.75 5.25V4.5H11.25V5.25C11.25 5.44891 11.329 5.63968 11.4697 5.78033C11.6103 5.92098 11.8011 6 12 6C12.1989 6 12.3897 5.92098 12.5303 5.78033C12.671 5.63968 12.75 5.44891 12.75 5.25V4.5H14.25C14.4489 4.5 14.6397 4.57902 14.7803 4.71967C14.921 4.86032 15 5.05109 15 5.25V7.5Z"
+        fill="black"/>
+    </svg>
+  );
+}
+
+// Arrow-right icon  (basil:arrow-right-outline — path from svg-2vqsdn872w)
+function ArrowRightIcon({ color = 'black', opacity = 0.6 }: { color?: string; opacity?: number }) {
+  return (
+    <svg className="w-[22px] h-[22px] shrink-0" fill="none" viewBox="0 0 22 22">
+      <path
+        d="M12.3475 7.81917C12.2261 7.68884 12.1599 7.51646 12.1631 7.33836C12.1662 7.16025 12.2384 6.99031 12.3643 6.86435C12.4903 6.73839 12.6602 6.66623 12.8384 6.66309C13.0165 6.65995 13.1888 6.72606 13.3192 6.8475L16.9858 10.5142C17.1146 10.6431 17.1869 10.8178 17.1869 11C17.1869 11.1822 17.1146 11.3569 16.9858 11.4858L13.3192 15.1525C13.2562 15.22 13.1803 15.2742 13.096 15.3118C13.0117 15.3494 12.9206 15.3696 12.8283 15.3712C12.736 15.3728 12.6443 15.3559 12.5587 15.3213C12.4731 15.2867 12.3953 15.2352 12.33 15.17C12.2648 15.1047 12.2133 15.0269 12.1787 14.9413C12.1441 14.8557 12.1272 14.764 12.1288 14.6717C12.1304 14.5794 12.1506 14.4883 12.1882 14.404C12.2258 14.3197 12.28 14.2438 12.3475 14.1808L14.8408 11.6875H5.95833C5.776 11.6875 5.60113 11.6151 5.4722 11.4861C5.34327 11.3572 5.27083 11.1823 5.27083 11C5.27083 10.8177 5.34327 10.6428 5.4722 10.5139C5.60113 10.3849 5.776 10.3125 5.95833 10.3125H14.8408L12.3475 7.81917Z"
+        fill={color}
+        fillOpacity={opacity}
+      />
+    </svg>
+  );
+}
+
+const FILTER_TABS: { id: FilterTab; label: string }[] = [
+  { id: 'requests',  label: 'Requests'  },
+  { id: 'upcoming',  label: 'Upcoming'  },
+  { id: 'postponed', label: 'Postponed' },
+  { id: 'completed', label: 'Completed' },
+];
+
+const TAB_STATUS_MAP: Record<FilterTab, RequestStatus> = {
+  requests:  'pending',
+  upcoming:  'accepted',
+  postponed: 'postponed',
+  completed: 'completed',
+};
+
+function SessionRequestsView() {
+  const [requests, setRequests] = useState<SessionRequest[]>(INITIAL_REQUESTS);
+  const [activeTab, setActiveTab] = useState<FilterTab>('requests');
+
+  const visibleRows = requests.filter(r => r.status === TAB_STATUS_MAP[activeTab]);
+
+  const acceptRequest   = (id: string) => setRequests(p => p.map(r => r.id === id ? { ...r, status: 'accepted'  as RequestStatus } : r));
+  const postponeRequest = (id: string) => setRequests(p => p.map(r => {
+    if (r.id !== id) return r;
+    // Derive a rescheduled datetime: parse day part and add 2, keep time
+    const parts = r.datetime.split('  |  ');
+    let newDt = r.datetime;
+    if (parts.length === 2) {
+      const [datePart, timePart] = parts;
+      const [dd, mm, yy] = datePart.trim().split('/').map(Number);
+      const newDay = String(dd + 2).padStart(2, '0');
+      newDt = `${newDay}/${String(mm).padStart(2, '0')}/${yy}  |  ${timePart}`;
+    }
+    return { ...r, status: 'postponed' as RequestStatus, oldDatetime: r.datetime, newDatetime: newDt };
+  }));
+
+  return (
+    <div className="flex flex-col gap-6">
+
+      {/* Page Header */}
+      <div>
+        <p className="font-['Poppins'] font-medium text-[40px] text-black leading-tight">Session Requests</p>
+        <p className="font-['Poppins'] text-[14px] text-[rgba(0,0,0,0.6)]">View and respond to incoming session requests easily.</p>
+      </div>
+
+      {/* Filter bar */}
+      <div className="bg-white rounded-[20px] shadow-[0px_4px_50px_5px_rgba(0,0,0,0.1)] flex items-center justify-between px-6 py-[10px]">
+        <div className="flex items-center gap-4">
+          <p className="font-['Poppins'] font-medium text-[12px] text-black shrink-0">Filter By</p>
+          <div className="bg-[#f3f4f6] rounded-[20px] h-[50px] flex items-center px-[6px]">
+            {FILTER_TABS.map(tab => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`h-[42px] px-6 rounded-[20px] font-['Poppins'] font-medium text-[12px] transition-colors whitespace-nowrap flex items-center gap-1.5
+                  ${activeTab === tab.id ? 'bg-white text-black shadow-sm' : 'text-[rgba(0,0,0,0.8)] hover:text-black'}`}
+              >
+                {tab.label}
+                {tab.id === 'requests' && requests.filter(r => r.status === 'pending').length > 0 && (
+                  <span className="bg-[#003566] text-white text-[10px] rounded-full w-4 h-4 flex items-center justify-center">
+                    {requests.filter(r => r.status === 'pending').length}
+                  </span>
+                )}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Date Range */}
+        <div className="border border-[rgba(0,0,0,0.4)] rounded-[12px] flex items-center gap-4 px-6 py-[10px] min-w-[180px]">
+          <CalendarIconSR />
+          <span className="font-['Poppins'] text-[12px] text-[rgba(0,0,0,0.6)]">Date Range</span>
+        </div>
+      </div>
+
+      {/* Table */}
+      <div className="bg-white rounded-[20px] shadow-[0px_4px_50px_0px_rgba(0,0,0,0.1)] overflow-hidden">
+
+        {/* Header row — 5-column layout for Postponed, 4-column for all others */}
+        <div className="bg-[#c9e5ff] h-[62px] flex items-center px-6">
+          {activeTab === 'postponed' ? (
+            <>
+              <div className="w-[180px] shrink-0">
+                <p className="font-['Poppins'] font-medium text-[12px] text-[rgba(0,0,0,0.8)]">Student Name</p>
+              </div>
+              <div className="w-[210px] shrink-0">
+                <p className="font-['Poppins'] font-medium text-[12px] text-[rgba(0,0,0,0.8)]">New Session Date and Time</p>
+              </div>
+              <div className="w-[210px] shrink-0">
+                <p className="font-['Poppins'] font-medium text-[12px] text-[rgba(0,0,0,0.8)]">Old Session Date and Time</p>
+              </div>
+              <div className="w-[160px] shrink-0">
+                <p className="font-['Poppins'] font-medium text-[12px] text-[rgba(0,0,0,0.8)]">No.of Hours</p>
+              </div>
+              <div className="flex-1 flex justify-center">
+                <p className="font-['Poppins'] font-medium text-[12px] text-[rgba(0,0,0,0.8)]">Status</p>
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="w-[200px] shrink-0">
+                <p className="font-['Poppins'] font-medium text-[12px] text-[rgba(0,0,0,0.8)]">Student Name</p>
+              </div>
+              <div className="w-[230px] shrink-0">
+                <p className="font-['Poppins'] font-medium text-[12px] text-[rgba(0,0,0,0.8)]">Session Date and Time</p>
+              </div>
+              <div className="w-[230px] shrink-0">
+                <p className="font-['Poppins'] font-medium text-[12px] text-[rgba(0,0,0,0.8)]">No.of Hours</p>
+              </div>
+              <div className="flex-1 flex justify-center">
+                <p className="font-['Poppins'] font-medium text-[12px] text-[rgba(0,0,0,0.8)]">
+                  {activeTab === 'completed' ? 'Status' : 'Action'}
+                </p>
+              </div>
+            </>
+          )}
+        </div>
+
+        {/* Empty state */}
+        {visibleRows.length === 0 ? (
+          <div className="flex items-center justify-center py-14">
+            <p className="font-['Poppins'] text-[14px] text-[rgba(0,0,0,0.4)]">
+              {activeTab === 'requests'  && 'No pending session requests.'}
+              {activeTab === 'upcoming'  && 'No upcoming sessions yet.'}
+              {activeTab === 'postponed' && 'No postponed sessions.'}
+              {activeTab === 'completed' && 'No completed sessions.'}
+            </p>
+          </div>
+        ) : (
+          visibleRows.map((req, idx) => (
+            <div
+              key={req.id}
+              className={`bg-white h-[62px] flex items-center px-6 ${idx < visibleRows.length - 1 ? 'border-b border-[rgba(0,0,0,0.15)]' : ''}`}
+            >
+              {activeTab === 'postponed' ? (
+                /* ── Postponed: 5-column layout ── */
+                <>
+                  <div className="w-[180px] shrink-0">
+                    <p className="font-['Poppins'] font-medium text-[12px] text-black">{req.student}</p>
+                  </div>
+                  <div className="w-[210px] shrink-0">
+                    <p className="font-['Poppins'] font-medium text-[12px] text-black">{req.newDatetime ?? '—'}</p>
+                  </div>
+                  <div className="w-[210px] shrink-0">
+                    <p className="font-['Poppins'] font-medium text-[12px] text-black">{req.oldDatetime ?? req.datetime}</p>
+                  </div>
+                  <div className="w-[160px] shrink-0">
+                    <p className="font-['Poppins'] font-medium text-[12px] text-black">
+                      {req.hours} {req.hours === 1 ? 'hr' : 'hrs'}
+                    </p>
+                  </div>
+                  <div className="flex-1 flex justify-center">
+                    <span className="font-['Poppins'] font-medium text-[12px] text-[#003566]">Postponed</span>
+                  </div>
+                </>
+              ) : (
+                /* ── All other tabs: 4-column layout ── */
+                <>
+                  {/* Student Name */}
+                  <div className="w-[200px] shrink-0">
+                    <p className="font-['Poppins'] font-medium text-[12px] text-black">{req.student}</p>
+                  </div>
+
+                  {/* Date & Time */}
+                  <div className="w-[230px] shrink-0">
+                    <p className="font-['Poppins'] font-medium text-[12px] text-black">{req.datetime}</p>
+                  </div>
+
+                  {/* Hours */}
+                  <div className="w-[230px] shrink-0">
+                    <p className="font-['Poppins'] font-medium text-[12px] text-black">
+                      {req.hours} {req.hours === 1 ? 'hr' : 'hrs'}
+                    </p>
+                  </div>
+
+                  {/* Action cell */}
+                  <div className="flex-1 flex items-center gap-6 h-[42px]">
+                {activeTab === 'requests' && (
+                  <>
+                    <button
+                      onClick={() => acceptRequest(req.id)}
+                      className="flex-1 h-full bg-[rgba(52,177,97,0.4)] rounded-[20px] flex items-center justify-center gap-[6px] hover:bg-[rgba(52,177,97,0.55)] transition-colors"
+                    >
+                      <TickIcon />
+                      <span className="font-['Poppins'] font-medium text-[12px] text-[#34b161]">Accept</span>
+                    </button>
+                    <button
+                      onClick={() => postponeRequest(req.id)}
+                      className="flex-1 h-full bg-[rgba(255,94,94,0.4)] rounded-[20px] flex items-center justify-center gap-[10px] hover:bg-[rgba(255,94,94,0.55)] transition-colors"
+                    >
+                      <ClockIconSR />
+                      <span className="font-['Poppins'] font-medium text-[12px] text-[#cc3636]">Postpone</span>
+                    </button>
+                  </>
+                )}
+                {activeTab === 'upcoming' && (
+                  <div className="flex-1 flex justify-center">
+                    {req.canJoin ? (
+                      // Blue — ready to join (within 10 min of session time)
+                      <button className="bg-[#c9e5ff] flex items-center justify-center gap-1 px-4 py-1 rounded-[20px] hover:bg-[#aad6ff] transition-colors">
+                        <span className="font-['Poppins'] font-medium text-[12px] text-[#003566]">Join Session</span>
+                        <ArrowRightIcon color="#003566" opacity={1} />
+                      </button>
+                    ) : (
+                      // Gray — not yet within 10 min of session time
+                      <button disabled className="bg-[#c8c8c8] flex items-center justify-center gap-1 px-4 py-1 rounded-[20px] cursor-not-allowed">
+                        <span className="font-['Poppins'] font-medium text-[12px] text-[rgba(0,0,0,0.6)]">Join Session</span>
+                        <ArrowRightIcon color="black" opacity={0.6} />
+                      </button>
+                    )}
+                  </div>
+                )}
+                {activeTab === 'completed' && (
+                  <div className="flex-1 flex justify-center">
+                    <span className="font-['Poppins'] font-medium text-[12px] text-[#34b161]">Completed</span>
+                  </div>
+                )}
+                  </div>{/* /action cell */}
+                </>
+              )}{/* /ternary */}
+            </div>
+          ))
+        )}
+      </div>
+
+      {/* Upcoming — note text (Figma: below the table) */}
+      {activeTab === 'upcoming' && (
+        <p className="font-['Poppins'] text-[12px] text-black">
+          <span className="font-medium">* Note:</span>
+          <span className="font-['Poppins']"> You'll be able to join your session 10 minutes before the scheduled time. You'll also receive a reminder notification when it's time to join. </span>
+        </p>
+      )}
+    </div>
+  );
+}
+
+// ────────────────────────────────────────────────────────────────────────────────
+// Create Study Room View
+// ────────────────────────────────────────────────────────────────────────────────
+
+function CreateStudyRoomView() {
+  const [step, setStep] = useState<'form' | 'share' | 'launching' | 'launched'>('form');
+  const [roomName, setRoomName] = useState('');
+  const [subject, setSubject] = useState('');
+  const [roomType, setRoomType] = useState<'private' | 'public'>('private');
+  const [roomId] = useState(() => Math.floor(1000 + Math.random() * 9000).toString());
+  const [copied, setCopied] = useState(false);
+
+  const joinLink = `learnova.com/room/${roomId}`;
+
+  const handleLaunch = () => {
+    setStep('launching');
+    setTimeout(() => setStep('launched'), 2500);
+  };
+
+  const handleCopyLink = () => {
+    navigator.clipboard.writeText(`https://${joinLink}`).catch(() => {});
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handleReset = () => {
+    setStep('form');
+    setRoomName('');
+    setSubject('');
+    setRoomType('private');
+  };
+
+  /* ── Shared page header ── */
+  const PageHeader = () => (
+    <div>
+      <p className="font-['Poppins'] font-medium text-[40px] text-black leading-tight">Create Study Room</p>
+      <p className="font-['Poppins'] text-[14px] text-[rgba(0,0,0,0.6)]">Build your own space to learn your way.</p>
+    </div>
+  );
+
+  /* ── Launching state ── */
+  if (step === 'launching') {
+    return (
+      <div className="flex flex-col gap-6">
+        <PageHeader />
+        <div className="flex items-center justify-center py-32">
+          <div className="flex items-center gap-3">
+            <p className="font-['Poppins'] font-medium text-[16px] text-black">
+              Launching your room.......Please wait
+            </p>
+            <span className="text-3xl animate-spin" style={{ animationDuration: '2s' }}>⏳</span>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  /* ── Launched / success state ── */
+  if (step === 'launched') {
+    return (
+      <div className="flex flex-col gap-6">
+        <PageHeader />
+        <div className="flex flex-col items-center justify-center py-20 gap-4 text-center">
+          <div className="w-[80px] h-[80px] bg-[#c9e5ff] rounded-full flex items-center justify-center">
+            <svg fill="none" viewBox="0 0 24 24" className="w-9 h-9" stroke="#003566" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M20 6L9 17l-5-5" />
+            </svg>
+          </div>
+          <p className="font-['Poppins'] font-medium text-[20px] text-black">Room Launched!</p>
+          <p className="font-['Poppins'] text-[14px] text-[rgba(0,0,0,0.5)]">
+            Your study room <span className="text-[#003566] font-medium">"{roomName || 'Untitled Room'}"</span> is now live.
+          </p>
+          <button
+            onClick={handleReset}
+            className="mt-2 font-['Poppins'] font-medium text-[14px] text-[#003566] underline hover:opacity-70 transition-opacity"
+          >
+            Create another room
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  /* ── Share state ── */
+  if (step === 'share') {
+    return (
+      <div className="flex flex-col gap-6">
+        <PageHeader />
+        <div className="flex justify-center">
+          <div className="bg-white rounded-[20px] shadow-[0px_4px_50px_5px_rgba(0,0,0,0.1)] p-6 w-full max-w-[515px] flex flex-col gap-6">
+            {/* Back + title inside card */}
+            <div className="flex flex-col gap-[5px]">
+              <button
+                onClick={() => setStep('form')}
+                className="font-['Poppins'] text-[16px] text-black text-left hover:opacity-60 transition-opacity"
+              >
+                &lt;Back
+              </button>
+              <p className="font-['Poppins'] font-medium text-[24px] text-black">Share Your Room</p>
+            </div>
+
+            {/* Room Name (read-only) */}
+            <div className="flex flex-col gap-2.5">
+              <p className="font-['Poppins'] text-[16px] text-black">Room Name</p>
+              <div className="h-[39px] rounded-[10px] border border-[rgba(0,0,0,0.4)] flex items-center gap-2.5 px-2.5">
+                <Building2 className="w-[24px] h-[24px] shrink-0 text-black" strokeWidth={1.4} />
+                <p className="font-['Poppins'] text-[14px] text-black">{roomName || 'Maths Room'}</p>
+              </div>
+            </div>
+
+            {/* Room ID */}
+            <div className="flex flex-col gap-2.5">
+              <p className="font-['Poppins'] text-[16px] text-black">Room ID</p>
+              <div className="h-[39px] rounded-[10px] border border-[rgba(0,0,0,0.4)] flex items-center gap-2.5 px-2.5">
+                <Hash className="w-[20px] h-[20px] shrink-0 text-black" strokeWidth={1.6} />
+                <p className="font-['Poppins'] font-medium text-[14px] text-black">{roomId}</p>
+              </div>
+            </div>
+
+            {/* Join Link */}
+            <div className="flex flex-col gap-2.5">
+              <p className="font-['Poppins'] text-[16px] text-black">Join Link</p>
+              <div className="h-[39px] rounded-[10px] border border-[rgba(0,0,0,0.4)] flex items-center gap-2.5 px-2.5">
+                <Link2 className="w-[24px] h-[24px] shrink-0 text-black" strokeWidth={1.6} />
+                <p className="font-['Poppins'] font-medium text-[14px] text-[#003566]">{joinLink}</p>
+              </div>
+            </div>
+
+            {/* Copy Link */}
+            <div className="flex justify-end">
+              <button
+                onClick={handleCopyLink}
+                className="bg-[#003566] text-white font-['Poppins'] font-medium text-[14px] h-[42px] px-8 rounded-[20px] hover:bg-[#00284d] transition-colors"
+              >
+                {copied ? 'Copied!' : 'Copy Link'}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  /* ── Form state (default) ── */
+  return (
+    <div className="flex flex-col gap-6">
+      <PageHeader />
+      <div className="flex justify-center">
+        <div className="bg-white rounded-[20px] shadow-[0px_4px_50px_5px_rgba(0,0,0,0.1)] p-6 w-full max-w-[515px] flex flex-col gap-6">
+
+          {/* Room Name */}
+          <div className="flex flex-col gap-2.5">
+            <p className="font-['Poppins'] text-[16px] text-black">Room Name</p>
+            <div className="h-[39px] rounded-[10px] border border-[rgba(0,0,0,0.4)] flex items-center gap-2.5 px-2.5">
+              <Building2 className="w-[24px] h-[24px] shrink-0 text-[rgba(0,0,0,0.6)]" strokeWidth={1.4} />
+              <input
+                value={roomName}
+                onChange={e => setRoomName(e.target.value)}
+                placeholder="Name your study space"
+                className="flex-1 bg-transparent outline-none font-['Poppins'] text-[14px] text-black placeholder:text-[rgba(0,0,0,0.4)]"
+              />
+            </div>
+          </div>
+
+          {/* Subject/Topic */}
+          <div className="flex flex-col gap-2.5">
+            <p className="font-['Poppins'] text-[16px] text-black">Subject/Topic</p>
+            <div className="h-[39px] rounded-[10px] border border-[rgba(0,0,0,0.4)] flex items-center gap-2.5 px-2.5">
+              <AlignLeft className="w-[24px] h-[24px] shrink-0 text-[rgba(0,0,0,0.6)]" strokeWidth={1.4} />
+              <input
+                value={subject}
+                onChange={e => setSubject(e.target.value)}
+                placeholder="Enter Subject/Topic"
+                className="flex-1 bg-transparent outline-none font-['Poppins'] text-[14px] text-black placeholder:text-[rgba(0,0,0,0.4)]"
+              />
+            </div>
+          </div>
+
+          {/* Room Type */}
+          <div className="flex flex-col gap-2.5">
+            <p className="font-['Poppins'] text-[16px] text-black">Select Room Type</p>
+            <div className="flex gap-2.5">
+              {/* Private */}
+              <button
+                onClick={() => setRoomType('private')}
+                className={`flex-1 rounded-[10px] p-2.5 text-left transition-colors ${
+                  roomType === 'private'
+                    ? 'bg-[#c9e5ff]'
+                    : 'border border-[rgba(0,0,0,0.4)] hover:bg-gray-50'
+                }`}
+              >
+                <div className="flex items-center gap-2.5 mb-2.5">
+                  <Lock className="w-[20px] h-[20px] shrink-0 text-[rgba(0,0,0,0.8)]" strokeWidth={1.6} />
+                  <span className="font-['Poppins'] font-medium text-[14px] text-[rgba(0,0,0,0.8)]">Private</span>
+                </div>
+                <div className="font-['Poppins'] text-[12px] text-[rgba(0,0,0,0.6)] leading-snug">
+                  <p>Accessible only through a</p>
+                  <p>Room ID or invitation link.</p>
+                </div>
+              </button>
+
+              {/* Public */}
+              <button
+                onClick={() => setRoomType('public')}
+                className={`flex-1 rounded-[10px] p-2.5 text-left transition-colors ${
+                  roomType === 'public'
+                    ? 'bg-[#c9e5ff]'
+                    : 'border border-[rgba(0,0,0,0.4)] hover:bg-gray-50'
+                }`}
+              >
+                <div className="flex items-center gap-2.5 mb-2.5">
+                  <Globe className="w-[20px] h-[20px] shrink-0 text-[rgba(0,0,0,0.8)]" strokeWidth={1.6} />
+                  <span className="font-['Poppins'] font-medium text-[14px] text-[rgba(0,0,0,0.8)]">Public</span>
+                </div>
+                <div className="font-['Poppins'] text-[12px] text-[rgba(0,0,0,0.6)] leading-snug">
+                  <p>Open to all learners and listed</p>
+                  <p>in Join Random Room Page.</p>
+                </div>
+              </button>
+            </div>
+          </div>
+
+          {/* Action buttons */}
+          <div className="flex gap-6 items-center">
+            <button
+              onClick={() => setStep('share')}
+              className="flex-1 h-[42px] rounded-[20px] border-2 border-[#003566] text-[#003566] font-['Poppins'] font-medium text-[14px] hover:bg-[#003566] hover:text-white transition-colors"
+            >
+              Share Room
+            </button>
+            <button
+              onClick={handleLaunch}
+              className="flex-1 h-[42px] rounded-[20px] bg-[#003566] text-white font-['Poppins'] font-medium text-[14px] hover:bg-[#00284d] transition-colors"
+            >
+              Launch Room
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ────────────────────────────────────────────────────────────────────────────────
+// World Chat View
+// ────────────────────────────────────────────────────────────────────────────────
+
+interface ChatMessage {
+  id: string;
+  sender: 'other' | 'me';
+  senderName: string;
+  text: string;
+  time: string;
+}
+
+const REPORT_OPTIONS = [
+  'Inappropriate or offensive messages',
+  'Spamming or sending repetitive messages',
+  'Harassing or targeting other users',
+  'Other',
+];
+
+const INITIAL_CHAT_MESSAGES: ChatMessage[] = [
+  { id: '1', sender: 'other', senderName: 'Alex', text: 'Hey, there everyone', time: '10:14PM' },
+  { id: '2', sender: 'me',    senderName: 'You',  text: 'Hey, there everyone', time: '10:14PM' },
+];
+
+function WorldChatView() {
+  const [messages, setMessages] = useState<ChatMessage[]>(INITIAL_CHAT_MESSAGES);
+  const [inputText, setInputText]         = useState('');
+  const [selectedMsgId, setSelectedMsgId] = useState<string | null>(null);
+  const [showReportModal, setShowReportModal] = useState(false);
+  const [reportReason, setReportReason]       = useState(REPORT_OPTIONS[0]);
+  const [reportDescription, setReportDescription] = useState('');
+  const [reportSubmitted, setReportSubmitted]     = useState(false);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
+
+  const now = () => new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true }).replace(' ', '');
+
+  const sendMessage = () => {
+    const text = inputText.trim();
+    if (!text) return;
+    const t = now();
+    setMessages(prev => [...prev, { id: Date.now().toString(), sender: 'me', senderName: 'You', text, time: t }]);
+    setInputText('');
+    setTimeout(() => {
+      setMessages(prev => [...prev, { id: (Date.now() + 1).toString(), sender: 'other', senderName: 'Alex', text: 'Thanks for sharing! 👍', time: now() }]);
+    }, 1200);
+  };
+
+  const handleBubbleClick = (msg: ChatMessage) => {
+    if (msg.sender === 'me') return;
+    setSelectedMsgId(prev => prev === msg.id ? null : msg.id);
+  };
+
+  const closeReport = () => {
+    setShowReportModal(false);
+    setReportDescription('');
+    setReportReason(REPORT_OPTIONS[0]);
+    setReportSubmitted(false);
+  };
+
+  const handleSubmitReport = () => {
+    setReportSubmitted(true);
+    setTimeout(() => closeReport(), 1500);
+  };
+
+  return (
+    <div className="flex flex-col h-full">
+      {/* Page title */}
+      <p className="font-['Poppins'] font-medium text-[40px] text-black leading-tight shrink-0 mb-4">World Chat</p>
+
+      {/* Messages area */}
+      <div className="flex-1 overflow-y-auto flex flex-col gap-4 pr-1">
+        {messages.map(msg => (
+          <div key={msg.id} className={`flex gap-2 items-end ${msg.sender === 'me' ? 'flex-row-reverse' : 'flex-row'}`}>
+            {/* Avatar */}
+            <img
+              src={msg.sender === 'other' ? imgChatAvatar : imgUserAvatar}
+              alt={msg.senderName}
+              className="w-[38px] h-[38px] rounded-full object-cover shrink-0"
+            />
+
+            {/* Bubble column */}
+            <div className={`flex flex-col gap-[3px] flex-1 ${msg.sender === 'me' ? 'items-end' : 'items-start'}`}>
+              {/* Name | time */}
+              <p className="font-['Poppins'] text-[12px] text-[rgba(0,0,0,0.6)]">
+                <span className="text-black">{msg.senderName}</span>
+                {` | ${msg.time}`}
+              </p>
+
+              {/* Message bubble */}
+              <div
+                className={`h-[40px] rounded-[12px] shadow-[0px_4px_60px_5px_rgba(0,0,0,0.15)] flex items-center px-4 cursor-pointer w-full transition-opacity ${
+                  msg.sender === 'other' ? 'bg-white' : 'bg-[#c9e5ff]'
+                }`}
+                onClick={() => handleBubbleClick(msg)}
+              >
+                <p className="font-['Poppins'] text-[16px] text-[rgba(0,0,0,0.7)]">{msg.text}</p>
+              </div>
+
+              {/* Report button (other's messages only) */}
+              {selectedMsgId === msg.id && msg.sender === 'other' && (
+                <div className="mt-0.5">
+                  <button
+                    onClick={() => { setShowReportModal(true); setSelectedMsgId(null); }}
+                    className="bg-white h-[40px] px-6 rounded-[12px] shadow-[0px_4px_60px_5px_rgba(0,0,0,0.15)] font-['Poppins'] font-medium text-[12px] text-[#ff5e5e] hover:bg-red-50 transition-colors"
+                  >
+                    Report
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        ))}
+        <div ref={messagesEndRef} />
+      </div>
+
+      {/* Input bar */}
+      <div className="flex gap-5 items-center pt-4 shrink-0">
+        <div className="flex-1 h-[54px] bg-white rounded-[12px] shadow-[0px_4px_60px_5px_rgba(0,0,0,0.15)] flex items-center px-4">
+          <input
+            value={inputText}
+            onChange={e => setInputText(e.target.value)}
+            onKeyDown={e => e.key === 'Enter' && sendMessage()}
+            placeholder="Type here"
+            className="w-full bg-transparent outline-none font-['Poppins'] font-medium text-[16px] text-[rgba(0,0,0,0.6)] placeholder:text-[rgba(0,0,0,0.6)]"
+          />
+        </div>
+        <button
+          onClick={sendMessage}
+          className="w-[54px] h-[54px] bg-[#003566] rounded-full flex items-center justify-center shrink-0 hover:bg-[#00284d] transition-colors"
+        >
+          <svg fill="none" viewBox="0 0 24 24" className="w-5 h-5" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <line x1="22" y1="2" x2="11" y2="13" />
+            <polygon points="22 2 15 22 11 13 2 9 22 2" fill="white" stroke="white" strokeWidth="2" strokeLinejoin="round" />
+          </svg>
+        </button>
+      </div>
+
+      {/* Report User Modal */}
+      {showReportModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20 p-4">
+          <div
+            className="fixed inset-0"
+            onClick={closeReport}
+          />
+          <div className="relative bg-white rounded-[20px] shadow-[0px_4px_60px_5px_rgba(0,0,0,0.15)] w-[436px] overflow-hidden">
+            <div className="flex flex-col gap-[26px] p-6">
+              {/* Header */}
+              <div className="flex flex-col gap-[6px]">
+                <p className="font-['Poppins'] font-semibold text-[24px] text-black">Report User</p>
+                <p className="font-['Poppins'] text-[12px] text-black">Help us maintain a calm and distraction-free study environment</p>
+              </div>
+
+              {/* Radio options */}
+              <div className="flex flex-col gap-[15px]">
+                {REPORT_OPTIONS.map(option => (
+                  <button
+                    key={option}
+                    onClick={() => setReportReason(option)}
+                    className="flex gap-2 items-center text-left"
+                  >
+                    <svg fill="none" viewBox="0 0 18 18" className="w-[18px] h-[18px] shrink-0">
+                      <circle cx="9" cy="9" r="9" fill="#D9D9D9" />
+                      {reportReason === option && <circle cx="9" cy="9" r="4" fill="#003566" />}
+                    </svg>
+                    <p className="font-['Poppins'] text-[14px] text-black">{option}</p>
+                  </button>
+                ))}
+
+                {/* Description textarea */}
+                <div className="bg-[#d9d9d9] rounded-[20px] p-4 h-[127px] flex items-start">
+                  <textarea
+                    value={reportDescription}
+                    onChange={e => setReportDescription(e.target.value)}
+                    placeholder="Describe the issue briefly"
+                    className="w-full h-full bg-transparent outline-none resize-none font-['Poppins'] text-[12px] text-[rgba(0,0,0,0.7)] placeholder:text-[rgba(0,0,0,0.7)]"
+                  />
+                </div>
+              </div>
+
+              {/* Action buttons */}
+              <div className="flex gap-4 items-center justify-end">
+                <button
+                  onClick={closeReport}
+                  className="h-[42px] w-[156px] rounded-[20px] border border-black font-['Poppins'] text-[14px] text-black hover:bg-gray-50 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleSubmitReport}
+                  className="h-[42px] w-[156px] rounded-[20px] bg-[#ff5e5e] font-['Poppins'] font-medium text-[14px] text-white hover:bg-[#e54e4e] transition-colors"
+                >
+                  {reportSubmitted ? 'Submitted ✓' : 'Submit'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ────────────────────────────────────────────────────────────────────────────────
+// Emotional Wellness View
+// ────────────────────────────────────────────────────────────────────────────────
+
+type WellnessSubView = 'mood' | 'resources' | 'chat' | 'motivation';
+
+type MoodChatState = 'welcome' | 'mic' | 'chat';
+interface MoodMessage { id: number; role: 'ai' | 'user'; text: string; }
+
+const INITIAL_MOOD_MESSAGES: MoodMessage[] = [
+  { id: 1, role: 'ai',   text: 'Hello there! How may I assist you today?' },
+  { id: 2, role: 'user', text: 'Hello there' },
+  { id: 3, role: 'ai',   text: 'Lorem ipsum dolor sit amet consectetur. Adipiscing porttitor vel varius ut sed neque ut. Aliquet molestie dignissim eu elementum sollicitudin.' },
+  { id: 4, role: 'user', text: 'Lorem Ipsum?' },
+];
+
+const AI_RESPONSES = [
+  "I hear you. It's completely normal to feel that way. Would you like to talk more about it?",
+  "Thank you for sharing. Your feelings are valid. Let me help you work through this.",
+  "That sounds really meaningful. Remember, every step forward counts, no matter how small.",
+  "I'm here with you. Take a deep breath — you're doing great by reaching out.",
+];
+
+const WELLNESS_ARTICLES = [
+  { title: '5 Breathing Techniques to Reduce Stress', tag: 'Article', time: '5 min read', tagColor: '#00c6ff' },
+  { title: 'Understanding Emotional Triggers', tag: 'Video', time: '8 min watch', tagColor: '#0072ff' },
+  { title: 'Mindfulness for Students', tag: 'Article', time: '4 min read', tagColor: '#00c6ff' },
+  { title: 'How I Overcame Exam Anxiety', tag: 'Story', time: '6 min read', tagColor: '#56ab2f' },
+  { title: 'Sleep Hygiene and Academic Performance', tag: 'Article', time: '7 min read', tagColor: '#f77f00' },
+  { title: 'Journaling for Mental Clarity', tag: 'Video', time: '10 min watch', tagColor: '#b91d73' },
+];
+
+const QUOTES = [
+  { quote: "Believe you can and you're halfway there.", author: 'Theodore Roosevelt' },
+  { quote: "It always seems impossible until it's done.", author: 'Nelson Mandela' },
+  { quote: 'The secret of getting ahead is getting started.', author: 'Mark Twain' },
+  { quote: 'You are braver than you believe, stronger than you seem.', author: 'A.A. Milne' },
+];
+
+function EmotionalWellnessView() {
+  const [activeCard, setActiveCard] = useState<WellnessSubView | null>(null);
+  // ── World Chat state ──
+  const [wcMessages, setWcMessages] = useState([
+    { id: 1, sender: 'alex' as const, name: 'Alex', text: 'Hey, there everyone', time: '10:14PM' },
+    { id: 2, sender: 'you'  as const, name: 'You',  text: 'Hey, there everyone', time: '10:14PM' },
+  ]);
+  const [wcInput,        setWcInput]        = useState('');
+  const [wcReportMsgId,  setWcReportMsgId]  = useState<number | null>(null);
+  const [wcShowReport,   setWcShowReport]   = useState(false);
+  const [wcReportReason, setWcReportReason] = useState(0);
+  const [wcReportText,   setWcReportText]   = useState('');
+  const wcEndRef = useRef<HTMLDivElement>(null);
+
+  const wcSend = () => {
+    const t = wcInput.trim();
+    if (!t) return;
+    const now = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+    setWcMessages(prev => [...prev, { id: Date.now(), sender: 'you', name: 'You', text: t, time: now }]);
+    setWcInput('');
+    setWcReportMsgId(null);
+    setTimeout(() => wcEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 80);
+  };
+
+  // ── Motivation Corner state ──
+  const [mcShowPostModal,  setMcShowPostModal]  = useState(false);
+  const [mcPostType,       setMcPostType]       = useState<'' | 'Quote' | 'Story'>('');
+  const [mcTypeDropOpen,   setMcTypeDropOpen]   = useState(false);
+  const [mcPostContent,    setMcPostContent]    = useState('');
+  const [mcPostAttached,   setMcPostAttached]   = useState(false);
+  const [mcMotivLikes,     setMcMotivLikes]     = useState<Record<number, 'like' | 'dislike' | null>>({});
+  const [mcPosts, setMcPosts] = useState([
+    { id: 0, type: 'quote' as const, title: 'Motivational Quote', body: '' },
+    { id: 1, type: 'story' as const, title: 'Motivational Story', body: 'Lorem ipsum dolor sit amet consectetur. Adipiscing porttitor vel varius ut sed neque ut. Aliquet molestie dignissim eu elementum sollicitudin.' },
+  ]);
+
+  const mcResetModal = () => {
+    setMcShowPostModal(false); setMcPostType(''); setMcTypeDropOpen(false);
+    setMcPostContent(''); setMcPostAttached(false);
+  };
+  const mcSubmitPost = () => {
+    if (!mcPostType || !mcPostContent.trim()) return;
+    setMcPosts(prev => [...prev, { id: Date.now(), type: mcPostType === 'Quote' ? 'quote' as const : 'story' as const, title: mcPostType === 'Quote' ? 'Motivational Quote' : 'Motivational Story', body: mcPostContent }]);
+    mcResetModal();
+  };
+  const toggleMcLike = (id: number, action: 'like' | 'dislike') =>
+    setMcMotivLikes(prev => ({ ...prev, [id]: prev[id] === action ? null : action }));
+
+  // ── Wellness Resources state ──
+  const [showPostModal, setShowPostModal]   = useState(false);
+  const [postTitle, setPostTitle]           = useState('');
+  const [postContent, setPostContent]       = useState('');
+  const [postAttached, setPostAttached]     = useState(false);
+  const [resLikes, setResLikes]             = useState<Record<number, 'like' | 'dislike' | null>>({});
+  const [resArticles, setResArticles]       = useState([
+    { id: 0, type: 'article' as const, title: 'Title', body: 'Lorem ipsum dolor sit amet consectetur. Adipiscing porttitor vel varius ut sed neque ut. Aliquet molestie dignissim eu elementum sollicitudin.' },
+    { id: 1, type: 'video'   as const, title: 'Title', body: 'Lorem ipsum dolor sit amet consectetur. Adipiscing porttitor vel varius ut sed neque ut. Aliquet molestie dignissim eu elementum sollicitudin.' },
+  ]);
+
+  const handlePostArticle = () => {
+    if (!postTitle.trim() && !postContent.trim()) return;
+    setResArticles(prev => [...prev, { id: Date.now(), type: 'article', title: postTitle || 'New Article', body: postContent || '' }]);
+    setPostTitle(''); setPostContent(''); setPostAttached(false); setShowPostModal(false);
+  };
+
+  const toggleResLike = (id: number, action: 'like' | 'dislike') => {
+    setResLikes(prev => ({ ...prev, [id]: prev[id] === action ? null : action }));
+  };
+
+  // ── Mood Check-In chat state ──
+  const [moodChatState, setMoodChatState]   = useState<MoodChatState>('welcome');
+  const [moodMessages, setMoodMessages]     = useState<MoodMessage[]>(INITIAL_MOOD_MESSAGES);
+  const [moodInput, setMoodInput]           = useState('');
+  const [moodTyping, setMoodTyping]         = useState(false);
+  const moodScrollRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (moodScrollRef.current) {
+      moodScrollRef.current.scrollTop = moodScrollRef.current.scrollHeight;
+    }
+  }, [moodMessages, moodTyping]);
+
+  const handleMoodSend = () => {
+    const text = moodInput.trim();
+    if (!text) return;
+    const userMsg: MoodMessage = { id: Date.now(), role: 'user', text };
+    setMoodMessages(prev => [...prev, userMsg]);
+    setMoodInput('');
+    setMoodChatState('chat');
+    setMoodTyping(true);
+    setTimeout(() => {
+      const aiText = AI_RESPONSES[Math.floor(Math.random() * AI_RESPONSES.length)];
+      setMoodMessages(prev => [...prev, { id: Date.now() + 1, role: 'ai', text: aiText }]);
+      setMoodTyping(false);
+    }, 1200);
+  };
+
+  /* ─── Arrow icon (rotated 90° = pointing right) ─── */
+  const ArrowRight = () => (
+    <svg fill="none" viewBox="0 0 22 22" className="w-[22px] h-[22px] rotate-90 shrink-0">
+      <path clipRule="evenodd" d={svgWellness.p16746080} fill="white" fillRule="evenodd" />
+    </svg>
+  );
+
+  /* ─── Card definitions ─── */
+  const cards = [
+    {
+      id: 'mood' as WellnessSubView,
+      title: 'Mood Check-In',
+      subtitle: 'Share your feelings and let AI organize, track, and understand your mood journey.',
+      cta: 'Start Check-In',
+      gradient: 'from-[#f953c6] via-[#b91d73] to-[#ff5858]',
+      icon: (
+        <svg fill="none" viewBox="0 0 46 46" className="w-[46px] h-[46px] shrink-0">
+          <path d={svgWellness.pf3ff700} stroke="white" strokeLinecap="round" strokeLinejoin="round" strokeWidth="4" />
+        </svg>
+      ),
+    },
+    {
+      id: 'resources' as WellnessSubView,
+      title: 'Wellness Resources',
+      subtitle: 'Access articles, videos and inspiring stories.',
+      cta: 'Explore Resources',
+      gradient: 'from-[#00c6ff] to-[#0072ff]',
+      icon: (
+        <svg fill="none" viewBox="0 0 46 46" className="w-[46px] h-[46px] shrink-0">
+          <path d={svgWellness.p2bf7e800} stroke="white" strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" />
+        </svg>
+      ),
+    },
+    {
+      id: 'chat' as WellnessSubView,
+      title: 'World Chat',
+      subtitle: 'Connect, share, and support each other worldwide.',
+      cta: 'Join Conversation',
+      gradient: 'from-[#56ab2f] to-[#a8e063]',
+      icon: (
+        <svg fill="none" viewBox="0 0 46 46" className="w-[46px] h-[46px] shrink-0">
+          <path d={svgWellness.p232f3d30} fill="white" />
+        </svg>
+      ),
+    },
+    {
+      id: 'motivation' as WellnessSubView,
+      title: 'Motivation Corner',
+      subtitle: 'Get inspired with uplifting quotes and real success stories.',
+      cta: 'Find Inspiration',
+      gradient: 'from-[#7f00ff] to-[#e100ff]',
+      icon: (
+        <svg fill="none" viewBox="0 0 46 46" className="w-[46px] h-[46px] shrink-0">
+          <path d={svgWellness.p2a8f0980} stroke="white" strokeLinejoin="round" strokeWidth="2" />
+        </svg>
+      ),
+    },
+  ];
+
+  /* ─── Sub-view header with breadcrumb ─── */
+  const SubHeader = ({ card }: { card: typeof cards[0] }) => (
+    <div className="flex flex-col gap-1 shrink-0">
+      <div className="flex items-center gap-2">
+        <button
+          onClick={() => { setActiveCard(null); setMoodChatState('welcome'); setMoodInput(''); }}
+          className="font-['Poppins'] text-[14px] text-[rgba(0,0,0,0.5)] hover:text-black transition-colors"
+        >
+          Emotional Wellness
+        </button>
+        <span className="text-[rgba(0,0,0,0.3)] text-[16px]">›</span>
+        <span className="font-['Poppins'] text-[14px] text-black">{card.title}</span>
+      </div>
+      <p className="font-['Poppins'] font-medium text-[40px] text-black leading-tight">{card.title}</p>
+    </div>
+  );
+
+  /* ─── Mood Check-In sub-view ─── */
+  if (activeCard === 'mood') {
+    const card = cards[0];
+
+    /* Shared: robot image + greeting */
+    const RobotGreeting = () => (
+      <div className="flex flex-col items-center gap-6">
+        {/* Robot image — matches Figma frame dimensions */}
+        <div className="relative w-[145px] h-[253px] overflow-hidden pointer-events-none shrink-0">
+          <img
+            src={imgSayHi}
+            alt="AI mentor waving"
+            className="absolute max-w-none"
+            style={{ width: '186.39%', height: '108.77%', left: '-32.4%', top: '-8.59%' }}
+          />
+        </div>
+        {/* Greeting */}
+        <div className="flex flex-col items-center text-center leading-[1.3]">
+          <p className="font-['Poppins'] font-medium text-[32px] text-[rgba(0,0,0,0.7)]">Hello, Jack Sparrow</p>
+          <p className="font-['Poppins'] font-medium text-[32px] text-[rgba(0,0,0,0.7)]">How are you feeling today?</p>
+        </div>
+      </div>
+    );
+
+    /* Shared: bottom input bar */
+    const InputBar = () => (
+      <div className="flex gap-5 items-center shrink-0">
+        {/* Text field */}
+        <div className="flex-1 bg-white h-[54px] rounded-[12px] shadow-[0px_4px_60px_5px_rgba(0,0,0,0.15)] relative overflow-hidden">
+          <div className="absolute inset-0 flex items-center justify-between px-4">
+            <input
+              value={moodInput}
+              onChange={e => setMoodInput(e.target.value)}
+              onKeyDown={e => { if (e.key === 'Enter') handleMoodSend(); }}
+              placeholder="Type here"
+              className="flex-1 bg-transparent outline-none font-['Poppins'] font-medium text-[16px] text-[rgba(0,0,0,0.7)] placeholder:text-[rgba(0,0,0,0.6)]"
+            />
+            {/* Small mic icon */}
+            <button
+              onClick={() => setMoodChatState('mic')}
+              className="shrink-0 p-1 hover:opacity-70 transition-opacity"
+              title="Use microphone"
+            >
+              <svg fill="none" viewBox="0 0 16 20" className="w-4 h-5">
+                <path d={svgMic.p17188b80} fill="#003566" />
+                <path d={svgMic.p11bfc93e} stroke="#003566" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" />
+              </svg>
+            </button>
+          </div>
+        </div>
+        {/* Navy send button */}
+        <button
+          onClick={handleMoodSend}
+          className="bg-[#003566] rounded-[50px] size-[54px] flex items-center justify-center shrink-0 hover:bg-[#004580] transition-colors"
+          title="Send"
+        >
+          {/* Up-arrow send icon (white) */}
+          <svg fill="none" viewBox="0 0 24 24" className="w-[22px] h-[22px]">
+            <path d="M12 20V4M12 4L6 10M12 4L18 10" stroke="white" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </button>
+      </div>
+    );
+
+    /* ── WELCOME state ── */
+    if (moodChatState === 'welcome') {
+      return (
+        <div className="flex flex-col h-full min-h-0">
+          <SubHeader card={card} />
+          {/* Centered robot + greeting */}
+          <div className="flex-1 flex items-center justify-center py-6">
+            <RobotGreeting />
+          </div>
+          <InputBar />
+        </div>
+      );
+    }
+
+    /* ── MIC state ── */
+    if (moodChatState === 'mic') {
+      return (
+        <div className="flex flex-col h-full min-h-0">
+          <SubHeader card={card} />
+          {/* Centered robot + greeting */}
+          <div className="flex-1 flex items-center justify-center py-6">
+            <RobotGreeting />
+          </div>
+          {/* "Ask me anything" card — matches Figma Frame14 */}
+          <div className="bg-white rounded-[12px] shadow-[0px_4px_60px_5px_rgba(0,0,0,0.15)] px-10 py-9 flex flex-col items-center gap-6 shrink-0">
+            <p className="font-['Poppins'] font-medium text-[24px] text-[rgba(0,0,0,0.6)]">Ask me anything</p>
+            {/* Large mic button — white circle with shadow */}
+            <button
+              onClick={() => setMoodChatState('welcome')}
+              className="bg-white rounded-[100px] shadow-[0px_4px_60px_0px_rgba(0,0,0,0.1)] size-[105px] flex items-center justify-center hover:shadow-[0px_6px_40px_rgba(0,53,102,0.2)] transition-shadow"
+              title="Stop listening"
+            >
+              {/* Large mic SVG — viewBox matches Figma (35.6 × 46.6) */}
+              <svg fill="none" viewBox="0 0 35.6189 46.6248" className="w-9 h-12">
+                <path d={svgMicLarge.p11c0ecb0} fill="#003566" />
+                <path d={svgMicLarge.p168ffd40} stroke="#003566" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" />
+              </svg>
+            </button>
+          </div>
+        </div>
+      );
+    }
+
+    /* ── CHAT state ── */
+    return (
+      <div className="flex flex-col h-full min-h-0">
+        <SubHeader card={card} />
+        {/* Scrollable messages */}
+        <div
+          ref={moodScrollRef}
+          className="flex-1 min-h-0 overflow-y-auto flex flex-col gap-4 py-4 pr-1"
+          style={{ scrollbarWidth: 'thin', scrollbarColor: '#003566 rgba(0,53,102,0.2)' }}
+        >
+          {moodMessages.map(msg => (
+            <div
+              key={msg.id}
+              className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
+            >
+              <div
+                className={`max-w-[55%] p-4 rounded-[12px] shadow-[0px_4px_60px_5px_rgba(0,0,0,0.15)] ${
+                  msg.role === 'ai' ? 'bg-white' : 'bg-[#c9e5ff]'
+                }`}
+              >
+                <p className="font-['Poppins'] text-[16px] text-black leading-[21px]">{msg.text}</p>
+              </div>
+            </div>
+          ))}
+          {/* Typing indicator */}
+          {moodTyping && (
+            <div className="flex justify-start">
+              <div className="bg-white p-4 rounded-[12px] shadow-[0px_4px_60px_5px_rgba(0,0,0,0.15)] flex gap-1 items-center">
+                {[0, 1, 2].map(i => (
+                  <div
+                    key={i}
+                    className="w-2 h-2 bg-[#003566] rounded-full"
+                    style={{ animation: `bounce 1s ease-in-out ${i * 0.15}s infinite` }}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+        <InputBar />
+      </div>
+    );
+  }
+
+  /* ─── Wellness Resources sub-view ─── */
+  if (activeCard === 'resources') {
+    const card = cards[1];
+
+    /* Like / Dislike SVG icons */
+    const ThumbUp = () => (
+      <div className="overflow-clip relative shrink-0 size-[24px]">
+        <div className="absolute inset-[8.33%_12.5%_8.33%_25.5%]">
+          <svg className="absolute block size-full" fill="none" preserveAspectRatio="none" viewBox="0 0 14.8805 20">
+            <path d={svgWellRes.p3e7c7e00} fill="#F77F00" />
+          </svg>
+        </div>
+        <div className="absolute inset-[39.52%_80.32%_5.15%_9.37%]">
+          <svg className="absolute block size-full" fill="none" preserveAspectRatio="none" viewBox="0 0 2.474 13.2796">
+            <path clipRule="evenodd" d={svgWellRes.p8514000} fill="#F77F00" fillRule="evenodd" />
+          </svg>
+        </div>
+      </div>
+    );
+
+    const ThumbDown = () => (
+      <div className="flex items-center justify-center relative shrink-0">
+        <div className="-scale-y-100 flex-none">
+          <div className="overflow-clip relative size-[24px]">
+            <div className="absolute inset-[5.21%_9.38%]">
+              <svg className="absolute block size-full" fill="none" preserveAspectRatio="none" viewBox="0 0 19.4996 21.4997">
+                <path d={svgWellRes.p3779a540} fill="#F77F00" />
+              </svg>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+
+    return (
+      <div className="flex flex-col h-full min-h-0">
+        {/* Header row: breadcrumb left, Post Article button right */}
+        <div className="flex items-end justify-between shrink-0 pb-[6px]">
+          <SubHeader card={card} />
+          <button
+            onClick={() => setShowPostModal(true)}
+            className="relative flex gap-[6px] h-[42px] items-center px-[16px] rounded-[10px] hover:bg-[#f0f6ff] transition-colors"
+          >
+            <div aria-hidden="true" className="absolute border-2 border-[#003566] border-solid inset-[-1px] pointer-events-none rounded-[11px]" />
+            <p className="font-['Poppins'] font-medium leading-normal text-[#003566] text-[14px]">Post Article</p>
+            <svg fill="none" viewBox="0 0 24 24" className="w-6 h-6 shrink-0">
+              <path d="M12 5V19M5 12H19" stroke="#003566" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" />
+            </svg>
+          </button>
+        </div>
+
+        {/* Scrollable article list */}
+        <div className="flex-1 min-h-0 overflow-y-auto flex flex-col gap-6 py-2 pr-1" style={{ scrollbarWidth: 'thin', scrollbarColor: '#003566 rgba(0,53,102,0.15)' }}>
+          {resArticles.map(article => (
+            <div key={article.id} className="bg-white flex flex-col gap-[24px] items-start p-[24px] rounded-[20px] shadow-[0px_4px_50px_0px_rgba(0,0,0,0.1)] shrink-0">
+              {/* Thumbnail */}
+              {article.type === 'article' ? (
+                <div className="bg-[#9f9f9f] h-[127px] overflow-clip relative rounded-[20px] shrink-0 w-[249px]">
+                  <div className="absolute left-[-2px] size-[251px] top-[-63px]">
+                    <img alt="" className="absolute inset-0 max-w-none object-cover pointer-events-none size-full" src={imgResThumb} />
+                  </div>
+                </div>
+              ) : (
+                <div className="bg-[#9f9f9f] h-[127px] overflow-clip relative rounded-[20px] shrink-0 w-[249px]">
+                  {/* White play icon centered */}
+                  <div className="-translate-x-1/2 -translate-y-1/2 absolute left-1/2 size-[24px] top-1/2">
+                    <svg className="absolute block size-full" fill="none" preserveAspectRatio="none" viewBox="0 0 24 24">
+                      <path d={svgWellRes.p1c33f400} fill="white" />
+                    </svg>
+                  </div>
+                </div>
+              )}
+
+              {/* Title + body */}
+              <div className="flex flex-col gap-[4px] items-start w-full">
+                <p className="font-['Poppins'] font-medium leading-normal text-[#003566] text-[24px] w-full">{article.title}</p>
+                <p className="font-['Poppins'] leading-[21px] text-[16px] text-[rgba(0,0,0,0.7)] w-full">{article.body}</p>
+              </div>
+
+              {/* Author row + like/dislike */}
+              <div className="flex items-center justify-between w-full">
+                {/* Author */}
+                <div className="flex gap-[10px] items-center">
+                  <div className="relative rounded-[100px] shrink-0 size-[55px]">
+                    <div className="absolute bg-[#cacaca] inset-0 rounded-[100px]" />
+                    <div className="absolute inset-0 overflow-hidden rounded-[100px]">
+                      <img alt="" className="absolute h-full left-0 max-w-none top-0 w-full object-cover" src={imgResAuthor} />
+                    </div>
+                  </div>
+                  <div className="flex flex-col gap-[10px]">
+                    <p className="font-['Poppins'] font-medium leading-[21px] text-[14px] text-[rgba(0,0,0,0.7)]">Jack Sparrow</p>
+                    <p className="font-['Poppins'] font-medium leading-[21px] text-[12px] text-[rgba(0,0,0,0.6)]">July 15, 2024</p>
+                  </div>
+                </div>
+
+                {/* Like / Dislike */}
+                <div className="flex gap-[24px] items-center">
+                  <button
+                    onClick={() => toggleResLike(article.id, 'like')}
+                    className={`transition-transform hover:scale-110 ${resLikes[article.id] === 'like' ? 'scale-110' : ''}`}
+                    title="Like"
+                  >
+                    <ThumbUp />
+                  </button>
+                  <button
+                    onClick={() => toggleResLike(article.id, 'dislike')}
+                    className={`transition-transform hover:scale-110 ${resLikes[article.id] === 'dislike' ? 'scale-110' : ''}`}
+                    title="Dislike"
+                  >
+                    <ThumbDown />
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* ── Post New Article Modal ── */}
+        {showPostModal && (
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center"
+            style={{ backgroundColor: 'rgba(0,0,0,0.2)' }}
+            onClick={e => { if (e.target === e.currentTarget) setShowPostModal(false); }}
+          >
+            <div className="bg-white flex flex-col gap-[24px] items-end p-[24px] rounded-[20px] shadow-[0px_4px_50px_0px_rgba(0,0,0,0.1)] w-[618px]">
+              {/* Heading */}
+              <p className="font-['Poppins'] font-semibold leading-normal min-w-full text-[24px] text-black">Post New Article</p>
+
+              {/* Fields */}
+              <div className="flex flex-col gap-[4px] w-full">
+                {/* Title input */}
+                <div className="bg-white rounded-[10px] shadow-[0px_4px_29.4px_0px_rgba(0,0,0,0.1)] w-full">
+                  <div className="flex items-start p-[16px] w-full">
+                    <input
+                      value={postTitle}
+                      onChange={e => setPostTitle(e.target.value)}
+                      placeholder="Article Title"
+                      className="w-full bg-transparent outline-none font-['Poppins'] font-medium text-[16px] text-[rgba(0,0,0,0.8)] placeholder:text-[rgba(0,0,0,0.5)]"
+                    />
+                  </div>
+                </div>
+                {/* Content textarea */}
+                <div className="bg-white h-[222px] rounded-[10px] shadow-[0px_4px_29.4px_0px_rgba(0,0,0,0.1)] w-full">
+                  <div className="flex items-start p-[16px] size-full">
+                    <textarea
+                      value={postContent}
+                      onChange={e => setPostContent(e.target.value)}
+                      placeholder="Article Content"
+                      className="w-full h-full bg-transparent outline-none resize-none font-['Poppins'] text-[16px] text-[rgba(0,0,0,0.7)] placeholder:text-[rgba(0,0,0,0.5)]"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Attach area */}
+              {!postAttached ? (
+                /* Attach button (empty state) */
+                <div className="relative h-[40px] w-full">
+                  <button
+                    onClick={() => setPostAttached(true)}
+                    className="absolute flex gap-[10px] items-center justify-center left-0 p-[10px] rounded-[10px] top-0 hover:bg-[#fff7f0] transition-colors"
+                  >
+                    <div aria-hidden="true" className="absolute border border-[#f77f00] border-solid inset-0 pointer-events-none rounded-[10px] shadow-[0px_4px_29.4px_0px_rgba(0,0,0,0.1)]" />
+                    <svg fill="none" viewBox="0 0 20 20" className="relative shrink-0 size-[20px]">
+                      <path d={svgWellResFill.p350cac80} stroke="#F77F00" strokeLinecap="square" strokeWidth="2" />
+                    </svg>
+                    <p className="font-['Poppins'] font-medium leading-normal text-[#f77f00] text-[12px] relative">Attach Image, Video</p>
+                  </button>
+                </div>
+              ) : (
+                /* On-fill: image preview + add more */
+                <div className="flex gap-[24px] items-center w-full">
+                  {/* Attached image thumbnail with X */}
+                  <div className="h-[113px] overflow-clip relative rounded-[20px] shrink-0 w-[112px]">
+                    <div className="absolute h-[113px] left-[-41px] top-0 w-[194px]">
+                      <img alt="" className="absolute inset-0 max-w-none object-cover pointer-events-none size-full" src={imgResAttach} />
+                    </div>
+                    {/* X button */}
+                    <button
+                      onClick={() => setPostAttached(false)}
+                      className="absolute left-[90px] size-[13px] top-[7px]"
+                      title="Remove"
+                    >
+                      <svg className="absolute block size-full" fill="none" preserveAspectRatio="none" viewBox="0 0 13 13">
+                        <rect fill="white" height="13" rx="6.5" width="13" />
+                        <path d={svgWellResFill.p11434fc0} stroke="black" strokeLinecap="round" strokeLinejoin="round" strokeWidth="0.85" />
+                      </svg>
+                    </button>
+                  </div>
+                  {/* Orange circle add more */}
+                  <div className="overflow-clip relative shrink-0 size-[47px]">
+                    <div className="absolute inset-[12.5%]">
+                      <svg className="absolute block size-full" fill="none" preserveAspectRatio="none" viewBox="0 0 35.25 35.25">
+                        <path d={svgWellResFill.p2e367c00} fill="#F77F00" fillOpacity="0.2" />
+                        <path d={svgWellResFill.pa4ae8c0} stroke="#F77F00" strokeLinecap="square" strokeLinejoin="round" strokeWidth="2" />
+                      </svg>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Cancel / Post Article buttons */}
+              <div className="flex gap-[16px] items-center w-[337px]">
+                <button
+                  onClick={() => { setShowPostModal(false); setPostTitle(''); setPostContent(''); setPostAttached(false); }}
+                  className="relative flex flex-1 h-[42px] items-center justify-center rounded-[20px] hover:bg-[#fff0f0] transition-colors"
+                >
+                  <div aria-hidden="true" className="absolute border border-[#cc3636] border-solid inset-[-0.5px] pointer-events-none rounded-[20.5px]" />
+                  <p className="font-['Poppins'] font-medium leading-normal text-[#cc3636] text-[14px]">Cancel</p>
+                </button>
+                <button
+                  onClick={handlePostArticle}
+                  className="bg-[#003566] flex flex-1 h-[42px] items-center justify-center rounded-[20px] hover:bg-[#004580] transition-colors"
+                >
+                  <p className="font-['Poppins'] font-medium leading-normal text-[14px] text-white">Post Article</p>
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  /* ─── World Chat sub-view ─── */
+  if (activeCard === 'chat') {
+    const card = cards[2];
+
+    const WC_REPORT_OPTIONS = [
+      'Inappropriate visuals or gestures',
+      'Camera showing disturbing or distracting content',
+      'Using unrelated or misleading video feed',
+      'Other',
+    ];
+
+    return (
+      <div className="flex flex-col h-full min-h-0">
+        {/* Header */}
+        <SubHeader card={card} />
+
+        {/* Scrollable message list */}
+        <div
+          className="flex-1 min-h-0 overflow-y-auto flex flex-col gap-[16px] py-4 pr-1"
+          style={{ scrollbarWidth: 'thin', scrollbarColor: '#003566 rgba(0,53,102,0.15)' }}
+          onClick={() => setWcReportMsgId(null)}
+        >
+          {wcMessages.map(msg => (
+            <div key={msg.id}>
+              {msg.sender === 'alex' ? (
+                /* Other-user message */
+                <div
+                  className="flex gap-[8px] items-end cursor-pointer"
+                  onClick={e => { e.stopPropagation(); setWcReportMsgId(wcReportMsgId === msg.id ? null : msg.id); }}
+                >
+                  <div className="relative shrink-0 size-[38px]">
+                    <img alt="" className="absolute block max-w-none size-full rounded-full" src={imgWcAvatar} />
+                  </div>
+                  <div className="flex flex-col gap-[3px] flex-1">
+                    <p className="font-['Poppins'] text-[12px] text-[rgba(0,0,0,0.6)]">
+                      <span className="text-black">{msg.name}</span>{` | ${msg.time}`}
+                    </p>
+                    <div className="bg-white h-[40px] rounded-[12px] shadow-[0px_4px_60px_5px_rgba(0,0,0,0.15)] flex items-center px-[16px]">
+                      <p className="font-['Poppins'] text-[16px] text-[rgba(0,0,0,0.7)]">{msg.text}</p>
+                    </div>
+                    {/* Report pill */}
+                    {wcReportMsgId === msg.id && (
+                      <button
+                        onClick={e => { e.stopPropagation(); setWcShowReport(true); setWcReportMsgId(null); }}
+                        className="mt-1 bg-white h-[40px] w-[147px] rounded-[12px] shadow-[0px_4px_60px_5px_rgba(0,0,0,0.15)] flex items-center justify-center hover:bg-[#fff0f0] transition-colors"
+                      >
+                        <p className="font-['Poppins'] font-medium text-[12px] text-[#ff5e5e]">Report</p>
+                      </button>
+                    )}
+                  </div>
+                </div>
+              ) : (
+                /* Your message */
+                <div className="flex gap-[8px] items-end">
+                  <div className="flex flex-col gap-[3px] flex-1 items-end">
+                    <p className="font-['Poppins'] text-[12px] text-[rgba(0,0,0,0.6)] text-right w-full">
+                      <span className="text-black">{msg.name}</span>{` | ${msg.time}`}
+                    </p>
+                    <div className="bg-[#c9e5ff] h-[40px] rounded-[12px] shadow-[0px_4px_60px_5px_rgba(0,0,0,0.15)] flex items-center px-[16px] w-full">
+                      <p className="font-['Poppins'] text-[16px] text-[rgba(0,0,0,0.7)]">{msg.text}</p>
+                    </div>
+                  </div>
+                  <div className="relative shrink-0 size-[38px]">
+                    <img alt="" className="absolute block max-w-none size-full rounded-full" src={imgWcAvatar} />
+                  </div>
+                </div>
+              )}
+            </div>
+          ))}
+          <div ref={wcEndRef} />
+        </div>
+
+        {/* Input bar */}
+        <div className="flex gap-[20px] items-center shrink-0 pt-3">
+          <input
+            value={wcInput}
+            onChange={e => setWcInput(e.target.value)}
+            onKeyDown={e => { if (e.key === 'Enter') wcSend(); }}
+            placeholder="Type here"
+            className="flex-1 h-[54px] rounded-[12px] shadow-[0px_4px_60px_5px_rgba(0,0,0,0.15)] bg-white px-[16px] font-['Poppins'] font-medium text-[16px] text-[rgba(0,0,0,0.6)] placeholder:text-[rgba(0,0,0,0.6)] outline-none"
+          />
+          {/* Send button: navy circle with masked paper-plane */}
+          <button
+            onClick={wcSend}
+            className="bg-[#003566] overflow-hidden relative rounded-full shrink-0 size-[54px] hover:bg-[#004580] transition-colors flex items-center justify-center"
+          >
+            <div
+              className="bg-white size-[24px]"
+              style={{
+                maskImage: `url('${imgWcSendMask}')`,
+                WebkitMaskImage: `url('${imgWcSendMask}')`,
+                maskSize: '24px 24px',
+                WebkitMaskSize: '24px 24px',
+                maskRepeat: 'no-repeat',
+                WebkitMaskRepeat: 'no-repeat',
+                maskPosition: 'center',
+                WebkitMaskPosition: 'center',
+              }}
+            />
+          </button>
+        </div>
+
+        {/* ── Report User Modal ── */}
+        {wcShowReport && (
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center"
+            style={{ backgroundColor: 'rgba(0,0,0,0.2)' }}
+            onClick={e => { if (e.target === e.currentTarget) setWcShowReport(false); }}
+          >
+            <div className="bg-white h-[454px] w-[436px] overflow-hidden rounded-[20px] shadow-[0px_4px_60px_5px_rgba(0,0,0,0.15)] flex flex-col gap-[26px] p-[24px]">
+              {/* Heading */}
+              <div className="flex flex-col gap-[6px]">
+                <p className="font-['Poppins'] font-semibold text-[24px] text-black">Report User</p>
+                <p className="font-['Poppins'] text-[12px] text-black">Help us maintain a clam and distraction-free study environment</p>
+              </div>
+
+              {/* Radio options + textarea */}
+              <div className="flex flex-col gap-[15px]">
+                {WC_REPORT_OPTIONS.map((opt, i) => (
+                  <button
+                    key={i}
+                    onClick={() => setWcReportReason(i)}
+                    className="flex gap-[8px] items-center text-left"
+                  >
+                    {/* Radio circle */}
+                    <div className="relative shrink-0 size-[18px]">
+                      <svg className="absolute block size-full" fill="none" viewBox="0 0 18 18">
+                        <circle cx="9" cy="9" fill="#D9D9D9" r="9" />
+                        {wcReportReason === i && <circle cx="9" cy="9" fill="#003566" r="4" />}
+                      </svg>
+                    </div>
+                    <p className="font-['Poppins'] text-[14px] text-black">{opt}</p>
+                  </button>
+                ))}
+
+                {/* Textarea */}
+                <div className="relative mt-1">
+                  <textarea
+                    value={wcReportText}
+                    onChange={e => setWcReportText(e.target.value)}
+                    placeholder="Describe the issue briefly"
+                    className="bg-[#d9d9d9] w-full h-[127px] rounded-[20px] px-[16px] pt-[16px] font-['Poppins'] text-[12px] text-[rgba(0,0,0,0.7)] placeholder:text-[rgba(0,0,0,0.7)] outline-none resize-none"
+                  />
+                </div>
+              </div>
+
+              {/* Buttons */}
+              <div className="flex gap-[16px] items-center justify-end mt-auto">
+                <button
+                  onClick={() => { setWcShowReport(false); setWcReportReason(0); setWcReportText(''); }}
+                  className="relative h-[42px] w-[156px] rounded-[20px] flex items-center justify-center hover:bg-[#f5f5f5] transition-colors"
+                >
+                  <div aria-hidden="true" className="absolute border border-black inset-[-1px] pointer-events-none rounded-[21px]" />
+                  <p className="font-['Poppins'] text-[14px] text-black">Cancel</p>
+                </button>
+                <button
+                  onClick={() => { setWcShowReport(false); setWcReportReason(0); setWcReportText(''); }}
+                  className="bg-[#ff5e5e] h-[42px] w-[156px] rounded-[20px] flex items-center justify-center hover:bg-[#e04c4c] transition-colors"
+                >
+                  <p className="font-['Poppins'] font-medium text-[14px] text-white">Submit</p>
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  /* ─── Motivation Corner sub-view ─── */
+  if (activeCard === 'motivation') {
+    const card = cards[3];
+
+    /* Reusable like / dislike icons (same SVG paths as Wellness Resources) */
+    const McThumbUp = () => (
+      <div className="overflow-clip relative shrink-0 size-[24px]">
+        <div className="absolute inset-[8.33%_12.5%_8.33%_25.5%]">
+          <svg className="absolute block size-full" fill="none" preserveAspectRatio="none" viewBox="0 0 14.8805 20">
+            <path d={svgWellRes.p3e7c7e00} fill="#F77F00" />
+          </svg>
+        </div>
+        <div className="absolute inset-[39.52%_80.32%_5.15%_9.37%]">
+          <svg className="absolute block size-full" fill="none" preserveAspectRatio="none" viewBox="0 0 2.474 13.2796">
+            <path clipRule="evenodd" d={svgWellRes.p8514000} fill="#F77F00" fillRule="evenodd" />
+          </svg>
+        </div>
+      </div>
+    );
+    const McThumbDown = () => (
+      <div className="flex items-center justify-center relative shrink-0">
+        <div className="-scale-y-100 flex-none">
+          <div className="overflow-clip relative size-[24px]">
+            <div className="absolute inset-[5.21%_9.38%]">
+              <svg className="absolute block size-full" fill="none" preserveAspectRatio="none" viewBox="0 0 19.4996 21.4997">
+                <path d={svgWellRes.p3779a540} fill="#F77F00" />
+              </svg>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+
+    /* Dropdown chevron */
+    const Chevron = () => (
+      <svg className="shrink-0 size-[24px]" fill="none" viewBox="0 0 24 24">
+        <path d="M7 10L12 15L17 10" stroke="black" strokeLinecap="round" strokeLinejoin="round" strokeOpacity="0.6" strokeWidth="1.5" />
+      </svg>
+    );
+
+    /* Whether Post button is active */
+    const mcCanPost = mcPostType !== '' && mcPostContent.trim() !== '';
+
+    return (
+      <div className="flex flex-col h-full min-h-0">
+        {/* Header row */}
+        <div className="flex items-end justify-between shrink-0 pb-[6px]">
+          <SubHeader card={card} />
+          <button
+            onClick={() => setMcShowPostModal(true)}
+            className="relative flex gap-[6px] h-[42px] items-center px-[16px] rounded-[10px] hover:bg-[#f0f6ff] transition-colors"
+          >
+            <div aria-hidden="true" className="absolute border-2 border-[#003566] border-solid inset-[-1px] pointer-events-none rounded-[11px]" />
+            <p className="font-['Poppins'] font-medium leading-normal text-[#003566] text-[14px]">Post</p>
+            <svg fill="none" viewBox="0 0 24 24" className="w-6 h-6 shrink-0">
+              <path d="M12 5V19M5 12H19" stroke="#003566" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" />
+            </svg>
+          </button>
+        </div>
+
+        {/* Scrollable post list */}
+        <div
+          className="flex-1 min-h-0 overflow-y-auto flex flex-col gap-6 py-2 pr-1"
+          style={{ scrollbarWidth: 'thin', scrollbarColor: '#003566 rgba(0,53,102,0.15)' }}
+        >
+          {mcPosts.map(post => (
+            <div key={post.id} className="bg-white flex flex-col gap-[24px] items-start p-[24px] rounded-[20px] shadow-[0px_4px_50px_0px_rgba(0,0,0,0.1)] shrink-0">
+              {/* Thumbnail — only for story type */}
+              {post.type === 'story' && (
+                <div className="bg-[#9f9f9f] h-[127px] overflow-clip relative rounded-[20px] shrink-0 w-[249px]">
+                  <div className="absolute left-[-2px] size-[251px] top-[-63px]">
+                    <img alt="" className="absolute inset-0 max-w-none object-cover pointer-events-none size-full" src={imgResThumb} />
+                  </div>
+                </div>
+              )}
+
+              {/* Title + body */}
+              <div className="flex flex-col gap-[4px] items-start w-full">
+                <p className="font-['Poppins'] font-medium leading-normal text-[#003566] text-[24px] w-full">{post.title}</p>
+                {post.body && (
+                  <p className="font-['Poppins'] leading-[21px] text-[16px] text-[rgba(0,0,0,0.7)] w-full">{post.body}</p>
+                )}
+              </div>
+
+              {/* Author row + like/dislike */}
+              <div className="flex items-center justify-between w-full">
+                <div className="flex gap-[10px] items-center">
+                  <div className="relative rounded-[100px] shrink-0 size-[55px]">
+                    <div className="absolute bg-[#cacaca] inset-0 rounded-[100px]" />
+                    <div className="absolute inset-0 overflow-hidden rounded-[100px]">
+                      <img alt="" className="absolute h-full left-0 max-w-none top-0 w-full object-cover" src={imgResAuthor} />
+                    </div>
+                  </div>
+                  <div className="flex flex-col gap-[10px]">
+                    <p className="font-['Poppins'] font-medium leading-[21px] text-[14px] text-[rgba(0,0,0,0.7)]">Jack Sparrow</p>
+                    <p className="font-['Poppins'] font-medium leading-[21px] text-[12px] text-[rgba(0,0,0,0.6)]">July 15, 2024</p>
+                  </div>
+                </div>
+                <div className="flex gap-[24px] items-center">
+                  <button onClick={() => toggleMcLike(post.id, 'like')} className={`transition-transform hover:scale-110 ${mcMotivLikes[post.id] === 'like' ? 'scale-110' : ''}`} title="Like">
+                    <McThumbUp />
+                  </button>
+                  <button onClick={() => toggleMcLike(post.id, 'dislike')} className={`transition-transform hover:scale-110 ${mcMotivLikes[post.id] === 'dislike' ? 'scale-110' : ''}`} title="Dislike">
+                    <McThumbDown />
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* ── Post Motivational Quote/Story Modal ── */}
+        {mcShowPostModal && (
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center"
+            style={{ backgroundColor: 'rgba(0,0,0,0.2)' }}
+            onClick={e => { if (e.target === e.currentTarget) { mcResetModal(); } }}
+          >
+            <div className="bg-white flex flex-col gap-[24px] items-end p-[24px] rounded-[20px] shadow-[0px_4px_50px_0px_rgba(0,0,0,0.1)] w-[618px]">
+              {/* Heading */}
+              <p className="font-['Poppins'] font-semibold leading-normal min-w-full text-[24px] text-black">Post Motivational Quote/Story</p>
+
+              {/* Post Type dropdown */}
+              <div className="flex flex-col gap-[4px] w-full relative">
+                {/* Dropdown trigger */}
+                <button
+                  onClick={() => setMcTypeDropOpen(v => !v)}
+                  className="bg-white relative rounded-[10px] shadow-[0px_4px_29.4px_0px_rgba(0,0,0,0.1)] w-full flex items-start justify-between p-[16px] hover:bg-[#fafafa] transition-colors"
+                >
+                  <p className="font-['Poppins'] font-medium leading-normal text-[16px] text-[rgba(0,0,0,0.8)]">
+                    {mcPostType || 'Post Type'}
+                  </p>
+                  <Chevron />
+                </button>
+
+                {/* Dropdown panel */}
+                {mcTypeDropOpen && (
+                  <div className="absolute top-[calc(100%+4px)] left-0 right-0 bg-white rounded-[10px] shadow-[0px_4px_30px_0px_rgba(0,0,0,0.1)] z-10 flex flex-col gap-[4px]">
+                    {(['Quote', 'Story'] as const).map(opt => (
+                      <button
+                        key={opt}
+                        onClick={() => { setMcPostType(opt); setMcTypeDropOpen(false); setMcPostContent(''); setMcPostAttached(false); }}
+                        className="bg-white text-left px-[16px] py-[14px] rounded-[10px] hover:bg-[#f0f6ff] transition-colors"
+                      >
+                        <p className="font-['Poppins'] font-medium text-[14px] text-[rgba(0,0,0,0.8)]">{opt}</p>
+                      </button>
+                    ))}
+                  </div>
+                )}
+
+                {/* Content area — only shown once type is selected */}
+                {mcPostType && (
+                  <textarea
+                    value={mcPostContent}
+                    onChange={e => setMcPostContent(e.target.value)}
+                    placeholder={mcPostType === 'Quote' ? 'Type your quote here' : 'Type in your story here'}
+                    className={`bg-white w-full rounded-[10px] shadow-[0px_4px_29.4px_0px_rgba(0,0,0,0.1)] p-[16px] font-['Poppins'] font-medium text-[16px] text-[rgba(0,0,0,0.7)] placeholder:text-[rgba(0,0,0,0.6)] outline-none resize-none ${mcPostType === 'Quote' ? 'h-[111px]' : 'h-[327px]'}`}
+                  />
+                )}
+              </div>
+
+              {/* Attach section — only for Story type */}
+              {mcPostType === 'Story' && (
+                !mcPostAttached ? (
+                  <div className="relative h-[40px] w-full">
+                    <button
+                      onClick={() => setMcPostAttached(true)}
+                      className="absolute flex gap-[10px] items-center justify-center left-0 p-[10px] rounded-[10px] top-0 hover:bg-[#fff7f0] transition-colors"
+                    >
+                      <div aria-hidden="true" className="absolute border border-[#f77f00] border-solid inset-0 pointer-events-none rounded-[10px] shadow-[0px_4px_29.4px_0px_rgba(0,0,0,0.1)]" />
+                      <svg fill="none" viewBox="0 0 20 20" className="relative shrink-0 size-[20px]">
+                        <path d={svgWellResFill.p350cac80} stroke="#F77F00" strokeLinecap="square" strokeWidth="2" />
+                      </svg>
+                      <p className="font-['Poppins'] font-medium leading-normal text-[#f77f00] text-[12px] relative">Attach Image, Video</p>
+                    </button>
+                  </div>
+                ) : (
+                  <div className="flex gap-[24px] items-center w-full">
+                    {/* Attached image thumbnail */}
+                    <div className="h-[113px] overflow-clip relative rounded-[20px] shrink-0 w-[112px]">
+                      <div className="absolute h-[113px] left-[-41px] top-0 w-[194px]">
+                        <img alt="" className="absolute inset-0 max-w-none object-cover pointer-events-none size-full" src={imgResAttach} />
+                      </div>
+                      <button onClick={() => setMcPostAttached(false)} className="absolute left-[90px] size-[13px] top-[7px]" title="Remove">
+                        <svg className="absolute block size-full" fill="none" preserveAspectRatio="none" viewBox="0 0 13 13">
+                          <rect fill="white" height="13" rx="6.5" width="13" />
+                          <path d={svgWellResFill.p11434fc0} stroke="black" strokeLinecap="round" strokeLinejoin="round" strokeWidth="0.85" />
+                        </svg>
+                      </button>
+                    </div>
+                    {/* Orange circle add more */}
+                    <div className="overflow-clip relative shrink-0 size-[47px]">
+                      <div className="absolute inset-[12.5%]">
+                        <svg className="absolute block size-full" fill="none" preserveAspectRatio="none" viewBox="0 0 35.25 35.25">
+                          <path d={svgWellResFill.p2e367c00} fill="#F77F00" fillOpacity="0.2" />
+                          <path d={svgWellResFill.pa4ae8c0} stroke="#F77F00" strokeLinecap="square" strokeLinejoin="round" strokeWidth="2" />
+                        </svg>
+                      </div>
+                    </div>
+                  </div>
+                )
+              )}
+
+              {/* Cancel / Post buttons */}
+              <div className="flex gap-[16px] items-center w-[337px]">
+                <button
+                  onClick={mcResetModal}
+                  className="relative flex flex-1 h-[42px] items-center justify-center rounded-[20px] hover:bg-[#fff0f0] transition-colors"
+                >
+                  <div aria-hidden="true" className="absolute border border-[#cc3636] border-solid inset-[-0.5px] pointer-events-none rounded-[20.5px]" />
+                  <p className="font-['Poppins'] font-medium leading-normal text-[#cc3636] text-[14px]">Cancel</p>
+                </button>
+                <button
+                  onClick={mcSubmitPost}
+                  disabled={!mcCanPost}
+                  className={`flex flex-1 h-[42px] items-center justify-center rounded-[20px] transition-colors ${mcCanPost ? 'bg-[#003566] hover:bg-[#004580]' : 'bg-[#a6a6a6] cursor-not-allowed'}`}
+                >
+                  <p className="font-['Poppins'] font-medium leading-normal text-[14px] text-white">
+                    {mcPostType === 'Story' ? 'Post Story' : 'Post'}
+                  </p>
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  /* ─── Main card grid (default) ─── */
+  return (
+    <div className="flex flex-col gap-6">
+      <div>
+        <p className="font-['Poppins'] font-medium text-[40px] text-black leading-tight">Emotional Wellness</p>
+        <p className="font-['Poppins'] text-[14px] text-[rgba(0,0,0,0.6)]">Everything you need to manage your mental health journey</p>
+      </div>
+
+      <div className="grid grid-cols-2 gap-[25px]">
+        {cards.map(card => (
+          <button
+            key={card.id}
+            onClick={() => setActiveCard(card.id)}
+            className={`bg-gradient-to-r ${card.gradient} h-[308px] rounded-[20px] p-[24px] flex flex-col justify-between overflow-hidden hover:scale-[1.015] hover:shadow-xl transition-all text-left`}
+          >
+            {/* Header */}
+            <div className="flex flex-col gap-[6px] w-full">
+              <div className="flex gap-[6px] items-center w-full">
+                {card.icon}
+                <p className="font-['Poppins'] font-semibold text-[24px] text-white">{card.title}</p>
+              </div>
+              <p className="font-['Poppins'] font-medium text-[16px] text-white whitespace-pre-wrap">{card.subtitle}</p>
+            </div>
+
+            {/* CTA */}
+            <div className="flex gap-[6px] items-center">
+              <p className="font-['Poppins'] font-medium text-[14px] text-white">{card.cta}</p>
+              <ArrowRight />
+            </div>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ────────────────────────────────────────────────────────────────────────────────
+// Coming Soon placeholder
+// ────────────────────────────────────────────────────────────────────────────────
+
+function ComingSoon({ title }: { title: string }) {
+  return (
+    <div className="flex flex-col gap-4">
+      <div>
+        <p className="font-['Poppins'] font-medium text-[40px] text-black leading-tight">{title}</p>
+      </div>
+      <div className="flex flex-col items-center justify-center py-24 gap-4 text-center">
+        <div className="w-[80px] h-[80px] bg-[#c9e5ff] rounded-full flex items-center justify-center">
+          <svg fill="none" viewBox="0 0 24 24" className="w-9 h-9" stroke="#003566" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="12" cy="12" r="10" />
+            <path d="M12 6v6l4 2" />
+          </svg>
+        </div>
+        <p className="font-['Poppins'] font-medium text-[20px] text-[rgba(0,0,0,0.6)]">Coming Soon</p>
+        <p className="font-['Poppins'] text-[14px] text-[rgba(0,0,0,0.4)] max-w-[300px]">This section is under development and will be available soon.</p>
+      </div>
+    </div>
+  );
+}
+
+// ────────────────────────────────────────────────────────────────────────────────
+// Sidebar
+// ────────────────────────────────────────────────────────────────────────────────
+
+interface SidebarProps {
+  active: NavItem;
+  onNav: (item: NavItem) => void;
+}
+
+const NAV_ITEMS: { id: NavItem; label: string; icon: React.ReactNode }[] = [
+  { id: 'create-session', label: 'Create Session', icon: <CreateSessionIcon /> },
+  { id: 'session-requests', label: 'Session Requests', icon: <SessionRequestsIcon /> },
+  { id: 'study-room', label: 'Create Study Room', icon: <StudyRoomIcon /> },
+  { id: 'world-chat', label: 'World Chat', icon: <WorldChatIcon /> },
+  { id: 'wellness', label: 'Emotional Wellness', icon: <WellnessIcon /> },
+  { id: 'community', label: 'Community', icon: <CommunityIcon /> },
+];
+
+function Sidebar({ active, onNav }: SidebarProps) {
+  return (
+    <div className="bg-white shadow-[0px_4px_18px_-1px_rgba(0,0,0,0.1)] h-full flex flex-col pt-[32px] pb-6">
+      {/* Logo */}
+      <div className="px-[32px] mb-[36px]">
+        <LearnovaLogo />
+      </div>
+
+      {/* Menu label */}
+      <p className="px-[32px] font-['Poppins'] text-[14px] text-[rgba(0,0,0,0.6)] mb-3">Main Menu</p>
+
+      {/* Nav items */}
+      <nav className="flex flex-col gap-1.5 px-[16px]">
+        {NAV_ITEMS.map(item => {
+          const isActive = active === item.id;
+          return (
+            <button
+              key={item.id}
+              onClick={() => onNav(item.id)}
+              className={`flex items-center gap-[6px] h-[42px] px-[16px] rounded-[10px] w-full text-left transition-colors ${
+                isActive ? 'bg-[#c9e5ff]' : 'hover:bg-[#f0f4f8]'
+              }`}
+            >
+              <span className={isActive ? '[&_path]:fill-[#003566] [&_path]:stroke-[#003566]' : ''}>
+                {item.icon}
+              </span>
+              <span className={`font-['Poppins'] text-[14px] ${isActive ? 'text-[#003566]' : 'text-[rgba(0,0,0,0.6)]'}`}>
+                {item.label}
+              </span>
+            </button>
+          );
+        })}
+      </nav>
+
+      {/* Spacer */}
+      <div className="flex-1" />
+
+      {/* Mentor badge */}
+      <div className="px-[16px]">
+        <div className="bg-[#003566] rounded-[12px] p-4 flex flex-col gap-1">
+          <p className="font-['Poppins'] text-[12px] text-white/70">Logged in as</p>
+          <p className="font-['Poppins'] font-medium text-[14px] text-white">Mentor Account</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ────────────────────────────────────────────────────────────────────────────────
+// Profile dropdown
+// ────────────────────────────────────────────────────────────────────────────────
+
+interface ProfileDropdownProps {
+  onLogout: () => void;
+  onClose: () => void;
+  onNavigate: (nav: NavItem) => void;
+}
+
+function ProfileDropdown({ onLogout, onClose, onNavigate }: ProfileDropdownProps) {
+  return (
+    <>
+      <div className="fixed inset-0 z-10" onClick={onClose} />
+      <div className="absolute top-[52px] right-0 z-20 bg-white rounded-[12px] shadow-[0px_4px_20px_rgba(0,0,0,0.15)] w-[180px] py-2 overflow-hidden">
+        <button
+          className="w-full px-4 py-2.5 text-left font-['Poppins'] text-[14px] text-black hover:bg-gray-50 transition-colors"
+          onClick={() => { onNavigate('profile'); onClose(); }}
+        >
+          Profile Settings
+        </button>
+        <div className="border-t border-[rgba(0,0,0,0.08)] my-1" />
+        <button
+          className="w-full px-4 py-2.5 text-left font-['Poppins'] text-[14px] text-[#cc3636] hover:bg-[#fde8e8] transition-colors"
+          onClick={onLogout}
+        >
+          Log Out
+        </button>
+      </div>
+    </>
+  );
+}
+
+// ────────────────────────────────────────────────────────────────────────────────
+// Main Mentor Dashboard
+// ────────────────────────────────────────────────────────────────────────────────
+
+export function MentorDashboard({ onLogout }: MentorDashboardProps) {
+  const [activeNav, setActiveNav] = useState<NavItem>('create-session');
+  const [showProfile, setShowProfile] = useState(false);
+  const [showNotifications, setShowNotifications] = useState(false);
+
+  const renderContent = () => {
+    switch (activeNav) {
+      case 'create-session': return <CreateSessionView />;
+      case 'session-requests': return <SessionRequestsView />;
+      case 'study-room': return <CreateStudyRoomView />;
+      case 'world-chat': return <WorldChatView />;
+      case 'wellness': return <EmotionalWellnessView />;
+      case 'community': return <MentorCommunityView />;
+      case 'profile':   return <MentorProfileSettings onBack={() => setActiveNav('create-session')} />;
+    }
+  };
+
+  return (
+    <div className="flex h-screen bg-[#f8fafc] overflow-hidden">
+      {/* Sidebar — hidden when profile settings is open (it has its own sidebar) */}
+      {activeNav !== 'profile' && (
+        <div className="w-[278px] shrink-0 h-full overflow-y-auto">
+          <Sidebar active={activeNav} onNav={setActiveNav} />
+        </div>
+      )}
+
+      {/* Main area */}
+      <div className="flex-1 flex flex-col overflow-hidden">
+        {/* Top bar — hidden in profile view which has its own */}
+        <div className={`bg-white border-b border-[rgba(0,0,0,0.06)] px-10 py-[22px] flex items-center justify-end gap-6 shrink-0 ${activeNav === 'profile' ? 'hidden' : ''}`}>
+          {/* Bell */}
+          <button
+            className="relative p-1 hover:opacity-70 transition-opacity"
+            onClick={() => { setShowNotifications(!showNotifications); setShowProfile(false); }}
+          >
+            <BellIcon />
+            {showNotifications && (
+              <div
+                className="absolute top-[44px] right-0 z-30 bg-white rounded-[20px] shadow-[0px_4px_50px_5px_rgba(0,0,0,0.1)] w-[380px] p-[32px] flex flex-col gap-[24px]"
+                onClick={(e) => e.stopPropagation()}
+              >
+                {/* Header */}
+                <div className="flex items-center justify-between">
+                  <p className="font-['Poppins'] font-medium text-[16px] text-black">Notifications</p>
+                  <p className="font-['Poppins'] text-[12px] text-[rgba(0,0,0,0.7)] underline cursor-pointer">View All</p>
+                </div>
+
+                {/* Scrollable body */}
+                <div className="flex flex-col gap-[16px] max-h-[520px] overflow-y-auto pr-1">
+
+                  {/* ── Session Updates ── */}
+                  <p className="font-['Poppins'] text-[12px] text-[rgba(0,0,0,0.7)]">Session Updates</p>
+
+                  {/* Session Feedback */}
+                  <div className="flex gap-[10px] items-start">
+                    <div className="bg-[#2295ff] flex items-center justify-center rounded-[5px] shrink-0 size-[44px]">
+                      <svg className="size-[24px]" fill="none" viewBox="0 0 24 24">
+                        <path d="M12 15C12.2833 15 12.521 14.904 12.713 14.712C12.905 14.52 13.0007 14.2827 13 14C12.9993 13.7173 12.9033 13.48 12.712 13.288C12.5207 13.096 12.2833 13 12 13C11.7167 13 11.4793 13.096 11.288 13.288C11.0967 13.48 11.0007 13.7173 11 14C10.9993 14.2827 11.0953 14.5203 11.288 14.713C11.4807 14.9057 11.718 15.0013 12 15ZM11 11H13V5H11V11ZM2 22V4C2 3.45 2.196 2.97933 2.588 2.588C2.98 2.19667 3.45067 2.00067 4 2H20C20.55 2 21.021 2.196 21.413 2.588C21.805 2.98 22.0007 3.45067 22 4V16C22 16.55 21.8043 17.021 21.413 17.413C21.0217 17.805 20.5507 18.0007 20 18H6L2 22ZM5.15 16H20V4H4V17.125L5.15 16Z" fill="white" />
+                      </svg>
+                    </div>
+                    <div className="flex flex-col font-['Poppins'] text-[12px]">
+                      <p className="text-[14px] text-black leading-normal">Session Feedback</p>
+                      <p className="text-[rgba(0,0,0,0.7)] leading-normal"><span className="text-black">Student Name:</span> Ravi Kumar</p>
+                      <p className="text-[rgba(0,0,0,0.7)] leading-normal">18-10-2025 &nbsp;|&nbsp; 9:00PM - 10:00PM</p>
+                      <div className="flex items-center gap-[2px]">
+                        <p className="text-[rgba(0,0,0,0.7)] leading-normal"><span className="text-black">Rating:</span> 4.5</p>
+                        <svg className="size-[14px]" fill="none" viewBox="0 0 20 20">
+                          <path d="M10 14.3958L6.54167 16.4792C6.38889 16.5764 6.22917 16.6181 6.0625 16.6042C5.89583 16.5903 5.75 16.5347 5.625 16.4375C5.5 16.3403 5.40278 16.2189 5.33333 16.0733C5.26389 15.9278 5.25 15.7644 5.29167 15.5833L6.20833 11.6458L3.14583 9C3.00694 8.875 2.92028 8.7325 2.88583 8.5725C2.85139 8.4125 2.86167 8.25639 2.91667 8.10417C2.97167 7.95195 3.055 7.82694 3.16667 7.72917C3.27833 7.63139 3.43111 7.56889 3.625 7.54167L7.66667 7.1875L9.22917 3.47917C9.29861 3.3125 9.40639 3.1875 9.5525 3.10417C9.69861 3.02083 9.84778 2.97917 10 2.97917C10.1522 2.97917 10.3014 3.02083 10.4475 3.10417C10.5936 3.1875 10.7014 3.3125 10.7708 3.47917L12.3333 7.1875L16.375 7.54167C16.5694 7.56945 16.7222 7.63194 16.8333 7.72917C16.9444 7.82639 17.0278 7.95139 17.0833 8.10417C17.1389 8.25695 17.1494 8.41333 17.115 8.57333C17.0806 8.73333 16.9936 8.87556 16.8542 9L13.7917 11.6458L14.7083 15.5833C14.75 15.7639 14.7361 15.9272 14.6667 16.0733C14.5972 16.2194 14.5 16.3408 14.375 16.4375C14.25 16.5342 14.1042 16.5897 13.9375 16.6042C13.7708 16.6186 13.6111 16.5769 13.4583 16.4792L10 14.3958Z" fill="#F77F00" />
+                        </svg>
+                      </div>
+                      <p className="text-[rgba(0,0,0,0.7)] leading-normal"><span className="text-black">Feedback:</span> Good</p>
+                    </div>
+                  </div>
+
+                  {/* Session Reminder */}
+                  <div className="flex gap-[10px] items-start">
+                    <div className="bg-[#8A38F5] flex items-center justify-center rounded-[5px] shrink-0 size-[44px]">
+                      <svg className="size-[24px]" fill="none" viewBox="0 0 44 44">
+                        <path d="M26.5002 14.2059C27.8576 14.9897 28.9868 16.1144 29.776 17.4687C30.5652 18.823 30.987 20.3599 30.9997 21.9273C31.0124 23.4947 30.6154 25.0383 29.8482 26.4051C29.081 27.772 27.9701 28.9148 26.6255 29.7204C25.2809 30.526 23.7492 30.9664 22.182 30.9982C20.6148 31.0299 19.0666 30.6518 17.6905 29.9012C16.3143 29.1507 15.1581 28.0538 14.3362 26.7191C13.5143 25.3844 13.0553 23.8581 13.0045 22.2915L13 21.9999L13.0045 21.7083C13.0549 20.154 13.5072 18.6393 14.3173 17.3118C15.1274 15.9843 16.2676 14.8894 17.6269 14.1338C18.9861 13.3782 20.5179 12.9877 22.073 13.0003C23.6281 13.0129 25.1534 13.4283 26.5002 14.2059ZM22.0001 16.5999C21.7797 16.5999 21.5669 16.6809 21.4022 16.8273C21.2374 16.9738 21.1322 17.1757 21.1064 17.3946L21.1001 17.4999V21.9999L21.1082 22.1178C21.1287 22.2739 21.1899 22.422 21.2855 22.5471L21.3638 22.6371L24.0638 25.3371L24.1484 25.4109C24.3063 25.5334 24.5004 25.5998 24.7001 25.5998C24.8999 25.5998 25.094 25.5334 25.2519 25.4109L25.3365 25.3362L25.4112 25.2516C25.5336 25.0938 25.6001 24.8997 25.6001 24.6999C25.6001 24.5001 25.5336 24.306 25.4112 24.1482L25.3365 24.0636L22.9001 21.6264V17.4999L22.8938 17.3946C22.868 17.1757 22.7628 16.9738 22.5981 16.8273C22.4333 16.6809 22.2206 16.5999 22.0001 16.5999Z" fill="white" />
+                      </svg>
+                    </div>
+                    <div className="flex flex-col gap-[10px] flex-1">
+                      <div className="flex flex-col font-['Poppins'] text-[12px]">
+                        <p className="text-[14px] text-black leading-normal">Session Reminder</p>
+                        <p className="text-[rgba(0,0,0,0.7)] leading-normal">Your Session Starts in 10 Minutes</p>
+                        <p className="text-[rgba(0,0,0,0.7)] leading-normal"><span className="text-black">Student Name:</span> Ravi Kumar</p>
+                        <p className="text-[rgba(0,0,0,0.7)] leading-normal"><span className="text-black">Time:</span> 5:00PM - 6:00PM</p>
+                      </div>
+                      <div className="bg-[#8a38f5] flex h-[30px] items-center justify-center rounded-[20px] w-full cursor-pointer hover:bg-[#7a28e5] transition-colors">
+                        <p className="font-['Poppins'] text-[12px] text-white">Join Session</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Session Rescheduled */}
+                  <div className="flex gap-[10px] items-center">
+                    <div className="bg-[#dc2626] flex items-center justify-center rounded-[5px] shrink-0 size-[44px]">
+                      <svg className="size-[24px]" fill="none" viewBox="0 0 24 24">
+                        <path d="M19 3H18V1H16V3H8V1H6V3H5C3.89 3 3 3.89 3 5V19C3 19.5304 3.21071 20.0391 3.58579 20.4142C3.96086 20.7893 4.46957 21 5 21H19C20.1 21 21 20.1 21 19V5C21 4.46957 20.7893 3.96086 20.4142 3.58579C20.0391 3.21071 19.5304 3 19 3ZM19 19H5V8H19V19ZM12 10V12H16V15H12V17L8 13.5L12 10Z" fill="white" />
+                      </svg>
+                    </div>
+                    <div className="flex flex-col font-['Poppins'] text-[12px]">
+                      <p className="text-[14px] text-black leading-normal">Session Rescheduled</p>
+                      <p className="text-[rgba(0,0,0,0.7)] leading-normal"><span className="text-black">Student Name:</span> Ravi Kumar</p>
+                      <p className="text-[rgba(0,0,0,0.7)] leading-normal">New Date and Time:</p>
+                      <p className="text-[rgba(0,0,0,0.7)] leading-normal">18-10-2025 &nbsp;|&nbsp; 9:00PM - 10:00PM</p>
+                    </div>
+                  </div>
+
+                  {/* Session Booked */}
+                  <div className="flex gap-[10px] items-center">
+                    <div className="bg-[#34b161] flex items-center justify-center rounded-[5px] shrink-0 size-[44px]">
+                      <svg className="size-[24px]" fill="none" viewBox="0 0 24 24">
+                        <path clipRule="evenodd" d="M20.55 6.285C21.015 6.696 21.0585 7.407 20.6475 7.875L12.0225 17.625C11.9229 17.7376 11.8017 17.8291 11.6661 17.8941C11.5306 17.9591 11.3833 17.9963 11.2332 18.0034C11.083 18.0106 10.9329 17.9875 10.7918 17.9357C10.6506 17.8838 10.5213 17.8042 10.4115 17.7015L4.7865 12.4515C4.57011 12.2476 4.44325 11.9663 4.43365 11.6691C4.42406 11.3719 4.53252 11.083 4.73531 10.8655C4.9381 10.6481 5.21874 10.5197 5.51587 10.5086C5.81301 10.4974 6.10248 10.6044 6.321 10.806L11.106 15.261L18.966 6.381C19.064 6.27014 19.1829 6.1797 19.3159 6.11486C19.4489 6.05002 19.5934 6.01206 19.7411 6.00314C19.8888 5.99422 20.0368 6.01453 20.1766 6.0629C20.3165 6.11126 20.4454 6.18674 20.556 6.285H20.55Z" fill="white" fillRule="evenodd" />
+                      </svg>
+                    </div>
+                    <div className="flex flex-col font-['Poppins'] text-[12px]">
+                      <p className="text-[14px] text-black leading-normal">Session Booked</p>
+                      <p className="text-[rgba(0,0,0,0.7)] leading-normal"><span className="text-black">Student Name:</span> Ravi Kumar</p>
+                      <p className="text-[rgba(0,0,0,0.7)] leading-normal">18-10-2025 &nbsp;|&nbsp; 9:00PM - 10:00PM</p>
+                    </div>
+                  </div>
+
+                  <div className="border-t border-[rgba(0,0,0,0.08)]" />
+
+                  {/* ── System and Platform Alerts ── */}
+                  <p className="font-['Poppins'] text-[12px] text-[rgba(0,0,0,0.7)]">System and Platform Alerts</p>
+
+                  {/* Server Maintenance */}
+                  <div className="flex gap-[10px] items-center">
+                    <div className="bg-[#f77f00] flex items-center justify-center rounded-[5px] shrink-0 size-[44px]">
+                      <svg className="size-[24px]" fill="none" viewBox="0 0 24 24">
+                        <path clipRule="evenodd" d="M8.062 7.938L9 5.127L6.158 2.287C6.738 2.102 7.358 2 8 2C8.93717 1.99973 9.86138 2.21899 10.6985 2.64022C11.5357 3.06144 12.2626 3.67292 12.8209 4.42564C13.3792 5.17837 13.7534 6.05141 13.9135 6.9748C14.0736 7.89818 14.0152 8.84625 13.743 9.743L20 16C20.2626 16.2626 20.471 16.5744 20.6131 16.9176C20.7553 17.2608 20.8284 17.6286 20.8284 18C20.8284 18.3714 20.7553 18.7392 20.6131 19.0824C20.471 19.4256 20.2626 19.7374 20 20C19.7374 20.2626 19.4256 20.471 19.0824 20.6131C18.7392 20.7553 18.3714 20.8284 18 20.8284C17.6286 20.8284 17.2608 20.7553 16.9176 20.6131C16.5744 20.471 16.2626 20.2626 16 20L9.743 13.743C8.69515 14.0617 7.58007 14.0874 6.51863 13.8175C5.45718 13.5476 4.48986 12.9923 3.72152 12.2118C2.95318 11.4313 2.41313 10.4554 2.1599 9.38981C1.90668 8.32426 1.94994 7.20972 2.285 6.167L5.124 9L7.937 8.063L8.062 7.938Z" fill="white" fillRule="evenodd" />
+                      </svg>
+                    </div>
+                    <div className="flex flex-col font-['Poppins'] text-[12px] flex-1">
+                      <p className="text-[14px] text-black leading-normal">Server Maintenance</p>
+                      <p className="text-[rgba(0,0,0,0.7)] leading-normal">Scheduled server maintenance is ongoing. Some features may be temporarily unavailable.</p>
+                    </div>
+                  </div>
+
+                  {/* New Feature Release */}
+                  <div className="flex gap-[10px] items-center">
+                    <div className="bg-[#3451b1] flex items-center justify-center rounded-[5px] shrink-0 size-[44px]">
+                      <svg className="size-[24px]" fill="none" viewBox="0 0 24 24">
+                        <path d="M6 19.05L7.975 18.25C7.80833 17.7667 7.65433 17.275 7.513 16.775C7.37167 16.275 7.259 15.775 7.175 15.275L6 16.075V19.05ZM10 18H14C14.3 17.3333 14.5417 16.521 14.725 15.563C14.9083 14.605 15 13.6257 15 12.625C15 10.975 14.725 9.41267 14.175 7.938C13.625 6.46333 12.9 5.32567 12 4.525C11.1 5.325 10.375 6.46267 9.825 7.938C9.275 9.41333 9 10.9757 9 12.625C9 13.625 9.09167 14.6043 9.275 15.563C9.45833 16.5217 9.7 17.334 10 18ZM12 13C11.45 13 10.9793 12.8043 10.588 12.413C10.1967 12.0217 10.0007 11.5507 10 11C9.99933 10.4493 10.1953 9.97867 10.588 9.588C10.9807 9.19733 11.4513 9.00133 12 9C12.5487 8.99867 13.0197 9.19467 13.413 9.588C13.8063 9.98133 14.002 10.452 14 11C13.998 11.548 13.8023 12.019 13.413 12.413C13.0237 12.807 12.5527 13.0027 12 13ZM18 19.05V16.075L16.825 15.275C16.7417 15.775 16.6293 16.275 16.488 16.775C16.3467 17.275 16.1923 17.7667 16.025 18.25L18 19.05ZM12 1.975C13.65 3.175 14.896 4.7 15.738 6.55C16.58 8.4 17.0007 10.55 17 13L19.1 14.4C19.3833 14.5833 19.6043 14.825 19.763 15.125C19.9217 15.425 20.0007 15.7417 20 16.075V22L15.025 20H8.975L4 22V16.075C4 15.7417 4.07933 15.425 4.238 15.125C4.39667 14.825 4.61733 14.5833 4.9 14.4L7 13C7 10.55 7.421 8.4 8.263 6.55C9.105 4.7 10.3507 3.175 12 1.975Z" fill="white" />
+                      </svg>
+                    </div>
+                    <div className="flex flex-col font-['Poppins'] text-[12px] flex-1">
+                      <p className="text-[14px] text-black leading-normal">New Feature Release</p>
+                      <p className="text-[rgba(0,0,0,0.7)] leading-normal">A new update is available! Check out the latest features and improvements.</p>
+                    </div>
+                  </div>
+
+                  <div className="border-t border-[rgba(0,0,0,0.08)]" />
+
+                  {/* ── Withdraw Notifications ── */}
+                  <p className="font-['Poppins'] text-[12px] text-[rgba(0,0,0,0.7)]">Withdraw Notification</p>
+
+                  {/* Withdraw Successful */}
+                  <div className="flex gap-[10px] items-start">
+                    <div className="bg-[#34b161] flex items-center justify-center rounded-[5px] shrink-0 size-[44px]">
+                      <svg className="size-[24px]" fill="none" viewBox="0 0 24 24">
+                        <path clipRule="evenodd" d="M20.55 6.285C21.015 6.696 21.0585 7.407 20.6475 7.875L12.0225 17.625C11.9229 17.7376 11.8017 17.8291 11.6661 17.8941C11.5306 17.9591 11.3833 17.9963 11.2332 18.0034C11.083 18.0106 10.9329 17.9875 10.7918 17.9357C10.6506 17.8838 10.5213 17.8042 10.4115 17.7015L4.7865 12.4515C4.57011 12.2476 4.44325 11.9663 4.43365 11.6691C4.42406 11.3719 4.53252 11.083 4.73531 10.8655C4.9381 10.6481 5.21874 10.5197 5.51587 10.5086C5.81301 10.4974 6.10248 10.6044 6.321 10.806L11.106 15.261L18.966 6.381C19.064 6.27014 19.1829 6.1797 19.3159 6.11486C19.4489 6.05002 19.5934 6.01206 19.7411 6.00314C19.8888 5.99422 20.0368 6.01453 20.1766 6.0629C20.3165 6.11126 20.4454 6.18674 20.556 6.285H20.55Z" fill="white" fillRule="evenodd" />
+                      </svg>
+                    </div>
+                    <div className="flex flex-col font-['Poppins'] text-[12px] flex-1">
+                      <p className="text-[14px] text-black leading-normal">Withdraw Successful</p>
+                      <p className="text-[rgba(0,0,0,0.7)] leading-normal"><span className="text-black">Amount:</span> ₹1500</p>
+                      <p className="text-[rgba(0,0,0,0.7)] leading-normal"><span className="text-black">Mode:</span> UPI</p>
+                      <p className="text-[rgba(0,0,0,0.7)] leading-normal">30-10-2025 &nbsp;|&nbsp; 8:00PM</p>
+                    </div>
+                  </div>
+
+                  {/* Withdraw Failed */}
+                  <div className="flex gap-[10px] items-start">
+                    <div className="bg-[#dc2626] flex items-center justify-center rounded-[5px] shrink-0 size-[44px]">
+                      <svg className="size-[24px]" fill="none" viewBox="0 0 24 24" stroke="white" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5">
+                        <path d="M16.875 7.125L7.125 16.875M7.125 7.125L16.875 16.875" />
+                      </svg>
+                    </div>
+                    <div className="flex flex-col font-['Poppins'] text-[12px] flex-1">
+                      <p className="text-[14px] text-black leading-normal">Withdraw Failed</p>
+                      <p className="text-[rgba(0,0,0,0.7)] leading-normal"><span className="text-black">Amount:</span> ₹1500</p>
+                      <p className="text-[rgba(0,0,0,0.7)] leading-normal"><span className="text-black">Mode:</span> UPI</p>
+                      <p className="text-[rgba(0,0,0,0.7)] leading-normal">28-10-2025 &nbsp;|&nbsp; 8:00PM</p>
+                    </div>
+                  </div>
+
+                </div>
+              </div>
+            )}
+          </button>
+
+          {/* Profile */}
+          <div className="relative">
+            <button
+              className="flex items-center gap-[10px] hover:opacity-80 transition-opacity"
+              onClick={() => { setShowProfile(!showProfile); setShowNotifications(false); }}
+            >
+              <ImageWithFallback
+                src="https://images.unsplash.com/photo-1758685845906-6f705cde4fb7?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxwcm9mZXNzaW9uYWwlMjBtZW50b3IlMjB0ZWFjaGVyJTIwcG9ydHJhaXR8ZW58MXx8fHwxNzcxNjcwNjM4fDA&ixlib=rb-4.1.0&q=80&w=1080"
+                alt="Jack Sparrow"
+                className="w-[38px] h-[38px] rounded-full object-cover"
+              />
+              <span className="font-['Poppins'] text-[16px] text-black">Jack Sparrow</span>
+            </button>
+
+            {showProfile && (
+              <ProfileDropdown
+                onLogout={onLogout}
+                onClose={() => setShowProfile(false)}
+                onNavigate={(nav) => { setActiveNav(nav); setShowProfile(false); }}
+              />
+            )}
+          </div>
+        </div>
+
+        {/* Page content */}
+        <div className={`flex-1 ${activeNav === 'world-chat' || activeNav === 'wellness' ? 'overflow-hidden flex flex-col p-10' : activeNav === 'profile' ? 'overflow-hidden flex flex-col' : 'overflow-y-auto p-10'}`}>
+          {renderContent()}
+        </div>
+      </div>
+    </div>
+  );
+}

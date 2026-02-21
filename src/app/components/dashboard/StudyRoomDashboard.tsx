@@ -7,6 +7,12 @@ import { AiMentorHome } from "@/app/components/AiMentorHome";
 import { AiMentorVoiceChat } from "@/app/components/AiMentorVoiceChat";
 import { AiMentorChat } from "@/app/components/AiMentorChat";
 import { HumanMentorHome } from "@/app/components/HumanMentorHome";
+import { ProductivityToolsView } from "./ProductivityToolsView";
+import { EmotionalWellnessView } from "./EmotionalWellnessView";
+import { CommunityView } from "./CommunityView";
+import { NotificationsPopup } from "./NotificationsPopup";
+import { ProfilePopup } from "./ProfilePopup";
+import { UserProfileSettings } from "./UserProfileSettings";
 import React from 'react';
 import svgPaths from '@/imports/svg-87v94e0bse';
 import imgEllipse1 from "figma:asset/798eac6e288222603807db12d070c52d1a145785.png";
@@ -88,23 +94,23 @@ function IconMentorSupport({ active }: { active?: boolean }) {
   );
 }
 
-function IconProductivityTools() {
+function IconProductivityTools({ active }: { active?: boolean }) {
   return (
     <div className="size-[24px] shrink-0 flex items-center justify-center">
        <svg className="block size-[20px]" fill="none" viewBox="0 0 20 20">
-          <path d={svgPaths.p12587c80} stroke="black" strokeLinecap="round" strokeLinejoin="round" strokeOpacity="0.6" strokeWidth="2" />
-          <path d={svgPaths.p58ba980} stroke="black" strokeLinecap="round" strokeLinejoin="round" strokeOpacity="0.6" strokeWidth="2" />
+          <path d={svgPaths.p12587c80} stroke={active ? "#003566" : "black"} strokeLinecap="round" strokeLinejoin="round" strokeOpacity={active ? "1" : "0.6"} strokeWidth="2" />
+          <path d={svgPaths.p58ba980} stroke={active ? "#003566" : "black"} strokeLinecap="round" strokeLinejoin="round" strokeOpacity={active ? "1" : "0.6"} strokeWidth="2" />
         </svg>
     </div>
   );
 }
 
-function IconEmotionalWellness() {
+function IconEmotionalWellness({ active }: { active?: boolean }) {
   return (
     <div className="w-[21px] h-[22px] shrink-0">
       <svg className="block size-full" fill="none" viewBox="0 0 21 22">
         <g clipPath="url(#clip0_4_104_local)">
-          <path d={svgPaths.p2ab57600} fill="black" fillOpacity="0.6" />
+          <path d={svgPaths.p2ab57600} fill={active ? "#003566" : "black"} fillOpacity={active ? "1" : "0.6"} />
         </g>
         <defs>
           <clipPath id="clip0_4_104_local">
@@ -116,11 +122,11 @@ function IconEmotionalWellness() {
   );
 }
 
-function IconCommunity() {
+function IconCommunity({ active }: { active?: boolean }) {
   return (
     <div className="size-[22px] shrink-0">
       <svg className="block size-full" fill="none" viewBox="0 0 22 22">
-        <path d={svgPaths.p7213140} fill="black" fillOpacity="0.6" />
+        <path d={svgPaths.p7213140} fill={active ? "#003566" : "black"} fillOpacity={active ? "1" : "0.6"} />
       </svg>
     </div>
   );
@@ -242,19 +248,19 @@ const SidebarContent = ({
         onClick={() => onNavigate("Mentor Support")}
       />
       <SidebarItem 
-        icon={<IconProductivityTools />} 
+        icon={<IconProductivityTools active={activeSection === "Productivity Tools"} />} 
         label="Productivity Tools" 
         active={activeSection === "Productivity Tools"}
         onClick={() => onNavigate("Productivity Tools")}
       />
       <SidebarItem 
-        icon={<IconEmotionalWellness />} 
+        icon={<IconEmotionalWellness active={activeSection === "Emotional Wellness"} />} 
         label="Emotional Wellness" 
         active={activeSection === "Emotional Wellness"}
         onClick={() => onNavigate("Emotional Wellness")}
       />
       <SidebarItem 
-        icon={<IconCommunity />} 
+        icon={<IconCommunity active={activeSection === "Community"} />} 
         label="Community" 
         active={activeSection === "Community"}
         onClick={() => onNavigate("Community")}
@@ -275,6 +281,8 @@ const SidebarContent = ({
 export function StudyRoomDashboard({ onLogout }: { onLogout?: () => void }) {
   const [activeMode, setActiveMode] = React.useState<string | null>(null);
   const [activeSection, setActiveSection] = React.useState("Study Rooms");
+  const [showNotifications, setShowNotifications] = React.useState(false);
+  const [showProfile, setShowProfile] = React.useState(false);
 
   const modes = [
     {
@@ -342,10 +350,19 @@ export function StudyRoomDashboard({ onLogout }: { onLogout?: () => void }) {
 
   if (activeSection === "AI Mentor Chat") {
     return (
-      <AiMentorChat 
+      <AiMentorChat
         onBack={() => setActiveSection("Mentor Support")}
         onVoiceMode={() => setActiveSection("AI Mentor Voice")}
       />
+    );
+  }
+
+  // Profile Settings full-screen
+  if (activeSection === "Profile Settings") {
+    return (
+      <div className="flex w-full min-h-screen bg-white font-['Poppins']">
+        <UserProfileSettings onBack={() => setActiveSection("Study Rooms")} />
+      </div>
     );
   }
 
@@ -390,17 +407,43 @@ export function StudyRoomDashboard({ onLogout }: { onLogout?: () => void }) {
             </div>
 
             <div className="flex items-center gap-4 md:gap-6 ml-auto">
-                <button className="p-2 hover:bg-gray-100 rounded-full transition-colors relative">
+                <div className="relative">
+                  <button
+                    onClick={() => {
+                      setShowNotifications((prev) => !prev);
+                      setShowProfile(false);
+                    }}
+                    className="p-2 hover:bg-gray-100 rounded-full transition-colors relative cursor-pointer"
+                  >
                     <IconBell />
                     {/* Notification dot */}
                     <span className="absolute top-2 right-2 size-2 bg-red-500 rounded-full border-2 border-white"></span>
-                </button>
+                  </button>
+                  <NotificationsPopup
+                    isOpen={showNotifications}
+                    onClose={() => setShowNotifications(false)}
+                  />
+                </div>
                 
-                <div className="flex items-center gap-3 pl-2 border-l border-gray-200">
+                <div className="relative pl-2 border-l border-gray-200">
+                  <button
+                    onClick={() => {
+                      setShowProfile((prev) => !prev);
+                      setShowNotifications(false);
+                    }}
+                    className="flex items-center gap-3 cursor-pointer hover:opacity-80 transition-opacity"
+                  >
                     <div className="size-[32px] md:size-[38px] rounded-full overflow-hidden border border-gray-200">
                         <ImageWithFallback src={imgEllipse1} alt="User" className="size-full object-cover" />
                     </div>
                     <span className="hidden sm:block text-[16px] text-black font-medium">Jack Sparrow</span>
+                  </button>
+                  <ProfilePopup
+                    isOpen={showProfile}
+                    onClose={() => setShowProfile(false)}
+                    onProfileSettings={() => setActiveSection("Profile Settings")}
+                    onLogout={() => onLogout?.()}
+                  />
                 </div>
             </div>
         </header>
@@ -445,8 +488,20 @@ export function StudyRoomDashboard({ onLogout }: { onLogout?: () => void }) {
                 <HumanMentorHome onBack={() => setActiveSection("Mentor Support")} />
             )}
 
+            {activeSection === "Productivity Tools" && (
+                <ProductivityToolsView />
+            )}
+
+            {activeSection === "Emotional Wellness" && (
+                <EmotionalWellnessView />
+            )}
+
+            {activeSection === "Community" && (
+                <CommunityView />
+            )}
+
             {/* If section is not one of the main ones and not handled above, show coming soon */}
-            {activeSection !== "Study Rooms" && activeSection !== "Mentor Support" && activeSection !== "Human Mentor" && !activeSection.startsWith("AI Mentor") && (
+            {activeSection !== "Study Rooms" && activeSection !== "Mentor Support" && activeSection !== "Human Mentor" && activeSection !== "Productivity Tools" && activeSection !== "Emotional Wellness" && activeSection !== "Community" && !activeSection.startsWith("AI Mentor") && (
                 <div className="flex flex-col items-center justify-center h-[50vh] text-center">
                     <h2 className="text-2xl font-semibold text-gray-400 mb-2">Coming Soon</h2>
                     <p className="text-gray-400">The {activeSection} feature is currently under development.</p>

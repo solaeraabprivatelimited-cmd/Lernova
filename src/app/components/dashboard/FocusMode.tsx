@@ -3,6 +3,7 @@ import { ImageWithFallback } from "../figma/ImageWithFallback";
 import { toast } from "sonner";
 import { SilentModeView } from "./SilentModeView"; // Import Silent Mode component
 import { PostReportNotification } from "./PostReportNotification"; // Import Post Report Notification
+import { notes as notesApi } from "@/app/lib/api";
 
 // Import SVGs
 import svgPathsNew from "@/imports/svg-734xismd1b";
@@ -282,51 +283,165 @@ interface Note {
 }
 
 function NotesOverlay({ onClose }: { onClose: () => void }) {
-  const [notes, setNotes] = useState<Note[]>([
-    {
-      id: '1',
-      title: 'Social Science',
-      content: 'Lorem ipsum dolor sit amet consectetur. Semper leo quis odio enim. Purus diam at aenean morbi dictum. Est dui id malesuada amet pellentesque mattis leo. Placerat id libero eget enim ut rhoncus massa lectus.',
-      date: 'Today, 15:24'
-    },
-    {
-      id: '2',
-      title: 'Mathematics',
-      content: 'Algebra review: Quadratic formulas and their applications in real-world problems. Remember to bring the calculator tomorrow.',
-      date: 'Today, 15:24'
-    }
-  ]);
+  const [notesList, setNotesList] = useState<Note[]>([]);
   const [search, setSearch] = useState("");
+  const [isLoading, setIsLoading] = useState(true);
+  // editing state: null = list view, 'new' = creating, noteId = editing existing
+  const [editingId, setEditingId] = useState<string | null | "new">(null);
+  const [editTitle, setEditTitle] = useState("");
+  const [editContent, setEditContent] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
 
-  const addNote = () => {
-    const newNote: Note = {
-      id: Date.now().toString(),
-      title: 'New Note',
-      content: 'Start typing your note here...',
-      date: 'Just now'
-    };
-    setNotes([newNote, ...notes]);
-    toast.success("Note added");
+  // Load notes from API
+  useEffect(() => {
+    notesApi.list()
+      .then((data: any[]) => {
+        setNotesList(
+          data.map((n) => ({
+            id: n.id,
+            title: n.title || "Untitled",
+            content: n.content || "",
+            date: n.createdAt
+              ? new Date(n.createdAt).toLocaleString("en-US", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })
+              : "Just now",
+          }))
+        );
+      })
+      .catch((e) => {
+        console.log("Error loading notes:", e);
+        toast.error("Failed to load notes");
+      })
+      .finally(() => setIsLoading(false));
+  }, []);
+
+  // Open new note form
+  const openNew = () => {
+    setEditTitle("");
+    setEditContent("");
+    setEditingId("new");
   };
 
-  const deleteNote = (id: string, e: React.MouseEvent) => {
+  // Open existing note for editing
+  const openEdit = (note: Note) => {
+    setEditTitle(note.title);
+    setEditContent(note.content);
+    setEditingId(note.id);
+  };
+
+  // Save (create or update)
+  const handleSave = async () => {
+    if (!editTitle.trim() && !editContent.trim()) {
+      setEditingId(null);
+      return;
+    }
+    setIsSaving(true);
+    try {
+      if (editingId === "new") {
+        const created = await notesApi.create(editTitle.trim() || "Untitled", editContent.trim());
+        const newNote: Note = {
+          id: created.id,
+          title: created.title || "Untitled",
+          content: created.content || "",
+          date: "Just now",
+        };
+        setNotesList((prev) => [newNote, ...prev]);
+        toast.success("Note saved");
+      } else if (editingId) {
+        await notesApi.update(editingId, { title: editTitle.trim() || "Untitled", content: editContent.trim() });
+        setNotesList((prev) =>
+          prev.map((n) =>
+            n.id === editingId ? { ...n, title: editTitle.trim() || "Untitled", content: editContent.trim() } : n
+          )
+        );
+        toast.success("Note updated");
+      }
+    } catch (e) {
+      console.log("Error saving note:", e);
+      toast.error("Failed to save note");
+    } finally {
+      setIsSaving(false);
+      setEditingId(null);
+    }
+  };
+
+  // Delete note
+  const deleteNote = async (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    setNotes(notes.filter(n => n.id !== id));
-    toast.success("Note deleted");
+    try {
+      await notesApi.delete(id);
+      setNotesList((prev) => prev.filter((n) => n.id !== id));
+      toast.success("Note deleted");
+    } catch (e) {
+      console.log("Error deleting note:", e);
+      toast.error("Failed to delete note");
+    }
   };
 
-  const filteredNotes = notes.filter(n => 
-    n.title.toLowerCase().includes(search.toLowerCase()) || 
+  const filteredNotes = notesList.filter((n) =>
+    n.title.toLowerCase().includes(search.toLowerCase()) ||
     n.content.toLowerCase().includes(search.toLowerCase())
   );
 
+  // ── Edit / Create view ──
+  if (editingId !== null) {
+    return (
+      <div className="absolute right-4 bottom-24 md:right-12 top-8 md:top-auto md:bottom-24 w-[350px] md:w-[462px] bg-[rgba(20,19,22,0.97)] backdrop-blur-xl rounded-[20px] p-8 border border-white/10 shadow-2xl animate-in fade-in z-40 flex flex-col gap-5">
+        {/* Header */}
+        <div className="flex items-center justify-between w-full">
+          <button
+            type="button"
+            onClick={() => setEditingId(null)}
+            className="flex items-center gap-2 text-white/60 hover:text-white transition-colors"
+          >
+            <svg className="size-[18px]" fill="none" viewBox="0 0 24 24">
+              <path d="M15 18l-6-6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+            <span className="font-['Poppins'] text-[14px]">Notes</span>
+          </button>
+          <button
+            type="button"
+            onClick={handleSave}
+            disabled={isSaving}
+            className="flex items-center gap-2 bg-white/10 hover:bg-white/20 transition-colors rounded-full px-4 py-1.5 disabled:opacity-50"
+          >
+            {isSaving && (
+              <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />
+            )}
+            <span className="font-['Poppins'] text-[13px] text-white">Save</span>
+          </button>
+        </div>
+
+        {/* Title input */}
+        <input
+          type="text"
+          placeholder="Note title…"
+          value={editTitle}
+          onChange={(e) => setEditTitle(e.target.value)}
+          autoFocus
+          className="bg-transparent font-['Poppins'] font-medium text-[20px] text-white outline-none placeholder:text-white/30 border-b border-white/10 pb-3"
+        />
+
+        {/* Content textarea */}
+        <textarea
+          placeholder="Start writing your note…"
+          value={editContent}
+          onChange={(e) => setEditContent(e.target.value)}
+          className="flex-1 bg-transparent font-['Poppins'] text-[15px] text-white/80 outline-none placeholder:text-white/30 resize-none leading-relaxed min-h-[260px]"
+        />
+
+        {/* Character count */}
+        <p className="font-['Poppins'] text-[11px] text-white/30 text-right">{editContent.length} characters</p>
+      </div>
+    );
+  }
+
+  // ── List view ──
   return (
-    <div className="absolute right-4 bottom-24 md:right-12 top-8 md:bottom-24 w-[350px] md:w-[462px] bg-[rgba(20,19,22,0.95)] backdrop-blur-xl rounded-[20px] p-8 border border-white/10 shadow-2xl animate-in fade-in slide-in-from-bottom-4 z-40 flex flex-col gap-6">
-      
+    <div className="absolute right-4 bottom-24 md:right-12 top-8 md:top-auto md:bottom-24 w-[350px] md:w-[462px] bg-[rgba(20,19,22,0.95)] backdrop-blur-xl rounded-[20px] p-8 border border-white/10 shadow-2xl animate-in fade-in slide-in-from-bottom-4 z-40 flex flex-col gap-6">
       {/* Header */}
       <div className="flex items-center justify-between w-full">
         <h2 className="font-['Poppins'] font-medium text-[24px] text-white">Notes</h2>
-        <button 
+        <button
           onClick={onClose}
           type="button"
           className="relative z-50 cursor-pointer hover:opacity-80 transition-opacity"
@@ -338,49 +453,79 @@ function NotesOverlay({ onClose }: { onClose: () => void }) {
 
       {/* Search Bar */}
       <div className="bg-[rgba(255,255,255,0.1)] rounded-[20px] w-full px-6 py-3 flex items-center gap-3">
-         <MageSearch />
-         <input 
-            type="text" 
-            placeholder="Search Notes" 
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="bg-transparent border-none outline-none text-[16px] text-white placeholder:text-[rgba(255,255,255,0.6)] w-full font-['Poppins']"
-         />
+        <MageSearch />
+        <input
+          type="text"
+          placeholder="Search Notes"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="bg-transparent border-none outline-none text-[16px] text-white placeholder:text-[rgba(255,255,255,0.6)] w-full font-['Poppins']"
+        />
       </div>
 
       {/* My Notes Header */}
       <div className="flex items-center justify-between w-full">
         <p className="font-['Poppins'] text-[12px] text-[rgba(255,255,255,0.6)] uppercase">My Notes</p>
-        <button onClick={addNote} className="opacity-60 hover:opacity-100 transition-opacity hover:bg-white/10 rounded-full p-1">
-           <LucidePlus />
+        <button
+          onClick={openNew}
+          className="opacity-60 hover:opacity-100 transition-opacity hover:bg-white/10 rounded-full p-1"
+          title="Add note"
+        >
+          <LucidePlus />
         </button>
       </div>
 
       {/* Notes List */}
       <div className="flex flex-col gap-4 w-full flex-1 overflow-y-auto pr-2 custom-scrollbar">
-         {filteredNotes.length === 0 ? (
-            <div className="text-white/50 text-center py-8 font-['Poppins']">No notes found</div>
-         ) : (
-            filteredNotes.map((note) => (
-               <div key={note.id} className="bg-[rgba(255,255,255,0.05)] hover:bg-[rgba(255,255,255,0.1)] rounded-[20px] p-6 flex flex-col gap-2 transition-colors cursor-pointer group relative">
-                  <h3 className="font-['Poppins'] font-medium text-[16px] text-white">{note.title}</h3>
-                  <p className="font-['Poppins'] text-[14px] text-[rgba(255,255,255,0.6)] line-clamp-4">
-                     {note.content}
-                  </p>
-                  <div className="flex justify-between items-end mt-2">
-                     <span className="font-['Poppins'] font-medium text-[12px] text-[rgba(255,255,255,0.4)]">{note.date}</span>
-                     <button 
-                        onClick={(e) => deleteNote(note.id, e)}
-                        className="opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-red-500/20 rounded-full text-red-400"
-                        title="Delete note"
-                     >
-                        <MingcuteDeleteLine />
-                     </button>
-                  </div>
-               </div>
-            ))
-         )}
+        {isLoading ? (
+          <div className="flex items-center justify-center py-10">
+            <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin" />
+          </div>
+        ) : filteredNotes.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-10 gap-3">
+            <svg className="size-[40px] text-white/20" fill="none" viewBox="0 0 24 24">
+              <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" stroke="currentColor" strokeWidth="1.5" />
+              <path d="M14 2v6h6M16 13H8M16 17H8M10 9H8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+            </svg>
+            <p className="font-['Poppins'] text-white/40 text-[14px] text-center">
+              {search ? "No notes match your search" : "No notes yet. Tap + to create one."}
+            </p>
+          </div>
+        ) : (
+          filteredNotes.map((note) => (
+            <div
+              key={note.id}
+              onClick={() => openEdit(note)}
+              className="bg-[rgba(255,255,255,0.05)] hover:bg-[rgba(255,255,255,0.1)] rounded-[20px] p-6 flex flex-col gap-2 transition-colors cursor-pointer group relative"
+            >
+              <h3 className="font-['Poppins'] font-medium text-[16px] text-white">{note.title}</h3>
+              <p className="font-['Poppins'] text-[14px] text-[rgba(255,255,255,0.6)] line-clamp-3">
+                {note.content || <span className="italic text-white/30">Empty note</span>}
+              </p>
+              <div className="flex justify-between items-end mt-2">
+                <span className="font-['Poppins'] font-medium text-[12px] text-[rgba(255,255,255,0.4)]">{note.date}</span>
+                <button
+                  onClick={(e) => deleteNote(note.id, e)}
+                  className="opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-red-500/20 rounded-full text-red-400"
+                  title="Delete note"
+                >
+                  <MingcuteDeleteLine />
+                </button>
+              </div>
+            </div>
+          ))
+        )}
       </div>
+
+      {/* Quick-add CTA when empty */}
+      {!isLoading && filteredNotes.length === 0 && !search && (
+        <button
+          onClick={openNew}
+          className="w-full bg-white/10 hover:bg-white/15 transition-colors rounded-[16px] py-3 font-['Poppins'] text-[14px] text-white/70"
+        >
+          + Create your first note
+        </button>
+      )}
     </div>
   );
 }
