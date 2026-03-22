@@ -1,5 +1,5 @@
 import React from 'react';
-import { ArrowLeft, Search, Star, GraduationCap, Briefcase, User, Loader2 } from 'lucide-react';
+import { ArrowLeft, Search, Star, GraduationCap, Briefcase, Loader2, ArrowRight, Users, Clock, X, CheckCircle, XCircle } from 'lucide-react';
 import { ImageWithFallback } from "./figma/ImageWithFallback";
 import imgRavi from "figma:asset/ee75b3f7fd75b317c92ab5dcaa912db9eddbf3e7.png";
 import imgRiya from "figma:asset/0aaa9a026db3fff583a4d805f37def4bf33531fe.png";
@@ -7,10 +7,10 @@ import imgSarah from "figma:asset/1febea968fb6ef6c5fe4a446aa07bfe8857031ea.png";
 import imgPhonePe from "figma:asset/68a29cc3e202d7b0aeb6edd06b3ee07b4bb5a8cd.png";
 import imgAmazonPay from "figma:asset/4653de0e1c461ac1033869badee2bf8229548fac.png";
 
-// Unique SVG for Flask/Chemistry icon as it's not standard in Lucide
-const FlaskIcon = () => (
-  <svg width="20" height="21" viewBox="0 0 20 21" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M10.8333 2.16667V5.5M10.8333 2.16667H6.66667M10.8333 2.16667H15M6.66667 5.5H15M8.70583 5.5L4.54583 13.5183C3.96333 14.6417 3.67167 15.2033 3.75417 15.6883C3.82667 16.115 4.07 16.4858 4.4175 16.7C4.81167 16.9433 5.44333 16.9433 6.70833 16.9433H15.0417C16.3067 16.9433 16.9383 16.9433 17.3325 16.7C17.68 16.4858 17.9233 16.115 17.9958 15.6883C18.0783 15.2033 17.7867 14.6417 17.2042 13.5183L13.0442 5.5" stroke="black" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+// Unique SVG for Flask/Chemistry icon
+const FlaskIcon = ({ className = "" }: { className?: string }) => (
+  <svg width="18" height="18" viewBox="0 0 20 21" fill="none" xmlns="http://www.w3.org/2000/svg" className={className}>
+    <path d="M10.8333 2.16667V5.5M10.8333 2.16667H6.66667M10.8333 2.16667H15M6.66667 5.5H15M8.70583 5.5L4.54583 13.5183C3.96333 14.6417 3.67167 15.2033 3.75417 15.6883C3.82667 16.115 4.07 16.4858 4.4175 16.7C4.81167 16.9433 5.44333 16.9433 6.70833 16.9433H15.0417C16.3067 16.9433 16.9383 16.9433 17.3325 16.7C17.68 16.4858 17.9233 16.115 17.9958 15.6883C18.0783 15.2033 17.7867 14.6417 17.2042 13.5183L13.0442 5.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
   </svg>
 );
 
@@ -51,60 +51,64 @@ interface Mentor {
   experience: string;
 }
 
-interface MentorCardProps extends Mentor {
-  onBook: () => void;
-}
-
-const MentorCard = ({ name, description, image, rating, studentsHelped, subject, experience, onBook }: MentorCardProps) => {
+const MentorCard = ({ name, description, image, rating, studentsHelped, subject, experience, onBook }: Mentor & { onBook: () => void }) => {
   return (
-    <div className="bg-white rounded-[20px] shadow-[0px_4px_50px_5px_rgba(0,0,0,0.05)] overflow-hidden flex flex-col h-full hover:shadow-lg transition-shadow">
+    <div className="group bg-white rounded-[20px] overflow-hidden flex flex-col h-full border border-gray-100/60 shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1"
+      style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
       {/* Image Section */}
-      <div className="relative h-[252px] w-full shrink-0 overflow-hidden">
-        <ImageWithFallback src={image} alt={name} className="w-full h-full object-cover object-top hover:scale-105 transition-transform duration-500" />
-        
+      <div className="relative h-[220px] w-full shrink-0 overflow-hidden">
+        <ImageWithFallback src={image} alt={name} className="w-full h-full object-cover object-top transition-transform duration-700 group-hover:scale-105" />
+        <div className="absolute inset-0" style={{ background: 'linear-gradient(180deg, transparent 50%, rgba(0,0,0,0.15) 100%)' }} />
+
         {/* Rating Badge */}
-        <div className="absolute top-6 right-6 bg-[#FACC15] px-2.5 py-1 rounded-[10px] flex items-center gap-1 shadow-sm">
-          <Star className="w-3.5 h-3.5 fill-black text-black" />
-          <span className="text-[12px] font-['Poppins'] font-semibold text-black">{rating}</span>
+        <div className="absolute top-4 right-4 px-3 py-1.5 rounded-full flex items-center gap-1.5 shadow-lg"
+          style={{ background: 'rgba(255,255,255,0.95)', backdropFilter: 'blur(8px)' }}>
+          <Star className="w-3.5 h-3.5 fill-[#f77f00] text-[#f77f00]" />
+          <span className="text-[12px] font-bold text-[#003566]">{rating}</span>
+        </div>
+
+        {/* Subject badge */}
+        <div className="absolute bottom-4 left-4 px-3 py-1.5 rounded-full flex items-center gap-1.5"
+          style={{ background: 'rgba(0,53,102,0.8)', backdropFilter: 'blur(8px)' }}>
+          <FlaskIcon className="text-white/80" />
+          <span className="text-[11px] font-semibold text-white">{subject}</span>
         </div>
       </div>
 
       {/* Content Section */}
-      <div className="p-6 flex flex-col flex-1 gap-4">
+      <div className="p-5 flex flex-col flex-1 gap-3">
         <div>
-          <h3 className="text-[24px] font-['Poppins'] font-semibold text-black mb-2">{name}</h3>
-          <p className="text-[16px] font-['Poppins'] text-black/70 leading-normal line-clamp-3">
+          <h3 className="text-[20px] font-bold text-[#003566] mb-1.5"
+            style={{ fontFamily: "'DM Serif Display', serif" }}>
+            {name}
+          </h3>
+          <p className="text-[13px] text-[#5a7089] leading-relaxed line-clamp-2">
             {description}
           </p>
         </div>
 
         {/* Info Tags */}
-        <div className="flex flex-col gap-3 mt-auto">
-          {/* Row 1: Students & Subject */}
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2.5">
-              <GraduationCap className="w-5 h-5 text-black" />
-              <span className="text-[12px] font-['Poppins'] text-black">{studentsHelped} Students helped</span>
-            </div>
-            <div className="flex items-center gap-2.5">
-              <FlaskIcon />
-              <span className="text-[12px] font-['Poppins'] text-black text-right">{subject}</span>
-            </div>
+        <div className="flex flex-wrap gap-2 mt-auto">
+          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-[10px]"
+            style={{ background: 'rgba(9,103,189,0.06)' }}>
+            <GraduationCap className="w-3.5 h-3.5 text-[#0967bd]" />
+            <span className="text-[11px] font-medium text-[#0967bd]">{studentsHelped}</span>
           </div>
-
-          {/* Row 2: Experience */}
-          <div className="flex items-center gap-2.5">
-            <Briefcase className="w-5 h-5 text-black" />
-            <span className="text-[12px] font-['Poppins'] text-black">{experience} experience</span>
+          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-[10px]"
+            style={{ background: 'rgba(247,127,0,0.06)' }}>
+            <Briefcase className="w-3.5 h-3.5 text-[#f77f00]" />
+            <span className="text-[11px] font-medium text-[#f77f00]">{experience}</span>
           </div>
         </div>
 
         {/* Action Button */}
-        <button 
+        <button
           onClick={onBook}
-          className="w-full h-[42px] mt-2 bg-[#003566] text-white rounded-[20px] font-['Poppins'] font-medium text-[14px] hover:bg-[#00284d] transition-colors border-2 border-transparent"
+          className="w-full h-[44px] mt-2 rounded-[14px] font-bold text-[13px] transition-all duration-300 flex items-center justify-center gap-2 cursor-pointer group/btn"
+          style={{ background: 'linear-gradient(135deg, #003566, #0967bd)', color: 'white', boxShadow: '0 4px 16px rgba(0,53,102,0.2)' }}
         >
           Book a Session
+          <ArrowRight className="w-4 h-4 transition-transform group-hover/btn:translate-x-0.5" />
         </button>
       </div>
     </div>
@@ -115,7 +119,7 @@ export function HumanMentorHome({ onBack }: HumanMentorHomeProps) {
   const [selectedMentor, setSelectedMentor] = React.useState<Mentor | null>(null);
   const [selectedSlot, setSelectedSlot] = React.useState<string>("18-10-25 | 7:00 PM");
   const [selectedDuration, setSelectedDuration] = React.useState<string>("1 hour");
-  
+
   // Payment Modal States
   const [showPaymentModal, setShowPaymentModal] = React.useState(false);
   const [showProcessingModal, setShowProcessingModal] = React.useState(false);
@@ -125,7 +129,7 @@ export function HumanMentorHome({ onBack }: HumanMentorHomeProps) {
   const [selectedApp, setSelectedApp] = React.useState<string | null>('Google Pay');
   const [upiId, setUpiId] = React.useState<string>("");
 
-  const mentors = [
+  const mentors: Mentor[] = [
     {
       name: "Ravi Kumar",
       description: "Dedicated Math tutor helping students simplify complex problems and build confidence in quantitative reasoning.",
@@ -137,7 +141,7 @@ export function HumanMentorHome({ onBack }: HumanMentorHomeProps) {
     },
     {
       name: "Dr. Riya Nair",
-      description: "Passionate physics educator who simplifies complex theories with visual explanations and real-world connections",
+      description: "Passionate physics educator who simplifies complex theories with visual explanations and real-world connections.",
       image: imgRiya,
       rating: "4.5",
       studentsHelped: "1,120+",
@@ -155,17 +159,8 @@ export function HumanMentorHome({ onBack }: HumanMentorHomeProps) {
     }
   ];
 
-  const timeSlots = [
-    "18-10-25 | 7:00 PM",
-    "22-10-25 | 6:00 PM",
-    "25-10-25 | 8:00 PM"
-  ];
-
-  const durationOptions = [
-    "1 hour",
-    "2 hours",
-    "3 hours"
-  ];
+  const timeSlots = ["18-10-25 | 7:00 PM", "22-10-25 | 6:00 PM", "25-10-25 | 8:00 PM"];
+  const durationOptions = ["1 hour", "2 hours", "3 hours"];
 
   const handleBookClick = (mentor: Mentor) => {
     setSelectedMentor(mentor);
@@ -179,22 +174,15 @@ export function HumanMentorHome({ onBack }: HumanMentorHomeProps) {
   };
 
   const handleBookingConfirm = () => {
-    // Close booking modal, open payment modal
     setShowPaymentModal(true);
   };
 
   const handlePaymentConfirm = () => {
-    // Close payment modal, open processing modal
     setShowPaymentModal(false);
     setShowProcessingModal(true);
-    
-    // Simulate processing time then show success or failure
     setTimeout(() => {
       setShowProcessingModal(false);
-      // Simulate random failure (30% chance of failure for demo purposes)
-      // or check if UPI ID contains 'fail' for manual testing
       const shouldFail = Math.random() < 0.3 || upiId.toLowerCase().includes('fail');
-      
       if (shouldFail) {
         setShowFailedModal(true);
       } else {
@@ -217,156 +205,194 @@ export function HumanMentorHome({ onBack }: HumanMentorHomeProps) {
   };
 
   return (
-    <div className="w-full animate-in fade-in zoom-in-95 duration-300 relative">
+    <div className="w-full animate-in fade-in duration-300 relative" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
       {/* Back Breadcrumb */}
-      <button 
+      <button
         onClick={onBack}
-        className="flex items-center gap-2 text-black/60 hover:text-black mb-6 transition-colors group w-fit"
+        className="flex items-center gap-2 text-[#5a7089] hover:text-[#003566] mb-6 transition-colors group w-fit cursor-pointer"
       >
         <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
-        <span className="text-[14px] font-['Poppins']">Mentor Support</span>
+        <span className="text-[13px] font-medium">Mentor Support</span>
       </button>
 
-      {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-[40px] font-['Poppins'] font-medium text-black mb-2">Human Mentor</h1>
-        <p className="text-[14px] font-['Poppins'] text-black/60">
-          Learn directly from real mentors who guide, motivate, and inspire.
-        </p>
+      {/* Hero Header */}
+      <div className="relative rounded-[24px] overflow-hidden mb-8"
+        style={{ background: 'linear-gradient(135deg, #001d3d 0%, #003566 50%, #0967bd 100%)' }}>
+        <div className="absolute -top-20 -right-20 w-[300px] h-[300px] rounded-full opacity-[0.06]"
+          style={{ background: 'radial-gradient(circle, white, transparent 70%)' }} />
+
+        <div className="relative z-10 px-6 md:px-10 py-8 md:py-10 flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+          <div className="flex-1">
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full mb-4"
+              style={{ background: 'rgba(247,127,0,0.15)', border: '1px solid rgba(247,127,0,0.25)' }}>
+              <Users className="w-3.5 h-3.5 text-[#f77f00]" />
+              <span className="text-[12px] font-semibold text-[#f77f00]">Verified Human Experts</span>
+            </div>
+            <h1 className="text-[28px] md:text-[36px] text-white mb-3 leading-[1.1]"
+              style={{ fontFamily: "'DM Serif Display', serif" }}>
+              Human Mentors
+            </h1>
+            <p className="text-[14px] text-white/50 max-w-[420px] leading-relaxed">
+              Learn directly from real mentors who guide, motivate, and inspire — book 1:1 or group sessions.
+            </p>
+          </div>
+
+          {/* Quick stats */}
+          <div className="flex gap-3 shrink-0">
+            {[
+              { value: "3", label: "Mentors" },
+              { value: "4.5", label: "Avg Rating" },
+              { value: "2.9K+", label: "Helped" },
+            ].map((stat) => (
+              <div key={stat.label}
+                className="flex flex-col items-center px-5 py-4 rounded-[18px] min-w-[80px]"
+                style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.08)', backdropFilter: 'blur(10px)' }}>
+                <span className="text-[22px] font-bold text-white leading-none mb-1"
+                  style={{ fontFamily: "'DM Serif Display', serif" }}>
+                  {stat.value}
+                </span>
+                <span className="text-[10px] font-semibold text-white/35 uppercase tracking-[0.12em]">{stat.label}</span>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
 
       {/* Search Bar */}
-      <div className="bg-white rounded-[12px] p-4 mb-12 shadow-[0px_4px_60px_5px_rgba(0,0,0,0.05)] flex items-center gap-4">
-        <Search className="w-6 h-6 text-black/40" />
-        <input 
-          type="text" 
-          placeholder="Search by Name/Subject/Exam/Language" 
-          className="flex-1 bg-transparent border-none outline-none font-['Poppins'] text-[16px] placeholder:text-black/40"
+      <div className="flex items-center gap-3 px-5 h-[50px] rounded-[16px] bg-white border border-[#e2e8f0] mb-8 shadow-sm hover:border-[#c9ddf0] transition-all group">
+        <Search className="w-4 h-4 text-[#94a3b8] group-focus-within:text-[#0967bd] transition-colors shrink-0" />
+        <input
+          type="text"
+          placeholder="Search by Name, Subject, Exam, or Language..."
+          className="flex-1 bg-transparent border-none outline-none text-[13px] text-[#1e293b] placeholder:text-[#94a3b8] font-medium"
         />
       </div>
 
+      {/* Section Label */}
+      <div className="flex items-center gap-3 mb-5">
+        <div className="w-1 h-5 rounded-full bg-[#f77f00]" />
+        <h2 className="text-[16px] font-bold text-[#003566]">Available Mentors</h2>
+        <span className="text-[12px] font-medium text-[#94a3b8] ml-auto">{mentors.length} mentors</span>
+      </div>
+
       {/* Mentors Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
         {mentors.map((mentor, index) => (
-          <MentorCard 
-            key={index} 
-            {...mentor} 
-            onBook={() => handleBookClick(mentor)} 
+          <MentorCard
+            key={index}
+            {...mentor}
+            onBook={() => handleBookClick(mentor)}
           />
         ))}
       </div>
 
-      {/* Modal Overlay */}
+      {/* ── Modal Overlay ── */}
       {selectedMentor && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-black/20 backdrop-blur-sm" onClick={handleCloseModal}></div>
-          
+          <div className="absolute inset-0 bg-[#001d3d]/40 backdrop-blur-sm" onClick={handleCloseModal} />
+
           {showSuccessModal ? (
-            // --- SUCCESS MODAL ---
-            <div className="bg-white rounded-[20px] shadow-[0px_4px_50px_5px_rgba(0,0,0,0.1)] w-full max-w-[500px] p-[32px] z-10 animate-in fade-in zoom-in-95 duration-200 flex flex-col items-center justify-center text-center">
-              <h2 className="text-[24px] font-['Poppins'] font-semibold text-black mb-6 w-full text-left">Payment Successful</h2>
-              
-              <div className="mb-6 relative">
-                {/* Green Badge */}
-                <svg width="174" height="174" viewBox="0 0 254 243" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M254 121.549C254 134.468 237.823 144.673 234.039 156.33C230.116 168.412 237.069 186.149 229.75 196.206C222.358 206.363 203.29 205.196 193.133 212.588C183.077 219.906 178.336 238.442 166.254 242.365C154.597 246.15 139.919 234.065 127 234.065C114.081 234.065 99.4035 246.15 87.7464 242.365C75.6644 238.442 70.9232 219.906 60.8667 212.588C50.7099 205.196 31.6421 206.363 24.2501 196.206C16.9313 186.15 23.8841 168.412 19.9615 156.33C16.1765 144.673 0 134.468 0 121.549C0 108.63 16.1765 98.4258 19.9615 86.7686C23.8844 74.6867 16.9316 56.9489 24.2504 46.8925C31.6424 36.7356 50.7099 37.9027 60.867 30.511C70.9235 23.1922 75.6648 4.65696 87.7464 0.734014C99.4035 -3.05099 114.081 9.03411 127 9.03411C139.919 9.03411 154.597 -3.05099 166.254 0.734014C178.336 4.65696 183.077 23.1922 193.134 30.511C203.29 37.903 222.358 36.7356 229.75 46.8928C237.069 56.9493 230.116 74.687 234.039 86.7689C237.824 98.4255 254 108.63 254 121.549Z" fill="#65A34E"/>
-                  {/* Checkmark */}
-                  <path d="M108.025 181.295L62.6615 140.071L79.1392 121.938L105.375 145.779L167.036 70.1747L186.023 85.6606L108.025 181.295Z" fill="white"/>
-                </svg>
+            /* ── SUCCESS MODAL ── */
+            <div className="bg-white rounded-[24px] shadow-2xl w-full max-w-[480px] p-8 z-10 animate-in fade-in zoom-in-95 duration-200 flex flex-col items-center text-center">
+              <div className="w-20 h-20 rounded-full flex items-center justify-center mb-6"
+                style={{ background: 'rgba(34,197,94,0.1)' }}>
+                <CheckCircle className="w-10 h-10 text-[#22c55e]" />
               </div>
 
-              <h3 className="text-[20px] font-['Poppins'] font-medium text-black mb-4">Your session has been successfully booked.</h3>
-              <p className="text-[16px] font-['Poppins'] text-black/80 leading-relaxed mb-8 max-w-[400px]">
-                You'll receive a notification before 10 minutes of your scheduled session time. Get ready to learn with your mentor!
+              <h2 className="text-[24px] font-bold text-[#003566] mb-2"
+                style={{ fontFamily: "'DM Serif Display', serif" }}>
+                Payment Successful
+              </h2>
+              <p className="text-[14px] text-[#5a7089] leading-relaxed mb-8 max-w-[360px]">
+                Your session with <strong className="text-[#003566]">{selectedMentor.name}</strong> has been booked. You'll receive a notification 10 minutes before your scheduled time.
               </p>
 
-              <button 
+              <button
                 onClick={handleCloseModal}
-                className="px-8 h-[42px] rounded-[20px] bg-[#003566] text-white font-['Poppins'] font-medium text-[14px] hover:bg-[#00284d] transition-colors"
+                className="px-8 h-[44px] rounded-[14px] font-bold text-[13px] text-white transition-all hover:shadow-xl cursor-pointer"
+                style={{ background: 'linear-gradient(135deg, #003566, #0967bd)' }}
               >
                 Go to Dashboard
               </button>
             </div>
+
           ) : showFailedModal ? (
-            // --- FAILED MODAL ---
-            <div className="bg-white rounded-[20px] shadow-[0px_4px_50px_5px_rgba(0,0,0,0.1)] w-full max-w-[640px] p-[24px] z-10 animate-in fade-in zoom-in-95 duration-200 flex flex-col items-center justify-center text-center">
-               <h2 className="text-[24px] font-['Poppins'] font-semibold text-black mb-6 w-full text-center">Payment Failed</h2>
-               
-               <div className="mb-6">
-                 <svg width="254" height="244" viewBox="0 0 254 244" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-[200px] h-[200px]">
-                    <path d="M254 121.549C254 134.468 237.823 144.673 234.039 156.33C230.116 168.412 237.069 186.149 229.75 196.206C222.358 206.363 203.29 205.196 193.133 212.588C183.077 219.906 178.336 238.442 166.254 242.365C154.597 246.15 139.919 234.065 127 234.065C114.081 234.065 99.4035 246.15 87.7464 242.365C75.6644 238.442 70.9232 219.906 60.8667 212.588C50.7099 205.196 31.6421 206.363 24.2501 196.206C16.9313 186.15 23.8841 168.412 19.9615 156.33C16.1765 144.673 0 134.468 0 121.549C0 108.63 16.1765 98.4258 19.9615 86.7686C23.8844 74.6867 16.9316 56.9489 24.2504 46.8925C31.6424 36.7356 50.7099 37.9027 60.867 30.511C70.9235 23.1922 75.6648 4.65696 87.7464 0.734014C99.4035 -3.05099 114.081 9.03411 127 9.03411C139.919 9.03411 154.597 -3.05099 166.254 0.734014C178.336 4.65696 183.077 23.1922 193.134 30.511C203.29 37.903 222.358 36.7356 229.75 46.8928C237.069 56.9493 230.116 74.687 234.039 86.7689C237.824 98.4255 254 108.63 254 121.549Z" fill="#FF5E5E"/>
-                    <path d="M169.213 148.089L143.124 122L169.213 95.9114C169.713 95.4053 169.993 94.7227 169.993 94.0114C169.993 93.3001 169.713 92.6174 169.213 92.1114L156.889 79.7871C156.385 79.2833 155.702 79.0003 154.989 79.0003C154.276 79.0003 153.593 79.2833 153.089 79.7871L127 105.876L100.911 79.7871C100.407 79.2833 99.7237 79.0003 99.0111 79.0003C98.2985 79.0003 97.615 79.2833 97.1111 79.7871L84.7868 92.1114C84.283 92.6154 84 93.2988 84 94.0114C84 94.724 84.283 95.4074 84.7868 95.9114L110.876 122L84.7868 148.089C84.283 148.593 84 149.277 84 149.989C84 150.702 84.283 151.385 84.7868 151.889L97.1111 164.213C97.615 164.717 98.2985 165 99.0111 165C99.7237 165 100.407 164.717 100.911 164.213L127 138.125L153.089 164.213C153.593 164.717 154.276 165 154.989 165C155.702 165 156.385 164.717 156.889 164.213L169.213 151.889C169.717 151.385 170 150.702 170 149.989C170 149.277 169.717 148.593 169.213 148.089Z" fill="white"/>
-                 </svg>
-               </div>
+            /* ── FAILED MODAL ── */
+            <div className="bg-white rounded-[24px] shadow-2xl w-full max-w-[480px] p-8 z-10 animate-in fade-in zoom-in-95 duration-200 flex flex-col items-center text-center">
+              <div className="w-20 h-20 rounded-full flex items-center justify-center mb-6"
+                style={{ background: 'rgba(204,54,54,0.1)' }}>
+                <XCircle className="w-10 h-10 text-[#cc3636]" />
+              </div>
 
-               <h3 className="text-[20px] font-['Poppins'] font-medium text-black mb-4">Something went wrong while processing your payment.</h3>
-               <p className="text-[16px] font-['Poppins'] text-black/80 leading-relaxed mb-8 max-w-[400px]">
-                 Please try again or use a different payment method.<br/> Your session hasn’t been booked yet
-               </p>
+              <h2 className="text-[24px] font-bold text-[#003566] mb-2"
+                style={{ fontFamily: "'DM Serif Display', serif" }}>
+                Payment Failed
+              </h2>
+              <p className="text-[14px] text-[#5a7089] leading-relaxed mb-8 max-w-[360px]">
+                Something went wrong while processing your payment. Please try again or use a different payment method.
+              </p>
 
-               <button 
-                 onClick={handleTryAgain}
-                 className="px-8 h-[42px] rounded-[20px] bg-[#003566] text-white font-['Poppins'] font-medium text-[14px] hover:bg-[#00284d] transition-colors"
-               >
-                 Try Again
-               </button>
+              <button
+                onClick={handleTryAgain}
+                className="px-8 h-[44px] rounded-[14px] font-bold text-[13px] text-white transition-all hover:shadow-xl cursor-pointer"
+                style={{ background: 'linear-gradient(135deg, #003566, #0967bd)' }}
+              >
+                Try Again
+              </button>
             </div>
+
           ) : showProcessingModal ? (
-            // --- PROCESSING MODAL ---
-            <div className="bg-white rounded-[20px] shadow-[0px_4px_50px_5px_rgba(0,0,0,0.1)] w-full max-w-[500px] p-[32px] z-10 animate-in fade-in zoom-in-95 duration-200 flex flex-col items-center justify-center">
-              {paymentMethod === 'Bank' ? (
-                // Bank Gateway View
-                <>
-                  <h2 className="text-[24px] font-['Poppins'] font-semibold text-black mb-6 w-full text-left">Bank Payment</h2>
-                  <div className="flex items-center gap-3 w-full">
-                    <p className="text-[16px] font-['Poppins'] text-black/80">Heading towards payment gateway</p>
-                    <Loader2 className="w-5 h-5 animate-spin text-black/60" />
-                  </div>
-                </>
-              ) : (
-                // UPI Processing View
-                <>
-                  <h2 className="text-[24px] font-['Poppins'] font-semibold text-black mb-6 w-full text-left">UPI Payment</h2>
-                  
-                  <div className="w-full mb-8">
-                    <p className="text-[16px] font-['Poppins'] text-black/80 leading-relaxed">
-                      A payment request has been sent to the below UPI ID:
-                    </p>
-                    <p className="text-[16px] font-['Poppins'] font-semibold text-black mt-1">
-                      {upiId || "andrew@sbiybl"}
-                    </p>
-                  </div>
+            /* ── PROCESSING MODAL ── */
+            <div className="bg-white rounded-[24px] shadow-2xl w-full max-w-[480px] p-8 z-10 animate-in fade-in zoom-in-95 duration-200 flex flex-col items-center text-center">
+              <div className="w-20 h-20 rounded-full flex items-center justify-center mb-6"
+                style={{ background: 'rgba(9,103,189,0.08)' }}>
+                <Loader2 className="w-8 h-8 text-[#0967bd] animate-spin" />
+              </div>
 
-                  <div className="flex items-center gap-3">
-                    <p className="text-[16px] font-['Poppins'] text-black">Processing the payment</p>
-                    <Loader2 className="w-6 h-6 animate-spin text-black/60" />
-                  </div>
-                </>
-              )}
+              <h2 className="text-[20px] font-bold text-[#003566] mb-2"
+                style={{ fontFamily: "'DM Serif Display', serif" }}>
+                {paymentMethod === 'Bank' ? 'Redirecting to Bank' : 'Processing Payment'}
+              </h2>
+              <p className="text-[14px] text-[#5a7089] leading-relaxed max-w-[340px]">
+                {paymentMethod === 'Bank'
+                  ? 'Heading towards the payment gateway...'
+                  : <>A payment request has been sent to <strong className="text-[#003566]">{upiId || "andrew@sbiybl"}</strong></>
+                }
+              </p>
             </div>
+
           ) : showPaymentModal ? (
-            // --- PAYMENT MODAL ---
-            <div className="bg-white rounded-[20px] shadow-[0px_4px_50px_5px_rgba(0,0,0,0.1)] w-full max-w-[640px] p-[32px] z-10 animate-in fade-in zoom-in-95 duration-200">
-              <h2 className="text-[24px] font-['Poppins'] font-semibold text-black mb-6">Choose Mode of Payment</h2>
-              
+            /* ── PAYMENT MODAL ── */
+            <div className="bg-white rounded-[24px] shadow-2xl w-full max-w-[560px] p-7 z-10 animate-in fade-in zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto">
+              {/* Close button */}
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-[22px] font-bold text-[#003566]"
+                  style={{ fontFamily: "'DM Serif Display', serif" }}>
+                  Payment Method
+                </h2>
+                <button onClick={handleCloseModal} className="w-8 h-8 rounded-[10px] hover:bg-[#f5f7fa] flex items-center justify-center text-[#94a3b8] hover:text-[#003566] transition-colors cursor-pointer">
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
               {/* Payment Method Toggle */}
-              <div className="bg-[#e8ecf2] p-1 rounded-[4px] flex mb-6">
-                <button 
+              <div className="p-1 rounded-[14px] flex mb-6" style={{ background: '#f5f7fa' }}>
+                <button
                   onClick={() => setPaymentMethod('UPI')}
-                  className={`flex-1 h-[42px] rounded-[4px] font-['Poppins'] font-semibold text-[16px] transition-all ${
-                    paymentMethod === 'UPI' 
-                      ? 'bg-[#c9e5ff] text-black' 
-                      : 'bg-transparent text-black/60 hover:bg-gray-200'
+                  className={`flex-1 h-[42px] rounded-[12px] font-bold text-[13px] transition-all cursor-pointer ${
+                    paymentMethod === 'UPI'
+                      ? 'bg-white text-[#003566] shadow-sm'
+                      : 'bg-transparent text-[#94a3b8] hover:text-[#5a7089]'
                   }`}
                 >
                   UPI
                 </button>
-                <button 
+                <button
                   onClick={() => setPaymentMethod('Bank')}
-                  className={`flex-1 h-[42px] rounded-[4px] font-['Poppins'] font-medium text-[16px] transition-all ${
-                    paymentMethod === 'Bank' 
-                      ? 'bg-[#c9e5ff] text-black font-semibold' 
-                      : 'bg-transparent text-black hover:bg-gray-200'
+                  className={`flex-1 h-[42px] rounded-[12px] font-bold text-[13px] transition-all cursor-pointer ${
+                    paymentMethod === 'Bank'
+                      ? 'bg-white text-[#003566] shadow-sm'
+                      : 'bg-transparent text-[#94a3b8] hover:text-[#5a7089]'
                   }`}
                 >
                   Bank Account
@@ -375,49 +401,47 @@ export function HumanMentorHome({ onBack }: HumanMentorHomeProps) {
 
               {/* UPI Options */}
               {paymentMethod === 'UPI' && (
-                <div className="flex flex-col gap-4">
+                <div className="flex flex-col gap-5">
                   <div>
-                    <p className="text-[16px] font-['Poppins'] text-black mb-2">Choose App</p>
-                    <div className="flex gap-4">
+                    <p className="text-[13px] font-semibold text-[#003566] mb-3">Choose App</p>
+                    <div className="flex gap-3">
                       {[
                         { name: 'Google Pay', icon: <IconGooglePay /> },
                         { name: 'Paytm', icon: <IconPaytm /> },
                         { name: 'PhonePe', img: imgPhonePe },
                         { name: 'Amazon Pay', img: imgAmazonPay }
                       ].map((app) => (
-                        <button 
+                        <button
                           key={app.name}
                           onClick={() => setSelectedApp(app.name)}
-                          className={`w-[80px] h-[52px] rounded-[8px] flex items-center justify-center border transition-all ${
-                            selectedApp === app.name 
-                              ? 'border-[#003566] border-2 bg-blue-50' 
-                              : 'border-[#f6f6f6] hover:border-gray-300'
+                          className={`w-[72px] h-[48px] rounded-[12px] flex items-center justify-center transition-all cursor-pointer ${
+                            selectedApp === app.name
+                              ? 'border-2 border-[#0967bd] bg-[rgba(9,103,189,0.04)]'
+                              : 'border border-[#e2e8f0] hover:border-[#94a3b8]'
                           }`}
                         >
-                          {app.icon ? app.icon : <img src={app.img} alt={app.name} className="w-[24px] h-[24px]" />}
+                          {app.icon ? app.icon : <img src={app.img} alt={app.name} className="w-[22px] h-[22px]" />}
                         </button>
                       ))}
                     </div>
                   </div>
 
-                  <div className="relative text-center my-2">
+                  <div className="relative text-center">
                     <div className="absolute inset-0 flex items-center">
-                      <div className="w-full border-t border-gray-300"></div>
+                      <div className="w-full border-t border-[#e2e8f0]"></div>
                     </div>
-                    <span className="relative bg-white px-4 text-[16px] text-gray-500 font-['Poppins']">OR</span>
+                    <span className="relative bg-white px-4 text-[12px] font-semibold text-[#94a3b8]">OR</span>
                   </div>
 
                   <div>
-                    <p className="text-[16px] font-['Poppins'] text-black mb-2">Enter UPI ID</p>
-                    <div className="relative">
-                      <input 
-                        type="text" 
-                        value={upiId}
-                        onChange={(e) => setUpiId(e.target.value)}
-                        placeholder="example@ybl"
-                        className="w-full h-[39px] border border-gray-300 rounded-[10px] px-3 font-['Poppins'] text-[14px] outline-none focus:border-[#003566] focus:ring-1 focus:ring-[#003566]"
-                      />
-                    </div>
+                    <p className="text-[13px] font-semibold text-[#003566] mb-2">Enter UPI ID</p>
+                    <input
+                      type="text"
+                      value={upiId}
+                      onChange={(e) => setUpiId(e.target.value)}
+                      placeholder="example@ybl"
+                      className="w-full h-[44px] border border-[#e2e8f0] rounded-[12px] px-4 text-[13px] outline-none focus:border-[#0967bd] focus:ring-1 focus:ring-[#0967bd]/20 transition-all text-[#1e293b] placeholder:text-[#94a3b8]"
+                    />
                   </div>
                 </div>
               )}
@@ -425,106 +449,103 @@ export function HumanMentorHome({ onBack }: HumanMentorHomeProps) {
               {/* Bank Account Form */}
               {paymentMethod === 'Bank' && (
                 <div className="flex flex-col gap-4">
-                  <div>
-                    <p className="text-[16px] font-['Poppins'] text-black mb-2">Account Holder Name</p>
-                    <input 
-                      type="text" 
-                      placeholder="Enter your name"
-                      className="w-full h-[39px] border border-black/40 rounded-[10px] px-3 font-['Poppins'] text-[14px] text-black/60 outline-none focus:border-[#003566] focus:ring-1 focus:ring-[#003566] placeholder:text-black/60"
-                    />
-                  </div>
-
-                  <div>
-                    <p className="text-[16px] font-['Poppins'] text-black mb-2">Bank Name</p>
-                    <input 
-                      type="text" 
-                      placeholder="Enter your bank name"
-                      className="w-full h-[39px] border border-black/40 rounded-[10px] px-3 font-['Poppins'] text-[14px] text-black/60 outline-none focus:border-[#003566] focus:ring-1 focus:ring-[#003566] placeholder:text-black/60"
-                    />
-                  </div>
-
-                  <div>
-                    <p className="text-[16px] font-['Poppins'] text-black mb-2">Account Number</p>
-                    <input 
-                      type="text" 
-                      placeholder="Enter your bank account number"
-                      className="w-full h-[39px] border border-black/40 rounded-[10px] px-3 font-['Poppins'] text-[14px] text-black/60 outline-none focus:border-[#003566] focus:ring-1 focus:ring-[#003566] placeholder:text-black/60"
-                    />
-                  </div>
-
-                  <div>
-                    <p className="text-[16px] font-['Poppins'] text-black mb-2">Re-Enter Account Number</p>
-                    <input 
-                      type="text" 
-                      placeholder="Re-enter your bank account number"
-                      className="w-full h-[39px] border border-black/40 rounded-[10px] px-3 font-['Poppins'] text-[14px] text-black/60 outline-none focus:border-[#003566] focus:ring-1 focus:ring-[#003566] placeholder:text-black/60"
-                    />
-                  </div>
-
-                  <div>
-                    <p className="text-[16px] font-['Poppins'] text-black mb-2">Bank IFSC Code</p>
-                    <input 
-                      type="text" 
-                      placeholder="Enter your bank IFSC code"
-                      className="w-full h-[39px] border border-black/40 rounded-[10px] px-3 font-['Poppins'] text-[14px] text-black/60 outline-none focus:border-[#003566] focus:ring-1 focus:ring-[#003566] placeholder:text-black/60"
-                    />
-                  </div>
+                  {[
+                    { label: "Account Holder Name", placeholder: "Enter your name" },
+                    { label: "Bank Name", placeholder: "Enter your bank name" },
+                    { label: "Account Number", placeholder: "Enter your bank account number" },
+                    { label: "Re-Enter Account Number", placeholder: "Re-enter your bank account number" },
+                    { label: "Bank IFSC Code", placeholder: "Enter your bank IFSC code" },
+                  ].map((field) => (
+                    <div key={field.label}>
+                      <p className="text-[13px] font-semibold text-[#003566] mb-2">{field.label}</p>
+                      <input
+                        type="text"
+                        placeholder={field.placeholder}
+                        className="w-full h-[44px] border border-[#e2e8f0] rounded-[12px] px-4 text-[13px] outline-none focus:border-[#0967bd] focus:ring-1 focus:ring-[#0967bd]/20 transition-all text-[#1e293b] placeholder:text-[#94a3b8]"
+                      />
+                    </div>
+                  ))}
                 </div>
               )}
 
               {/* Amount Display */}
-              <div className="bg-[#f1f5f9] rounded-[10px] px-6 py-3 flex items-center justify-between mt-6 mb-6">
-                <span className="text-[16px] font-['Poppins'] font-semibold text-black">Amount:</span>
-                <span className="text-[32px] font-['Poppins'] font-semibold text-black">₹500</span>
+              <div className="rounded-[14px] px-5 py-4 flex items-center justify-between mt-6 mb-6"
+                style={{ background: 'rgba(9,103,189,0.04)', border: '1px solid rgba(9,103,189,0.08)' }}>
+                <span className="text-[13px] font-semibold text-[#5a7089]">Total Amount</span>
+                <span className="text-[28px] font-bold text-[#003566]" style={{ fontFamily: "'DM Serif Display', serif" }}>₹500</span>
               </div>
 
               {/* Action Buttons */}
-              <div className="flex items-center gap-6 w-[385px] mx-auto">
-                <button 
+              <div className="flex items-center gap-3">
+                <button
                   onClick={handleCloseModal}
-                  className="flex-1 h-[42px] rounded-[20px] border border-[#cc3636] text-[#cc3636] font-['Poppins'] font-medium text-[14px] hover:bg-red-50 transition-colors"
+                  className="flex-1 h-[44px] rounded-[14px] border border-[#cc3636] text-[#cc3636] font-bold text-[13px] hover:bg-red-50 transition-colors cursor-pointer"
                 >
                   Cancel
                 </button>
-                <button 
+                <button
                   onClick={handlePaymentConfirm}
-                  className="flex-1 h-[42px] rounded-[20px] bg-[#003566] text-white font-['Poppins'] font-medium text-[14px] hover:bg-[#00284d] transition-colors"
+                  className="flex-1 h-[44px] rounded-[14px] font-bold text-[13px] text-white transition-all hover:shadow-xl cursor-pointer"
+                  style={{ background: 'linear-gradient(135deg, #003566, #0967bd)' }}
                 >
                   Pay ₹500
                 </button>
               </div>
             </div>
+
           ) : (
-            // --- BOOKING DETAILS MODAL ---
-            <div className="bg-white rounded-[20px] shadow-[0px_4px_50px_5px_rgba(0,0,0,0.1)] w-full max-w-[895px] h-[552px] overflow-hidden flex animate-in fade-in zoom-in-95 duration-200">
+            /* ── BOOKING DETAILS MODAL ── */
+            <div className="bg-white rounded-[24px] shadow-2xl w-full max-w-[860px] overflow-hidden flex animate-in fade-in zoom-in-95 duration-200 max-h-[90vh]">
               {/* Left Side - Image */}
-              <div className="w-[305px] h-full relative shrink-0">
+              <div className="w-[300px] relative shrink-0 hidden md:block">
                 <ImageWithFallback src={selectedMentor.image} alt={selectedMentor.name} className="w-full h-full object-cover" />
-                <div className="absolute top-6 right-6 bg-[#FACC15] px-2.5 py-1 rounded-[10px] flex items-center gap-1 shadow-sm">
-                  <Star className="w-3.5 h-3.5 fill-black text-black" />
-                  <span className="text-[12px] font-['Poppins'] font-semibold text-black">{selectedMentor.rating}</span>
+                <div className="absolute inset-0" style={{ background: 'linear-gradient(180deg, transparent 40%, rgba(0,29,61,0.6) 100%)' }} />
+                <div className="absolute bottom-5 left-5 right-5">
+                  <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full w-fit mb-2"
+                    style={{ background: 'rgba(255,255,255,0.15)', backdropFilter: 'blur(8px)' }}>
+                    <Star className="w-3.5 h-3.5 fill-[#f77f00] text-[#f77f00]" />
+                    <span className="text-[12px] font-bold text-white">{selectedMentor.rating}</span>
+                  </div>
                 </div>
               </div>
 
               {/* Right Side - Form */}
-              <div className="flex-1 p-8 flex flex-col h-full overflow-y-auto">
-                <h2 className="text-[32px] font-['Poppins'] font-semibold text-black mb-1">{selectedMentor.name}</h2>
-                <p className="text-[16px] font-['Poppins'] text-black/60 mb-6">{selectedMentor.subject}</p>
+              <div className="flex-1 p-7 flex flex-col overflow-y-auto">
+                {/* Close */}
+                <div className="flex items-start justify-between mb-5">
+                  <div>
+                    <h2 className="text-[26px] font-bold text-[#003566] mb-1"
+                      style={{ fontFamily: "'DM Serif Display', serif" }}>
+                      {selectedMentor.name}
+                    </h2>
+                    <div className="flex items-center gap-2">
+                      <FlaskIcon className="text-[#0967bd]" />
+                      <span className="text-[13px] text-[#5a7089]">{selectedMentor.subject}</span>
+                    </div>
+                  </div>
+                  <button onClick={handleCloseModal} className="w-8 h-8 rounded-[10px] hover:bg-[#f5f7fa] flex items-center justify-center text-[#94a3b8] hover:text-[#003566] transition-colors cursor-pointer">
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
 
-                <div className="flex flex-col gap-6">
+                <div className="flex flex-col gap-6 flex-1">
                   {/* Time Slots */}
                   <div>
-                    <h3 className="text-[16px] font-['Poppins'] font-medium text-black mb-3">Available slots</h3>
-                    <div className="flex flex-wrap gap-3">
+                    <div className="flex items-center gap-2 mb-3">
+                      <Clock className="w-4 h-4 text-[#0967bd]" />
+                      <h3 className="text-[14px] font-bold text-[#003566]">Available Slots</h3>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
                       {timeSlots.map((slot) => (
                         <button
                           key={slot}
                           onClick={() => setSelectedSlot(slot)}
-                          className={`px-4 py-2 rounded-[8px] font-['Poppins'] text-[14px] border transition-all ${
+                          className={`px-4 py-2.5 rounded-[12px] text-[13px] font-medium transition-all cursor-pointer ${
                             selectedSlot === slot
-                              ? 'bg-[#003566] text-white border-[#003566]'
-                              : 'bg-white text-black/80 border-black/10 hover:border-[#003566]'
+                              ? 'text-white shadow-md'
+                              : 'bg-[#f5f7fa] text-[#5a7089] border border-transparent hover:border-[#e2e8f0]'
                           }`}
+                          style={selectedSlot === slot ? { background: 'linear-gradient(135deg, #003566, #0967bd)' } : {}}
                         >
                           {slot}
                         </button>
@@ -534,17 +555,21 @@ export function HumanMentorHome({ onBack }: HumanMentorHomeProps) {
 
                   {/* Duration */}
                   <div>
-                    <h3 className="text-[16px] font-['Poppins'] font-medium text-black mb-3">Duration</h3>
-                    <div className="flex flex-wrap gap-3">
+                    <div className="flex items-center gap-2 mb-3">
+                      <Clock className="w-4 h-4 text-[#f77f00]" />
+                      <h3 className="text-[14px] font-bold text-[#003566]">Duration</h3>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
                       {durationOptions.map((duration) => (
                         <button
                           key={duration}
                           onClick={() => setSelectedDuration(duration)}
-                          className={`px-4 py-2 rounded-[8px] font-['Poppins'] text-[14px] border transition-all ${
+                          className={`px-4 py-2.5 rounded-[12px] text-[13px] font-medium transition-all cursor-pointer ${
                             selectedDuration === duration
-                              ? 'bg-[#003566] text-white border-[#003566]'
-                              : 'bg-white text-black/80 border-black/10 hover:border-[#003566]'
+                              ? 'text-white shadow-md'
+                              : 'bg-[#f5f7fa] text-[#5a7089] border border-transparent hover:border-[#e2e8f0]'
                           }`}
+                          style={selectedDuration === duration ? { background: 'linear-gradient(135deg, #003566, #0967bd)' } : {}}
                         >
                           {duration}
                         </button>
@@ -554,24 +579,26 @@ export function HumanMentorHome({ onBack }: HumanMentorHomeProps) {
                 </div>
 
                 {/* Footer Actions */}
-                <div className="mt-auto pt-8 flex items-center justify-between">
+                <div className="mt-6 pt-6 border-t border-[#f0f2f5] flex items-center justify-between">
                   <div>
-                    <p className="text-[14px] font-['Poppins'] text-black/60">Total Amount</p>
-                    <p className="text-[24px] font-['Poppins'] font-semibold text-black">₹500</p>
+                    <p className="text-[11px] font-semibold text-[#94a3b8] uppercase tracking-wider">Total Amount</p>
+                    <p className="text-[24px] font-bold text-[#003566]" style={{ fontFamily: "'DM Serif Display', serif" }}>₹500</p>
                   </div>
-                  
-                  <div className="flex items-center gap-4">
-                    <button 
+
+                  <div className="flex items-center gap-3">
+                    <button
                       onClick={handleCloseModal}
-                      className="px-8 h-[42px] rounded-[20px] border border-[#cc3636] text-[#cc3636] font-['Poppins'] font-medium text-[14px] hover:bg-red-50 transition-colors"
+                      className="px-6 h-[44px] rounded-[14px] border border-[#cc3636] text-[#cc3636] font-bold text-[13px] hover:bg-red-50 transition-colors cursor-pointer"
                     >
                       Cancel
                     </button>
-                    <button 
+                    <button
                       onClick={handleBookingConfirm}
-                      className="px-8 h-[42px] rounded-[20px] bg-[#003566] text-white font-['Poppins'] font-medium text-[14px] hover:bg-[#00284d] transition-colors"
+                      className="px-6 h-[44px] rounded-[14px] font-bold text-[13px] text-white transition-all hover:shadow-xl cursor-pointer flex items-center gap-2"
+                      style={{ background: 'linear-gradient(135deg, #003566, #0967bd)' }}
                     >
                       Proceed to Pay
+                      <ArrowRight className="w-4 h-4" />
                     </button>
                   </div>
                 </div>

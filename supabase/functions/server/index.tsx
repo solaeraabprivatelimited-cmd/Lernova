@@ -163,12 +163,57 @@ app.post("/make-server-a0923c49/auth/register", async (c) => {
 
 app.get("/make-server-a0923c49/profile", async (c) => {
   try {
-    const user = await getAuthUser(c);
-    const profile = await kv.get(`user:${user.id}:profile`);
-    if (!profile) return err(c, "Profile not found", 404);
+    const token = c.req.header("Authorization")?.split(" ")[1];
+    if (!token) return err(c, "Missing auth token", 401);
+
+    const supabase = adminClient();
+    const { data, error } = await supabase.auth.getUser(token);
+    if (error || !data.user) {
+      console.log("Profile GET: token verification failed:", error?.message);
+      return err(c, "Invalid or expired token", 401);
+    }
+
+    const uid = data.user.id;
+    let profile = await kv.get(`user:${uid}:profile`);
+
+    // Auto-provision a profile for users who authenticated via Supabase
+    // but don't have a KV profile (e.g., created outside the registration flow,
+    // or KV data was cleared).
+    if (!profile) {
+      console.log(`Profile GET: no KV profile found for user ${uid}, auto-provisioning…`);
+      const metaName =
+        data.user.user_metadata?.name ??
+        data.user.email?.split("@")[0] ??
+        "User";
+      const metaRole = data.user.user_metadata?.role ?? "user";
+      const avatarUrl = `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(metaName)}`;
+      profile = {
+        id: uid,
+        name: metaName,
+        email: data.user.email!,
+        role: metaRole,
+        avatar: avatarUrl,
+        bio: "",
+        gradeLevel: "",
+        subjects: [],
+        joinedAt: data.user.created_at ?? nowIso(),
+        autoProvisioned: true,
+      };
+      await kv.set(`user:${uid}:profile`, profile);
+      // Send a welcome notification
+      await pushNotification(
+        uid,
+        "system",
+        "System and Platform Alerts",
+        "Welcome back to Learnova! 👋",
+        "Your profile has been set up. Feel free to update your details in Settings."
+      );
+    }
+
     return c.json(profile);
   } catch (e: any) {
-    return err(c, e.message, 401);
+    console.log("Profile GET error:", e.message);
+    return err(c, `Profile fetch failed: ${e.message}`, 401);
   }
 });
 

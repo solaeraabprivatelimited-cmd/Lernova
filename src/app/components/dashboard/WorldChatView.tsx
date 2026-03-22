@@ -1,11 +1,12 @@
 import React, { useState, useRef, useEffect } from "react";
 import imgEllipse1 from "figma:asset/798eac6e288222603807db12d070c52d1a145785.png";
-import imgRectangle39951 from "figma:asset/e1dadbc98b774e2ab4d6bd1189e0b24dd17951cb.png";
 import { ImageWithFallback } from "../figma/ImageWithFallback";
 import { worldChat, getCurrentUser } from "@/app/lib/api";
+import {
+  ArrowLeft, Send, MessageCircle, Globe, Users, AlertTriangle, X, Flag
+} from "lucide-react";
 
 /* ── Types ── */
-
 interface ChatMessage {
   id: string;
   sender: string;
@@ -15,150 +16,6 @@ interface ChatMessage {
   isOwn: boolean;
 }
 
-/* ── Mock Data ── */
-
-const mockUsers = [
-  {
-    name: "Alex",
-    avatar: "https://images.unsplash.com/photo-1543132220-e7fef0b974e7?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxwb3J0cmFpdCUyMHlvdW5nJTIwbWFuJTIwY2FzdWFsfGVufDF8fHx8MTc3MTEyMjU2Mnww&ixlib=rb-4.1.0&q=80&w=1080",
-  },
-  {
-    name: "Mia",
-    avatar: "https://images.unsplash.com/photo-1680983387172-aedb346ba443?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxwb3J0cmFpdCUyMHlvdW5nJTIwd29tYW4lMjBzdHVkZW50fGVufDF8fHx8MTc3MTE3Mjg3NHww&ixlib=rb-4.1.0&q=80&w=1080",
-  },
-  {
-    name: "Jordan",
-    avatar: "https://images.unsplash.com/photo-1623594675959-02360202d4d6?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxwb3J0cmFpdCUyMHNtaWxpbmclMjB3b21hbiUyMHByb2Zlc3Npb25hbHxlbnwxfHx8fDE3NzExNzI4NzV8MA&ixlib=rb-4.1.0&q=80&w=1080",
-  },
-];
-
-const autoReplies = [
-  "That's a great point! I totally agree.",
-  "Has anyone tried the new study technique mentioned in the wellness resources?",
-  "I've been feeling much better since I started meditating daily.",
-  "Same here! The mood check-in feature really helped me track my progress.",
-  "Anyone else studying for finals this week?",
-  "Just finished a 2-hour focus session. Feeling accomplished!",
-  "Remember to take breaks everyone! Self-care matters.",
-  "The lofi beats playlist is amazing for studying!",
-];
-
-/* ── Send Button SVG ── */
-
-function SendIcon() {
-  return (
-    <div className="relative size-[24px]">
-      <svg className="block size-full" fill="none" viewBox="0 0 24 24">
-        <mask
-          id="sendMask"
-          style={{ maskType: "alpha" }}
-          maskUnits="userSpaceOnUse"
-          x="0"
-          y="0"
-          width="24"
-          height="24"
-        >
-          <image
-            href={imgRectangle39951}
-            x="0"
-            y="0"
-            width="24"
-            height="24"
-          />
-        </mask>
-        <g mask="url(#sendMask)">
-          <rect fill="white" width="24" height="24" />
-        </g>
-      </svg>
-    </div>
-  );
-}
-
-/* ── Chat Bubble Components ── */
-
-interface ChatBubbleProps {
-  message: ChatMessage;
-  reportOpenId: string | null;
-  onAvatarClick: (id: string) => void;
-  onReport: (senderName: string) => void;
-}
-
-function OtherChatBubble({ message, reportOpenId, onAvatarClick, onReport }: ChatBubbleProps) {
-  return (
-    <div className="flex flex-col gap-0 items-start w-full">
-      <div className="flex gap-[8px] items-end w-full">
-        <button
-          type="button"
-          onClick={() => onAvatarClick(message.id)}
-          className="relative shrink-0 size-[38px] rounded-full overflow-hidden cursor-pointer hover:ring-2 hover:ring-black/20 transition-all"
-          data-report-area
-        >
-          <ImageWithFallback
-            alt={message.sender}
-            className="block max-w-none size-full object-cover"
-            src={message.avatar}
-          />
-        </button>
-        <div className="flex flex-1 flex-col gap-[3px] items-start min-w-0">
-          <p className="font-['Poppins'] text-[12px] text-black/60 w-full">
-            <span className="text-black">{message.sender}</span>
-            <span>{` | ${message.time}`}</span>
-          </p>
-          <div className="bg-white rounded-[12px] shadow-[0px_4px_60px_5px_rgba(0,0,0,0.15)] w-full">
-            <div className="flex items-center p-[16px] w-full">
-              <p className="font-['Poppins'] text-[16px] text-black/70">
-                {message.text}
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
-      {/* Report Popup */}
-      {reportOpenId === message.id && (
-        <button
-          type="button"
-          onClick={() => onReport(message.sender)}
-          className="bg-white h-[40px] w-[147px] rounded-[12px] shadow-[0px_4px_60px_5px_rgba(0,0,0,0.15)] flex items-center justify-center ml-[46px] mt-[4px] cursor-pointer hover:bg-red-50 transition-colors"
-          data-report-area
-        >
-          <span className="font-['Poppins'] font-medium text-[12px] text-[#ff5e5e]">
-            Report
-          </span>
-        </button>
-      )}
-    </div>
-  );
-}
-
-function OwnChatBubble({ message }: Pick<ChatBubbleProps, "message">) {
-  return (
-    <div className="flex gap-[8px] items-end w-full">
-      <div className="flex flex-1 flex-col gap-[3px] items-end min-w-0">
-        <p className="font-['Poppins'] text-[12px] text-black/60 text-right w-full">
-          <span className="text-black">{message.sender}</span>
-          <span>{` | ${message.time}`}</span>
-        </p>
-        <div className="bg-[#c9e5ff] rounded-[12px] shadow-[0px_4px_60px_5px_rgba(0,0,0,0.15)] w-full">
-          <div className="flex items-center p-[16px] w-full">
-            <p className="font-['Poppins'] text-[16px] text-black/70">
-              {message.text}
-            </p>
-          </div>
-        </div>
-      </div>
-      <div className="relative shrink-0 size-[38px] rounded-full overflow-hidden">
-        <ImageWithFallback
-          alt={message.sender}
-          className="block max-w-none size-full object-cover"
-          src={message.avatar}
-        />
-      </div>
-    </div>
-  );
-}
-
-/* ── Main Component ── */
-
 const reportReasons = [
   "Inappropriate visuals or gestures",
   "Camera showing disturbing or distracting content",
@@ -166,100 +23,62 @@ const reportReasons = [
   "Other",
 ] as const;
 
-/* ── Report User Modal ── */
-
-interface ReportModalProps {
-  senderName: string;
-  onClose: () => void;
-  onSubmit: (reason: string, description: string) => void;
-}
-
-function ReportUserModal({ senderName, onClose, onSubmit }: ReportModalProps) {
+/* ── Report Modal ── */
+function ReportUserModal({ senderName, onClose, onSubmit }: {
+  senderName: string; onClose: () => void; onSubmit: (reason: string, desc: string) => void;
+}) {
   const [selectedReason, setSelectedReason] = useState<string>(reportReasons[0]);
   const [description, setDescription] = useState("");
 
-  const handleSubmit = () => {
-    onSubmit(
-      selectedReason,
-      selectedReason === "Other" ? description : ""
-    );
-  };
-
   return (
-    <div className="fixed inset-0 bg-black/30 z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-[20px] shadow-[0px_4px_60px_5px_rgba(0,0,0,0.15)] w-[436px] p-[24px] flex flex-col gap-[26px] items-start">
-        {/* Header */}
-        <div className="flex flex-col gap-[6px] items-start w-full">
-          <p className="font-['Poppins'] font-semibold text-[24px] text-black w-full">
-            Report User
-          </p>
-          <p className="font-['Poppins'] text-[12px] text-black w-full">
-            Help us maintain a calm and distraction-free study environment
-          </p>
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-[#001d3d]/40 backdrop-blur-sm" onClick={onClose} />
+      <div className="relative bg-white rounded-[24px] shadow-2xl p-7 w-full max-w-[440px] z-10 animate-in fade-in zoom-in-95 duration-200">
+        <div className="flex items-center gap-3 mb-5">
+          <div className="w-10 h-10 rounded-[14px] bg-[#cc3636]/10 flex items-center justify-center shrink-0">
+            <Flag className="w-5 h-5 text-[#cc3636]" />
+          </div>
+          <div>
+            <h2 className="text-[20px] font-bold text-[#003566]" style={{ fontFamily: "'DM Serif Display', serif" }}>Report User</h2>
+            <p className="text-[11px] text-[#94a3b8]">Help us maintain a safe environment</p>
+          </div>
+          <button onClick={onClose} className="ml-auto w-8 h-8 rounded-[10px] hover:bg-[#f5f7fa] flex items-center justify-center text-[#94a3b8] hover:text-[#003566] transition-colors cursor-pointer">
+            <X className="w-4 h-4" />
+          </button>
         </div>
 
-        {/* Radio Options */}
-        <div className="flex flex-col gap-[15px] items-start w-full">
+        <div className="flex flex-col gap-2.5 mb-5">
           {reportReasons.map((reason) => (
-            <button
-              key={reason}
-              type="button"
-              onClick={() => setSelectedReason(reason)}
-              className="flex gap-[8px] items-center cursor-pointer"
-            >
-              {/* Radio Circle */}
-              <div className="relative shrink-0 size-[18px]">
-                <svg className="block size-full" fill="none" viewBox="0 0 18 18">
-                  <circle cx="9" cy="9" r="9" fill={selectedReason === reason ? "#D9D9D9" : "#D9D9D9"} />
-                  {selectedReason === reason && (
-                    <circle cx="9" cy="9" r="4" fill="#003566" />
-                  )}
-                </svg>
+            <button key={reason} onClick={() => setSelectedReason(reason)}
+              className={`flex items-center gap-3 px-4 py-3 rounded-[12px] border text-left cursor-pointer transition-all text-[13px] ${
+                selectedReason === reason
+                  ? "border-[#0967bd] bg-[#0967bd]/5 text-[#003566] font-semibold"
+                  : "border-[#e2e8f0] text-[#5a7089] hover:border-[#c9ddf0]"
+              }`}>
+              <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 ${
+                selectedReason === reason ? "border-[#0967bd]" : "border-[#c1c7ce]"
+              }`}>
+                {selectedReason === reason && <div className="w-2 h-2 rounded-full bg-[#0967bd]" />}
               </div>
-              <span className="font-['Poppins'] text-[14px] text-black">
-                {reason}
-              </span>
+              {reason}
             </button>
           ))}
 
-          {/* Other — Description Textarea */}
           {selectedReason === "Other" && (
-            <div className="bg-[#d9d9d9] rounded-[20px] w-full h-[127px] ml-[26px] overflow-hidden"
-              style={{ width: "calc(100% - 26px)" }}
-            >
-              <textarea
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                placeholder="Describe the issue briefly"
-                className="font-['Poppins'] text-[12px] text-black/70 bg-transparent outline-none border-none w-full h-full resize-none p-[16px] placeholder:text-black/70"
-              />
-            </div>
+            <textarea value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Describe the issue briefly..."
+              className="w-full h-[100px] border border-[#e2e8f0] rounded-[12px] px-4 py-3 text-[13px] outline-none focus:border-[#0967bd] focus:ring-1 focus:ring-[#0967bd]/20 transition-all text-[#1e293b] placeholder:text-[#94a3b8] bg-white resize-none ml-7" style={{ width: 'calc(100% - 28px)' }} />
           )}
         </div>
 
-        {/* Action Buttons */}
-        <div className="flex gap-[16px] items-center justify-end w-full">
-          {/* Cancel */}
-          <button
-            type="button"
-            onClick={onClose}
-            className="h-[42px] w-[156px] flex items-center justify-center rounded-[20px] border border-black cursor-pointer hover:bg-black/5 transition-colors"
-          >
-            <span className="font-['Poppins'] text-[14px] text-black">
-              Cancel
-            </span>
+        <div className="flex items-center gap-3">
+          <button onClick={onClose}
+            className="flex-1 h-[44px] rounded-[14px] border border-[#e2e8f0] text-[#5a7089] font-bold text-[13px] hover:bg-[#f5f7fa] transition-colors cursor-pointer">
+            Cancel
           </button>
-
-          {/* Submit */}
-          <button
-            type="button"
-            onClick={handleSubmit}
+          <button onClick={() => onSubmit(selectedReason, selectedReason === "Other" ? description : "")}
             disabled={selectedReason === "Other" && !description.trim()}
-            className="bg-[#ff5e5e] h-[42px] w-[156px] flex items-center justify-center rounded-[20px] cursor-pointer hover:bg-[#e54e4e] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            <span className="font-['Poppins'] font-medium text-[14px] text-white">
-              Submit
-            </span>
+            className="flex-1 h-[44px] rounded-[14px] bg-[#cc3636] text-white font-bold text-[13px] hover:bg-[#b52e2e] transition-colors cursor-pointer disabled:opacity-50">
+            Submit Report
           </button>
         </div>
       </div>
@@ -267,11 +86,8 @@ function ReportUserModal({ senderName, onClose, onSubmit }: ReportModalProps) {
   );
 }
 
-interface WorldChatViewProps {
-  onBack: () => void;
-}
-
-export function WorldChatView({ onBack }: WorldChatViewProps) {
+/* ── Main Component ── */
+export function WorldChatView({ onBack }: { onBack: () => void }) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputText, setInputText] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -282,172 +98,162 @@ export function WorldChatView({ onBack }: WorldChatViewProps) {
   const currentUser = getCurrentUser();
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  // Load messages from API and poll for new ones
   const loadMessages = async () => {
     try {
       const raw = await worldChat.getMessages();
       const myId = currentUser?.id;
       setMessages(raw.map((m: any) => ({ ...m, isOwn: m.senderId === myId })));
-    } catch (e) {
-      console.log("WorldChat load error:", e);
-    }
+    } catch (e) { console.log("WorldChat load error:", e); }
   };
 
   useEffect(() => {
     loadMessages();
-    pollRef.current = setInterval(loadMessages, 5000); // poll every 5s
+    pollRef.current = setInterval(loadMessages, 5000);
     return () => { if (pollRef.current) clearInterval(pollRef.current); };
   }, []);
 
-  // Close report popup when clicking outside
   useEffect(() => {
     if (!reportOpenId) return;
-    const handleClickOutside = (e: MouseEvent) => {
+    const handler = (e: MouseEvent) => {
       const target = e.target as HTMLElement;
       if (!target.closest("[data-report-area]")) setReportOpenId(null);
     };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
   }, [reportOpenId]);
 
-  const scrollToBottom = () => messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  useEffect(() => { scrollToBottom(); }, [messages]);
+  useEffect(() => { messagesEndRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages]);
 
   const getCurrentTime = () => {
     const now = new Date();
-    let hours = now.getHours();
-    const minutes = now.getMinutes().toString().padStart(2, "0");
-    const ampm = hours >= 12 ? "PM" : "AM";
-    hours = hours % 12 || 12;
-    return `${hours}:${minutes}${ampm}`;
+    let h = now.getHours(); const m = now.getMinutes().toString().padStart(2, "0");
+    const ampm = h >= 12 ? "PM" : "AM"; h = h % 12 || 12;
+    return `${h}:${m}${ampm}`;
   };
 
   const sendMessage = async () => {
     if (!inputText.trim()) return;
-    const text = inputText.trim();
-    setInputText("");
+    const text = inputText.trim(); setInputText("");
     try {
-      const senderName = currentUser?.name || "You";
-      const senderAvatar = currentUser?.avatar || imgEllipse1;
-      await worldChat.sendMessage(text, senderName, senderAvatar);
+      const name = currentUser?.name || "You";
+      const avatar = currentUser?.avatar || imgEllipse1;
+      await worldChat.sendMessage(text, name, avatar);
       await loadMessages();
     } catch (e) {
       console.log("Send message error:", e);
-      // Optimistic local fallback
-      const newMsg: ChatMessage = {
-        id: Date.now().toString(),
-        sender: currentUser?.name || "You",
-        avatar: currentUser?.avatar || imgEllipse1,
-        text,
-        time: getCurrentTime(),
-        isOwn: true,
-      };
-      setMessages((prev) => [...prev, newMsg]);
+      setMessages((prev) => [...prev, { id: Date.now().toString(), sender: currentUser?.name || "You", avatar: currentUser?.avatar || imgEllipse1, text, time: getCurrentTime(), isOwn: true }]);
     }
-  };
-
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      sendMessage();
-    }
-  };
-
-  const handleAvatarClick = (id: string) => {
-    setReportOpenId((prev) => (prev === id ? null : id));
-  };
-
-  const handleReport = (senderName: string) => {
-    setReportOpenId(null);
-    setReportSenderName(senderName);
-    setReportModalOpen(true);
-  };
-
-  const handleReportModalClose = () => {
-    setReportModalOpen(false);
-  };
-
-  const handleReportModalSubmit = (reason: string, description: string) => {
-    setReportModalOpen(false);
-    // Show a brief confirmation
-    setTimeout(() => {
-      alert(`${reportSenderName} has been reported. Our team will review this.`);
-    }, 100);
   };
 
   return (
-    <div className="w-full flex flex-col h-full">
+    <div className="w-full flex flex-col h-full" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
       {/* Header */}
-      <div className="flex flex-col items-start pb-1.5 mb-6 shrink-0">
-        <button
-          type="button"
-          onClick={onBack}
-          className="font-['Poppins'] text-[14px] text-black/60 cursor-pointer hover:text-black/80 transition-colors mb-0.5"
-        >
-          {"< Emotional Wellness"}
+      <div className="shrink-0 mb-4">
+        <button onClick={onBack} className="flex items-center gap-2 text-[#5a7089] hover:text-[#003566] mb-3 transition-colors group cursor-pointer">
+          <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
+          <span className="text-[13px] font-medium">Emotional Wellness</span>
         </button>
-        <h1 className="font-['Poppins'] font-medium text-[40px] text-black leading-tight">
-          World Chat
-        </h1>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-[14px] flex items-center justify-center"
+              style={{ background: 'linear-gradient(135deg, #11998e, #38ef7d)' }}>
+              <Globe className="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <h1 className="text-[28px] md:text-[34px] text-[#003566]" style={{ fontFamily: "'DM Serif Display', serif" }}>
+                World Chat
+              </h1>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-full" style={{ background: 'rgba(17,153,142,0.06)', border: '1px solid rgba(17,153,142,0.1)' }}>
+            <Users className="w-3.5 h-3.5 text-[#11998e]" />
+            <span className="text-[11px] font-semibold text-[#11998e]">{messages.length > 0 ? `${new Set(messages.map(m => m.sender)).size} online` : "Global"}</span>
+          </div>
+        </div>
       </div>
 
-      {/* Chat Messages Area */}
-      <div
-        ref={chatContainerRef}
-        className="flex-1 flex flex-col gap-[24px] overflow-y-auto pb-4 pr-2 max-w-[1082px] w-full min-h-0"
-      >
-        {messages.map((msg) =>
-          msg.isOwn ? (
-            <OwnChatBubble key={msg.id} message={msg} />
-          ) : (
-            <OtherChatBubble key={msg.id} message={msg} reportOpenId={reportOpenId} onAvatarClick={handleAvatarClick} onReport={handleReport} />
-          )
+      {/* Chat Messages */}
+      <div ref={chatContainerRef}
+        className="flex-1 flex flex-col gap-4 overflow-y-auto pb-4 pr-1 max-w-[800px] w-full min-h-0">
+
+        {/* Welcome divider */}
+        {messages.length > 0 && (
+          <div className="flex justify-center mb-2">
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-[#edf0f4] shadow-sm">
+              <Globe className="w-3 h-3 text-[#11998e]" />
+              <span className="text-[11px] font-medium text-[#94a3b8]">World Chat</span>
+            </div>
+          </div>
         )}
+
+        {messages.length === 0 && (
+          <div className="flex flex-col items-center justify-center flex-1 text-center px-4">
+            <div className="w-16 h-16 rounded-[20px] flex items-center justify-center mb-4" style={{ background: 'rgba(17,153,142,0.08)' }}>
+              <MessageCircle className="w-7 h-7 text-[#11998e]/40" />
+            </div>
+            <p className="text-[14px] font-semibold text-[#5a7089]">No messages yet</p>
+            <p className="text-[12px] text-[#94a3b8] mt-1">Be the first to start the conversation!</p>
+          </div>
+        )}
+
+        {messages.map((msg) => (
+          <div key={msg.id} className={`flex ${msg.isOwn ? "justify-end" : "justify-start"} gap-2.5`}>
+            {!msg.isOwn && (
+              <button onClick={() => setReportOpenId((p) => (p === msg.id ? null : msg.id))}
+                className="w-8 h-8 rounded-full overflow-hidden shrink-0 mt-1 cursor-pointer hover:ring-2 hover:ring-[#0967bd]/20 transition-all" data-report-area>
+                <ImageWithFallback src={msg.avatar} alt={msg.sender} className="w-full h-full object-cover" />
+              </button>
+            )}
+            <div className={`max-w-[72%] ${msg.isOwn ? "flex flex-col items-end" : ""}`}>
+              <p className={`text-[10px] text-[#c1c7ce] mb-1 ${msg.isOwn ? "text-right" : ""}`}>
+                <span className="font-semibold text-[#5a7089]">{msg.sender}</span> · {msg.time}
+              </p>
+              <div className={`px-4 py-3 text-[14px] leading-relaxed ${
+                msg.isOwn
+                  ? "rounded-[18px] rounded-br-[6px] text-white"
+                  : "rounded-[18px] rounded-bl-[6px] bg-white text-[#2d3748] shadow-[0_1px_3px_rgba(0,0,0,0.04)] border border-[#edf0f4]"
+              }`} style={msg.isOwn ? { background: 'linear-gradient(135deg, #003566, #0967bd)' } : undefined}>
+                {msg.text}
+              </div>
+
+              {/* Report popup */}
+              {!msg.isOwn && reportOpenId === msg.id && (
+                <button onClick={() => { setReportOpenId(null); setReportSenderName(msg.sender); setReportModalOpen(true); }}
+                  className="mt-1.5 flex items-center gap-1.5 px-3 py-2 rounded-[10px] bg-white border border-[#edf0f4] shadow-lg cursor-pointer hover:bg-red-50 hover:border-[#cc3636]/20 transition-all animate-in fade-in slide-in-from-top-1 duration-150"
+                  data-report-area>
+                  <AlertTriangle className="w-3 h-3 text-[#cc3636]" />
+                  <span className="text-[11px] font-bold text-[#cc3636]">Report</span>
+                </button>
+              )}
+            </div>
+            {msg.isOwn && (
+              <div className="w-8 h-8 rounded-full overflow-hidden shrink-0 mt-5">
+                <ImageWithFallback src={msg.avatar} alt={msg.sender} className="w-full h-full object-cover" />
+              </div>
+            )}
+          </div>
+        ))}
         <div ref={messagesEndRef} />
       </div>
 
       {/* Input Bar */}
-      <div className="flex gap-[20px] items-center max-w-[1082px] w-full pt-4 shrink-0">
-        {/* Text Input */}
-        <div className="bg-white flex-1 h-[54px] rounded-[12px] shadow-[0px_4px_60px_5px_rgba(0,0,0,0.15)]">
-          <div className="flex items-center px-[16px] size-full">
-            <input
-              type="text"
-              value={inputText}
-              onChange={(e) => setInputText(e.target.value)}
-              onKeyDown={handleKeyDown}
-              placeholder="Type here"
-              className="font-['Poppins'] font-medium text-[16px] text-black bg-transparent outline-none border-none w-full placeholder:text-black/60"
-            />
-          </div>
+      <div className="flex gap-2.5 items-center max-w-[800px] w-full pt-3 shrink-0">
+        <div className="flex-1 h-[52px] rounded-[16px] bg-white flex items-center px-4 border border-[#e2e8f0] shadow-lg shadow-black/[0.05] hover:border-[#c9ddf0] focus-within:border-[#11998e] focus-within:shadow-[#11998e]/10 transition-all">
+          <input type="text" value={inputText} onChange={(e) => setInputText(e.target.value)}
+            onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMessage(); } }}
+            placeholder="Type your message..."
+            className="flex-1 bg-transparent border-none outline-none text-[14px] text-[#1e293b] placeholder:text-[#b0b8c4] font-medium" />
         </div>
-
-        {/* Send Button */}
-        <button
-          type="button"
-          onClick={sendMessage}
-          disabled={!inputText.trim()}
-          className="bg-[#003566] rounded-full size-[54px] flex items-center justify-center cursor-pointer hover:bg-[#002a52] transition-colors shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-            <path
-              d="M22 2L11 13M22 2L15 22L11 13M22 2L2 9L11 13"
-              stroke="white"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
+        <button onClick={sendMessage} disabled={!inputText.trim()}
+          className="w-[52px] h-[52px] rounded-[16px] flex items-center justify-center shadow-lg hover:shadow-xl hover:scale-[1.04] transition-all shrink-0 cursor-pointer disabled:opacity-50"
+          style={{ background: 'linear-gradient(135deg, #003566, #0967bd)' }}>
+          <Send className="w-5 h-5 text-white ml-0.5" />
         </button>
       </div>
 
-      {/* Report User Modal */}
       {reportModalOpen && (
-        <ReportUserModal
-          senderName={reportSenderName}
-          onClose={handleReportModalClose}
-          onSubmit={handleReportModalSubmit}
-        />
+        <ReportUserModal senderName={reportSenderName} onClose={() => setReportModalOpen(false)}
+          onSubmit={(reason, desc) => { setReportModalOpen(false); setTimeout(() => alert(`${reportSenderName} has been reported. Our team will review this.`), 100); }} />
       )}
     </div>
   );

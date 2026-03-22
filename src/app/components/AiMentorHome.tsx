@@ -1,5 +1,5 @@
 import React from 'react';
-import { ArrowLeft, Plus, Search, Mic, Send } from 'lucide-react';
+import { ArrowLeft, Plus, Search, Mic, Send, MessageSquare, Sparkles, Clock, Bot, Zap, BookOpen, HelpCircle, Brain, ListChecks } from 'lucide-react';
 import { ImageWithFallback } from "./figma/ImageWithFallback";
 import imgSayHi1 from "figma:asset/5e91c4f0fbdda278a8c62c9c5428eca49ba69e08.png";
 
@@ -9,135 +9,220 @@ interface AiMentorHomeProps {
   onChatMode?: () => void;
 }
 
-export function AiMentorHome({ onBack, onVoiceMode, onChatMode }: AiMentorHomeProps) {
-  return (
-    <div className="flex h-[calc(100vh-6rem)] w-full bg-white font-['Poppins'] overflow-hidden">
-      {/* Left Sidebar Panel - Hidden on mobile, same as in VoiceChat for consistency */}
-      <div className="w-[280px] shrink-0 border-r border-gray-100 bg-white flex flex-col p-6 h-full z-10 relative shadow-[0px_4px_18px_-1px_rgba(0,0,0,0.1)] md:shadow-none hidden md:flex">
-        
-        {/* Back Link */}
-        <button 
-          onClick={onBack}
-          className="flex items-center gap-2 text-black/60 hover:text-black mb-6 transition-colors group"
-        >
-          <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
-          <span className="text-[12px] font-medium">Mentor Support</span>
-        </button>
+const SidebarPanel = ({ onBack, onChatMode }: { onBack: () => void; onChatMode?: () => void }) => (
+  <div className="w-[280px] shrink-0 flex-col h-full z-10 relative hidden lg:flex overflow-hidden"
+    style={{ background: 'linear-gradient(180deg, #001d3d 0%, #003566 50%, #001d3d 100%)' }}>
+    <div className="absolute inset-0 opacity-[0.03] pointer-events-none"
+      style={{ backgroundImage: 'radial-gradient(circle at 25% 25%, white 1px, transparent 1px)', backgroundSize: '24px 24px' }} />
 
-        {/* Title */}
-        <h2 className="text-[24px] font-medium text-[#003566] mb-8">AI Mentor</h2>
+    <div className="relative flex flex-col h-full p-6">
+      <button onClick={onBack}
+        className="flex items-center gap-2 text-white/40 hover:text-white mb-8 transition-colors group cursor-pointer">
+        <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
+        <span className="text-[12px] font-medium">Mentor Support</span>
+      </button>
 
-        {/* Actions */}
-        <div className="flex flex-col gap-2 mb-8">
-          <button 
-            onClick={onChatMode}
-            className="flex items-center gap-3 px-4 h-[42px] rounded-[10px] hover:bg-gray-50 text-black transition-colors border border-transparent hover:border-gray-100"
-          >
-            <Plus className="w-5 h-5" />
-            <span className="text-[14px]">New Chat</span>
-          </button>
-          <button className="flex items-center gap-3 px-4 h-[42px] rounded-[10px] hover:bg-gray-50 text-black transition-colors border border-transparent hover:border-gray-100">
-            <Search className="w-5 h-5" />
-            <span className="text-[14px]">Search Chats</span>
-          </button>
+      <div className="flex items-center gap-3 mb-8">
+        <div className="w-10 h-10 rounded-[14px] flex items-center justify-center relative"
+          style={{ background: 'rgba(9,103,189,0.25)', border: '1px solid rgba(9,103,189,0.15)' }}>
+          <Bot className="w-5 h-5 text-[#7cc4ff]" />
+          <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-[#22c55e] border-2 border-[#003566]" />
         </div>
-
-        {/* Recent Chats Section */}
-        <div className="flex-1 overflow-y-auto">
-           <div className="mb-2">
-              <span className="text-[14px] text-black/60 pl-4">Chats</span>
-           </div>
-           <div className="flex flex-col gap-1">
-              <button 
-                onClick={onChatMode}
-                className="flex items-center px-4 h-[42px] rounded-[10px] hover:bg-[#e6f0ff] text-black transition-colors text-left"
-              >
-                 <span className="text-[14px]">Maths Doubt</span>
-              </button>
-              <button 
-                onClick={onChatMode}
-                className="flex items-center px-4 h-[42px] rounded-[10px] hover:bg-[#e6f0ff] text-black transition-colors text-left"
-              >
-                 <span className="text-[14px]">Physics</span>
-              </button>
-           </div>
+        <div>
+          <h2 className="text-[18px] font-bold text-white" style={{ fontFamily: "'DM Serif Display', serif" }}>
+            AI Mentor
+          </h2>
+          <span className="text-[10px] text-white/30 font-medium">Powered by Learnova AI</span>
         </div>
       </div>
 
-      {/* Main Chat Area */}
-      <div className="flex-1 relative bg-white flex flex-col items-center justify-center p-8">
-        
-        {/* Mobile Back Button */}
-        <button 
-          onClick={onBack}
-          className="absolute top-4 left-4 md:hidden flex items-center gap-2 text-black/60 hover:text-black transition-colors"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          <span className="text-[12px] font-medium">Back</span>
+      <div className="flex flex-col gap-1 mb-6">
+        <button onClick={onChatMode}
+          className="flex items-center gap-3 px-4 h-[40px] rounded-[12px] text-white/40 hover:text-white/80 hover:bg-white/[0.06] transition-all cursor-pointer">
+          <Plus className="w-4 h-4" />
+          <span className="text-[13px] font-medium">New Chat</span>
         </button>
+        <button className="flex items-center gap-3 px-4 h-[40px] rounded-[12px] text-white/40 hover:text-white/80 hover:bg-white/[0.06] transition-all cursor-pointer">
+          <Search className="w-4 h-4" />
+          <span className="text-[13px] font-medium">Search Chats</span>
+        </button>
+      </div>
 
-        {/* Center Content */}
-        <div className="flex flex-col items-center max-w-2xl w-full -mt-20">
-           {/* Robot Image */}
-           <div className="w-[300px] h-[300px] relative mb-4">
-              <ImageWithFallback 
-                 src={imgSayHi1} 
-                 alt="AI Robot" 
-                 className="w-full h-full object-contain drop-shadow-xl"
-              />
-           </div>
+      <div className="h-px bg-white/[0.06] mb-4" />
 
-           {/* Greeting Text */}
-           <div className="text-center space-y-2 mb-12">
-              <h1 className="text-[32px] font-medium text-black/70 leading-tight">
-                Good Morning, Jack Sparrow
-              </h1>
-              <h2 className="text-[32px] font-medium leading-tight">
-                <span className="text-black/70">How Can I </span>
-                <span className="text-[#003566]">Assist you today ?</span>
-              </h2>
-           </div>
+      <div className="flex-1 overflow-y-auto">
+        <p className="text-[10px] font-bold text-white/20 uppercase tracking-[0.18em] pl-4 mb-3">Recent</p>
+        <div className="flex flex-col gap-0.5">
+          {[
+            { title: "Maths Doubt", time: "2h ago" },
+            { title: "Physics", time: "Yesterday" },
+          ].map((chat) => (
+            <button key={chat.title} onClick={onChatMode}
+              className="flex items-center justify-between px-4 h-[40px] rounded-[12px] hover:bg-white/[0.06] text-white/40 hover:text-white/70 transition-all text-left cursor-pointer group">
+              <div className="flex items-center gap-2.5 min-w-0">
+                <MessageSquare className="w-3.5 h-3.5 shrink-0 opacity-60" />
+                <span className="text-[13px] truncate">{chat.title}</span>
+              </div>
+              <span className="text-[9px] text-white/20 shrink-0 group-hover:text-white/30">{chat.time}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="mt-auto pt-4 border-t border-white/[0.06]">
+        <div className="px-4 py-3 rounded-[14px] border border-white/[0.06]"
+          style={{ background: 'rgba(247,127,0,0.06)' }}>
+          <div className="flex items-center gap-2 mb-1">
+            <Zap className="w-3 h-3 text-[#f77f00]" />
+            <span className="text-[11px] font-bold text-[#f77f00]">Pro Tip</span>
+          </div>
+          <p className="text-[10px] text-white/30 leading-relaxed">
+            Try voice mode for hands-free learning while you study!
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+);
+
+export function AiMentorHome({ onBack, onVoiceMode, onChatMode }: AiMentorHomeProps) {
+  const [inputValue, setInputValue] = React.useState("");
+
+  const capabilities = [
+    { icon: <HelpCircle className="w-4 h-4" />, title: "Explain Concepts", desc: "Break down complex topics into simple terms", color: "#0967bd" },
+    { icon: <Brain className="w-4 h-4" />, title: "Solve Problems", desc: "Step-by-step guidance on tough questions", color: "#7c3aed" },
+    { icon: <BookOpen className="w-4 h-4" />, title: "Summarize Notes", desc: "Get concise summaries of your study material", color: "#f77f00" },
+    { icon: <ListChecks className="w-4 h-4" />, title: "Quiz Me", desc: "Test your knowledge with smart questions", color: "#22c55e" },
+  ];
+
+  return (
+    <div className="flex h-screen w-full overflow-hidden" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+      <SidebarPanel onBack={onBack} onChatMode={onChatMode} />
+
+      {/* Main Area */}
+      <div className="flex-1 relative flex flex-col h-full overflow-hidden">
+        {/* Background */}
+        <div className="absolute inset-0 bg-[#fafbfd]" />
+        <div className="absolute top-0 left-0 right-0 h-[50%]"
+          style={{ background: 'radial-gradient(ellipse at 50% 0%, rgba(9,103,189,0.04) 0%, transparent 70%)' }} />
+
+        {/* Mobile Back */}
+        <div className="lg:hidden sticky top-0 z-20 px-5 py-3 bg-white/80 backdrop-blur-xl border-b border-gray-100/80">
+          <div className="flex items-center justify-between">
+            <button onClick={onBack}
+              className="flex items-center gap-2 text-[#5a7089] hover:text-[#003566] transition-colors cursor-pointer">
+              <ArrowLeft className="w-4 h-4" />
+              <span className="text-[13px] font-medium">Back</span>
+            </button>
+            <div className="flex items-center gap-2">
+              <Bot className="w-4 h-4 text-[#0967bd]" />
+              <span className="text-[14px] font-bold text-[#003566]">AI Mentor</span>
+            </div>
+            <div className="w-16" />
+          </div>
         </div>
 
-        {/* Input Area (Bottom Floating) */}
-        <div className="absolute bottom-10 left-0 right-0 px-8 flex justify-center">
-           <div className="w-full max-w-[900px] flex items-center gap-4">
-              
-              {/* Input Box */}
-              <div className="flex-1 bg-white h-[54px] rounded-[12px] shadow-[0px_4px_60px_5px_rgba(0,0,0,0.15)] flex items-center px-4 border border-gray-100">
-                 <button 
-                    onClick={onChatMode}
-                    className="p-2 hover:bg-gray-100 rounded-full text-black/60 mr-2"
-                 >
-                    <Plus className="w-5 h-5" />
-                 </button>
-                 <input 
-                    type="text" 
-                    placeholder="Type here"
-                    className="flex-1 bg-transparent border-none outline-none text-[16px] placeholder:text-black/40 font-medium"
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') {
-                        onChatMode?.();
-                      }
-                    }}
-                 />
-                 <button 
-                    onClick={onVoiceMode}
-                    className="p-2 hover:bg-gray-100 rounded-full text-[#003566]"
-                 >
-                    <Mic className="w-5 h-5 fill-current" />
-                 </button>
-              </div>
+        {/* Scrollable Content */}
+        <div className="flex-1 relative z-10 overflow-y-auto flex flex-col items-center px-5 md:px-8 py-8 md:py-12 pb-[140px]">
+          {/* Robot Image with glow */}
+          <div className="relative mb-6">
+            <div className="absolute inset-0 blur-3xl opacity-20 rounded-full"
+              style={{ background: 'radial-gradient(circle, #0967bd, transparent 70%)' }} />
+            <div className="w-[200px] h-[200px] md:w-[240px] md:h-[240px] relative">
+              <ImageWithFallback src={imgSayHi1} alt="AI Mentor" className="w-full h-full object-contain drop-shadow-2xl" />
+            </div>
+          </div>
 
-              {/* Send Button */}
-              <button 
+          {/* Greeting */}
+          <div className="text-center mb-8">
+            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full mb-4"
+              style={{ background: 'rgba(9,103,189,0.06)', border: '1px solid rgba(9,103,189,0.08)' }}>
+              <Sparkles className="w-3 h-3 text-[#0967bd]" />
+              <span className="text-[11px] font-semibold text-[#0967bd]">AI-Powered Study Assistant</span>
+            </div>
+            <h1 className="text-[26px] md:text-[32px] lg:text-[38px] text-[#003566] leading-[1.15] mb-3"
+              style={{ fontFamily: "'DM Serif Display', serif" }}>
+              Good Morning, Jack
+            </h1>
+            <p className="text-[15px] md:text-[16px] text-[#7a8ea3] max-w-[400px] mx-auto leading-relaxed">
+              I'm your AI study companion. Ask me anything, or pick a topic to get started.
+            </p>
+          </div>
+
+          {/* Capability Cards */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 w-full max-w-[720px] mb-8">
+            {capabilities.map((cap) => (
+              <button
+                key={cap.title}
                 onClick={onChatMode}
-                className="w-[54px] h-[54px] bg-[#003566] rounded-full flex items-center justify-center shadow-lg hover:bg-[#00284d] transition-colors shrink-0"
+                className="group flex flex-col items-center text-center p-4 rounded-[18px] bg-white border border-[#edf0f4] hover:border-transparent transition-all duration-300 cursor-pointer hover:shadow-lg hover:-translate-y-0.5"
+                style={{ ['--cap-color' as string]: cap.color }}
               >
-                 <Send className="w-6 h-6 text-white ml-1" />
+                <div className="w-10 h-10 rounded-[12px] flex items-center justify-center mb-3 transition-all duration-300 group-hover:scale-110"
+                  style={{ background: `${cap.color}12`, color: cap.color }}>
+                  {cap.icon}
+                </div>
+                <span className="text-[12px] font-bold text-[#1e293b] mb-1">{cap.title}</span>
+                <span className="text-[10px] text-[#94a3b8] leading-snug hidden md:block">{cap.desc}</span>
               </button>
+            ))}
+          </div>
 
-           </div>
+          {/* Quick prompts */}
+          <div className="w-full max-w-[720px]">
+            <p className="text-[11px] font-bold text-[#94a3b8] uppercase tracking-[0.12em] mb-3 pl-1">Try asking</p>
+            <div className="flex flex-col gap-2">
+              {[
+                "Explain the theory of relativity in simple terms",
+                "Help me solve this quadratic equation: x² + 5x + 6 = 0",
+                "Create a study plan for my physics exam next week",
+              ].map((prompt) => (
+                <button
+                  key={prompt}
+                  onClick={onChatMode}
+                  className="group flex items-center gap-3 px-5 py-3.5 rounded-[14px] bg-white border border-[#edf0f4] hover:border-[#0967bd]/20 hover:shadow-md transition-all text-left cursor-pointer"
+                >
+                  <div className="w-7 h-7 rounded-[9px] flex items-center justify-center shrink-0 bg-[#f5f7fa] group-hover:bg-[#0967bd]/10 transition-colors">
+                    <Sparkles className="w-3 h-3 text-[#94a3b8] group-hover:text-[#0967bd] transition-colors" />
+                  </div>
+                  <span className="text-[13px] text-[#5a7089] group-hover:text-[#003566] transition-colors leading-snug">{prompt}</span>
+                  <Send className="w-3.5 h-3.5 text-[#d1d5db] group-hover:text-[#0967bd] shrink-0 ml-auto transition-colors" />
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Bottom Input */}
+        <div className="absolute bottom-0 left-0 right-0 z-20">
+          <div className="px-5 md:px-8 pb-6 pt-4"
+            style={{ background: 'linear-gradient(180deg, transparent 0%, #fafbfd 30%)' }}>
+            <div className="w-full max-w-[720px] mx-auto flex items-center gap-2.5">
+              <div className="flex-1 h-[52px] rounded-[16px] bg-white flex items-center px-3 border border-[#e2e8f0] shadow-lg shadow-black/[0.05] hover:border-[#c1d4e8] focus-within:border-[#0967bd] focus-within:shadow-[#0967bd]/10 transition-all">
+                <button onClick={onChatMode}
+                  className="p-2 hover:bg-[#f5f7fa] rounded-[10px] text-[#c1c7ce] hover:text-[#0967bd] transition-colors cursor-pointer">
+                  <Plus className="w-5 h-5" />
+                </button>
+                <input
+                  type="text"
+                  placeholder="Ask me anything..."
+                  className="flex-1 bg-transparent border-none outline-none text-[14px] text-[#1e293b] placeholder:text-[#b0b8c4] font-medium px-1"
+                  value={inputValue}
+                  onChange={(e) => setInputValue(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === 'Enter') onChatMode?.(); }}
+                />
+                <button onClick={onVoiceMode}
+                  className="p-2 hover:bg-[#f5f7fa] rounded-[10px] text-[#003566]/60 hover:text-[#0967bd] transition-colors cursor-pointer">
+                  <Mic className="w-5 h-5" />
+                </button>
+              </div>
+              <button onClick={onChatMode}
+                className="w-[52px] h-[52px] rounded-[16px] flex items-center justify-center shadow-lg hover:shadow-xl hover:scale-[1.04] transition-all shrink-0 cursor-pointer"
+                style={{ background: 'linear-gradient(135deg, #003566, #0967bd)' }}>
+                <Send className="w-5 h-5 text-white ml-0.5" />
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     </div>

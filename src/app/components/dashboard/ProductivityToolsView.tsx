@@ -1,20 +1,23 @@
 import React, { useState, useEffect } from "react";
 import imgNotesImage from "figma:asset/00ae786af8ac4c0943552db9a6f6dfd10268ca06.png";
 import imgPlannerImage from "figma:asset/3bed40028d21e55021d8008bb0100eca00d08ab3.png";
-import svgNotePaths from "@/imports/svg-acp3s7jq6n";
-import svgPlannerPaths from "@/imports/svg-c9gs1u9we0";
-import svgModalPaths from "@/imports/svg-xl1sy24t63";
-import svgAddTaskPaths from "@/imports/svg-dalfud3wlq";
-import svgAddReminderPaths from "@/imports/svg-y1tmdqw9t2";
-import svgCompletedPlanPaths from "@/imports/svg-7qydjhl9d5";
 import { notes as notesApi, tasks as tasksApi, reminders as remindersApi, studyPlans as studyPlansApi } from "@/app/lib/api";
+import {
+  ArrowLeft, Plus, Search, FileText, Sparkles, ArrowRight,
+  StickyNote, ClipboardList, Clock, ChevronDown, Check, Trash2, X,
+  Bell, BookOpen, CheckCircle, Target, ChevronRight
+} from "lucide-react";
+
+/* ═══════ LANDING PAGE ═══════ */
 
 interface ToolCard {
   id: string;
   title: string;
   description: string;
   image: string;
-  gradient: string;
+  icon: React.ReactNode;
+  accent: string;
+  features: string[];
 }
 
 const tools: ToolCard[] = [
@@ -23,80 +26,104 @@ const tools: ToolCard[] = [
     title: "Notes",
     description: "Write freely and store your thoughts in one neat place.",
     image: imgNotesImage,
-    gradient:
-      "linear-gradient(-7.39deg, rgba(0, 0, 0, 0) 41.14%, rgba(0, 0, 0, 0.4) 70.39%)",
+    icon: <StickyNote className="w-5 h-5 text-white" />,
+    accent: "#0967bd",
+    features: ["Quick capture", "Rich text", "Search & filter"],
   },
   {
     id: "planner",
-    title: "Planner/Scheduler",
+    title: "Planner / Scheduler",
     description: "Organize your day, set goals, and track your progress.",
     image: imgPlannerImage,
-    gradient:
-      "linear-gradient(-2.49deg, rgba(0, 0, 0, 0) 47.33%, rgba(0, 0, 0, 0.4) 66.41%)",
+    icon: <ClipboardList className="w-5 h-5 text-white" />,
+    accent: "#f77f00",
+    features: ["Tasks & reminders", "Study plans", "Weekly overview"],
   },
 ];
 
 export function ProductivityToolsView() {
   const [activeTool, setActiveTool] = useState<string | null>(null);
 
-  if (activeTool === "notes") {
-    return <NotesApp onBack={() => setActiveTool(null)} />;
-  }
-
-  if (activeTool === "planner") {
-    return <PlannerApp onBack={() => setActiveTool(null)} />;
-  }
+  if (activeTool === "notes") return <NotesApp onBack={() => setActiveTool(null)} />;
+  if (activeTool === "planner") return <PlannerApp onBack={() => setActiveTool(null)} />;
 
   return (
-    <>
-      <div className="mb-8 md:mb-10">
-        <h1 className="text-[28px] md:text-[32px] lg:text-[40px] font-medium text-black mb-1 font-['Poppins']">
-          Productivity Tools
-        </h1>
-        <p className="text-[14px] text-black/60 font-['Poppins']">
-          Everything you need to manage your learning efficiently
-        </p>
+    <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }} className="animate-in fade-in duration-300">
+      {/* Hero Header */}
+      <div className="relative rounded-[24px] overflow-hidden mb-8"
+        style={{ background: 'linear-gradient(135deg, #001d3d 0%, #003566 50%, #0967bd 100%)' }}>
+        <div className="absolute -top-20 -right-20 w-[300px] h-[300px] rounded-full opacity-[0.06]"
+          style={{ background: 'radial-gradient(circle, white, transparent 70%)' }} />
+        <div className="relative z-10 px-6 md:px-10 py-8 md:py-10">
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full mb-4"
+            style={{ background: 'rgba(247,127,0,0.15)', border: '1px solid rgba(247,127,0,0.25)' }}>
+            <Sparkles className="w-3.5 h-3.5 text-[#f77f00]" />
+            <span className="text-[12px] font-semibold text-[#f77f00]">Stay Organized</span>
+          </div>
+          <h1 className="text-[28px] md:text-[36px] lg:text-[40px] text-white mb-3 leading-[1.1]"
+            style={{ fontFamily: "'DM Serif Display', serif" }}>
+            Productivity Tools
+          </h1>
+          <p className="text-[14px] text-white/50 max-w-[460px] leading-relaxed">
+            Everything you need to manage your learning efficiently — capture ideas, plan study sessions, and track progress.
+          </p>
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-10">
+      {/* Section Label */}
+      <div className="flex items-center gap-3 mb-6">
+        <div className="w-1 h-5 rounded-full bg-[#f77f00]" />
+        <h2 className="text-[16px] font-bold text-[#003566]">Choose a Tool</h2>
+      </div>
+
+      {/* Tool Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
         {tools.map((tool) => (
           <div
             key={tool.id}
             onClick={() => setActiveTool(tool.id)}
-            className="relative w-full h-[280px] md:h-[307px] rounded-[20px] overflow-hidden group cursor-pointer shadow-sm hover:shadow-lg transition-all duration-300"
+            className="group relative rounded-[22px] overflow-hidden cursor-pointer transition-all duration-300 hover:shadow-2xl hover:-translate-y-1"
+            style={{ minHeight: 320 }}
           >
-            {/* Background Image */}
             <div className="absolute inset-0">
-              <img
-                src={tool.image}
-                alt={tool.title}
-                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-              />
+              <img src={tool.image} alt={tool.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
             </div>
+            <div className="absolute inset-0"
+              style={{ background: 'linear-gradient(180deg, rgba(0,29,61,0.15) 0%, rgba(0,29,61,0.92) 60%)' }} />
 
-            {/* Gradient Overlay */}
-            <div
-              className="absolute inset-0"
-              style={{ background: tool.gradient }}
-            />
+            <div className="relative z-10 h-full flex flex-col justify-between p-6" style={{ minHeight: 320 }}>
+              <div className="flex items-center justify-between">
+                <div className="w-10 h-10 rounded-[14px] flex items-center justify-center"
+                  style={{ background: tool.accent }}>
+                  {tool.icon}
+                </div>
+                <ArrowRight className="w-5 h-5 text-white/30 group-hover:text-white group-hover:translate-x-1 transition-all" />
+              </div>
 
-            {/* Content */}
-            <div className="absolute top-4 left-8 right-8 text-white z-10">
-              <h3 className="font-['Poppins'] font-semibold text-[20px] mb-0.5 drop-shadow-[0_0_1.5px_white]">
-                {tool.title}
-              </h3>
-              <p className="font-['Poppins'] text-[12px] drop-shadow-[0_0_1.5px_white] opacity-95">
-                {tool.description}
-              </p>
+              <div>
+                <h3 className="text-[22px] md:text-[26px] font-bold text-white mb-2 leading-tight"
+                  style={{ fontFamily: "'DM Serif Display', serif" }}>
+                  {tool.title}
+                </h3>
+                <p className="text-[13px] text-white/50 mb-4 leading-relaxed">{tool.description}</p>
+                <div className="flex flex-wrap gap-2">
+                  {tool.features.map((f) => (
+                    <span key={f} className="px-3 py-1.5 rounded-full text-[10px] font-medium text-white/60"
+                      style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.06)' }}>
+                      {f}
+                    </span>
+                  ))}
+                </div>
+              </div>
             </div>
           </div>
         ))}
       </div>
-    </>
+    </div>
   );
 }
 
-/* ─────────────── Notes App ─────────────── */
+/* ═══════════════ NOTES APP ═══════════════ */
 
 interface Note {
   id: string;
@@ -104,44 +131,6 @@ interface Note {
   content: string;
   timestamp: string;
 }
-
-const sampleNotes: Note[] = [
-  {
-    id: "1",
-    title: "Social Science",
-    content:
-      "Lorem ipsum dolor sit amet consectetur. Semper leo quis odio enim. Purus diam at aenean morbi dictum. Est dui id malesuada amet pellentesque mattis leo. Placerat id libero eget enim ut rhoncus massa lectus. In et bibendum sem phasellus.",
-    timestamp: "Today, 15:24",
-  },
-  {
-    id: "2",
-    title: "Maths",
-    content:
-      "Lorem ipsum dolor sit amet consectetur. Semper leo quis odio enim. Purus diam at aenean morbi dictum. Est dui id malesuada amet pellentesque mattis leo. Placerat id libero eget enim ut rhoncus massa lectus. In et bibendum sem phasellus.",
-    timestamp: "Today, 15:24",
-  },
-  {
-    id: "3",
-    title: "Physics",
-    content:
-      "Lorem ipsum dolor sit amet consectetur. Semper leo quis odio enim. Purus diam at aenean morbi dictum. Est dui id malesuada amet pellentesque mattis leo. Placerat id libero eget enim ut rhoncus massa lectus. In et bibendum sem phasellus.",
-    timestamp: "Today, 15:24",
-  },
-  {
-    id: "4",
-    title: "Chemistry",
-    content:
-      "Lorem ipsum dolor sit amet consectetur. Semper leo quis odio enim. Purus diam at aenean morbi dictum. Est dui id malesuada amet pellentesque mattis leo. Placerat id libero eget enim ut rhoncus massa lectus. In et bibendum sem phasellus.",
-    timestamp: "Today, 14:50",
-  },
-  {
-    id: "5",
-    title: "English Literature",
-    content:
-      "Lorem ipsum dolor sit amet consectetur. Semper leo quis odio enim. Purus diam at aenean morbi dictum. Est dui id malesuada amet pellentesque mattis leo. Placerat id libero eget enim ut rhoncus massa lectus. In et bibendum sem phasellus.",
-    timestamp: "Today, 14:12",
-  },
-];
 
 function NotesApp({ onBack }: { onBack: () => void }) {
   const [notes, setNotes] = useState<Note[]>([]);
@@ -154,12 +143,22 @@ function NotesApp({ onBack }: { onBack: () => void }) {
   const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
-    notesApi.list().then((data) => {
-      setNotes(data.map((n: any) => ({
-        id: n.id, title: n.title, content: n.content,
-        timestamp: n.updatedAt ? `${new Date(n.updatedAt).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })}` : "Now",
-      })));
-    }).catch(console.log).finally(() => setIsLoading(false));
+    notesApi
+      .list()
+      .then((data) => {
+        setNotes(
+          data.map((n: any) => ({
+            id: n.id,
+            title: n.title,
+            content: n.content,
+            timestamp: n.updatedAt
+              ? new Date(n.updatedAt).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })
+              : "Now",
+          }))
+        );
+      })
+      .catch(console.log)
+      .finally(() => setIsLoading(false));
   }, []);
 
   const filteredNotes = notes.filter(
@@ -174,10 +173,16 @@ function NotesApp({ onBack }: { onBack: () => void }) {
     try {
       const saved = await notesApi.create(newTitle || "Untitled Note", newContent);
       const now = new Date();
-      const timeStr = `Today, ${now.getHours().toString().padStart(2,"0")}:${now.getMinutes().toString().padStart(2,"0")}`;
+      const timeStr = now.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" });
       setNotes([{ id: saved.id, title: saved.title, content: saved.content, timestamp: timeStr }, ...notes]);
-      setNewTitle(""); setNewContent(""); setIsCreating(false);
-    } catch (e) { console.log("Save note error:", e); } finally { setIsSaving(false); }
+      setNewTitle("");
+      setNewContent("");
+      setIsCreating(false);
+    } catch (e) {
+      console.log("Save note error:", e);
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleUpdateNote = async () => {
@@ -187,7 +192,11 @@ function NotesApp({ onBack }: { onBack: () => void }) {
       await notesApi.update(editingNote.id, { title: editingNote.title, content: editingNote.content });
       setNotes(notes.map((n) => (n.id === editingNote.id ? editingNote : n)));
       setEditingNote(null);
-    } catch (e) { console.log("Update note error:", e); } finally { setIsSaving(false); }
+    } catch (e) {
+      console.log("Update note error:", e);
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleDeleteNote = async (id: string) => {
@@ -195,70 +204,65 @@ function NotesApp({ onBack }: { onBack: () => void }) {
       await notesApi.delete(id);
       setNotes(notes.filter((n) => n.id !== id));
       if (editingNote?.id === id) setEditingNote(null);
-    } catch (e) { console.log("Delete note error:", e); }
+    } catch (e) {
+      console.log("Delete note error:", e);
+    }
   };
 
   return (
-    <div className="font-['Poppins']">
+    <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }} className="animate-in fade-in duration-300">
       {/* Breadcrumb */}
-      <button
-        type="button"
-        onClick={onBack}
-        className="text-[14px] font-medium text-black/60 hover:text-black/80 transition-colors cursor-pointer mb-1"
-      >
-        {"< Productivity Tools"}
+      <button onClick={onBack}
+        className="flex items-center gap-2 text-[#5a7089] hover:text-[#003566] mb-5 transition-colors group cursor-pointer">
+        <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
+        <span className="text-[13px] font-medium">Productivity Tools</span>
       </button>
 
-      {/* Title */}
-      <h1 className="text-[28px] md:text-[32px] lg:text-[40px] font-medium text-black mb-5">
-        Notes
-      </h1>
-
-      {/* Search Bar + Plus Button */}
-      <div className="flex items-center gap-4 mb-8">
-        {/* Search Bar */}
-        <div className="flex-1 bg-white rounded-[12px] shadow-[0px_4px_60px_5px_rgba(0,0,0,0.15)] overflow-hidden">
-          <div className="flex items-center gap-6 px-6 py-3">
-            {/* Search Icon */}
-            <div className="shrink-0 size-[24px]">
-              <svg className="block size-full" fill="none" viewBox="0 0 24 24">
-                <path
-                  d={svgNotePaths.p10a22f00}
-                  stroke="black"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="1.5"
-                />
-              </svg>
-            </div>
-            <input
-              type="text"
-              placeholder="Search Notes"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="flex-1 text-[16px] text-black/60 font-medium outline-none placeholder:text-black/60 bg-transparent"
-            />
+      {/* Title + Search Row */}
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-[14px] flex items-center justify-center"
+            style={{ background: 'linear-gradient(135deg, #003566, #0967bd)' }}>
+            <StickyNote className="w-5 h-5 text-white" />
           </div>
+          <h1 className="text-[28px] md:text-[34px] text-[#003566]"
+            style={{ fontFamily: "'DM Serif Display', serif" }}>
+            Notes
+          </h1>
         </div>
 
-        {/* Plus Button */}
-        <button
-          type="button"
-          onClick={() => {
-            setIsCreating(true);
-            setEditingNote(null);
-          }}
-          className="shrink-0 size-[49px] bg-[#003566] rounded-[12px] flex items-center justify-center hover:bg-[#002a52] transition-colors cursor-pointer"
-        >
-          <svg className="block size-[49px]" fill="none" viewBox="0 0 49 49">
-            <path d={svgNotePaths.p36014500} fill="white" />
-          </svg>
-        </button>
+        <div className="flex items-center gap-3">
+          {/* Search */}
+          <div className="flex items-center gap-2.5 px-4 h-[44px] rounded-[14px] bg-white border border-[#e2e8f0] hover:border-[#c9ddf0] transition-all flex-1 md:w-[280px] shadow-sm">
+            <Search className="w-4 h-4 text-[#94a3b8] shrink-0" />
+            <input
+              type="text"
+              placeholder="Search notes..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="flex-1 bg-transparent border-none outline-none text-[13px] text-[#1e293b] placeholder:text-[#94a3b8] font-medium"
+            />
+          </div>
+          {/* Add Button */}
+          <button
+            onClick={() => { setIsCreating(true); setEditingNote(null); }}
+            className="w-[44px] h-[44px] rounded-[14px] flex items-center justify-center shadow-lg hover:shadow-xl hover:scale-[1.04] transition-all cursor-pointer shrink-0"
+            style={{ background: 'linear-gradient(135deg, #003566, #0967bd)' }}>
+            <Plus className="w-5 h-5 text-white" />
+          </button>
+        </div>
       </div>
 
       {/* Create / Edit Note Modal */}
       {(isCreating || editingNote) && (
-        <div className="mb-8 bg-white rounded-[20px] shadow-[0px_4px_60px_5px_rgba(0,0,0,0.08)] p-6">
+        <div className="mb-6 bg-white rounded-[20px] border border-[#edf0f4] shadow-lg p-6">
+          <div className="flex items-center gap-2.5 mb-4">
+            <div className="w-7 h-7 rounded-[10px] flex items-center justify-center"
+              style={{ background: 'rgba(9,103,189,0.1)' }}>
+              <FileText className="w-3.5 h-3.5 text-[#0967bd]" />
+            </div>
+            <span className="text-[14px] font-bold text-[#003566]">{editingNote ? "Edit Note" : "New Note"}</span>
+          </div>
           <input
             type="text"
             placeholder="Note title..."
@@ -268,7 +272,7 @@ function NotesApp({ onBack }: { onBack: () => void }) {
                 ? setEditingNote({ ...editingNote, title: e.target.value })
                 : setNewTitle(e.target.value)
             }
-            className="w-full text-[16px] font-medium mb-4 outline-none placeholder:text-black/30 bg-transparent"
+            className="w-full text-[15px] font-bold mb-3 outline-none placeholder:text-[#c1c7ce] bg-transparent text-[#1e293b]"
           />
           <textarea
             placeholder="Start writing your note..."
@@ -279,107 +283,99 @@ function NotesApp({ onBack }: { onBack: () => void }) {
                 : setNewContent(e.target.value)
             }
             rows={8}
-            className="w-full text-[16px] text-black/60 outline-none resize-none placeholder:text-black/30 bg-transparent"
+            className="w-full text-[14px] text-[#5a7089] outline-none resize-none placeholder:text-[#c1c7ce] bg-transparent leading-relaxed"
           />
           <div className="flex items-center gap-3 mt-4 justify-end">
             {editingNote && (
-              <button
-                type="button"
-                onClick={() => handleDeleteNote(editingNote.id)}
-                className="px-5 py-2.5 text-[14px] rounded-[10px] text-red-500 hover:bg-red-50 transition-colors cursor-pointer mr-auto"
-              >
+              <button onClick={() => handleDeleteNote(editingNote.id)}
+                className="px-4 py-2.5 text-[13px] font-bold rounded-[12px] text-[#cc3636] hover:bg-red-50 transition-colors cursor-pointer mr-auto flex items-center gap-1.5">
+                <Trash2 className="w-3.5 h-3.5" />
                 Delete
               </button>
             )}
             <button
-              type="button"
-              onClick={() => {
-                setIsCreating(false);
-                setEditingNote(null);
-                setNewTitle("");
-                setNewContent("");
-              }}
-              className="px-5 py-2.5 text-[14px] rounded-[10px] text-black/60 hover:bg-gray-100 transition-colors cursor-pointer"
-            >
+              onClick={() => { setIsCreating(false); setEditingNote(null); setNewTitle(""); setNewContent(""); }}
+              className="px-5 py-2.5 text-[13px] font-bold rounded-[12px] text-[#5a7089] hover:bg-[#f5f7fa] transition-colors cursor-pointer border border-[#e2e8f0]">
               Cancel
             </button>
             <button
-              type="button"
               onClick={editingNote ? handleUpdateNote : handleSaveNote}
-              className="px-5 py-2.5 text-[14px] rounded-[10px] bg-[#003566] text-white hover:bg-[#002a52] transition-colors cursor-pointer"
-            >
-              {editingNote ? "Update" : "Save"}
+              disabled={isSaving}
+              className="px-5 py-2.5 text-[13px] font-bold rounded-[12px] text-white transition-all cursor-pointer disabled:opacity-60 hover:shadow-lg"
+              style={{ background: 'linear-gradient(135deg, #003566, #0967bd)' }}>
+              {isSaving ? "Saving..." : editingNote ? "Update" : "Save Note"}
             </button>
           </div>
         </div>
       )}
 
-      {/* Notes Row - Horizontally Scrollable */}
-      <div className="relative">
-        <div
-          className="flex gap-[34px] overflow-x-auto pb-4 pr-4"
-          style={{
-            scrollbarWidth: "thin",
-            scrollbarColor: "#003566 rgba(0,0,0,0.2)",
-          }}
-        >
-          {filteredNotes.map((note) => (
-            <div
-              key={note.id}
-              onClick={() => {
-                setEditingNote(note);
-                setIsCreating(false);
-              }}
-              className="bg-[rgba(201,229,255,0.4)] shrink-0 w-[300px] md:w-[338px] rounded-[20px] p-6 cursor-pointer hover:shadow-md transition-all flex flex-col gap-4 group"
-            >
-              {/* Note Title */}
-              <p className="text-[16px] font-medium text-black">
-                {note.title}
-              </p>
-
-              {/* Note Content */}
-              <p className="text-[16px] text-black/60 h-[193px] overflow-hidden whitespace-pre-wrap">
-                {note.content}
-              </p>
-
-              {/* Timestamp */}
-              <div className="flex items-center justify-end w-full">
-                <p className="text-[12px] font-medium text-black/70">
-                  {note.timestamp}
-                </p>
-              </div>
-            </div>
-          ))}
+      {/* Loading */}
+      {isLoading && (
+        <div className="flex justify-center py-16">
+          <div className="w-8 h-8 border-2 border-[#003566]/15 border-t-[#0967bd] rounded-full animate-spin" />
         </div>
+      )}
 
-        {/* Custom Scrollbar Track (visual only, matching Figma) */}
-      </div>
+      {/* Notes Grid */}
+      {!isLoading && filteredNotes.length > 0 && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {filteredNotes.map((note, i) => {
+            const colors = [
+              'rgba(9,103,189,0.06)',
+              'rgba(247,127,0,0.06)',
+              'rgba(34,197,94,0.06)',
+              'rgba(124,58,237,0.06)',
+            ];
+            const borderColors = [
+              'rgba(9,103,189,0.1)',
+              'rgba(247,127,0,0.1)',
+              'rgba(34,197,94,0.1)',
+              'rgba(124,58,237,0.1)',
+            ];
+            return (
+              <div
+                key={note.id}
+                onClick={() => { setEditingNote(note); setIsCreating(false); }}
+                className="rounded-[18px] p-5 cursor-pointer hover:shadow-lg transition-all duration-300 hover:-translate-y-0.5 group flex flex-col gap-3"
+                style={{ background: colors[i % 4], border: `1px solid ${borderColors[i % 4]}` }}
+              >
+                <p className="text-[14px] font-bold text-[#003566] group-hover:text-[#0967bd] transition-colors line-clamp-1">{note.title}</p>
+                <p className="text-[13px] text-[#5a7089] leading-relaxed h-[140px] overflow-hidden whitespace-pre-wrap line-clamp-6">
+                  {note.content}
+                </p>
+                <div className="flex items-center justify-between mt-auto pt-2 border-t border-black/[0.04]">
+                  <div className="flex items-center gap-1.5">
+                    <Clock className="w-3 h-3 text-[#c1c7ce]" />
+                    <span className="text-[11px] font-medium text-[#94a3b8]">{note.timestamp}</span>
+                  </div>
+                  <ChevronRight className="w-3.5 h-3.5 text-[#c1c7ce] group-hover:text-[#0967bd] transition-colors" />
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
 
-      {filteredNotes.length === 0 && !isCreating && !editingNote && (
-        <div className="flex flex-col items-center justify-center py-16 text-center">
-          <div className="size-16 rounded-full bg-[rgba(201,229,255,0.3)] flex items-center justify-center mb-4">
-            <svg
-              className="size-8 text-[#003566]/30"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              strokeWidth={1.5}
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"
-              />
-            </svg>
+      {/* Empty State */}
+      {!isLoading && filteredNotes.length === 0 && !isCreating && !editingNote && (
+        <div className="flex flex-col items-center justify-center py-20 text-center">
+          <div className="w-16 h-16 rounded-[20px] flex items-center justify-center mb-4"
+            style={{ background: 'rgba(9,103,189,0.06)' }}>
+            <FileText className="w-7 h-7 text-[#0967bd]/30" />
           </div>
-          <p className="text-black/40 text-[14px]">No notes found</p>
+          <p className="text-[14px] font-semibold text-[#5a7089] mb-1">
+            {searchQuery ? "No notes match your search" : "No notes yet"}
+          </p>
+          <p className="text-[12px] text-[#94a3b8]">
+            {searchQuery ? "Try a different keyword" : "Click + to create your first note"}
+          </p>
         </div>
       )}
     </div>
   );
 }
 
-/* ─────────────── Planner / Scheduler App ─────────────── */
+/* ═══════════════ PLANNER / SCHEDULER APP ═══════════════ */
 
 interface PlannerTask {
   id: string;
@@ -401,25 +397,6 @@ interface StudyPlan {
   priority: "high" | "medium" | "low";
 }
 
-const initialTasks: PlannerTask[] = [
-  { id: "t1", title: "Complete Math Assignment", completed: false },
-  { id: "t2", title: "Submit History Essays", completed: true },
-  { id: "t3", title: "Read Biology Chapter 12", completed: false },
-  { id: "t4", title: "Practice Spanish Verbs", completed: false },
-  { id: "t5", title: "Review Chemistry Notes", completed: false },
-];
-
-const initialReminders: Reminder[] = [
-  { id: "r1", title: "Maths Study Session  | Daily at 3:00PM", completed: false },
-  { id: "r2", title: "Assignment Deadline | Weekly on Friday at 11:35PM", completed: true },
-];
-
-const initialStudyPlans: StudyPlan[] = [
-  { id: "s1", title: "Advanced Physics", time: "9:00 AM - 11:00AM", progress: 75, priority: "high" },
-  { id: "s2", title: "Statistics Review", time: "2:00 PM - 4:00 PM", progress: 50, priority: "medium" },
-  { id: "s3", title: "Spanish Vocabulary", time: "7:00 PM - 8:00 PM", progress: 25, priority: "low" },
-];
-
 interface WeeklyDay {
   id: string;
   day: string;
@@ -429,9 +406,7 @@ interface WeeklyDay {
 
 const initialWeeklyData: WeeklyDay[] = [
   {
-    id: "w1",
-    day: "Monday",
-    date: "Oct 21",
+    id: "w1", day: "Monday", date: "Oct 21",
     sessions: [
       { id: "ws1", title: "Advanced Physics", time: "9:00 AM - 11:00 AM", progress: 75, priority: "high" },
       { id: "ws2", title: "Statistics Review", time: "11:30 AM - 1:00 PM", progress: 50, priority: "medium" },
@@ -440,9 +415,7 @@ const initialWeeklyData: WeeklyDay[] = [
     ],
   },
   {
-    id: "w2",
-    day: "Sunday",
-    date: "Oct 20",
+    id: "w2", day: "Sunday", date: "Oct 20",
     sessions: [
       { id: "ws5", title: "Biology Chapter 12", time: "9:00 AM - 10:30 AM", progress: 40, priority: "high" },
       { id: "ws6", title: "English Literature", time: "11:00 AM - 12:30 PM", progress: 80, priority: "low" },
@@ -451,9 +424,7 @@ const initialWeeklyData: WeeklyDay[] = [
     ],
   },
   {
-    id: "w3",
-    day: "Saturday",
-    date: "Oct 19",
+    id: "w3", day: "Saturday", date: "Oct 19",
     sessions: [
       { id: "ws9", title: "Physics Lab Report", time: "10:00 AM - 12:00 PM", progress: 55, priority: "high" },
       { id: "ws10", title: "French Conversation", time: "1:00 PM - 2:00 PM", progress: 70, priority: "low" },
@@ -462,9 +433,7 @@ const initialWeeklyData: WeeklyDay[] = [
     ],
   },
   {
-    id: "w4",
-    day: "Friday",
-    date: "Oct 18",
+    id: "w4", day: "Friday", date: "Oct 18",
     sessions: [
       { id: "ws13", title: "Organic Chemistry", time: "9:00 AM - 11:00 AM", progress: 65, priority: "high" },
       { id: "ws14", title: "Computer Science", time: "1:00 PM - 3:00 PM", progress: 85, priority: "medium" },
@@ -481,125 +450,34 @@ interface CompletedPlan {
   time: string;
 }
 
-const initialCompletedPlans: CompletedPlan[] = [
-  { id: "cp1", title: "Advanced Physics", date: "Oct 21", time: "9:00AM - 11:00AM" },
-  { id: "cp2", title: "Statistics Review", date: "Oct 20", time: "2:00PM - 4:00PM" },
-  { id: "cp3", title: "Chemistry", date: "Oct 19", time: "9:00AM - 11:00AM" },
-  { id: "cp4", title: "English Literature", date: "Oct 18", time: "1:00PM - 3:00PM" },
-  { id: "cp5", title: "Biology Lab Report", date: "Oct 17", time: "10:00AM - 12:00PM" },
-];
-
 const priorityConfig = {
-  high: {
-    rowBg: "bg-[#fef2f2]",
-    badgeBg: "bg-[#fee2e2]",
-    badgeText: "text-[#ef4444]",
-    barColor: "bg-[#ef4444]",
-    label: "High",
-  },
-  medium: {
-    rowBg: "bg-[#fff7ed]",
-    badgeBg: "bg-[#ffedd5]",
-    badgeText: "text-[#f77f00]",
-    barColor: "bg-[#f77f00]",
-    label: "Medium",
-  },
-  low: {
-    rowBg: "bg-[#f0fdf4]",
-    badgeBg: "bg-[#dffbe9]",
-    badgeText: "text-[#34b161]",
-    barColor: "bg-[#34b161]",
-    label: "Low",
-  },
+  high: { bg: "rgba(239,68,68,0.05)", border: "rgba(239,68,68,0.1)", badgeBg: "#fef2f2", badgeText: "#ef4444", barColor: "#ef4444", label: "High" },
+  medium: { bg: "rgba(247,127,0,0.05)", border: "rgba(247,127,0,0.1)", badgeBg: "#fff7ed", badgeText: "#f77f00", barColor: "#f77f00", label: "Medium" },
+  low: { bg: "rgba(34,177,97,0.05)", border: "rgba(34,177,97,0.1)", badgeBg: "#f0fdf4", badgeText: "#34b161", barColor: "#34b161", label: "Low" },
 };
 
-/* Shared icon components */
-function CheckTickIcon({ size = 24 }: { size?: number }) {
-  const path = size >= 32 ? svgPlannerPaths.p8611000 : svgPlannerPaths.p155a3500;
+/* ── Shared modal backdrop ── */
+function ModalBackdrop({ children, onClose }: { children: React.ReactNode; onClose: () => void }) {
   return (
-    <svg className="block" style={{ width: size, height: size }} fill="none" viewBox={`0 0 ${size} ${size}`}>
-      <rect fill="#DCFCE7" height={size} rx="4" width={size} />
-      <path clipRule="evenodd" d={path} fill="#34B161" fillRule="evenodd" />
-    </svg>
-  );
-}
-
-function DeleteIcon() {
-  return (
-    <svg className="block size-[24px]" fill="none" viewBox="0 0 24 24">
-      <rect fill="#FEE2E2" height="24" rx="4" width="24" />
-      <path d={svgPlannerPaths.p830b800} fill="#DC2626" />
-      <path d="M8 9H16V19H8V9Z" fill="#DC2626" />
-    </svg>
-  );
-}
-
-function CompletedCircle() {
-  return (
-    <svg className="block w-[24px] h-[22px] shrink-0" fill="none" viewBox="0 0 24 22">
-      <circle cx="12.75" cy="11" fill="#22C55E" r="11" />
-      <circle cx="12.75" cy="11" r="10" stroke="#22C55E" strokeOpacity="0.4" strokeWidth="2" />
-      <path clipRule="evenodd" d={svgPlannerPaths.p1caa2d00} fill="white" fillRule="evenodd" />
-    </svg>
-  );
-}
-
-function EmptyCircle() {
-  return (
-    <svg className="block size-[22px] shrink-0" fill="none" viewBox="0 0 22 22">
-      <circle cx="11" cy="11" r="10" stroke="black" strokeOpacity="0.4" strokeWidth="2" />
-    </svg>
-  );
-}
-
-/* Icon for "My Tasks" section header */
-function MyTasksIcon() {
-  return (
-    <svg className="block size-[24px] shrink-0" fill="none" viewBox="0 0 24 24">
-      <rect fill="#F77F00" height="24" rx="5" width="24" />
-      <path d={svgPlannerPaths.p27706680} fill="white" />
-    </svg>
-  );
-}
-
-/* Icon for "Active Reminders" section header */
-function RemindersIcon() {
-  return (
-    <svg className="block size-[24px] shrink-0" fill="none" viewBox="0 0 24 24">
-      <rect fill="#FFD60A" height="24" rx="5" width="24" />
-      <path d={svgPlannerPaths.p67f3e80} fill="white" />
-    </svg>
-  );
-}
-
-/* Icon for "Study Plans" section header */
-function StudyPlansIcon() {
-  return (
-    <div className="bg-[#1ca4b3] flex flex-col items-center justify-center rounded-[5px] shrink-0 size-[24px]">
-      <svg className="block w-[12px] h-[14px]" fill="none" viewBox="0 0 13.5002 15.4998">
-        <path d={svgPlannerPaths.p32c303f0} stroke="white" strokeLinejoin="round" strokeWidth="1.5" />
-        <path d={svgPlannerPaths.p2b26e580} stroke="white" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" />
-        <path d={svgPlannerPaths.pa20fe80} stroke="white" strokeLinecap="round" strokeWidth="1.5" />
-      </svg>
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-[#001d3d]/40 backdrop-blur-sm" onClick={onClose} />
+      {children}
     </div>
   );
 }
 
-/* Icon for Completed Plans – charm:circle-tick (outlined green circle with checkmark) */
-function CharmCircleTickIcon() {
+/* ── Styled form input ── */
+function FormInput({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div className="overflow-clip relative shrink-0 size-[24px]">
-      <div className="absolute inset-[11.02%_10.94%_10.94%_10.94%]">
-        <div className="absolute inset-[-4%]">
-          <svg className="block size-full" fill="none" preserveAspectRatio="none" viewBox="0 0 20.2503 20.2309">
-            <path d={svgCompletedPlanPaths.p25d5a980} stroke="#34B161" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" />
-            <path d={svgCompletedPlanPaths.p2d1019e0} stroke="#34B161" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" />
-          </svg>
-        </div>
-      </div>
+    <div className="flex flex-col gap-2">
+      <label className="text-[13px] font-bold text-[#003566]">{label}</label>
+      {children}
     </div>
   );
 }
+
+const inputClass = "w-full h-[44px] border border-[#e2e8f0] rounded-[12px] px-4 text-[13px] outline-none focus:border-[#0967bd] focus:ring-1 focus:ring-[#0967bd]/20 transition-all text-[#1e293b] placeholder:text-[#94a3b8] bg-white";
+const selectClass = "w-full h-[44px] border border-[#e2e8f0] rounded-[12px] px-4 pr-9 text-[13px] outline-none focus:border-[#0967bd] focus:ring-1 focus:ring-[#0967bd]/20 transition-all text-[#1e293b] bg-white appearance-none cursor-pointer";
 
 function PlannerApp({ onBack }: { onBack: () => void }) {
   const [tasks, setTasks] = useState<PlannerTask[]>([]);
@@ -623,8 +501,10 @@ function PlannerApp({ onBack }: { onBack: () => void }) {
   const [reminderDate, setReminderDate] = useState("");
   const [reminderTime, setReminderTime] = useState("");
   const [isLoading, setIsLoading] = useState(true);
+  const [isSavingTask, setIsSavingTask] = useState(false);
+  const [isSavingReminder, setIsSavingReminder] = useState(false);
+  const [isSavingPlan, setIsSavingPlan] = useState(false);
 
-  /* Create Study Plan form state */
   const [formSubject, setFormSubject] = useState("");
   const [formGoal, setFormGoal] = useState("");
   const [formStartDate, setFormStartDate] = useState("");
@@ -634,131 +514,161 @@ function PlannerApp({ onBack }: { onBack: () => void }) {
   const [formReminder, setFormReminder] = useState("Daily");
   const [formPriority, setFormPriority] = useState<"high" | "medium" | "low">("low");
 
-  // Load all planner data from API
   useEffect(() => {
     Promise.all([tasksApi.list(), remindersApi.list(), studyPlansApi.list()])
       .then(([t, r, sp]) => {
         setTasks(t.map((x: any) => ({ id: x.id, title: x.title, completed: x.completed })));
-        setReminders(r.map((x: any) => ({ id: x.id, title: `${x.title}  | ${x.frequency}${x.reminderTime ? " at " + x.reminderTime : ""}`, completed: x.completed })));
+        setReminders(
+          r.map((x: any) => ({
+            id: x.id,
+            title: `${x.title}  | ${x.frequency}${x.reminderTime ? " at " + x.reminderTime : ""}`,
+            completed: x.completed,
+          }))
+        );
         const active = sp.filter((x: any) => !x.completed);
         const done = sp.filter((x: any) => x.completed);
         setStudyPlans(active.map((x: any) => ({ id: x.id, title: x.subject, time: x.timeStr || "TBD", progress: x.progress || 0, priority: x.priority || "low" })));
         setCompletedPlans(done.map((x: any) => ({ id: x.id, title: x.subject, date: x.startDate || "", time: x.timeStr || "" })));
-      }).catch(console.log).finally(() => setIsLoading(false));
+      })
+      .catch(console.log)
+      .finally(() => setIsLoading(false));
   }, []);
 
+  /* ── Task handlers ── */
   const toggleTask = async (id: string) => {
     const task = tasks.find((t) => t.id === id);
     if (!task) return;
     const updated = { ...task, completed: !task.completed };
     setTasks(tasks.map((t) => (t.id === id ? updated : t)));
-    try { await tasksApi.update(id, { completed: updated.completed }); } catch (e) { console.log(e); }
+    try { await tasksApi.update(id, { completed: updated.completed }); } catch (e) { console.log("Toggle task error:", e); }
   };
   const deleteTask = async (id: string) => {
     setTasks(tasks.filter((t) => t.id !== id));
-    try { await tasksApi.delete(id); } catch (e) { console.log(e); }
+    try { await tasksApi.delete(id); } catch (e) { console.log("Delete task error:", e); }
   };
+  const handleAddTask = async () => {
+    const title = newTaskTitle.trim();
+    if (!title) return;
+    setIsSavingTask(true); setNewTaskTitle(""); setShowAddTaskInput(false);
+    try { const saved = await tasksApi.create(title); setTasks((prev) => [{ id: saved.id, title: saved.title, completed: false }, ...prev]); }
+    catch (e) { console.log("Add task error:", e); setTasks((prev) => [{ id: Date.now().toString(), title, completed: false }, ...prev]); }
+    finally { setIsSavingTask(false); }
+  };
+
+  /* ── Reminder handlers ── */
   const toggleReminder = async (id: string) => {
     const r = reminders.find((x) => x.id === id);
     if (!r) return;
     const updated = { ...r, completed: !r.completed };
     setReminders(reminders.map((x) => (x.id === id ? updated : x)));
-    try { await remindersApi.update(id, { completed: updated.completed }); } catch (e) { console.log(e); }
+    try { await remindersApi.update(id, { completed: updated.completed }); } catch (e) { console.log("Toggle reminder error:", e); }
   };
   const deleteReminder = async (id: string) => {
     setReminders(reminders.filter((r) => r.id !== id));
-    try { await remindersApi.delete(id); } catch (e) { console.log(e); }
+    try { await remindersApi.delete(id); } catch (e) { console.log("Delete reminder error:", e); }
+  };
+  const handleAddReminder = async () => {
+    const name = newReminderTitle.trim();
+    if (!name) return;
+    setIsSavingReminder(true);
+    const freqStr = reminderFrequency;
+    const timeStr = reminderTime || "TBD";
+    const displayTitle = `${name} | ${freqStr} at ${timeStr}`;
+    setNewReminderTitle(""); setReminderFrequency("Daily"); setReminderDate(""); setReminderTime(""); setShowAddReminderInput(false);
+    try {
+      const saved = await remindersApi.create({ title: name, frequency: freqStr, reminderDate, reminderTime });
+      setReminders((prev) => [{ id: saved.id, title: `${saved.title}  | ${saved.frequency}${saved.reminderTime ? " at " + saved.reminderTime : ""}`, completed: false }, ...prev]);
+    } catch (e) {
+      console.log("Add reminder error:", e);
+      setReminders((prev) => [{ id: Date.now().toString(), title: displayTitle, completed: false }, ...prev]);
+    } finally { setIsSavingReminder(false); }
   };
 
-  const visibleTasks = showAllTasks ? tasks : tasks.slice(0, 2);
-  const visibleReminders = showAllReminders ? reminders : reminders.slice(0, 2);
-  const visiblePlans = showAllPlans ? studyPlans : studyPlans.slice(0, 3);
-
-  const resetForm = () => {
-    setFormSubject(""); setFormGoal(""); setFormStartDate(""); setFormEndDate("");
-    setFormStartTime(""); setFormEndTime(""); setFormReminder("Daily"); setFormPriority("low");
-  };
-
+  /* ── Study plan handlers ── */
+  const resetForm = () => { setFormSubject(""); setFormGoal(""); setFormStartDate(""); setFormEndDate(""); setFormStartTime(""); setFormEndTime(""); setFormReminder("Daily"); setFormPriority("low"); };
   const handleCreateStudyPlan = async () => {
     if (!formSubject.trim()) return;
+    setIsSavingPlan(true);
     try {
       const saved = await studyPlansApi.create({ subject: formSubject, goal: formGoal, startDate: formStartDate, endDate: formEndDate, startTime: formStartTime, endTime: formEndTime, reminder: formReminder, priority: formPriority });
       const timeStr = formStartTime && formEndTime ? `${formStartTime} - ${formEndTime}` : "TBD";
-      setStudyPlans([...studyPlans, { id: saved.id, title: formSubject, time: timeStr, progress: 0, priority: formPriority }]);
+      setStudyPlans((prev) => [...prev, { id: saved.id, title: formSubject, time: timeStr, progress: 0, priority: formPriority }]);
       resetForm(); setShowCreateModal(false);
-    } catch (e) { console.log("Create study plan error:", e); }
+    } catch (e) { console.log("Create study plan error:", e); } finally { setIsSavingPlan(false); }
+  };
+  const handleCompleteStudyPlan = async (planId: string) => {
+    const plan = studyPlans.find((p) => p.id === planId);
+    if (!plan) return;
+    setStudyPlans((prev) => prev.filter((p) => p.id !== planId));
+    const now = new Date();
+    const dateStr = now.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+    setCompletedPlans((prev) => [{ id: planId, title: plan.title, date: dateStr, time: plan.time }, ...prev]);
+    try { await studyPlansApi.update(planId, { completed: true, progress: 100 }); }
+    catch (e) { console.log("Complete study plan error:", e); setStudyPlans((prev) => [plan, ...prev]); setCompletedPlans((prev) => prev.filter((p) => p.id !== planId)); }
+  };
+  const deleteStudyPlan = async (planId: string) => {
+    setStudyPlans((prev) => prev.filter((p) => p.id !== planId));
+    try { await studyPlansApi.delete(planId); } catch (e) { console.log("Delete study plan error:", e); }
   };
 
+  const visibleTasks = showAllTasks ? tasks : tasks.slice(0, 3);
+  const visibleReminders = showAllReminders ? reminders : reminders.slice(0, 3);
+  const visiblePlans = showAllPlans ? studyPlans : studyPlans.slice(0, 3);
+
   return (
-    <div className="font-['Poppins']">
+    <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }} className="animate-in fade-in duration-300">
       {/* Breadcrumb */}
-      <button
-        type="button"
-        onClick={onBack}
-        className="text-[14px] font-medium text-black/60 hover:text-black/80 transition-colors cursor-pointer mb-1"
-      >
-        {"< Productivity Tools"}
+      <button onClick={onBack}
+        className="flex items-center gap-2 text-[#5a7089] hover:text-[#003566] mb-5 transition-colors group cursor-pointer">
+        <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
+        <span className="text-[13px] font-medium">Productivity Tools</span>
       </button>
 
       {/* Title Row */}
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-[28px] md:text-[32px] lg:text-[40px] font-medium text-black">
-          Planner/Scheduler
-        </h1>
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-[14px] flex items-center justify-center"
+            style={{ background: 'linear-gradient(135deg, #f77f00, #ff9a3c)' }}>
+            <ClipboardList className="w-5 h-5 text-white" />
+          </div>
+          <h1 className="text-[28px] md:text-[34px] text-[#003566]"
+            style={{ fontFamily: "'DM Serif Display', serif" }}>
+            Planner
+          </h1>
+        </div>
+
         {/* + Button with Popup */}
         <div className="relative">
-          <button
-            type="button"
-            onClick={() => setShowAddPopup(!showAddPopup)}
-            className="shrink-0 size-[49px] bg-[#003566] rounded-[12px] flex items-center justify-center hover:bg-[#002a52] transition-colors cursor-pointer"
-          >
-            <svg className="block size-[49px]" fill="none" viewBox="0 0 49 49">
-              <path d={svgPlannerPaths.p36014500} fill="white" />
-            </svg>
+          <button onClick={() => setShowAddPopup(!showAddPopup)}
+            className="w-[44px] h-[44px] rounded-[14px] flex items-center justify-center shadow-lg hover:shadow-xl hover:scale-[1.04] transition-all cursor-pointer shrink-0"
+            style={{ background: 'linear-gradient(135deg, #003566, #0967bd)' }}>
+            <Plus className="w-5 h-5 text-white" />
           </button>
 
-          {/* Add Popup */}
           {showAddPopup && (
             <>
-              {/* Invisible backdrop to close popup */}
               <div className="fixed inset-0 z-[90]" onClick={() => setShowAddPopup(false)} />
-              {/* Popup card */}
-              <div className="absolute right-0 top-[56px] z-[91] bg-white rounded-[20px] shadow-[0px_4px_50px_5px_rgba(0,0,0,0.1)] p-8 flex flex-col gap-6 w-[260px]">
-                {/* Add New Task */}
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowAddPopup(false);
-                    setShowAddTaskInput(true);
-                  }}
-                  className="flex gap-2.5 items-center cursor-pointer w-full hover:opacity-70 transition-opacity"
-                >
-                  <MyTasksIcon />
-                  <p className="text-[14px] font-medium text-black">Add New Task</p>
+              <div className="absolute right-0 top-[52px] z-[91] bg-white rounded-[18px] shadow-xl border border-[#edf0f4] p-3 flex flex-col gap-1 w-[220px] animate-in fade-in slide-in-from-top-2 duration-200">
+                <button onClick={() => { setShowAddPopup(false); setShowAddTaskInput(true); }}
+                  className="flex items-center gap-3 px-3 py-2.5 rounded-[12px] hover:bg-[#f5f7fa] cursor-pointer transition-colors w-full text-left">
+                  <div className="w-8 h-8 rounded-[10px] bg-[#f77f00] flex items-center justify-center shrink-0">
+                    <Target className="w-4 h-4 text-white" />
+                  </div>
+                  <span className="text-[13px] font-semibold text-[#1e293b]">Add New Task</span>
                 </button>
-                {/* Add Smart Reminder */}
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowAddPopup(false);
-                    setShowAddReminderInput(true);
-                  }}
-                  className="flex gap-2.5 items-center cursor-pointer w-full hover:opacity-70 transition-opacity"
-                >
-                  <RemindersIcon />
-                  <p className="text-[14px] font-medium text-black">Add Smart Reminder</p>
+                <button onClick={() => { setShowAddPopup(false); setShowAddReminderInput(true); }}
+                  className="flex items-center gap-3 px-3 py-2.5 rounded-[12px] hover:bg-[#f5f7fa] cursor-pointer transition-colors w-full text-left">
+                  <div className="w-8 h-8 rounded-[10px] bg-[#ffd60a] flex items-center justify-center shrink-0">
+                    <Bell className="w-4 h-4 text-white" />
+                  </div>
+                  <span className="text-[13px] font-semibold text-[#1e293b]">Smart Reminder</span>
                 </button>
-                {/* Create Study Plan */}
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowAddPopup(false);
-                    setShowCreateModal(true);
-                  }}
-                  className="flex gap-2.5 items-center cursor-pointer w-full hover:opacity-70 transition-opacity"
-                >
-                  <StudyPlansIcon />
-                  <p className="text-[14px] font-medium text-black">Create Study Plan</p>
+                <button onClick={() => { setShowAddPopup(false); setShowCreateModal(true); }}
+                  className="flex items-center gap-3 px-3 py-2.5 rounded-[12px] hover:bg-[#f5f7fa] cursor-pointer transition-colors w-full text-left">
+                  <div className="w-8 h-8 rounded-[10px] bg-[#1ca4b3] flex items-center justify-center shrink-0">
+                    <BookOpen className="w-4 h-4 text-white" />
+                  </div>
+                  <span className="text-[13px] font-semibold text-[#1e293b]">Study Plan</span>
                 </button>
               </div>
             </>
@@ -766,721 +676,466 @@ function PlannerApp({ onBack }: { onBack: () => void }) {
         </div>
       </div>
 
-      {/* ═══════ Add New Task Modal ═══════ */}
+      {/* ═══ Add New Task Modal ═══ */}
       {showAddTaskInput && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center">
-          {/* Backdrop */}
-          <div
-            className="absolute inset-0 bg-black/30"
-            onClick={() => { setShowAddTaskInput(false); setNewTaskTitle(""); }}
-          />
-          {/* Modal */}
-          <div className="relative bg-white rounded-[20px] shadow-[0px_4px_50px_5px_rgba(0,0,0,0.1)] p-8 w-[calc(100%-32px)] max-w-[656px] z-10 overflow-hidden">
-            <div className="flex flex-col gap-6 items-end w-full max-w-[592px]">
-              {/* Header */}
-              <div className="flex items-start gap-2.5 w-full">
-                <svg className="block shrink-0 size-[36px]" fill="none" viewBox="0 0 36 36">
-                  <rect fill="#F77F00" height="36" rx="5" width="36" />
-                  <path d={svgAddTaskPaths.p3a4ec300} fill="white" />
-                </svg>
-                <p className="text-[24px] font-semibold text-black">Add New Task</p>
+        <ModalBackdrop onClose={() => { setShowAddTaskInput(false); setNewTaskTitle(""); }}>
+          <div className="relative bg-white rounded-[24px] shadow-2xl p-7 w-full max-w-[520px] z-10 animate-in fade-in zoom-in-95 duration-200">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-10 h-10 rounded-[14px] bg-[#f77f00] flex items-center justify-center shrink-0">
+                <Target className="w-5 h-5 text-white" />
               </div>
-
-              {/* Task Name Input */}
-              <div className="flex flex-col gap-2.5 w-full">
-                <p className="text-[16px] text-black">Task Name</p>
-                <div className="relative h-[39px] rounded-[10px] border border-black/40">
-                  <input
-                    type="text"
-                    autoFocus
-                    value={newTaskTitle}
-                    onChange={(e) => setNewTaskTitle(e.target.value)}
-                    onKeyDown={async (e) => {
-                      if (e.key === "Enter" && newTaskTitle.trim()) {
-                        try { const s = await tasksApi.create(newTaskTitle.trim()); setTasks([{ id: s.id, title: s.title, completed: false }, ...tasks]); } catch { setTasks([{ id: Date.now().toString(), title: newTaskTitle.trim(), completed: false }, ...tasks]); }
-                        setNewTaskTitle(""); setShowAddTaskInput(false);
-                      }
-                      if (e.key === "Escape") { setShowAddTaskInput(false); setNewTaskTitle(""); }
-                    }}
-                    placeholder="example@ybl"
-                    className="w-full h-full px-2.5 text-[14px] text-black/60 bg-transparent outline-none rounded-[10px] placeholder:text-black/60"
-                  />
-                </div>
-              </div>
-
-              {/* Buttons */}
-              <div className="flex gap-6 items-center w-[334px]">
-                <button
-                  type="button"
-                  onClick={() => { setShowAddTaskInput(false); setNewTaskTitle(""); }}
-                  className="flex-1 h-[42px] rounded-[20px] border border-[#cc3636] flex items-center justify-center cursor-pointer hover:bg-red-50 transition-colors"
-                >
-                  <p className="text-[14px] font-medium text-[#cc3636]">Cancel</p>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (newTaskTitle.trim()) {
-                      setTasks([...tasks, { id: Date.now().toString(), title: newTaskTitle.trim(), completed: false }]);
-                      setNewTaskTitle("");
-                      setShowAddTaskInput(false);
-                    }
-                  }}
-                  className="flex-1 bg-[#f77f00] h-[42px] rounded-[20px] flex items-center justify-center cursor-pointer hover:bg-[#e07300] transition-colors"
-                >
-                  <p className="text-[14px] font-medium text-white">Add Task</p>
-                </button>
-              </div>
+              <h2 className="text-[22px] font-bold text-[#003566]" style={{ fontFamily: "'DM Serif Display', serif" }}>Add New Task</h2>
+              <button onClick={() => { setShowAddTaskInput(false); setNewTaskTitle(""); }}
+                className="ml-auto w-8 h-8 rounded-[10px] hover:bg-[#f5f7fa] flex items-center justify-center text-[#94a3b8] hover:text-[#003566] transition-colors cursor-pointer">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            <FormInput label="Task Name">
+              <input type="text" autoFocus value={newTaskTitle} onChange={(e) => setNewTaskTitle(e.target.value)}
+                onKeyDown={(e) => { if (e.key === "Enter" && newTaskTitle.trim()) handleAddTask(); if (e.key === "Escape") { setShowAddTaskInput(false); setNewTaskTitle(""); } }}
+                placeholder="Enter task name…" className={inputClass} />
+            </FormInput>
+            <div className="flex items-center gap-3 mt-6">
+              <button onClick={() => { setShowAddTaskInput(false); setNewTaskTitle(""); }}
+                className="flex-1 h-[44px] rounded-[14px] border border-[#cc3636] text-[#cc3636] font-bold text-[13px] hover:bg-red-50 transition-colors cursor-pointer">
+                Cancel
+              </button>
+              <button onClick={handleAddTask} disabled={isSavingTask || !newTaskTitle.trim()}
+                className="flex-1 h-[44px] rounded-[14px] font-bold text-[13px] text-white transition-all cursor-pointer disabled:opacity-60 hover:shadow-lg"
+                style={{ background: '#f77f00' }}>
+                {isSavingTask ? "Adding…" : "Add Task"}
+              </button>
             </div>
           </div>
-        </div>
+        </ModalBackdrop>
       )}
 
-      {/* ═══════ Add Smart Reminder Modal ═══════ */}
+      {/* ═══ Add Smart Reminder Modal ═══ */}
       {showAddReminderInput && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center">
-          {/* Backdrop */}
-          <div
-            className="absolute inset-0 bg-black/30"
-            onClick={() => { setShowAddReminderInput(false); setNewReminderTitle(""); setReminderFrequency("Daily"); setReminderDate(""); setReminderTime(""); }}
-          />
-          {/* Modal */}
-          <div className="relative bg-white rounded-[20px] shadow-[0px_4px_50px_5px_rgba(0,0,0,0.1)] p-8 w-[calc(100%-32px)] max-w-[656px] z-10 overflow-hidden">
-            <div className="flex flex-col gap-6 items-end w-full max-w-[592px]">
-              {/* Header */}
-              <div className="flex items-start gap-2.5 w-full">
-                <svg className="block shrink-0 size-[36px]" fill="none" viewBox="0 0 36 36">
-                  <rect fill="#FFD60A" height="36" rx="5" width="36" />
-                  <path d={svgAddReminderPaths.p148ead00} fill="white" />
-                </svg>
-                <p className="text-[24px] font-semibold text-black">Add Smart Reminder</p>
+        <ModalBackdrop onClose={() => { setShowAddReminderInput(false); setNewReminderTitle(""); setReminderFrequency("Daily"); setReminderDate(""); setReminderTime(""); }}>
+          <div className="relative bg-white rounded-[24px] shadow-2xl p-7 w-full max-w-[520px] z-10 animate-in fade-in zoom-in-95 duration-200">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-10 h-10 rounded-[14px] bg-[#ffd60a] flex items-center justify-center shrink-0">
+                <Bell className="w-5 h-5 text-white" />
               </div>
-
-              {/* Row 1: Reminder Name + Frequency */}
-              <div className="flex gap-6 items-start w-full">
-                <div className="flex-1 flex flex-col gap-2.5">
-                  <p className="text-[16px] text-black">Reminder Name</p>
-                  <div className="relative h-[39px] rounded-[10px] border border-black/40">
-                    <input
-                      type="text"
-                      autoFocus
-                      value={newReminderTitle}
-                      onChange={(e) => setNewReminderTitle(e.target.value)}
-                      onKeyDown={(e) => {
-                        if (e.key === "Escape") { setShowAddReminderInput(false); setNewReminderTitle(""); setReminderFrequency("Daily"); setReminderDate(""); setReminderTime(""); }
-                      }}
-                      placeholder="example@ybl"
-                      className="w-full h-full px-2.5 text-[14px] text-black/60 bg-transparent outline-none rounded-[10px] placeholder:text-black/60"
-                    />
-                  </div>
+              <h2 className="text-[22px] font-bold text-[#003566]" style={{ fontFamily: "'DM Serif Display', serif" }}>Smart Reminder</h2>
+              <button onClick={() => { setShowAddReminderInput(false); setNewReminderTitle(""); setReminderFrequency("Daily"); setReminderDate(""); setReminderTime(""); }}
+                className="ml-auto w-8 h-8 rounded-[10px] hover:bg-[#f5f7fa] flex items-center justify-center text-[#94a3b8] hover:text-[#003566] transition-colors cursor-pointer">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+              <FormInput label="Reminder Name">
+                <input type="text" autoFocus value={newReminderTitle} onChange={(e) => setNewReminderTitle(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === "Enter" && newReminderTitle.trim()) handleAddReminder(); }}
+                  placeholder="Enter reminder name…" className={inputClass} />
+              </FormInput>
+              <FormInput label="Frequency">
+                <div className="relative">
+                  <select value={reminderFrequency} onChange={(e) => setReminderFrequency(e.target.value)} className={selectClass}>
+                    <option value="Daily">Daily</option><option value="Weekly">Weekly</option><option value="Monthly">Monthly</option><option value="Once">Once</option>
+                  </select>
+                  <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#94a3b8] pointer-events-none" />
                 </div>
-                <div className="flex-1 flex flex-col gap-2.5">
-                  <p className="text-[16px] text-black">Frequency</p>
-                  <div className="relative h-[39px] rounded-[10px] border border-black/70">
-                    <select
-                      value={reminderFrequency}
-                      onChange={(e) => setReminderFrequency(e.target.value)}
-                      className="w-full h-full px-2.5 pr-8 text-[14px] text-black/60 bg-transparent outline-none rounded-[10px] appearance-none cursor-pointer"
-                    >
-                      <option value="Daily">Daily</option>
-                      <option value="Weekly">Weekly</option>
-                      <option value="Monthly">Monthly</option>
-                      <option value="Once">Once</option>
-                    </select>
-                    <div className="absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none">
-                      <svg className="block size-[24px]" fill="none" viewBox="0 0 24 24">
-                        <path d="M7 10L12 15L17 10" stroke="black" strokeLinecap="round" strokeLinejoin="round" strokeOpacity="0.6" strokeWidth="1.5" />
-                      </svg>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Row 2: Date + Time */}
-              <div className="flex gap-6 items-start w-full">
-                <div className="flex-1 flex flex-col gap-2.5">
-                  <p className="text-[16px] text-black">Date</p>
-                  <div className="relative h-[39px] rounded-[10px] border border-black/70">
-                    <input
-                      type="date"
-                      value={reminderDate}
-                      onChange={(e) => setReminderDate(e.target.value)}
-                      className="w-full h-full px-2.5 text-[14px] text-black/60 bg-transparent outline-none rounded-[10px] appearance-none"
-                    />
-                    <div className="absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none">
-                      <svg className="block size-[21px]" fill="none" viewBox="0 0 21 21">
-                        <path d={svgAddReminderPaths.p24603f80} fill="black" fillOpacity="0.6" />
-                      </svg>
-                    </div>
-                  </div>
-                </div>
-                <div className="flex-1 flex flex-col gap-2.5">
-                  <p className="text-[16px] text-black">Time</p>
-                  <div className="relative h-[39px] rounded-[10px] border border-black/40">
-                    <input
-                      type="time"
-                      value={reminderTime}
-                      onChange={(e) => setReminderTime(e.target.value)}
-                      className="w-full h-full px-2.5 text-[14px] text-black/60 bg-transparent outline-none rounded-[10px] appearance-none"
-                    />
-                    <div className="absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none">
-                      <svg className="block size-[19px] overflow-hidden" fill="none" viewBox="0 0 16.25 16.25">
-                        <path d={svgAddReminderPaths.p153bcd80} stroke="black" strokeLinecap="round" strokeLinejoin="round" strokeOpacity="0.6" strokeWidth="2" />
-                        <path d={svgAddReminderPaths.p3b383680} stroke="black" strokeLinecap="round" strokeLinejoin="round" strokeOpacity="0.6" strokeWidth="2" />
-                      </svg>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Buttons */}
-              <div className="flex gap-6 items-center w-[334px]">
-                <button
-                  type="button"
-                  onClick={() => { setShowAddReminderInput(false); setNewReminderTitle(""); setReminderFrequency("Daily"); setReminderDate(""); setReminderTime(""); }}
-                  className="flex-1 h-[42px] rounded-[20px] border border-[#cc3636] flex items-center justify-center cursor-pointer hover:bg-red-50 transition-colors"
-                >
-                  <p className="text-[14px] font-medium text-[#cc3636]">Cancel</p>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (newReminderTitle.trim()) {
-                      const freqStr = reminderFrequency;
-                      const timeStr = reminderTime || "TBD";
-                      const title = `${newReminderTitle.trim()} | ${freqStr} at ${timeStr}`;
-                      setReminders([...reminders, { id: Date.now().toString(), title, completed: false }]);
-                      setNewReminderTitle("");
-                      setReminderFrequency("Daily");
-                      setReminderDate("");
-                      setReminderTime("");
-                      setShowAddReminderInput(false);
-                    }
-                  }}
-                  className="flex-1 bg-[#ffd60a] h-[42px] rounded-[20px] flex items-center justify-center cursor-pointer hover:bg-[#e6c209] transition-colors"
-                >
-                  <p className="text-[14px] font-medium text-white">Add Reminder</p>
-                </button>
-              </div>
+              </FormInput>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <FormInput label="Date">
+                <input type="date" value={reminderDate} onChange={(e) => setReminderDate(e.target.value)} className={inputClass} />
+              </FormInput>
+              <FormInput label="Time">
+                <input type="time" value={reminderTime} onChange={(e) => setReminderTime(e.target.value)} className={inputClass} />
+              </FormInput>
+            </div>
+            <div className="flex items-center gap-3 mt-6">
+              <button onClick={() => { setShowAddReminderInput(false); setNewReminderTitle(""); setReminderFrequency("Daily"); setReminderDate(""); setReminderTime(""); }}
+                className="flex-1 h-[44px] rounded-[14px] border border-[#cc3636] text-[#cc3636] font-bold text-[13px] hover:bg-red-50 transition-colors cursor-pointer">
+                Cancel
+              </button>
+              <button onClick={handleAddReminder} disabled={isSavingReminder || !newReminderTitle.trim()}
+                className="flex-1 h-[44px] rounded-[14px] font-bold text-[13px] text-white transition-all cursor-pointer disabled:opacity-60 hover:shadow-lg"
+                style={{ background: '#f77f00' }}>
+                {isSavingReminder ? "Adding…" : "Add Reminder"}
+              </button>
             </div>
           </div>
-        </div>
+        </ModalBackdrop>
       )}
 
-      {/* ═══════ Create Study Plan Modal ═══════ */}
+      {/* ═══ Create Study Plan Modal ═══ */}
       {showCreateModal && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center">
-          {/* Backdrop */}
-          <div
-            className="absolute inset-0 bg-black/30"
-            onClick={() => { setShowCreateModal(false); resetForm(); }}
-          />
-          {/* Modal */}
-          <div className="relative bg-white rounded-[20px] shadow-[0px_4px_50px_5px_rgba(0,0,0,0.1)] p-8 w-[calc(100%-32px)] max-w-[656px] max-h-[90vh] overflow-y-auto z-10">
-            <div className="flex flex-col gap-6 w-full">
-              {/* Header */}
-              <div className="flex items-start gap-2.5 w-full">
-                <div className="bg-[#1ca4b3] flex flex-col items-center justify-center rounded-[5px] shrink-0 size-[36px]">
-                  <svg className="block w-[12px] h-[14px]" fill="none" viewBox="0 0 13.5002 15.4998">
-                    <path d={svgPlannerPaths.p32c303f0} stroke="white" strokeLinejoin="round" strokeWidth="1.5" />
-                    <path d={svgPlannerPaths.p2b26e580} stroke="white" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" />
-                    <path d={svgPlannerPaths.pa20fe80} stroke="white" strokeLinecap="round" strokeWidth="1.5" />
-                  </svg>
-                </div>
-                <p className="text-[24px] font-semibold text-black">Create Study Plan</p>
+        <ModalBackdrop onClose={() => { setShowCreateModal(false); resetForm(); }}>
+          <div className="relative bg-white rounded-[24px] shadow-2xl p-7 w-full max-w-[560px] max-h-[90vh] overflow-y-auto z-10 animate-in fade-in zoom-in-95 duration-200">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-10 h-10 rounded-[14px] bg-[#1ca4b3] flex items-center justify-center shrink-0">
+                <BookOpen className="w-5 h-5 text-white" />
               </div>
-
-              {/* Row 1: Subject/Topic + Goal/Target */}
-              <div className="flex gap-6 w-full">
-                <div className="flex-1 flex flex-col gap-2.5">
-                  <p className="text-[16px] text-black">Subject/Topic</p>
-                  <div className="relative h-[39px] rounded-[10px] border border-black/40">
-                    <input
-                      type="text"
-                      value={formSubject}
-                      onChange={(e) => setFormSubject(e.target.value)}
-                      placeholder="example@ybl"
-                      className="w-full h-full px-2.5 text-[14px] text-black/60 bg-transparent outline-none rounded-[10px] placeholder:text-black/60"
-                    />
-                  </div>
+              <h2 className="text-[22px] font-bold text-[#003566]" style={{ fontFamily: "'DM Serif Display', serif" }}>Create Study Plan</h2>
+              <button onClick={() => { setShowCreateModal(false); resetForm(); }}
+                className="ml-auto w-8 h-8 rounded-[10px] hover:bg-[#f5f7fa] flex items-center justify-center text-[#94a3b8] hover:text-[#003566] transition-colors cursor-pointer">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+              <FormInput label="Subject/Topic">
+                <input type="text" autoFocus value={formSubject} onChange={(e) => setFormSubject(e.target.value)} placeholder="e.g. Advanced Physics" className={inputClass} />
+              </FormInput>
+              <FormInput label="Goal/Target">
+                <input type="text" value={formGoal} onChange={(e) => setFormGoal(e.target.value)} placeholder="Complete 5 chapters" className={inputClass} />
+              </FormInput>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+              <FormInput label="Start Date"><input type="date" value={formStartDate} onChange={(e) => setFormStartDate(e.target.value)} className={inputClass} /></FormInput>
+              <FormInput label="End Date"><input type="date" value={formEndDate} onChange={(e) => setFormEndDate(e.target.value)} className={inputClass} /></FormInput>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+              <FormInput label="Start Time"><input type="time" value={formStartTime} onChange={(e) => setFormStartTime(e.target.value)} className={inputClass} /></FormInput>
+              <FormInput label="End Time"><input type="time" value={formEndTime} onChange={(e) => setFormEndTime(e.target.value)} className={inputClass} /></FormInput>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <FormInput label="Set Reminder">
+                <div className="relative">
+                  <select value={formReminder} onChange={(e) => setFormReminder(e.target.value)} className={selectClass}>
+                    <option value="Daily">Daily</option><option value="Weekly">Weekly</option><option value="Monthly">Monthly</option><option value="None">None</option>
+                  </select>
+                  <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#94a3b8] pointer-events-none" />
                 </div>
-                <div className="flex-1 flex flex-col gap-2.5">
-                  <p className="text-[16px] text-black">Goal/Target</p>
-                  <div className="relative h-[39px] rounded-[10px] border border-black/40">
-                    <input
-                      type="text"
-                      value={formGoal}
-                      onChange={(e) => setFormGoal(e.target.value)}
-                      placeholder="Complete 5 chapters"
-                      className="w-full h-full px-2.5 text-[14px] text-black/60 bg-transparent outline-none rounded-[10px] placeholder:text-black/60"
-                    />
-                  </div>
+              </FormInput>
+              <FormInput label="Priority">
+                <div className="relative">
+                  <select value={formPriority} onChange={(e) => setFormPriority(e.target.value as any)} className={selectClass}>
+                    <option value="low">Low</option><option value="medium">Medium</option><option value="high">High</option>
+                  </select>
+                  <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#94a3b8] pointer-events-none" />
                 </div>
-              </div>
-
-              {/* Row 2: Start Date + End Date */}
-              <div className="flex gap-6 w-full">
-                <div className="flex-1 flex flex-col gap-2.5">
-                  <p className="text-[16px] text-black">Start Date</p>
-                  <div className="relative h-[39px] rounded-[10px] border border-black/70">
-                    <input
-                      type="date"
-                      value={formStartDate}
-                      onChange={(e) => setFormStartDate(e.target.value)}
-                      className="w-full h-full px-2.5 text-[14px] text-black/60 bg-transparent outline-none rounded-[10px] appearance-none"
-                    />
-                    <div className="absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none">
-                      <svg className="block size-[21px]" fill="none" viewBox="0 0 21 21">
-                        <path d={svgModalPaths.p24603f80} fill="black" fillOpacity="0.6" />
-                      </svg>
-                    </div>
-                  </div>
-                </div>
-                <div className="flex-1 flex flex-col gap-2.5">
-                  <p className="text-[16px] text-black">End Date</p>
-                  <div className="relative h-[39px] rounded-[10px] border border-black/70">
-                    <input
-                      type="date"
-                      value={formEndDate}
-                      onChange={(e) => setFormEndDate(e.target.value)}
-                      className="w-full h-full px-2.5 text-[14px] text-black/60 bg-transparent outline-none rounded-[10px] appearance-none"
-                    />
-                    <div className="absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none">
-                      <svg className="block size-[21px]" fill="none" viewBox="0 0 21 21">
-                        <path d={svgModalPaths.p24603f80} fill="black" fillOpacity="0.6" />
-                      </svg>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Row 3: Start Time + End Time */}
-              <div className="flex gap-6 w-full">
-                <div className="flex-1 flex flex-col gap-2.5">
-                  <p className="text-[16px] text-black">Start Time</p>
-                  <div className="relative h-[39px] rounded-[10px] border border-black/40">
-                    <input
-                      type="time"
-                      value={formStartTime}
-                      onChange={(e) => setFormStartTime(e.target.value)}
-                      className="w-full h-full px-2.5 text-[14px] text-black/60 bg-transparent outline-none rounded-[10px] appearance-none"
-                    />
-                    <div className="absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none">
-                      <svg className="block size-[19px] overflow-hidden" fill="none" viewBox="0 0 16.25 16.25">
-                        <path d={svgModalPaths.p153bcd80} stroke="black" strokeLinecap="round" strokeLinejoin="round" strokeOpacity="0.6" strokeWidth="2" />
-                        <path d={svgModalPaths.p3b383680} stroke="black" strokeLinecap="round" strokeLinejoin="round" strokeOpacity="0.6" strokeWidth="2" />
-                      </svg>
-                    </div>
-                  </div>
-                </div>
-                <div className="flex-1 flex flex-col gap-2.5">
-                  <p className="text-[16px] text-black">End Time</p>
-                  <div className="relative h-[39px] rounded-[10px] border border-black/40">
-                    <input
-                      type="time"
-                      value={formEndTime}
-                      onChange={(e) => setFormEndTime(e.target.value)}
-                      className="w-full h-full px-2.5 text-[14px] text-black/60 bg-transparent outline-none rounded-[10px] appearance-none"
-                    />
-                    <div className="absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none">
-                      <svg className="block size-[19px] overflow-hidden" fill="none" viewBox="0 0 16.25 16.25">
-                        <path d={svgModalPaths.p153bcd80} stroke="black" strokeLinecap="round" strokeLinejoin="round" strokeOpacity="0.6" strokeWidth="2" />
-                        <path d={svgModalPaths.p3b383680} stroke="black" strokeLinecap="round" strokeLinejoin="round" strokeOpacity="0.6" strokeWidth="2" />
-                      </svg>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Row 4: Set Reminder + Priority */}
-              <div className="flex gap-6 w-full">
-                <div className="flex flex-col gap-2.5 w-[284px]">
-                  <p className="text-[16px] text-black">Set Reminder</p>
-                  <div className="relative h-[39px] rounded-[10px] border border-black/70">
-                    <select
-                      value={formReminder}
-                      onChange={(e) => setFormReminder(e.target.value)}
-                      className="w-full h-full px-2.5 pr-8 text-[14px] text-black/60 bg-transparent outline-none rounded-[10px] appearance-none cursor-pointer"
-                    >
-                      <option value="Daily">Daily</option>
-                      <option value="Weekly">Weekly</option>
-                      <option value="Monthly">Monthly</option>
-                      <option value="None">None</option>
-                    </select>
-                    <div className="absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none">
-                      <svg className="block size-[24px]" fill="none" viewBox="0 0 24 24">
-                        <path d="M7 10L12 15L17 10" stroke="black" strokeLinecap="round" strokeLinejoin="round" strokeOpacity="0.6" strokeWidth="1.5" />
-                      </svg>
-                    </div>
-                  </div>
-                </div>
-                <div className="flex flex-col gap-2.5 w-[284px]">
-                  <p className="text-[16px] text-black">Priority</p>
-                  <div className="relative h-[39px] rounded-[10px] border border-black/70">
-                    <select
-                      value={formPriority}
-                      onChange={(e) => setFormPriority(e.target.value as "high" | "medium" | "low")}
-                      className="w-full h-full px-2.5 pr-8 text-[14px] text-black/60 bg-transparent outline-none rounded-[10px] appearance-none cursor-pointer"
-                    >
-                      <option value="low">Low</option>
-                      <option value="medium">Medium</option>
-                      <option value="high">High</option>
-                    </select>
-                    <div className="absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none">
-                      <svg className="block size-[24px]" fill="none" viewBox="0 0 24 24">
-                        <path d="M7 10L12 15L17 10" stroke="black" strokeLinecap="round" strokeLinejoin="round" strokeOpacity="0.6" strokeWidth="1.5" />
-                      </svg>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Buttons */}
-              <div className="flex gap-6 items-center justify-end w-full">
-                <button
-                  type="button"
-                  onClick={() => { setShowCreateModal(false); resetForm(); }}
-                  className="flex-1 max-w-[138px] h-[42px] rounded-[20px] border border-[#cc3636] flex items-center justify-center cursor-pointer hover:bg-red-50 transition-colors"
-                >
-                  <p className="text-[14px] font-medium text-[#cc3636]">Cancel</p>
-                </button>
-                <button
-                  type="button"
-                  onClick={handleCreateStudyPlan}
-                  className="bg-[#1ca4b3] h-[42px] rounded-[20px] w-[172px] flex items-center justify-center cursor-pointer hover:bg-[#189aa8] transition-colors"
-                >
-                  <p className="text-[14px] font-medium text-white">Create Study Plan</p>
-                </button>
-              </div>
+              </FormInput>
+            </div>
+            <div className="flex items-center gap-3 mt-6">
+              <button onClick={() => { setShowCreateModal(false); resetForm(); }}
+                className="flex-1 h-[44px] rounded-[14px] border border-[#cc3636] text-[#cc3636] font-bold text-[13px] hover:bg-red-50 transition-colors cursor-pointer">
+                Cancel
+              </button>
+              <button onClick={handleCreateStudyPlan} disabled={isSavingPlan || !formSubject.trim()}
+                className="flex-1 h-[44px] rounded-[14px] font-bold text-[13px] text-white transition-all cursor-pointer disabled:opacity-60 hover:shadow-lg"
+                style={{ background: '#1ca4b3' }}>
+                {isSavingPlan ? "Creating…" : "Create Study Plan"}
+              </button>
             </div>
           </div>
+        </ModalBackdrop>
+      )}
+
+      {/* Loading */}
+      {isLoading && (
+        <div className="flex justify-center py-16">
+          <div className="w-8 h-8 border-2 border-[#003566]/15 border-t-[#0967bd] rounded-full animate-spin" />
         </div>
       )}
 
       {/* Cards */}
-      <div className="flex flex-col gap-6">
-        {/* ───── My Tasks Card ───── */}
-        <div className="bg-white rounded-[20px] shadow-[0px_4px_60px_5px_rgba(0,0,0,0.1)] overflow-hidden">
-          <div className="px-6 py-4">
-            <div className="flex items-center justify-between mb-5">
-              <div className="flex items-center gap-1.5">
-                <MyTasksIcon />
-                <p className="text-[16px] font-medium text-black">My Tasks</p>
-              </div>
-              <div className="bg-[#f3f4f6] h-[27px] flex items-center justify-center rounded-[20px] px-3">
-                <p className="text-[12px] text-black">{tasks.length} tasks</p>
-              </div>
-            </div>
-            <div className="flex flex-col gap-4">
-              {visibleTasks.map((task) => (
-                <div
-                  key={task.id}
-                  className={`h-[50px] rounded-[20px] flex items-center justify-between px-5 md:px-7 ${
-                    task.completed ? "bg-[#f0fdf4]" : "bg-[#f9fafb]"
-                  }`}
-                >
-                  <div className="flex items-center gap-2.5">
-                    <button type="button" onClick={() => toggleTask(task.id)} className="cursor-pointer shrink-0">
-                      {task.completed ? <CompletedCircle /> : <EmptyCircle />}
-                    </button>
-                    <p className="text-[12px] text-black/80">{task.title}</p>
-                  </div>
-                  {task.completed ? (
-                    <p className="text-[12px] font-medium text-[#34b161]">Completed</p>
-                  ) : (
-                    <div className="flex items-center gap-2.5">
-                      <button type="button" onClick={() => toggleTask(task.id)} className="cursor-pointer shrink-0">
-                        <CheckTickIcon size={24} />
-                      </button>
-                      <button type="button" onClick={() => deleteTask(task.id)} className="cursor-pointer shrink-0">
-                        <DeleteIcon />
-                      </button>
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-            {tasks.length > 2 && (
-              <div className="flex justify-center mt-5">
-                <button type="button" onClick={() => setShowAllTasks(!showAllTasks)} className="text-[14px] font-medium text-black/80 underline cursor-pointer hover:text-black transition-colors">
-                  {showAllTasks ? "Show Less" : "View All"}
-                </button>
-              </div>
-            )}
-          </div>
-        </div>
+      {!isLoading && (
+        <div className="flex flex-col gap-5">
 
-        {/* ───── Active Reminders Card ───── */}
-        <div className="bg-white rounded-[20px] shadow-[0px_4px_60px_5px_rgba(0,0,0,0.1)] overflow-hidden">
-          <div className="px-6 py-4">
-            <div className="flex items-center justify-between mb-5">
-              <div className="flex items-center gap-1.5">
-                <RemindersIcon />
-                <p className="text-[16px] font-medium text-black">Active Reminders</p>
-              </div>
-            </div>
-            <div className="flex flex-col gap-4">
-              {visibleReminders.map((reminder) => (
-                <div
-                  key={reminder.id}
-                  className={`h-[50px] rounded-[20px] flex items-center justify-between px-5 md:px-7 ${
-                    reminder.completed ? "bg-[#f0fdf4]" : "bg-[#f9fafb]"
-                  }`}
-                >
-                  <div className="flex items-center gap-2.5">
-                    <button type="button" onClick={() => toggleReminder(reminder.id)} className="cursor-pointer shrink-0">
-                      {reminder.completed ? <CompletedCircle /> : <EmptyCircle />}
-                    </button>
-                    <p className="text-[12px] text-black/80">{reminder.title}</p>
+          {/* ───── My Tasks Card ───── */}
+          <div className="bg-white rounded-[20px] border border-[#edf0f4] shadow-sm overflow-hidden">
+            <div className="px-6 py-5">
+              <div className="flex items-center justify-between mb-5">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-[10px] bg-[#f77f00] flex items-center justify-center">
+                    <Target className="w-4 h-4 text-white" />
                   </div>
-                  {reminder.completed ? (
-                    <p className="text-[12px] font-medium text-[#34b161]">Completed</p>
-                  ) : (
-                    <div className="flex items-center gap-2.5">
-                      <button type="button" onClick={() => toggleReminder(reminder.id)} className="cursor-pointer shrink-0">
-                        <CheckTickIcon size={24} />
-                      </button>
-                      <button type="button" onClick={() => deleteReminder(reminder.id)} className="cursor-pointer shrink-0">
-                        <DeleteIcon />
-                      </button>
-                    </div>
-                  )}
+                  <h3 className="text-[15px] font-bold text-[#003566]">My Tasks</h3>
                 </div>
-              ))}
-            </div>
-            {reminders.length > 2 && (
-              <div className="flex justify-center mt-5">
-                <button type="button" onClick={() => setShowAllReminders(!showAllReminders)} className="text-[14px] font-medium text-black/80 underline cursor-pointer hover:text-black transition-colors">
-                  {showAllReminders ? "Show Less" : "View All"}
-                </button>
+                <span className="px-3 py-1 rounded-full text-[11px] font-semibold text-[#5a7089]"
+                  style={{ background: 'rgba(0,53,102,0.04)', border: '1px solid rgba(0,53,102,0.06)' }}>
+                  {tasks.length} tasks
+                </span>
               </div>
-            )}
-          </div>
-        </div>
-
-        {/* ───── Study Plans Card ───── */}
-        <div className="bg-white rounded-[20px] shadow-[0px_4px_60px_5px_rgba(0,0,0,0.1)] overflow-hidden">
-          <div className="px-6 py-4">
-            <div className="flex items-center justify-between mb-5">
-              <div className="flex items-center gap-1.5">
-                <StudyPlansIcon />
-                <p className="text-[16px] font-medium text-black">Study Plans</p>
-              </div>
-            </div>
-            <div className="bg-[#f3f4f6] h-[50px] rounded-[20px] flex items-center p-1.5 mb-4">
-              {([
-                { key: "today" as const, label: "Todays Plan" },
-                { key: "weekly" as const, label: "Weekly Overview" },
-                { key: "completed" as const, label: "Completed Plans" },
-              ]).map((tab) => (
-                <button
-                  key={tab.key}
-                  type="button"
-                  onClick={() => setStudyTab(tab.key)}
-                  className={`flex-1 h-full rounded-[20px] flex items-center justify-center text-[12px] font-medium cursor-pointer transition-colors ${
-                    studyTab === tab.key
-                      ? "bg-white text-black shadow-sm"
-                      : "text-black/80 hover:text-black"
-                  }`}
-                >
-                  {tab.label}
-                </button>
-              ))}
-            </div>
-            {/* ── Today's Plan Tab ── */}
-            {studyTab === "today" && (
-              <>
-                <div className="flex flex-col gap-4">
-                  {visiblePlans.map((plan) => {
-                    const config = priorityConfig[plan.priority];
-                    return (
-                      <div
-                        key={plan.id}
-                        className={`${config.rowBg} rounded-[20px] flex items-center justify-between px-5 md:px-7 py-5`}
-                      >
-                        <div className="flex flex-col gap-1">
-                          <p className="text-[12px] font-medium text-black/80">{plan.title}</p>
-                          <p className="text-[12px] text-black/60">{plan.time}</p>
-                          <div className="flex items-center gap-2.5 mt-0.5">
-                            <div className="relative w-[82px] h-[5px]">
-                              <div className="absolute bg-[#d3d3d3] h-full left-0 rounded-[20px] top-0 w-full" />
-                              <div
-                                className={`absolute ${config.barColor} h-full left-0 rounded-[20px] top-0`}
-                                style={{ width: `${(plan.progress / 100) * 82}px` }}
-                              />
-                            </div>
-                            <p className="text-[10px] text-black/60">{plan.progress}%</p>
+              <div className="flex flex-col gap-2.5">
+                {visibleTasks.map((task) => (
+                  <div key={task.id}
+                    className={`rounded-[14px] flex items-center justify-between px-4 py-3.5 transition-colors ${
+                      task.completed ? 'bg-[#f0fdf4]' : 'bg-[#f8f9fc]'
+                    }`}>
+                    <div className="flex items-center gap-3 min-w-0">
+                      <button onClick={() => toggleTask(task.id)} className="cursor-pointer shrink-0">
+                        {task.completed ? (
+                          <div className="w-5 h-5 rounded-full bg-[#22c55e] flex items-center justify-center">
+                            <Check className="w-3 h-3 text-white" strokeWidth={3} />
                           </div>
-                        </div>
-                        <div className="flex items-center gap-4">
-                          <div className={`${config.badgeBg} h-[27px] flex items-center justify-center px-2.5 rounded-[20px]`}>
-                            <p className={`text-[12px] font-medium ${config.badgeText}`}>{config.label}</p>
-                          </div>
-                          <button type="button" className="cursor-pointer shrink-0">
-                            <CheckTickIcon size={32} />
-                          </button>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-                {studyPlans.length > 3 && (
-                  <div className="flex justify-center mt-5">
-                    <button
-                      type="button"
-                      onClick={() => setShowAllPlans(!showAllPlans)}
-                      className="text-[14px] font-medium text-black/80 underline cursor-pointer hover:text-black transition-colors"
-                    >
-                      {showAllPlans ? "Show Less" : "View All"}
-                    </button>
-                  </div>
-                )}
-              </>
-            )}
-
-            {/* ── Weekly Overview Tab ── */}
-            {studyTab === "weekly" && (
-              <>
-                <div className="flex flex-col gap-4">
-                  {(showAllWeekly ? initialWeeklyData : initialWeeklyData.slice(0, 3)).map((weekDay) => {
-                    const isExpanded = expandedDays.includes(weekDay.id);
-                    return (
-                      <div key={weekDay.id} className="flex flex-col gap-0">
-                        {/* Day Row */}
-                        <button
-                          type="button"
-                          onClick={() =>
-                            setExpandedDays(
-                              isExpanded
-                                ? expandedDays.filter((d) => d !== weekDay.id)
-                                : [...expandedDays, weekDay.id]
-                            )
-                          }
-                          className={`bg-[#f9fafb] w-full flex items-center justify-between px-7 md:px-10 py-[23px] cursor-pointer hover:bg-[#f3f4f6] transition-colors ${
-                            isExpanded ? "rounded-t-[20px]" : "rounded-[20px]"
-                          }`}
-                        >
-                          <div className="flex flex-col gap-0.5 items-start">
-                            <p className="text-[14px] font-medium text-black/80">{weekDay.day}</p>
-                            <p className="text-[10px] text-black/80">{weekDay.date}</p>
-                          </div>
-                          <div className="flex gap-1.5 items-center">
-                            <p className="text-[12px] text-black/80">{weekDay.sessions.length} sessions</p>
-                            <svg
-                              className={`block size-[24px] transition-transform duration-200 ${isExpanded ? "rotate-180" : ""}`}
-                              fill="none"
-                              viewBox="0 0 24 24"
-                            >
-                              <path
-                                d="M18 9L12 15L6 9"
-                                stroke="black"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeOpacity="0.8"
-                                strokeWidth="1.5"
-                              />
-                            </svg>
-                          </div>
-                        </button>
-                        {/* Expanded Sessions */}
-                        {isExpanded && (
-                          <div className="bg-white border border-[#f3f4f6] border-t-0 rounded-b-[20px] px-5 md:px-7 py-4 flex flex-col gap-3">
-                            {weekDay.sessions.map((session) => {
-                              const config = priorityConfig[session.priority];
-                              return (
-                                <div
-                                  key={session.id}
-                                  className={`${config.rowBg} rounded-[16px] flex items-center justify-between px-5 md:px-6 py-4`}
-                                >
-                                  <div className="flex flex-col gap-1">
-                                    <p className="text-[12px] font-medium text-black/80">{session.title}</p>
-                                    <p className="text-[12px] text-black/60">{session.time}</p>
-                                    <div className="flex items-center gap-2.5 mt-0.5">
-                                      <div className="relative w-[82px] h-[5px]">
-                                        <div className="absolute bg-[#d3d3d3] h-full left-0 rounded-[20px] top-0 w-full" />
-                                        <div
-                                          className={`absolute ${config.barColor} h-full left-0 rounded-[20px] top-0`}
-                                          style={{ width: `${(session.progress / 100) * 82}px` }}
-                                        />
-                                      </div>
-                                      <p className="text-[10px] text-black/60">{session.progress}%</p>
-                                    </div>
-                                  </div>
-                                  <div className="flex items-center gap-3">
-                                    <div className={`${config.badgeBg} h-[27px] flex items-center justify-center px-2.5 rounded-[20px]`}>
-                                      <p className={`text-[12px] font-medium ${config.badgeText}`}>{config.label}</p>
-                                    </div>
-                                    <button type="button" className="cursor-pointer shrink-0">
-                                      <CheckTickIcon size={24} />
-                                    </button>
-                                  </div>
-                                </div>
-                              );
-                            })}
-                          </div>
+                        ) : (
+                          <div className="w-5 h-5 rounded-full border-2 border-[#c1c7ce] hover:border-[#0967bd] transition-colors" />
                         )}
-                      </div>
-                    );
-                  })}
+                      </button>
+                      <span className={`text-[13px] truncate ${task.completed ? "line-through text-[#94a3b8]" : "text-[#2d3748] font-medium"}`}>
+                        {task.title}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                      {task.completed && <span className="text-[10px] font-bold text-[#22c55e]">Done</span>}
+                      {!task.completed && (
+                        <button onClick={() => toggleTask(task.id)} className="p-1.5 rounded-[8px] hover:bg-green-50 text-[#22c55e] cursor-pointer transition-colors" title="Complete">
+                          <Check className="w-3.5 h-3.5" />
+                        </button>
+                      )}
+                      <button onClick={() => deleteTask(task.id)} className="p-1.5 rounded-[8px] hover:bg-red-50 text-[#c1c7ce] hover:text-[#cc3636] cursor-pointer transition-colors" title="Delete">
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+                {tasks.length === 0 && (
+                  <p className="text-[13px] text-[#94a3b8] text-center py-8">No tasks yet — tap + to add your first task</p>
+                )}
+              </div>
+              {tasks.length > 3 && (
+                <button onClick={() => setShowAllTasks(!showAllTasks)}
+                  className="w-full mt-4 text-[12px] font-bold text-[#0967bd] hover:text-[#003566] cursor-pointer transition-colors">
+                  {showAllTasks ? "Show Less" : `View All (${tasks.length})`}
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* ───── Active Reminders Card ───── */}
+          <div className="bg-white rounded-[20px] border border-[#edf0f4] shadow-sm overflow-hidden">
+            <div className="px-6 py-5">
+              <div className="flex items-center justify-between mb-5">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-[10px] bg-[#ffd60a] flex items-center justify-center">
+                    <Bell className="w-4 h-4 text-white" />
+                  </div>
+                  <h3 className="text-[15px] font-bold text-[#003566]">Active Reminders</h3>
                 </div>
-                {initialWeeklyData.length > 3 && (
-                  <div className="flex justify-center mt-5">
-                    <button
-                      type="button"
-                      onClick={() => setShowAllWeekly(!showAllWeekly)}
-                      className="text-[14px] font-medium text-black/80 underline cursor-pointer hover:text-black transition-colors"
-                    >
+              </div>
+              <div className="flex flex-col gap-2.5">
+                {visibleReminders.map((reminder) => (
+                  <div key={reminder.id}
+                    className={`rounded-[14px] flex items-center justify-between px-4 py-3.5 transition-colors ${
+                      reminder.completed ? 'bg-[#f0fdf4]' : 'bg-[#f8f9fc]'
+                    }`}>
+                    <div className="flex items-center gap-3 min-w-0">
+                      <button onClick={() => toggleReminder(reminder.id)} className="cursor-pointer shrink-0">
+                        {reminder.completed ? (
+                          <div className="w-5 h-5 rounded-full bg-[#22c55e] flex items-center justify-center">
+                            <Check className="w-3 h-3 text-white" strokeWidth={3} />
+                          </div>
+                        ) : (
+                          <div className="w-5 h-5 rounded-full border-2 border-[#c1c7ce] hover:border-[#ffd60a] transition-colors" />
+                        )}
+                      </button>
+                      <span className={`text-[13px] truncate ${reminder.completed ? "line-through text-[#94a3b8]" : "text-[#2d3748] font-medium"}`}>
+                        {reminder.title}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                      {reminder.completed && <span className="text-[10px] font-bold text-[#22c55e]">Done</span>}
+                      {!reminder.completed && (
+                        <button onClick={() => toggleReminder(reminder.id)} className="p-1.5 rounded-[8px] hover:bg-green-50 text-[#22c55e] cursor-pointer transition-colors" title="Complete">
+                          <Check className="w-3.5 h-3.5" />
+                        </button>
+                      )}
+                      <button onClick={() => deleteReminder(reminder.id)} className="p-1.5 rounded-[8px] hover:bg-red-50 text-[#c1c7ce] hover:text-[#cc3636] cursor-pointer transition-colors" title="Delete">
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+                {reminders.length === 0 && (
+                  <p className="text-[13px] text-[#94a3b8] text-center py-8">No reminders yet — tap + to add a smart reminder</p>
+                )}
+              </div>
+              {reminders.length > 3 && (
+                <button onClick={() => setShowAllReminders(!showAllReminders)}
+                  className="w-full mt-4 text-[12px] font-bold text-[#0967bd] hover:text-[#003566] cursor-pointer transition-colors">
+                  {showAllReminders ? "Show Less" : `View All (${reminders.length})`}
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* ───── Study Plans Card ───── */}
+          <div className="bg-white rounded-[20px] border border-[#edf0f4] shadow-sm overflow-hidden">
+            <div className="px-6 py-5">
+              <div className="flex items-center justify-between mb-5">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-[10px] bg-[#1ca4b3] flex items-center justify-center">
+                    <BookOpen className="w-4 h-4 text-white" />
+                  </div>
+                  <h3 className="text-[15px] font-bold text-[#003566]">Study Plans</h3>
+                </div>
+              </div>
+
+              {/* Tab Pills */}
+              <div className="p-1 rounded-[14px] flex mb-5" style={{ background: '#f5f7fa' }}>
+                {([
+                  { key: "today" as const, label: "Today's Plan" },
+                  { key: "weekly" as const, label: "Weekly Overview" },
+                  { key: "completed" as const, label: "Completed" },
+                ]).map((tab) => (
+                  <button key={tab.key} onClick={() => setStudyTab(tab.key)}
+                    className={`flex-1 h-[38px] rounded-[12px] flex items-center justify-center text-[12px] font-bold cursor-pointer transition-all ${
+                      studyTab === tab.key
+                        ? "bg-white text-[#003566] shadow-sm"
+                        : "text-[#94a3b8] hover:text-[#5a7089]"
+                    }`}>
+                    {tab.label}
+                  </button>
+                ))}
+              </div>
+
+              {/* ── Today's Plan ── */}
+              {studyTab === "today" && (
+                <>
+                  <div className="flex flex-col gap-3">
+                    {visiblePlans.map((plan) => {
+                      const config = priorityConfig[plan.priority];
+                      return (
+                        <div key={plan.id} className="rounded-[16px] flex items-center justify-between px-5 py-4 transition-colors"
+                          style={{ background: config.bg, border: `1px solid ${config.border}` }}>
+                          <div className="flex flex-col gap-1.5 min-w-0">
+                            <span className="text-[13px] font-bold text-[#1e293b]">{plan.title}</span>
+                            <div className="flex items-center gap-2">
+                              <Clock className="w-3 h-3 text-[#94a3b8]" />
+                              <span className="text-[11px] text-[#94a3b8]">{plan.time}</span>
+                            </div>
+                            <div className="flex items-center gap-2.5 mt-0.5">
+                              <div className="w-[80px] h-[4px] bg-black/5 rounded-full overflow-hidden">
+                                <div className="h-full rounded-full transition-all" style={{ width: `${plan.progress}%`, background: config.barColor }} />
+                              </div>
+                              <span className="text-[10px] font-medium" style={{ color: config.badgeText }}>{plan.progress}%</span>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2 shrink-0">
+                            <span className="px-2.5 py-1 rounded-full text-[10px] font-bold"
+                              style={{ background: config.badgeBg, color: config.badgeText }}>
+                              {config.label}
+                            </span>
+                            <button onClick={() => handleCompleteStudyPlan(plan.id)}
+                              className="p-1.5 rounded-[8px] hover:bg-green-50 text-[#22c55e] cursor-pointer transition-colors" title="Complete">
+                              <CheckCircle className="w-4 h-4" />
+                            </button>
+                            <button onClick={() => deleteStudyPlan(plan.id)}
+                              className="p-1.5 rounded-[8px] hover:bg-red-50 text-[#c1c7ce] hover:text-[#cc3636] cursor-pointer transition-colors" title="Delete">
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                    {studyPlans.length === 0 && (
+                      <p className="text-[13px] text-[#94a3b8] text-center py-8">No study plans yet — tap + to create your first plan</p>
+                    )}
+                  </div>
+                  {studyPlans.length > 3 && (
+                    <button onClick={() => setShowAllPlans(!showAllPlans)}
+                      className="w-full mt-4 text-[12px] font-bold text-[#0967bd] hover:text-[#003566] cursor-pointer transition-colors">
+                      {showAllPlans ? "Show Less" : `View All (${studyPlans.length})`}
+                    </button>
+                  )}
+                </>
+              )}
+
+              {/* ── Weekly Overview ── */}
+              {studyTab === "weekly" && (
+                <>
+                  <div className="flex flex-col gap-3">
+                    {(showAllWeekly ? initialWeeklyData : initialWeeklyData.slice(0, 3)).map((weekDay) => {
+                      const isExpanded = expandedDays.includes(weekDay.id);
+                      return (
+                        <div key={weekDay.id} className="flex flex-col">
+                          <button onClick={() => setExpandedDays(isExpanded ? expandedDays.filter((d) => d !== weekDay.id) : [...expandedDays, weekDay.id])}
+                            className={`bg-[#f8f9fc] w-full flex items-center justify-between px-5 py-4 cursor-pointer hover:bg-[#f0f2f5] transition-colors ${
+                              isExpanded ? "rounded-t-[16px]" : "rounded-[16px]"
+                            }`}>
+                            <div>
+                              <p className="text-[14px] font-bold text-[#1e293b]">{weekDay.day}</p>
+                              <p className="text-[11px] text-[#94a3b8]">{weekDay.date}</p>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <span className="text-[11px] font-medium text-[#5a7089]">{weekDay.sessions.length} sessions</span>
+                              <ChevronDown className={`w-4 h-4 text-[#94a3b8] transition-transform duration-200 ${isExpanded ? "rotate-180" : ""}`} />
+                            </div>
+                          </button>
+                          {isExpanded && (
+                            <div className="border border-[#edf0f4] border-t-0 rounded-b-[16px] px-4 py-3 flex flex-col gap-2.5">
+                              {weekDay.sessions.map((session) => {
+                                const config = priorityConfig[session.priority];
+                                return (
+                                  <div key={session.id} className="rounded-[14px] flex items-center justify-between px-4 py-3.5"
+                                    style={{ background: config.bg, border: `1px solid ${config.border}` }}>
+                                    <div className="flex flex-col gap-1">
+                                      <span className="text-[12px] font-bold text-[#1e293b]">{session.title}</span>
+                                      <span className="text-[11px] text-[#94a3b8]">{session.time}</span>
+                                      <div className="flex items-center gap-2 mt-0.5">
+                                        <div className="w-[70px] h-[3px] bg-black/5 rounded-full overflow-hidden">
+                                          <div className="h-full rounded-full" style={{ width: `${session.progress}%`, background: config.barColor }} />
+                                        </div>
+                                        <span className="text-[9px] font-medium" style={{ color: config.badgeText }}>{session.progress}%</span>
+                                      </div>
+                                    </div>
+                                    <span className="px-2.5 py-1 rounded-full text-[10px] font-bold shrink-0"
+                                      style={{ background: config.badgeBg, color: config.badgeText }}>
+                                      {config.label}
+                                    </span>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                  {initialWeeklyData.length > 3 && (
+                    <button onClick={() => setShowAllWeekly(!showAllWeekly)}
+                      className="w-full mt-4 text-[12px] font-bold text-[#0967bd] hover:text-[#003566] cursor-pointer transition-colors">
                       {showAllWeekly ? "Show Less" : "View All"}
                     </button>
-                  </div>
-                )}
-              </>
-            )}
-
-            {/* ── Completed Plans Tab ── */}
-            {studyTab === "completed" && (
-              <>
-                <div className="flex flex-col gap-4">
-                  {completedPlans.length === 0 && (
-                    <div className="flex flex-col items-center justify-center py-10 text-center">
-                      <div className="size-14 rounded-full bg-[#f0fdf4] flex items-center justify-center mb-3">
-                        <CharmCircleTickIcon />
-                      </div>
-                      <p className="text-[14px] text-black/40">No completed plans yet</p>
-                      <p className="text-[12px] text-black/30 mt-1">Complete your study plans to see them here</p>
-                    </div>
                   )}
-                  {(showAllCompleted ? completedPlans : completedPlans.slice(0, 3)).map((plan) => (
-                    <div
-                      key={plan.id}
-                      className="bg-[#f9fafb] rounded-[20px] flex items-center justify-between px-7 md:px-10 py-[23px]"
-                    >
-                      <div className="flex items-center gap-4">
-                        <CharmCircleTickIcon />
-                        <div className="flex flex-col gap-0.5">
-                          <p className="text-[14px] font-medium text-black/80">{plan.title}</p>
-                          <p className="text-[10px] text-black/80">{`${plan.date}  |  ${plan.time}`}</p>
+                </>
+              )}
+
+              {/* ── Completed Plans ── */}
+              {studyTab === "completed" && (
+                <>
+                  <div className="flex flex-col gap-2.5">
+                    {completedPlans.length === 0 && (
+                      <div className="flex flex-col items-center justify-center py-12 text-center">
+                        <div className="w-14 h-14 rounded-[18px] flex items-center justify-center mb-3"
+                          style={{ background: 'rgba(34,197,94,0.08)' }}>
+                          <CheckCircle className="w-6 h-6 text-[#22c55e]/40" />
+                        </div>
+                        <p className="text-[14px] font-semibold text-[#5a7089]">No completed plans yet</p>
+                        <p className="text-[12px] text-[#94a3b8] mt-1">Complete your study plans to see them here</p>
+                      </div>
+                    )}
+                    {(showAllCompleted ? completedPlans : completedPlans.slice(0, 3)).map((plan) => (
+                      <div key={plan.id} className="bg-[#f8f9fc] rounded-[14px] flex items-center justify-between px-5 py-4">
+                        <div className="flex items-center gap-3">
+                          <div className="w-5 h-5 rounded-full bg-[#22c55e] flex items-center justify-center shrink-0">
+                            <Check className="w-3 h-3 text-white" strokeWidth={3} />
+                          </div>
+                          <div>
+                            <p className="text-[13px] font-bold text-[#1e293b]">{plan.title}</p>
+                            <p className="text-[11px] text-[#94a3b8]">{`${plan.date}  |  ${plan.time}`}</p>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  ))}
-                </div>
-                {completedPlans.length > 3 && (
-                  <div className="flex justify-center mt-5">
-                    <button
-                      type="button"
-                      onClick={() => setShowAllCompleted(!showAllCompleted)}
-                      className="text-[14px] font-medium text-black/80 underline cursor-pointer hover:text-black transition-colors"
-                    >
-                      {showAllCompleted ? "Show Less" : "View All"}
-                    </button>
+                    ))}
                   </div>
-                )}
-              </>
-            )}
+                  {completedPlans.length > 3 && (
+                    <button onClick={() => setShowAllCompleted(!showAllCompleted)}
+                      className="w-full mt-4 text-[12px] font-bold text-[#0967bd] hover:text-[#003566] cursor-pointer transition-colors">
+                      {showAllCompleted ? "Show Less" : `View All (${completedPlans.length})`}
+                    </button>
+                  )}
+                </>
+              )}
+            </div>
           </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }

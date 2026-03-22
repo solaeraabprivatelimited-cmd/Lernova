@@ -1,15 +1,9 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { ImageWithFallback } from "../figma/ImageWithFallback";
 import { toast } from "sonner";
-import { SilentModeView } from "./SilentModeView"; // Import Silent Mode component
-import { PostReportNotification } from "./PostReportNotification"; // Import Post Report Notification
+import { SilentModeView } from "./SilentModeView";
+import { PostReportNotification } from "./PostReportNotification";
 import { notes as notesApi } from "@/app/lib/api";
-
-// Import SVGs
-import svgPathsNew from "@/imports/svg-734xismd1b";
-import svgPathsNotes from "@/imports/svg-notes";
-import svgPaths from "@/imports/svg-10iypj6y9t";
-import svgPathsBackground from "@/imports/svg-background";
 
 // Import Images
 import imgScreenshot111 from "figma:asset/a474824d07b7e42cbfd6a81ec948e9946f5e4c3e.png";
@@ -17,756 +11,618 @@ import imgImage29 from "figma:asset/30b04958b99e4725a9210a26769081ac12720108.png
 import imgImage30 from "figma:asset/aa7efc412ce1a4c3d775b48b4309e6230467e2c0.png";
 import imgImage31 from "figma:asset/de662746f74c12720ca8b42aaa277de185521cd9.png";
 
-// --- Icons for Timer Overlay ---
+// ─── Helpers ─────────────────────────────────────────────────────────────────
 
-function IconParkOutlineCloseOne() {
-  return (
-    <div className="overflow-clip relative shrink-0 size-[32px] cursor-pointer hover:opacity-80 transition-opacity">
-      <svg className="block size-full" fill="none" viewBox="0 0 29 29">
-        <path d={svgPathsNew.p1fd3cb00} stroke="white" strokeLinejoin="round" strokeWidth="2" />
-        <path d={svgPathsNew.p89d1180} stroke="white" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" />
-      </svg>
-    </div>
-  );
-}
-
-function SolarPlayBold({ color = "#50FE00" }: { color?: string }) {
-  return (
-    <div className="relative shrink-0 size-[18px]">
-      <svg className="block size-full" fill="none" viewBox="0 0 18 18">
-        <path d={svgPathsNew.p10dbe800} fill={color} />
-      </svg>
-    </div>
-  );
-}
-
-function MingcuteDeleteLine() {
-  return (
-    <div className="overflow-clip relative shrink-0 size-[18px]">
-      <svg className="block size-full" fill="none" viewBox="0 0 14 17">
-        <path d={svgPathsNew.p13847780} fill="#FF6969" />
-      </svg>
-    </div>
-  );
-}
-
-// --- Icons for Notes Overlay ---
-
-function MageSearch() {
-  return (
-    <div className="relative shrink-0 size-[24px]">
-      <svg className="block size-full" fill="none" viewBox="0 0 24 24">
-        <path d={svgPathsNotes.p1a791c50} stroke="white" strokeLinecap="round" strokeLinejoin="round" strokeOpacity="0.6" strokeWidth="1.5" />
-      </svg>
-    </div>
-  );
-}
-
-function LucidePlus() {
-  return (
-    <div className="relative shrink-0 size-[24px]">
-      <svg className="block size-full" fill="none" viewBox="0 0 24 24">
-        <path d="M5 12H19M12 5V19" stroke="white" strokeLinecap="round" strokeLinejoin="round" strokeOpacity="0.6" strokeWidth="2" />
-      </svg>
-    </div>
-  );
-}
-
-// --- Icons for Footer ---
-
-function Group() {
-  return (
-    <div className="h-[24px] relative shrink-0 w-[19px]">
-      <svg className="block size-full" fill="none" viewBox="0 0 22 26">
-        <path d={svgPaths.p139e5180} stroke="white" strokeWidth="2" />
-        <path d={svgPaths.p1e52200} stroke="white" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" />
-      </svg>
-    </div>
-  );
-}
-
-function SvgRepoIconCarrier() {
-  return (
-    <div className="h-[24px] relative shrink-0 w-[21px]">
-       <svg className="block size-full" fill="none" viewBox="0 0 22 26">
-         <path d={svgPaths.p32c67b00} stroke="white" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.6" />
-         <path d={svgPaths.p18aa6100} stroke="white" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.6" />
-       </svg>
-    </div>
-  );
-}
-
-function NotesFooterIcon() {
-  return (
-    <div className="h-[24px] relative w-[24px]">
-      <svg className="block size-full" fill="none" viewBox="0 0 37 38">
-        <path d={svgPathsNotes.p19076800} fill="white" />
-        <path d={svgPathsNotes.p10c86b80} fill="white" />
-        <path d={svgPathsNotes.p3cc2e600} fill="white" />
-        <path d={svgPathsNotes.pac75b00} fill="white" />
-        <path d={svgPathsNotes.p77ad900} fill="white" />
-      </svg>
-    </div>
-  );
-}
-
-function BackgroundIcon() {
-  return (
-    <div className="relative shrink-0 size-[44px]">
-      <svg className="block size-full" fill="none" viewBox="0 0 44 44">
-        <path d={svgPathsBackground.p3de58900} fill="white" />
-        <path clipRule="evenodd" d={svgPathsBackground.p103a8e00} fill="white" fillRule="evenodd" />
-        <path d={svgPathsBackground.p239d3480} fill="white" opacity="0.5" />
-      </svg>
-    </div>
-  );
-}
-
-function MynauiMusicSolid() {
-  return (
-    <div className="relative shrink-0 size-[24px]">
-      <svg className="block size-full" fill="none" viewBox="0 0 24 24">
-        <path d={svgPaths.p26fc0380} fill="white" />
-      </svg>
-    </div>
-  );
-}
-
-// --- Helper Functions ---
-
-const formatTime = (seconds: number) => {
-  const h = Math.floor(seconds / 3600);
-  const m = Math.floor((seconds % 3600) / 60);
-  const s = seconds % 60;
-  return `${h.toString().padStart(2, '0')} : ${m.toString().padStart(2, '0')} : ${s.toString().padStart(2, '0')}`;
+const pad = (n: number) => n.toString().padStart(2, "0");
+const fmtTimer = (s: number) => `${pad(Math.floor(s / 60))}:${pad(s % 60)}`;
+const fmtElapsed = (s: number) => {
+  const h = Math.floor(s / 3600);
+  const m = Math.floor((s % 3600) / 60);
+  const sec = s % 60;
+  return `${pad(h)}:${pad(m)}:${pad(sec)}`;
 };
 
-// --- Components ---
+// ─── Circular Progress Ring ──────────────────────────────────────────────────
 
-function TimerOverlay({ onClose }: { onClose: () => void }) {
-  const [timeLeft, setTimeLeft] = useState(60); // Default 1 min
+function ProgressRing({ radius, stroke, progress, color }: { radius: number; stroke: number; progress: number; color: string }) {
+  const norm = radius - stroke / 2;
+  const circ = 2 * Math.PI * norm;
+  const offset = circ - (progress / 100) * circ;
+  return (
+    <svg width={radius * 2} height={radius * 2} className="rotate-[-90deg]">
+      <circle cx={radius} cy={radius} r={norm} fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth={stroke} />
+      <circle
+        cx={radius} cy={radius} r={norm} fill="none"
+        stroke={color} strokeWidth={stroke}
+        strokeDasharray={circ} strokeDashoffset={offset}
+        strokeLinecap="round"
+        className="transition-all duration-500"
+      />
+    </svg>
+  );
+}
+
+// ─── Timer Panel ─────────────────────────────────────────────────────────────
+
+function TimerPanel({ onClose }: { onClose: () => void }) {
+  const [totalTime, setTotalTime] = useState(1500);
+  const [timeLeft, setTimeLeft] = useState(1500);
   const [isActive, setIsActive] = useState(false);
-  const [label, setLabel] = useState("Focus Session");
-  
-  // Ref to store the interval id
-  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const [label, setLabel] = useState("Pomodoro");
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
     if (isActive && timeLeft > 0) {
-      intervalRef.current = setInterval(() => {
-        setTimeLeft((prev) => prev - 1);
-      }, 1000);
-    } else if (timeLeft === 0) {
+      intervalRef.current = setInterval(() => setTimeLeft((p) => p - 1), 1000);
+    } else if (timeLeft === 0 && isActive) {
       setIsActive(false);
-      if (intervalRef.current) clearInterval(intervalRef.current);
-      toast.success("Timer finished!");
+      toast.success("Timer complete! Great focus session.");
     }
-
-    return () => {
-      if (intervalRef.current) clearInterval(intervalRef.current);
-    };
+    return () => { if (intervalRef.current) clearInterval(intervalRef.current); };
   }, [isActive, timeLeft]);
 
-  const toggleTimer = () => {
-    setIsActive(!isActive);
-  };
+  const progress = totalTime > 0 ? ((totalTime - timeLeft) / totalTime) * 100 : 0;
 
-  const stopTimer = () => {
-    setIsActive(false);
-    setTimeLeft(60); // Reset to default or handle differently
-  };
+  const presets = [
+    { label: "Pomodoro", time: 1500 },
+    { label: "Short Break", time: 300 },
+    { label: "Long Break", time: 900 },
+    { label: "Deep Work", time: 3600 },
+  ];
 
-  const setTimer = (seconds: number, newLabel: string) => {
-    setTimeLeft(seconds);
-    setLabel(newLabel);
+  const selectPreset = (p: typeof presets[0]) => {
+    setTotalTime(p.time);
+    setTimeLeft(p.time);
+    setLabel(p.label);
     setIsActive(true);
   };
 
   return (
-    <div className="absolute right-4 bottom-24 md:right-12 md:bottom-24 w-[350px] md:w-[462px] bg-[rgba(20,19,22,0.95)] backdrop-blur-xl rounded-[20px] p-8 border border-white/10 shadow-2xl animate-in fade-in slide-in-from-bottom-4 z-40 flex flex-col gap-6">
-      
-      {/* Header */}
-      <div className="flex items-center justify-between w-full">
-        <h2 className="font-['Poppins'] font-medium text-[24px] text-white">Focus Timer</h2>
-        <button 
-          onClick={onClose}
-          type="button"
-          className="relative z-50 cursor-pointer hover:opacity-80 transition-opacity"
-          aria-label="Close"
-        >
-          <IconParkOutlineCloseOne />
-        </button>
-      </div>
+    <div className="fixed inset-0 z-[60] flex items-end justify-end pointer-events-none" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+      {/* Backdrop - click to close */}
+      <div className="absolute inset-0 pointer-events-auto" onClick={onClose} />
 
-      {/* Set Timer Section */}
-      <div className="flex flex-col gap-4 w-full">
-        <p className="font-['Poppins'] font-medium text-[16px] text-[rgba(255,255,255,0.6)]">Set Timer</p>
-        
-        {/* Label Input */}
-        <div className="bg-[rgba(255,255,255,0.1)] rounded-[20px] w-full px-6 py-4 flex items-center justify-between">
-           <span className="text-white font-['Poppins']">Label</span>
-           <input 
-              value={label}
-              onChange={(e) => setLabel(e.target.value)}
-              className="text-[rgba(255,255,255,0.6)] font-['Poppins'] bg-transparent text-right outline-none"
-           />
+      {/* Panel */}
+      <div
+        className="relative pointer-events-auto w-[380px] md:w-[420px] mb-24 mr-4 md:mr-10 rounded-[24px] border border-white/[0.12] shadow-2xl overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-300"
+        style={{ background: 'rgba(0,20,50,0.94)', backdropFilter: 'blur(40px)', WebkitBackdropFilter: 'blur(40px)' }}
+      >
+        {/* Header */}
+        <div className="flex items-center justify-between px-7 pt-6 pb-2">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-[10px] flex items-center justify-center" style={{ background: 'rgba(247,127,0,0.2)' }}>
+              <svg viewBox="0 0 24 24" className="w-4 h-4" fill="#f77f00">
+                <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2zm4.2 14.2L11 13V7h1.5v5.2l4.5 2.7-.8 1.3z" />
+              </svg>
+            </div>
+            <h2 className="text-[18px] font-bold text-white">Focus Timer</h2>
+          </div>
+          <button onClick={onClose} className="w-8 h-8 rounded-full bg-white/[0.06] hover:bg-white/[0.12] flex items-center justify-center transition-colors cursor-pointer">
+            <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round"><path d="M18 6L6 18M6 6l12 12" /></svg>
+          </button>
         </div>
 
         {/* Timer Display */}
-        <div className="flex justify-center py-2">
-           <p className="font-['Poppins'] text-[48px] md:text-[60px] text-white tabular-nums tracking-wider">{formatTime(timeLeft)}</p>
-        </div>
-
-        {/* Start/Stop Buttons */}
-        <div className="flex items-center justify-between w-full gap-4">
-           {/* Stop Button */}
-           <button 
-              onClick={stopTimer}
-              className="flex-1 bg-[rgba(255,105,105,0.1)] rounded-[20px] px-6 py-4 flex items-center justify-center hover:bg-[rgba(255,105,105,0.2)] transition-colors active:scale-95"
-           >
-              <span className="text-[#ff6969] font-['Poppins']">Reset</span>
-           </button>
-           
-           {/* Start Button */}
-           <button 
-              onClick={toggleTimer}
-              className={`flex-1 rounded-[20px] px-6 py-4 flex items-center justify-center transition-colors active:scale-95 ${isActive ? 'bg-yellow-500/10 hover:bg-yellow-500/20' : 'bg-[rgba(80,254,0,0.1)] hover:bg-[rgba(80,254,0,0.2)]'}`}
-           >
-              <span className={`font-['Poppins'] ${isActive ? 'text-yellow-500' : 'text-[#50fe00]'}`}>
-                 {isActive ? 'Pause' : 'Start'}
+        <div className="flex flex-col items-center py-6 gap-2">
+          <div className="relative">
+            <ProgressRing radius={90} stroke={6} progress={progress} color={isActive ? "#f77f00" : "#0967bd"} />
+            <div className="absolute inset-0 flex flex-col items-center justify-center">
+              <span className="text-[42px] font-bold text-white tabular-nums tracking-tight" style={{ fontFamily: "'DM Serif Display', serif" }}>
+                {fmtTimer(timeLeft)}
               </span>
-           </button>
+              <span className="text-[12px] font-medium text-white/40 uppercase tracking-wider">{label}</span>
+            </div>
+          </div>
+
+          {/* Controls */}
+          <div className="flex items-center gap-3 mt-3">
+            <button
+              onClick={() => { setIsActive(false); setTimeLeft(totalTime); }}
+              className="px-5 py-2.5 rounded-full text-[13px] font-semibold transition-all cursor-pointer hover:opacity-80"
+              style={{ background: 'rgba(204,54,54,0.15)', color: '#ff6b6b' }}
+            >
+              Reset
+            </button>
+            <button
+              onClick={() => setIsActive(!isActive)}
+              className="px-7 py-2.5 rounded-full text-[13px] font-bold transition-all shadow-lg cursor-pointer hover:opacity-90"
+              style={{
+                background: isActive ? 'rgba(251,191,36,0.15)' : 'linear-gradient(135deg, #f77f00, #e63946)',
+                color: isActive ? '#fbbf24' : 'white',
+                boxShadow: isActive ? 'none' : '0 4px 20px rgba(247,127,0,0.3)',
+              }}
+            >
+              {isActive ? "Pause" : "Start"}
+            </button>
+          </div>
         </div>
-      </div>
 
-      {/* Recents Section */}
-      <div className="flex flex-col gap-4 w-full">
-         <div className="flex items-center justify-end w-full">
-            <p className="font-['Poppins'] font-medium text-[16px] text-white">Recents</p>
-         </div>
-
-         {/* Recent Item 1 */}
-         <div className="bg-[rgba(255,255,255,0.05)] hover:bg-[rgba(255,255,255,0.1)] transition-colors rounded-[20px] w-full px-6 py-4 flex items-center justify-between">
-            <div className="flex flex-col items-start gap-1">
-               <span className="text-[24px] text-[rgba(255,255,255,0.8)] font-['Poppins']">25:00</span>
-               <span className="text-[16px] text-[rgba(255,255,255,0.6)] font-['Poppins']">Pomodoro</span>
-            </div>
-            <div className="flex items-center gap-4">
-               <button onClick={() => setTimer(1500, "Pomodoro")} className="bg-[rgba(80,254,0,0.1)] rounded-[20px] size-[32px] flex items-center justify-center hover:bg-[rgba(80,254,0,0.2)] transition-colors">
-                  <SolarPlayBold />
-               </button>
-            </div>
-         </div>
-
-         {/* Recent Item 2 */}
-         <div className="bg-[rgba(255,255,255,0.05)] hover:bg-[rgba(255,255,255,0.1)] transition-colors rounded-[20px] w-full px-6 py-4 flex items-center justify-between">
-            <div className="flex flex-col items-start gap-1">
-               <span className="text-[24px] text-[rgba(255,255,255,0.8)] font-['Poppins']">05:00</span>
-               <span className="text-[16px] text-[rgba(255,255,255,0.6)] font-['Poppins']">Short Break</span>
-            </div>
-            <div className="flex items-center gap-4">
-               <button onClick={() => setTimer(300, "Short Break")} className="bg-[rgba(80,254,0,0.1)] rounded-[20px] size-[32px] flex items-center justify-center hover:bg-[rgba(80,254,0,0.2)] transition-colors">
-                  <SolarPlayBold />
-               </button>
-            </div>
-         </div>
+        {/* Presets */}
+        <div className="px-7 pb-6">
+          <p className="text-[11px] font-semibold text-white/30 uppercase tracking-wider mb-3">Quick Presets</p>
+          <div className="grid grid-cols-2 gap-2">
+            {presets.map((p) => (
+              <button
+                key={p.label}
+                onClick={() => selectPreset(p)}
+                className="flex items-center justify-between px-4 py-3 rounded-[14px] transition-all hover:bg-white/[0.1] group cursor-pointer"
+                style={{
+                  background: label === p.label && isActive ? 'rgba(247,127,0,0.12)' : 'rgba(255,255,255,0.04)',
+                  border: label === p.label && isActive ? '1px solid rgba(247,127,0,0.3)' : '1px solid rgba(255,255,255,0.06)',
+                }}
+              >
+                <div className="text-left">
+                  <div className="text-[13px] font-semibold text-white/80">{p.label}</div>
+                  <div className="text-[11px] text-white/30">{fmtTimer(p.time)}</div>
+                </div>
+                <div className="w-7 h-7 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                  style={{ background: 'rgba(247,127,0,0.2)' }}>
+                  <svg viewBox="0 0 24 24" className="w-3.5 h-3.5" fill="#f77f00"><polygon points="5 3 19 12 5 21 5 3" /></svg>
+                </div>
+              </button>
+            ))}
+          </div>
+        </div>
       </div>
     </div>
   );
 }
 
-interface Note {
-  id: string;
-  title: string;
-  content: string;
-  date: string;
-}
+// ─── Notes Panel ─────────────────────────────────────────────────────────────
 
-function NotesOverlay({ onClose }: { onClose: () => void }) {
+interface Note { id: string; title: string; content: string; date: string; }
+
+function NotesPanel({ onClose }: { onClose: () => void }) {
   const [notesList, setNotesList] = useState<Note[]>([]);
   const [search, setSearch] = useState("");
   const [isLoading, setIsLoading] = useState(true);
-  // editing state: null = list view, 'new' = creating, noteId = editing existing
   const [editingId, setEditingId] = useState<string | null | "new">(null);
   const [editTitle, setEditTitle] = useState("");
   const [editContent, setEditContent] = useState("");
   const [isSaving, setIsSaving] = useState(false);
 
-  // Load notes from API
   useEffect(() => {
     notesApi.list()
       .then((data: any[]) => {
-        setNotesList(
-          data.map((n) => ({
-            id: n.id,
-            title: n.title || "Untitled",
-            content: n.content || "",
-            date: n.createdAt
-              ? new Date(n.createdAt).toLocaleString("en-US", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })
-              : "Just now",
-          }))
-        );
+        setNotesList(data.map((n) => ({
+          id: n.id, title: n.title || "Untitled", content: n.content || "",
+          date: n.createdAt ? new Date(n.createdAt).toLocaleString("en-US", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }) : "Just now",
+        })));
       })
-      .catch((e) => {
-        console.log("Error loading notes:", e);
-        toast.error("Failed to load notes");
-      })
+      .catch((e) => { console.log("Error loading notes:", e); toast.error("Failed to load notes"); })
       .finally(() => setIsLoading(false));
   }, []);
 
-  // Open new note form
-  const openNew = () => {
-    setEditTitle("");
-    setEditContent("");
-    setEditingId("new");
-  };
+  const openNew = () => { setEditTitle(""); setEditContent(""); setEditingId("new"); };
+  const openEdit = (note: Note) => { setEditTitle(note.title); setEditContent(note.content); setEditingId(note.id); };
 
-  // Open existing note for editing
-  const openEdit = (note: Note) => {
-    setEditTitle(note.title);
-    setEditContent(note.content);
-    setEditingId(note.id);
-  };
-
-  // Save (create or update)
   const handleSave = async () => {
-    if (!editTitle.trim() && !editContent.trim()) {
-      setEditingId(null);
-      return;
-    }
+    if (!editTitle.trim() && !editContent.trim()) { setEditingId(null); return; }
     setIsSaving(true);
     try {
       if (editingId === "new") {
         const created = await notesApi.create(editTitle.trim() || "Untitled", editContent.trim());
-        const newNote: Note = {
-          id: created.id,
-          title: created.title || "Untitled",
-          content: created.content || "",
-          date: "Just now",
-        };
-        setNotesList((prev) => [newNote, ...prev]);
+        setNotesList((prev) => [{ id: created.id, title: created.title || "Untitled", content: created.content || "", date: "Just now" }, ...prev]);
         toast.success("Note saved");
       } else if (editingId) {
         await notesApi.update(editingId, { title: editTitle.trim() || "Untitled", content: editContent.trim() });
-        setNotesList((prev) =>
-          prev.map((n) =>
-            n.id === editingId ? { ...n, title: editTitle.trim() || "Untitled", content: editContent.trim() } : n
-          )
-        );
+        setNotesList((prev) => prev.map((n) => n.id === editingId ? { ...n, title: editTitle.trim() || "Untitled", content: editContent.trim() } : n));
         toast.success("Note updated");
       }
-    } catch (e) {
-      console.log("Error saving note:", e);
-      toast.error("Failed to save note");
-    } finally {
-      setIsSaving(false);
-      setEditingId(null);
-    }
+    } catch (e) { console.log("Error saving note:", e); toast.error("Failed to save note"); }
+    finally { setIsSaving(false); setEditingId(null); }
   };
 
-  // Delete note
   const deleteNote = async (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    try {
-      await notesApi.delete(id);
-      setNotesList((prev) => prev.filter((n) => n.id !== id));
-      toast.success("Note deleted");
-    } catch (e) {
-      console.log("Error deleting note:", e);
-      toast.error("Failed to delete note");
-    }
+    try { await notesApi.delete(id); setNotesList((prev) => prev.filter((n) => n.id !== id)); toast.success("Note deleted"); }
+    catch (e) { console.log("Error deleting note:", e); toast.error("Failed to delete note"); }
   };
 
-  const filteredNotes = notesList.filter((n) =>
-    n.title.toLowerCase().includes(search.toLowerCase()) ||
-    n.content.toLowerCase().includes(search.toLowerCase())
-  );
+  const filteredNotes = notesList.filter((n) => n.title.toLowerCase().includes(search.toLowerCase()) || n.content.toLowerCase().includes(search.toLowerCase()));
+
+  const panelBg: React.CSSProperties = {
+    background: 'rgba(0,20,50,0.94)',
+    backdropFilter: 'blur(40px)',
+    WebkitBackdropFilter: 'blur(40px)',
+  };
 
   // ── Edit / Create view ──
   if (editingId !== null) {
     return (
-      <div className="absolute right-4 bottom-24 md:right-12 top-8 md:top-auto md:bottom-24 w-[350px] md:w-[462px] bg-[rgba(20,19,22,0.97)] backdrop-blur-xl rounded-[20px] p-8 border border-white/10 shadow-2xl animate-in fade-in z-40 flex flex-col gap-5">
-        {/* Header */}
-        <div className="flex items-center justify-between w-full">
-          <button
-            type="button"
-            onClick={() => setEditingId(null)}
-            className="flex items-center gap-2 text-white/60 hover:text-white transition-colors"
-          >
-            <svg className="size-[18px]" fill="none" viewBox="0 0 24 24">
-              <path d="M15 18l-6-6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-            <span className="font-['Poppins'] text-[14px]">Notes</span>
-          </button>
-          <button
-            type="button"
-            onClick={handleSave}
-            disabled={isSaving}
-            className="flex items-center gap-2 bg-white/10 hover:bg-white/20 transition-colors rounded-full px-4 py-1.5 disabled:opacity-50"
-          >
-            {isSaving && (
-              <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />
-            )}
-            <span className="font-['Poppins'] text-[13px] text-white">Save</span>
-          </button>
+      <div className="fixed inset-0 z-[60] flex items-stretch justify-end pointer-events-none" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+        <div className="absolute inset-0 pointer-events-auto" onClick={() => setEditingId(null)} />
+        <div
+          className="relative pointer-events-auto w-[380px] md:w-[420px] my-4 mr-4 md:mr-10 rounded-[24px] border border-white/[0.12] shadow-2xl flex flex-col overflow-hidden animate-in fade-in duration-200"
+          style={panelBg}
+        >
+          {/* Header */}
+          <div className="flex items-center justify-between px-7 pt-6 pb-3 shrink-0">
+            <button onClick={() => setEditingId(null)} className="flex items-center gap-2 text-white/50 hover:text-white transition-colors text-[13px] font-semibold cursor-pointer">
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M15 18l-6-6 6-6" /></svg>
+              Back
+            </button>
+            <button onClick={handleSave} disabled={isSaving}
+              className="flex items-center gap-2 px-4 py-1.5 rounded-full text-[13px] font-bold transition-all disabled:opacity-50 cursor-pointer hover:opacity-90"
+              style={{ background: 'linear-gradient(135deg, #003566, #0967bd)', color: 'white' }}>
+              {isSaving && <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />}
+              Save
+            </button>
+          </div>
+
+          {/* Title Input */}
+          <div className="px-7 shrink-0">
+            <input type="text" placeholder="Note title…" value={editTitle} onChange={(e) => setEditTitle(e.target.value)} autoFocus
+              className="w-full bg-transparent text-[20px] font-bold text-white outline-none placeholder:text-white/20 border-b border-white/[0.08] pb-3" />
+          </div>
+
+          {/* Content */}
+          <div className="flex-1 overflow-y-auto px-7 pt-4 pb-2">
+            <textarea placeholder="Start writing your note…" value={editContent} onChange={(e) => setEditContent(e.target.value)}
+              className="w-full h-full bg-transparent text-[14px] text-white/70 outline-none placeholder:text-white/20 resize-none leading-relaxed min-h-[200px]" />
+          </div>
+
+          {/* Footer */}
+          <div className="px-7 py-3 shrink-0 border-t border-white/[0.06]">
+            <p className="text-[11px] text-white/20 text-right">{editContent.length} characters</p>
+          </div>
         </div>
-
-        {/* Title input */}
-        <input
-          type="text"
-          placeholder="Note title…"
-          value={editTitle}
-          onChange={(e) => setEditTitle(e.target.value)}
-          autoFocus
-          className="bg-transparent font-['Poppins'] font-medium text-[20px] text-white outline-none placeholder:text-white/30 border-b border-white/10 pb-3"
-        />
-
-        {/* Content textarea */}
-        <textarea
-          placeholder="Start writing your note…"
-          value={editContent}
-          onChange={(e) => setEditContent(e.target.value)}
-          className="flex-1 bg-transparent font-['Poppins'] text-[15px] text-white/80 outline-none placeholder:text-white/30 resize-none leading-relaxed min-h-[260px]"
-        />
-
-        {/* Character count */}
-        <p className="font-['Poppins'] text-[11px] text-white/30 text-right">{editContent.length} characters</p>
       </div>
     );
   }
 
   // ── List view ──
   return (
-    <div className="absolute right-4 bottom-24 md:right-12 top-8 md:top-auto md:bottom-24 w-[350px] md:w-[462px] bg-[rgba(20,19,22,0.95)] backdrop-blur-xl rounded-[20px] p-8 border border-white/10 shadow-2xl animate-in fade-in slide-in-from-bottom-4 z-40 flex flex-col gap-6">
-      {/* Header */}
-      <div className="flex items-center justify-between w-full">
-        <h2 className="font-['Poppins'] font-medium text-[24px] text-white">Notes</h2>
-        <button
-          onClick={onClose}
-          type="button"
-          className="relative z-50 cursor-pointer hover:opacity-80 transition-opacity"
-          aria-label="Close"
-        >
-          <IconParkOutlineCloseOne />
-        </button>
-      </div>
-
-      {/* Search Bar */}
-      <div className="bg-[rgba(255,255,255,0.1)] rounded-[20px] w-full px-6 py-3 flex items-center gap-3">
-        <MageSearch />
-        <input
-          type="text"
-          placeholder="Search Notes"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="bg-transparent border-none outline-none text-[16px] text-white placeholder:text-[rgba(255,255,255,0.6)] w-full font-['Poppins']"
-        />
-      </div>
-
-      {/* My Notes Header */}
-      <div className="flex items-center justify-between w-full">
-        <p className="font-['Poppins'] text-[12px] text-[rgba(255,255,255,0.6)] uppercase">My Notes</p>
-        <button
-          onClick={openNew}
-          className="opacity-60 hover:opacity-100 transition-opacity hover:bg-white/10 rounded-full p-1"
-          title="Add note"
-        >
-          <LucidePlus />
-        </button>
-      </div>
-
-      {/* Notes List */}
-      <div className="flex flex-col gap-4 w-full flex-1 overflow-y-auto pr-2 custom-scrollbar">
-        {isLoading ? (
-          <div className="flex items-center justify-center py-10">
-            <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin" />
-          </div>
-        ) : filteredNotes.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-10 gap-3">
-            <svg className="size-[40px] text-white/20" fill="none" viewBox="0 0 24 24">
-              <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" stroke="currentColor" strokeWidth="1.5" />
-              <path d="M14 2v6h6M16 13H8M16 17H8M10 9H8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-            </svg>
-            <p className="font-['Poppins'] text-white/40 text-[14px] text-center">
-              {search ? "No notes match your search" : "No notes yet. Tap + to create one."}
-            </p>
-          </div>
-        ) : (
-          filteredNotes.map((note) => (
-            <div
-              key={note.id}
-              onClick={() => openEdit(note)}
-              className="bg-[rgba(255,255,255,0.05)] hover:bg-[rgba(255,255,255,0.1)] rounded-[20px] p-6 flex flex-col gap-2 transition-colors cursor-pointer group relative"
-            >
-              <h3 className="font-['Poppins'] font-medium text-[16px] text-white">{note.title}</h3>
-              <p className="font-['Poppins'] text-[14px] text-[rgba(255,255,255,0.6)] line-clamp-3">
-                {note.content || <span className="italic text-white/30">Empty note</span>}
-              </p>
-              <div className="flex justify-between items-end mt-2">
-                <span className="font-['Poppins'] font-medium text-[12px] text-[rgba(255,255,255,0.4)]">{note.date}</span>
-                <button
-                  onClick={(e) => deleteNote(note.id, e)}
-                  className="opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-red-500/20 rounded-full text-red-400"
-                  title="Delete note"
-                >
-                  <MingcuteDeleteLine />
-                </button>
-              </div>
+    <div className="fixed inset-0 z-[60] flex items-end justify-end pointer-events-none" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+      <div className="absolute inset-0 pointer-events-auto" onClick={onClose} />
+      <div
+        className="relative pointer-events-auto w-[380px] md:w-[420px] mb-24 mr-4 md:mr-10 max-h-[calc(100vh-120px)] rounded-[24px] border border-white/[0.12] shadow-2xl flex flex-col overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-300"
+        style={panelBg}
+      >
+        {/* Header */}
+        <div className="flex items-center justify-between px-7 pt-6 pb-2 shrink-0">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-[10px] flex items-center justify-center" style={{ background: 'rgba(9,103,189,0.2)' }}>
+              <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="#0967bd" strokeWidth="2" strokeLinecap="round">
+                <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" /><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8" />
+              </svg>
             </div>
-          ))
-        )}
-      </div>
+            <h2 className="text-[18px] font-bold text-white">Notes</h2>
+          </div>
+          <button onClick={onClose} className="w-8 h-8 rounded-full bg-white/[0.06] hover:bg-white/[0.12] flex items-center justify-center transition-colors cursor-pointer">
+            <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round"><path d="M18 6L6 18M6 6l12 12" /></svg>
+          </button>
+        </div>
 
-      {/* Quick-add CTA when empty */}
-      {!isLoading && filteredNotes.length === 0 && !search && (
-        <button
-          onClick={openNew}
-          className="w-full bg-white/10 hover:bg-white/15 transition-colors rounded-[16px] py-3 font-['Poppins'] text-[14px] text-white/70"
-        >
-          + Create your first note
-        </button>
-      )}
+        {/* Search */}
+        <div className="px-7 py-3 shrink-0">
+          <div className="flex items-center gap-3 px-4 py-2.5 rounded-[14px] border border-white/[0.08]" style={{ background: 'rgba(255,255,255,0.04)' }}>
+            <svg viewBox="0 0 24 24" className="w-4 h-4 shrink-0" fill="none" stroke="rgba(255,255,255,0.3)" strokeWidth="2" strokeLinecap="round"><circle cx="11" cy="11" r="8" /><path d="M21 21l-4.35-4.35" /></svg>
+            <input type="text" placeholder="Search notes…" value={search} onChange={(e) => setSearch(e.target.value)}
+              className="bg-transparent text-[13px] text-white/70 placeholder:text-white/25 outline-none w-full" />
+          </div>
+        </div>
+
+        {/* Section Header */}
+        <div className="flex items-center justify-between px-7 py-2 shrink-0">
+          <p className="text-[11px] font-semibold text-white/25 uppercase tracking-wider">My Notes</p>
+          <button onClick={openNew} className="w-7 h-7 rounded-full bg-white/[0.06] hover:bg-white/[0.12] flex items-center justify-center transition-colors cursor-pointer" title="New Note">
+            <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round"><path d="M12 5v14M5 12h14" /></svg>
+          </button>
+        </div>
+
+        {/* Notes List */}
+        <div className="flex-1 overflow-y-auto px-7 pb-6 flex flex-col gap-2.5 min-h-0">
+          {isLoading ? (
+            <div className="flex items-center justify-center py-10"><div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" /></div>
+          ) : filteredNotes.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-10 gap-3">
+              <div className="w-12 h-12 rounded-full bg-white/[0.05] flex items-center justify-center">
+                <svg viewBox="0 0 24 24" className="w-5 h-5" fill="none" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeOpacity="0.2">
+                  <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" /><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8" />
+                </svg>
+              </div>
+              <p className="text-[13px] text-white/25 text-center">{search ? "No notes match your search" : "No notes yet"}</p>
+              {!search && (
+                <button onClick={openNew} className="px-4 py-2 rounded-full text-[12px] font-semibold text-white/50 bg-white/[0.06] hover:bg-white/[0.12] transition-colors cursor-pointer">
+                  + Create your first note
+                </button>
+              )}
+            </div>
+          ) : (
+            filteredNotes.map((note) => (
+              <div key={note.id} onClick={() => openEdit(note)}
+                className="px-4 py-3.5 rounded-[14px] transition-all cursor-pointer group"
+                style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)' }}
+                onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.07)'; }}
+                onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.03)'; }}
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <h3 className="text-[14px] font-semibold text-white/80 line-clamp-1">{note.title}</h3>
+                  <button onClick={(e) => deleteNote(note.id, e)} className="opacity-0 group-hover:opacity-100 transition-opacity shrink-0 p-1 rounded-full hover:bg-red-500/20 cursor-pointer">
+                    <svg viewBox="0 0 24 24" className="w-3.5 h-3.5" fill="none" stroke="#ff6b6b" strokeWidth="2" strokeLinecap="round"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2" /></svg>
+                  </button>
+                </div>
+                <p className="text-[12px] text-white/35 line-clamp-2 mt-1">{note.content || "Empty note"}</p>
+                <p className="text-[10px] text-white/[0.15] mt-2">{note.date}</p>
+              </div>
+            ))
+          )}
+        </div>
+      </div>
     </div>
   );
 }
 
-function BackgroundSelector({ 
-  onSelect, 
+// ─── Background Selector ─────────────────────────────────────────────────────
+
+function BackgroundSelector({
+  onSelect,
   onClose,
-  currentBackground 
-}: { 
-  onSelect: (bg: string) => void, 
-  onClose: () => void,
-  currentBackground: string
+  currentBackground,
+}: {
+  onSelect: (bg: string) => void;
+  onClose: () => void;
+  currentBackground: string;
 }) {
   const backgrounds = [
-    { id: 'train', src: imgScreenshot111, alt: 'Train' },
-    { id: 'snow', src: imgImage29, alt: 'Snow Cafe' },
-    { id: 'space', src: imgImage30, alt: 'Space' },
-    { id: 'jungle', src: imgImage31, alt: 'Jungle' },
+    { id: "train", src: imgScreenshot111, label: "Train Journey" },
+    { id: "snow", src: imgImage29, label: "Snow Cafe" },
+    { id: "space", src: imgImage30, label: "Deep Space" },
+    { id: "jungle", src: imgImage31, label: "Tropical" },
   ];
 
   return (
-    <div className="absolute left-1/2 -translate-x-1/2 bottom-[100px] z-40 animate-in fade-in slide-in-from-bottom-4">
-       <div className="bg-[rgba(20,19,22,0.9)] backdrop-blur-xl rounded-[20px] p-[16px] flex gap-[16px] overflow-x-auto border border-white/10 shadow-2xl">
-          {backgrounds.map((bg) => (
-             <div 
-                key={bg.id}
-                onClick={() => onSelect(bg.src)}
-                className={`relative w-[180px] h-[100px] md:w-[278px] md:h-[156px] rounded-[16px] overflow-hidden cursor-pointer transition-all hover:scale-[1.02] ${currentBackground === bg.src ? 'ring-2 ring-[#50fe00] shadow-lg scale-[1.02]' : 'opacity-70 hover:opacity-100'}`}
-             >
-                <ImageWithFallback 
-                   src={bg.src} 
-                   alt={bg.alt} 
-                   className="absolute inset-0 size-full object-cover"
-                />
-                <div className="absolute inset-0 bg-black/20 hover:bg-transparent transition-colors" />
-             </div>
-          ))}
-       </div>
+    <div className="fixed inset-0 z-[60] flex items-end justify-center pointer-events-none" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+      {/* Backdrop */}
+      <div className="absolute inset-0 pointer-events-auto" onClick={onClose} />
+
+      {/* Selector */}
+      <div
+        className="relative pointer-events-auto mb-24 rounded-[20px] border border-white/[0.12] shadow-2xl p-4 flex gap-3 overflow-x-auto animate-in fade-in slide-in-from-bottom-4 duration-300"
+        style={{ background: 'rgba(0,20,50,0.94)', backdropFilter: 'blur(40px)', WebkitBackdropFilter: 'blur(40px)' }}
+      >
+        {backgrounds.map((bg) => (
+          <button
+            key={bg.id}
+            onClick={() => onSelect(bg.src)}
+            className={`relative w-[160px] h-[100px] md:w-[200px] md:h-[120px] rounded-[14px] overflow-hidden shrink-0 transition-all duration-200 group cursor-pointer ${currentBackground === bg.src ? "ring-2 ring-[#f77f00] scale-[1.02]" : "opacity-60 hover:opacity-100"}`}
+          >
+            <ImageWithFallback src={bg.src} alt={bg.label} className="absolute inset-0 w-full h-full object-cover" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+            <div className="absolute bottom-0 left-0 right-0 p-2.5">
+              <span className="text-[11px] font-semibold text-white">{bg.label}</span>
+            </div>
+            {currentBackground === bg.src && (
+              <div className="absolute top-2 right-2 w-5 h-5 rounded-full bg-[#f77f00] flex items-center justify-center">
+                <svg viewBox="0 0 24 24" className="w-3 h-3" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round"><polyline points="20 6 9 17 4 12" /></svg>
+              </div>
+            )}
+          </button>
+        ))}
+      </div>
     </div>
   );
 }
 
-interface FocusModeProps {
-  onLeave: () => void;
+// ─── Toolbar Button ──────────────────────────────────────────────────────────
+
+function ToolbarBtn({
+  active,
+  label,
+  onClick,
+  title,
+  children,
+}: {
+  active?: boolean;
+  label?: string;
+  onClick: () => void;
+  title: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      title={title}
+      className={`relative flex items-center gap-2 h-12 rounded-full transition-all duration-200 cursor-pointer ${
+        active
+          ? "bg-white shadow-[0_0_20px_rgba(255,255,255,0.25)] px-4"
+          : "w-12 justify-center bg-white/[0.08] hover:bg-white/[0.15]"
+      }`}
+    >
+      <div className={active ? "text-[#003566]" : "text-white"}>
+        {children}
+      </div>
+      {active && label && (
+        <span className="text-[12px] font-bold text-[#003566] pr-1">{label}</span>
+      )}
+    </button>
+  );
 }
 
+// ─── Focus Mode (Main) ──────────────────────────────────────────────────────
+
+interface FocusModeProps { onLeave: () => void; }
+
 export function FocusMode({ onLeave }: FocusModeProps) {
-  const [showTimer, setShowTimer] = useState(false);
-  const [showNotes, setShowNotes] = useState(false);
-  const [showBackgroundSelector, setShowBackgroundSelector] = useState(false);
+  const [activePanel, setActivePanel] = useState<"timer" | "notes" | "bg" | null>(null);
   const [backgroundImage, setBackgroundImage] = useState(imgScreenshot111);
-  const [blockNotifications, setBlockNotifications] = useState(false);
-  const [isSilentMode, setIsSilentMode] = useState(false); // Add Silent Mode toggle state
-  const [reportNotification, setReportNotification] = useState<{ visible: boolean; name: string }>({ visible: false, name: '' });
+  const [blockNotifs, setBlockNotifs] = useState(false);
+  const [isSilentMode, setIsSilentMode] = useState(false);
+  const [elapsed, setElapsed] = useState(0);
+  const [reportNotification, setReportNotification] = useState<{ visible: boolean; name: string }>({ visible: false, name: "" });
+
+  // Elapsed timer
+  useEffect(() => {
+    const id = setInterval(() => setElapsed((p) => p + 1), 1000);
+    return () => clearInterval(id);
+  }, []);
 
   const toggleSilentMode = () => {
-    const newState = !isSilentMode;
-    setIsSilentMode(newState);
-    if (newState) {
-       toast.success("Silent Mode activated");
-    } else {
-       toast.info("Focus Mode activated");
-    }
+    const next = !isSilentMode;
+    setIsSilentMode(next);
+    toast[next ? "success" : "info"](next ? "Silent Mode activated" : "Focus Mode activated");
   };
 
-  const handleReportSubmitted = (participantName: string) => {
-    setReportNotification({ visible: true, name: participantName });
-  };
+  const togglePanel = useCallback((panel: "timer" | "notes" | "bg") => {
+    setActivePanel((prev) => (prev === panel ? null : panel));
+  }, []);
 
-  const closeReportNotification = () => {
-    setReportNotification({ visible: false, name: '' });
-  };
+  const closePanel = useCallback(() => {
+    setActivePanel(null);
+  }, []);
 
-  // If Silent Mode is active, render the Silent Mode View
   if (isSilentMode) {
     return (
       <>
-        <SilentModeView 
-          onLeave={onLeave} 
-          onBackToFocus={toggleSilentMode}
-          onReportSubmitted={handleReportSubmitted}
-        />
-        <PostReportNotification 
-          isVisible={reportNotification.visible}
-          participantName={reportNotification.name}
-          onClose={closeReportNotification}
-        />
+        <SilentModeView onLeave={onLeave} onBackToFocus={toggleSilentMode} onReportSubmitted={(name: string) => setReportNotification({ visible: true, name })} />
+        <PostReportNotification isVisible={reportNotification.visible} participantName={reportNotification.name} onClose={() => setReportNotification({ visible: false, name: "" })} />
       </>
     );
   }
 
-  const closeAll = () => {
-    setShowTimer(false);
-    setShowNotes(false);
-    setShowBackgroundSelector(false);
-  }
-
-  const toggleTimer = () => {
-    const newState = !showTimer;
-    closeAll();
-    setShowTimer(newState);
-  };
-
-  const toggleNotes = () => {
-    const newState = !showNotes;
-    closeAll();
-    setShowNotes(newState);
-  };
-  
-  const toggleBackgroundSelector = () => {
-    const newState = !showBackgroundSelector;
-    closeAll();
-    setShowBackgroundSelector(newState);
-  };
-
-  const toggleNotifications = () => {
-    const newState = !blockNotifications;
-    setBlockNotifications(newState);
-    if (newState) {
-       toast.success("Notifications blocked");
-    } else {
-       toast.info("Notifications allowed");
-    }
-  };
-
-  const handleMusicClick = () => {
-     toast.info("Music player is currently disabled");
-  };
-
   return (
-    <div className="fixed inset-0 z-50 bg-[#141316] flex flex-col overflow-hidden font-['Poppins']">
-      {/* Background Image */}
-      <div className="absolute inset-0 transition-all duration-700 ease-in-out">
-        <ImageWithFallback 
-          key={backgroundImage} 
-          alt="Focus Background" 
-          className="size-full object-cover animate-in fade-in duration-700" 
-          src={backgroundImage} 
+    <div className="fixed inset-0 z-50 flex flex-col overflow-hidden" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+
+      {/* ─── Background ─── */}
+      <div className="absolute inset-0">
+        <ImageWithFallback key={backgroundImage} alt="Focus Background" className="w-full h-full object-cover animate-in fade-in duration-700" src={backgroundImage} />
+        <div className="absolute inset-x-0 top-0 h-[200px] bg-gradient-to-b from-black/50 to-transparent pointer-events-none" />
+        <div className="absolute inset-x-0 bottom-0 h-[300px] bg-gradient-to-t from-black/70 to-transparent pointer-events-none" />
+      </div>
+
+      {/* ─── Top Bar ─── */}
+      <div className="relative z-10 flex items-center justify-between px-6 md:px-10 pt-6 pb-4">
+        {/* Left */}
+        <div className="flex items-center gap-4">
+          <button onClick={onLeave} className="w-9 h-9 rounded-full bg-white/[0.1] hover:bg-white/[0.2] flex items-center justify-center transition-all backdrop-blur-sm border border-white/[0.1] cursor-pointer">
+            <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round"><path d="M19 12H5M12 5l-7 7 7 7" /></svg>
+          </button>
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="text-[15px] font-bold text-white">Focus Mode</span>
+              <span className="w-1.5 h-1.5 rounded-full bg-[#22c55e] animate-pulse" />
+            </div>
+            <span className="text-[11px] text-white/40">Session in progress</span>
+          </div>
+        </div>
+
+        {/* Right */}
+        <div className="flex items-center gap-3">
+          <div className="hidden sm:flex items-center gap-2 px-4 py-2 rounded-full border border-white/[0.1] bg-white/[0.05] backdrop-blur-sm">
+            <svg viewBox="0 0 24 24" className="w-3.5 h-3.5" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeOpacity="0.5">
+              <circle cx="12" cy="12" r="10" /><path d="M12 6v6l4 2" />
+            </svg>
+            <span className="text-[13px] font-semibold text-white/60 tabular-nums">{fmtElapsed(elapsed)}</span>
+          </div>
+          <div className="flex items-center gap-1.5 px-3 py-2 rounded-full border border-white/[0.1] bg-white/[0.05] backdrop-blur-sm">
+            <span className="w-[5px] h-[5px] rounded-full bg-[#22c55e] animate-pulse" />
+            <span className="text-[11px] font-semibold text-white/50">128 online</span>
+          </div>
+        </div>
+      </div>
+
+      {/* ─── Center area (spacer) ─── */}
+      <div className="flex-1" />
+
+      {/* ─── Overlay Panels (rendered at root level with fixed positioning) ─── */}
+      {activePanel === "timer" && <TimerPanel onClose={closePanel} />}
+      {activePanel === "notes" && <NotesPanel onClose={closePanel} />}
+      {activePanel === "bg" && (
+        <BackgroundSelector
+          onSelect={(bg) => setBackgroundImage(bg)}
+          onClose={closePanel}
+          currentBackground={backgroundImage}
         />
-        {/* Gradient Overlay for better text visibility at bottom */}
-        <div className="absolute inset-x-0 bottom-0 h-[300px] bg-gradient-to-t from-[#141316]/90 to-transparent pointer-events-none" />
-      </div>
+      )}
 
-      {/* Main Content Area */}
-      <div className="flex-1 relative z-10 p-8 flex items-center justify-center">
-          {/* Overlays */}
-          {showTimer && <TimerOverlay onClose={() => setShowTimer(false)} />}
-          {showNotes && <NotesOverlay onClose={() => setShowNotes(false)} />}
-          
-          {/* Background Selector */}
-          {showBackgroundSelector && (
-            <BackgroundSelector 
-               onSelect={(bg) => setBackgroundImage(bg)} 
-               onClose={() => setShowBackgroundSelector(false)}
-               currentBackground={backgroundImage}
-            />
-          )}
-      </div>
-
-      {/* Footer Bar */}
-      <div className="relative z-20 w-full px-6 md:px-12 pb-8 pt-4 flex flex-col md:flex-row items-center justify-between gap-6 md:gap-12">
-        
-        {/* Left: Time & Mode */}
-        <div className="flex items-center gap-[16px] text-white shrink-0 bg-black/20 backdrop-blur-md px-6 py-3 rounded-full border border-white/5">
-          <p className="text-[16px] text-[rgba(255,255,255,0.7)]">
-            <span className="font-medium text-white">Time Elapsed: </span>
-            00:01:29
-          </p>
-          
-          {/* Vertical Separator */}
-          <div className="h-[20px] w-[1px] bg-white/30" />
-          
-          <p className="font-medium text-[16px] text-white">Focus Mode</p>
-        </div>
-
-        {/* Center: Navigation Bar */}
-        <div className="flex items-center justify-center w-full max-w-[374px]">
-           <div className="bg-[rgba(255,255,255,0.1)] backdrop-blur-xl flex gap-[20px] px-6 py-2 h-[64px] items-center justify-center rounded-full w-full border border-white/10 shadow-2xl">
-              {/* Timer Button */}
-              <button 
-                onClick={toggleTimer}
-                className={`flex items-center justify-center rounded-full size-[48px] transition-all duration-300 ${showTimer ? 'bg-white text-black scale-110 shadow-[0_0_15px_rgba(255,255,255,0.5)]' : 'hover:bg-white/10 text-white'}`} 
-                title="Timer"
-              >
-                <div className={`flex items-center justify-center size-[24px] ${showTimer ? 'brightness-0 invert' : ''}`}>
-                   <Group />
-                </div>
-              </button>
-              
-              {/* Notifications Button */}
-              <button 
-                onClick={toggleNotifications}
-                className={`flex items-center justify-center rounded-full size-[48px] transition-all duration-300 ${blockNotifications ? 'bg-white text-black scale-110 shadow-[0_0_15px_rgba(255,255,255,0.5)]' : 'hover:bg-white/10 text-white'}`} 
-                title={blockNotifications ? "Unblock Notifications" : "Block Notifications"}
-              >
-                <div className={`${blockNotifications ? 'brightness-0 invert' : ''}`}>
-                   <SvgRepoIconCarrier />
-                </div>
-              </button>
-              
-              {/* Notes Button */}
-              <button 
-                onClick={toggleNotes}
-                className={`flex items-center justify-center rounded-full size-[48px] transition-all duration-300 ${showNotes ? 'bg-white text-black scale-110 shadow-[0_0_15px_rgba(255,255,255,0.5)]' : 'hover:bg-white/10 text-white'}`}
-                title="Notes"
-              >
-                 <div className={`flex-none scale-y-[-100%] ${showNotes ? 'brightness-0 invert' : ''}`}>
-                    <NotesFooterIcon />
-                 </div>
-              </button>
-              
-              {/* Background Button */}
-              <button 
-                onClick={toggleBackgroundSelector}
-                className={`flex items-center justify-center rounded-full size-[48px] transition-all duration-300 ${showBackgroundSelector ? 'bg-white text-black scale-110 shadow-[0_0_15px_rgba(255,255,255,0.5)]' : 'hover:bg-white/10 text-white'}`}
-                title="Change Background"
-              >
-                 <div className={`${showBackgroundSelector ? 'brightness-0 invert' : ''}`}>
-                    <BackgroundIcon />
-                 </div>
-              </button>
-              
-              {/* Silent Mode Toggle Button */}
-              <button 
-                onClick={toggleSilentMode}
-                className={`flex items-center justify-center rounded-full size-[48px] transition-all duration-300 hover:bg-white/10 text-white`}
-                title="Activate Silent Mode"
-              >
-                 <svg className="size-[24px]" fill="none" viewBox="0 0 24 24">
-                   <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z" fill="white" fillOpacity="0.8"/>
-                 </svg>
-              </button>
-           </div>
-        </div>
-
-        {/* Right: Leave Button */}
-        <button 
-          onClick={onLeave}
-          className="bg-[#cc3636] flex h-[48px] items-center justify-center px-[28px] rounded-full hover:bg-[#b02e2e] transition-all shadow-lg shrink-0 hover:scale-105 active:scale-95"
+      {/* ─── Bottom Toolbar ─── */}
+      <div className="relative z-10 w-full px-4 md:px-10 pb-6 pt-2 flex flex-wrap items-center justify-center gap-3 md:gap-4">
+        {/* Toolbar pill */}
+        <div
+          className="flex items-center gap-1.5 px-3 py-2 rounded-full border border-white/[0.1] shadow-2xl"
+          style={{ background: 'rgba(0,20,50,0.75)', backdropFilter: 'blur(40px)', WebkitBackdropFilter: 'blur(40px)' }}
         >
-          <p className="font-semibold text-[16px] text-white tracking-wide">Leave Room</p>
+          {/* Timer */}
+          <ToolbarBtn active={activePanel === "timer"} label="Timer" onClick={() => togglePanel("timer")} title="Focus Timer">
+            <svg viewBox="0 0 24 24" className="w-5 h-5" fill="currentColor">
+              <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2zm4.2 14.2L11 13V7h1.5v5.2l4.5 2.7-.8 1.3z" />
+            </svg>
+          </ToolbarBtn>
+
+          {/* Notes */}
+          <ToolbarBtn active={activePanel === "notes"} label="Notes" onClick={() => togglePanel("notes")} title="Notes">
+            <svg viewBox="0 0 24 24" className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+              <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" /><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8" />
+            </svg>
+          </ToolbarBtn>
+
+          {/* Block Notifications */}
+          <ToolbarBtn
+            active={blockNotifs}
+            label={blockNotifs ? "Blocked" : undefined}
+            onClick={() => {
+              const next = !blockNotifs;
+              setBlockNotifs(next);
+              toast[next ? "success" : "info"](next ? "Notifications blocked" : "Notifications allowed");
+            }}
+            title={blockNotifs ? "Unblock Notifications" : "Block Notifications"}
+          >
+            <svg viewBox="0 0 24 24" className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              {blockNotifs ? (
+                <>
+                  <path d="M13.73 21a2 2 0 01-3.46 0" />
+                  <path d="M18.63 13A17.89 17.89 0 0118 8" />
+                  <path d="M6.26 6.26A5.86 5.86 0 006 8c0 7-3 9-3 9h14" />
+                  <path d="M18 8a6 6 0 00-9.33-5" />
+                  <line x1="1" y1="1" x2="23" y2="23" />
+                </>
+              ) : (
+                <>
+                  <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9" />
+                  <path d="M13.73 21a2 2 0 01-3.46 0" />
+                </>
+              )}
+            </svg>
+          </ToolbarBtn>
+
+          {/* Background */}
+          <ToolbarBtn active={activePanel === "bg"} label="Scene" onClick={() => togglePanel("bg")} title="Change Background">
+            <svg viewBox="0 0 24 24" className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="8.5" cy="8.5" r="1.5" /><path d="M21 15l-5-5L5 21" />
+            </svg>
+          </ToolbarBtn>
+
+          {/* Divider */}
+          <div className="w-px h-8 bg-white/[0.1] mx-0.5" />
+
+          {/* Silent Mode */}
+          <ToolbarBtn onClick={toggleSilentMode} title="Switch to Silent Mode">
+            <svg viewBox="0 0 24 24" className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M11 5L6 9H2v6h4l5 4V5z" />
+              <line x1="23" y1="9" x2="17" y2="15" />
+              <line x1="17" y1="9" x2="23" y2="15" />
+            </svg>
+          </ToolbarBtn>
+
+          {/* Music */}
+          <ToolbarBtn onClick={() => toast.info("Music player coming soon")} title="Music">
+            <svg viewBox="0 0 24 24" className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M9 18V5l12-2v13" /><circle cx="6" cy="18" r="3" /><circle cx="18" cy="16" r="3" />
+            </svg>
+          </ToolbarBtn>
+        </div>
+
+        {/* Leave button */}
+        <button
+          onClick={onLeave}
+          className="h-12 px-7 rounded-full flex items-center gap-2 text-[14px] font-bold text-white transition-all hover:scale-105 active:scale-95 shadow-lg shrink-0 cursor-pointer"
+          style={{ background: 'linear-gradient(135deg, #cc3636, #e63946)', boxShadow: '0 4px 20px rgba(204,54,54,0.4)' }}
+        >
+          <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9" />
+          </svg>
+          Leave
         </button>
       </div>
     </div>

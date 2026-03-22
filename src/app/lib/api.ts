@@ -9,15 +9,62 @@ import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
 export const BASE_URL = `https://${projectId}.supabase.co/functions/v1/make-server-a0923c49`;
 
-// ─── Supabase Auth client (singleton) ──────────────────────────────────────────
-let _supabase: SupabaseClient | null = null;
+// ─── Supabase Auth client (true singleton) ──────────────────────────────────────
+//
+// Strategy: Create the client EXACTLY ONCE per JavaScript runtime, regardless of
+// how many times this module is re-evaluated (e.g., Vite/Figma Make HMR).
+//
+//  1. `import.meta.hot.data` — Vite's official HMR state bag. The `.dispose()`
+//     callback fires just before the module is replaced, saving the live client
+//     into `hot.data` so the incoming module evaluation can pick it up.
+//  2. `globalThis.__learnova_sb` — cross-reload fallback for environments where
+//     `import.meta.hot` is unavailable (production, non-Vite runtimes).
+//  3. Module-level `const` — fast in-module reference; never calls `createClient`
+//     if either of the above already holds a client.
+
+const _HOT_KEY  = 'supabaseClient';
+const _GLOB_KEY = '__learnova_sb__';
+
+function _getOrCreateClient(): SupabaseClient {
+  // Check Vite HMR data bag first (fastest path during hot reloads)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const hot = (import.meta as any).hot;
+  if (hot?.data?.[_HOT_KEY]) return hot.data[_HOT_KEY] as SupabaseClient;
+
+  // Check globalThis (survives across module re-evaluations in same JS context)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  if ((globalThis as any)[_GLOB_KEY]) return (globalThis as any)[_GLOB_KEY] as SupabaseClient;
+
+  // First time ever — create the client
+  // Use a custom storageKey so our GoTrueClient gets its own storage namespace,
+  // separate from the default `sb-<project>-auth-token` key used by
+  // `figma:foundry-client-api` (which creates its own client at entrypoint load
+  // time). Two clients sharing the SAME storage key trigger the "Multiple
+  // GoTrueClient instances" warning; different keys each start at instanceID=0.
+  const client = createClient(`https://${projectId}.supabase.co`, publicAnonKey, {
+    auth: { storageKey: 'learnova_auth_v1' },
+  });
+
+  // Persist in globalThis so any future evaluations skip createClient
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  (globalThis as any)[_GLOB_KEY] = client;
+  return client;
+}
+
+// Eagerly evaluated — runs once per module load, NOT lazily
+const _supabase: SupabaseClient = _getOrCreateClient();
+
+// Register Vite HMR dispose hook: save the live client so the next module
+// evaluation can recover it instead of calling createClient again.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+if ((import.meta as any).hot) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  (import.meta as any).hot.dispose((data: any) => {
+    data[_HOT_KEY] = _supabase;
+  });
+}
+
 export function getSupabaseClient(): SupabaseClient {
-  if (!_supabase) {
-    _supabase = createClient(
-      `https://${projectId}.supabase.co`,
-      publicAnonKey
-    );
-  }
   return _supabase;
 }
 
@@ -39,6 +86,15 @@ export function getAccessToken(): string | null {
   _accessToken = localStorage.getItem('learnova_token');
   return _accessToken;
 }
+
+// Auto-sync _accessToken whenever Supabase silently refreshes the JWT.
+// This replaces the per-request getSession() call in apiFetch, which was slow
+// (an async round-trip on every API call) and unnecessary.
+_supabase.auth.onAuthStateChange((_event, session) => {
+  if (session?.access_token && session.access_token !== _accessToken) {
+    setAccessToken(session.access_token);
+  }
+});
 
 export function setCurrentUser(user: any) {
   if (user) {
@@ -64,6 +120,7 @@ async function apiFetch<T = any>(
   options: RequestInit = {},
   usePublicKey = false
 ): Promise<T> {
+  // _accessToken is kept fresh by the onAuthStateChange listener above.
   const token = getAccessToken();
   const authHeader = token
     ? `Bearer ${token}`
@@ -82,7 +139,9 @@ async function apiFetch<T = any>(
   try { body = await res.json(); } catch { body = {}; }
 
   if (!res.ok) {
-    throw new Error(body?.error ?? `API error ${res.status}`);
+    // Handle both our server's { error: "..." } and Supabase gateway's { message: "..." }
+    const message = body?.error ?? body?.message ?? `API error ${res.status}`;
+    throw new Error(message);
   }
   return body as T;
 }

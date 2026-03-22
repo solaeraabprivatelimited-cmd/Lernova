@@ -1,85 +1,13 @@
 import React, { useState } from "react";
-import svgPaths from "@/imports/svg-w1ctq7f27e";
-import attachSvgPaths from "@/imports/svg-rie42b8guu";
-import addSvgPaths from "@/imports/svg-ao7iptlbn4";
 import imgImage28 from "figma:asset/605a593a8aec5bcd93a6caef17da90dbf55364dc.png";
 import imgFrame1171275609 from "figma:asset/d0b5e8618139abd2e6c665600d3134442c6ea4a3.png";
 import { ImageWithFallback } from "../figma/ImageWithFallback";
-
-/* ── SVG Icon Components (from Figma import) ── */
-
-function LikeIcon({ filled }: { filled?: boolean }) {
-  return (
-    <div className="relative shrink-0 size-[24px]">
-      <svg className="block size-full" fill="none" viewBox="0 0 24 24">
-        {filled ? (
-          <>
-            <path d={svgPaths.p2a838600} fill="#F77F00" />
-            <path
-              clipRule="evenodd"
-              d={svgPaths.p34820a00}
-              fill="#F77F00"
-              fillRule="evenodd"
-            />
-          </>
-        ) : (
-          <path d={svgPaths.p3adbf600} fill="#F77F00" />
-        )}
-      </svg>
-    </div>
-  );
-}
-
-function DislikeIcon({ filled }: { filled?: boolean }) {
-  return (
-    <div className="relative shrink-0 size-[24px] -scale-y-100">
-      <svg className="block size-full" fill="none" viewBox="0 0 24 24">
-        {filled ? (
-          <>
-            <path d={svgPaths.p2a838600} fill="#F77F00" />
-            <path
-              clipRule="evenodd"
-              d={svgPaths.p34820a00}
-              fill="#F77F00"
-              fillRule="evenodd"
-            />
-          </>
-        ) : (
-          <path d={svgPaths.p3adbf600} fill="#F77F00" />
-        )}
-      </svg>
-    </div>
-  );
-}
-
-function PlayIcon() {
-  return (
-    <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 size-[24px]">
-      <svg className="block size-full" fill="none" viewBox="0 0 24 24">
-        <path d={svgPaths.p1c33f400} fill="white" />
-      </svg>
-    </div>
-  );
-}
-
-function PlusIcon() {
-  return (
-    <div className="relative shrink-0 size-[24px]">
-      <svg className="block size-full" fill="none" viewBox="0 0 24 24">
-        <path
-          d="M12 5V19M5 12H19"
-          stroke="#003566"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth="2"
-        />
-      </svg>
-    </div>
-  );
-}
+import {
+  ArrowLeft, BookOpen, Plus, ThumbsUp, ThumbsDown, Play, FileText, X,
+  Image as ImageIcon, Sparkles, Clock, User
+} from "lucide-react";
 
 /* ── Types ── */
-
 interface WellnessArticle {
   id: string;
   type: "article" | "video";
@@ -93,303 +21,158 @@ interface WellnessArticle {
 }
 
 /* ── Mock Data ── */
-
 const initialArticles: WellnessArticle[] = [
-  {
-    id: "1",
-    type: "article",
-    title: "5 Ways to Manage Exam Stress Effectively",
-    description:
-      "Exams can be overwhelming, but managing stress is key to performing well. Learn five proven strategies including deep breathing exercises, structured study plans, and mindfulness techniques that help you stay calm and focused during exam season.",
-    thumbnail:
-      "https://images.unsplash.com/photo-1578264141195-263ee8c797a0?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxzdW5zZXQlMjBtZWRpdGF0aW9uJTIwd2VsbG5lc3N8ZW58MXx8fHwxNzcxMTcyMjkyfDA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral",
-    author: "Jack Sparrow",
-    date: "July 15, 2024",
-    likes: 24,
-    dislikes: 2,
-  },
-  {
-    id: "2",
-    type: "video",
-    title: "Guided Meditation for Students: 10 Minutes to Calm",
-    description:
-      "This guided meditation video is designed specifically for students. Take 10 minutes out of your day to reset, relax, and refocus. Perfect for study breaks or before bedtime to improve sleep quality.",
-    thumbnail:
-      "https://images.unsplash.com/photo-1764889743612-9e3761d787f7?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHx5b2dhJTIwbWluZGZ1bG5lc3MlMjBjYWxtfGVufDF8fHx8MTc3MTE2NjYyMHww&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral",
-    author: "Sarah Johnson",
-    date: "August 3, 2024",
-    likes: 56,
-    dislikes: 1,
-  },
-  {
-    id: "3",
-    type: "article",
-    title: "The Power of Gratitude: How It Changes Your Brain",
-    description:
-      "Research shows that practicing gratitude regularly can rewire your brain for happiness. Discover the science behind gratitude journaling and how just five minutes a day can boost your mood and academic performance.",
-    thumbnail:
-      "https://images.unsplash.com/photo-1617844580965-4cb9f0ba3e6e?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxuYXR1cmUlMjBwZWFjZWZ1bCUyMGZvcmVzdHxlbnwxfHx8fDE3NzExNzIyOTN8MA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral",
-    author: "Dr. Emily Chen",
-    date: "September 12, 2024",
-    likes: 42,
-    dislikes: 0,
-  },
-  {
-    id: "4",
-    type: "video",
-    title: "Study Focus Music: Lofi Beats for Deep Concentration",
-    description:
-      "Enhance your study sessions with carefully curated lofi beats. This playlist is scientifically designed to improve concentration, reduce anxiety, and help you enter a state of flow while studying.",
-    thumbnail:
-      "https://images.unsplash.com/photo-1763575648841-8793ad446b89?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxzdHVkZW50JTIwc3R1ZHlpbmclMjBmb2N1c3xlbnwxfHx8fDE3NzExNzIyOTN8MA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral",
-    author: "Alex Rivera",
-    date: "October 8, 2024",
-    likes: 89,
-    dislikes: 3,
-  },
+  { id: "1", type: "article", title: "5 Ways to Manage Exam Stress Effectively", description: "Exams can be overwhelming, but managing stress is key to performing well. Learn five proven strategies including deep breathing exercises, structured study plans, and mindfulness techniques that help you stay calm and focused during exam season.", thumbnail: "https://images.unsplash.com/photo-1578264141195-263ee8c797a0?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxzdW5zZXQlMjBtZWRpdGF0aW9uJTIwd2VsbG5lc3N8ZW58MXx8fHwxNzcxMTcyMjkyfDA&ixlib=rb-4.1.0&q=80&w=1080", author: "Jack Sparrow", date: "July 15, 2024", likes: 24, dislikes: 2 },
+  { id: "2", type: "video", title: "Guided Meditation for Students: 10 Minutes to Calm", description: "This guided meditation video is designed specifically for students. Take 10 minutes out of your day to reset, relax, and refocus. Perfect for study breaks or before bedtime to improve sleep quality.", thumbnail: "https://images.unsplash.com/photo-1764889743612-9e3761d787f7?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHx5b2dhJTIwbWluZGZ1bG5lc3MlMjBjYWxtfGVufDF8fHx8MTc3MTE2NjYyMHww&ixlib=rb-4.1.0&q=80&w=1080", author: "Sarah Johnson", date: "August 3, 2024", likes: 56, dislikes: 1 },
+  { id: "3", type: "article", title: "The Power of Gratitude: How It Changes Your Brain", description: "Research shows that practicing gratitude regularly can rewire your brain for happiness. Discover the science behind gratitude journaling and how just five minutes a day can boost your mood and academic performance.", thumbnail: "https://images.unsplash.com/photo-1617844580965-4cb9f0ba3e6e?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxuYXR1cmUlMjBwZWFjZWZ1bCUyMGZvcmVzdHxlbnwxfHx8fDE3NzExNzIyOTN8MA&ixlib=rb-4.1.0&q=80&w=1080", author: "Dr. Emily Chen", date: "September 12, 2024", likes: 42, dislikes: 0 },
+  { id: "4", type: "video", title: "Study Focus Music: Lofi Beats for Deep Concentration", description: "Enhance your study sessions with carefully curated lofi beats. This playlist is scientifically designed to improve concentration, reduce anxiety, and help you enter a state of flow while studying.", thumbnail: "https://images.unsplash.com/photo-1763575648841-8793ad446b89?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxzdHVkZW50JTIwc3R1ZHlpbmclMjBmb2N1c3xlbnwxfHx8fDE3NzExNzIyOTN8MA&ixlib=rb-4.1.0&q=80&w=1080", author: "Alex Rivera", date: "October 8, 2024", likes: 89, dislikes: 3 },
 ];
 
-/* ── Post Article Modal ── */
-
-interface PostArticleModalProps {
-  onClose: () => void;
-  onPost: (article: Omit<WellnessArticle, "id" | "likes" | "dislikes">) => void;
+/* ── Modal Backdrop ── */
+function ModalBackdrop({ children, onClose }: { children: React.ReactNode; onClose: () => void }) {
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-[#001d3d]/40 backdrop-blur-sm" onClick={onClose} />
+      {children}
+    </div>
+  );
 }
 
-function PostArticleModal({ onClose, onPost }: PostArticleModalProps) {
+/* ── Post Article Modal ── */
+function PostArticleModal({ onClose, onPost }: { onClose: () => void; onPost: (a: Omit<WellnessArticle, "id" | "likes" | "dislikes">) => void }) {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [attachedImages, setAttachedImages] = useState<string[]>([]);
 
   const handleSubmit = () => {
     if (!title.trim() || !content.trim()) return;
-
     onPost({
-      type: attachedImages.length > 0 ? "article" : "article",
-      title: title.trim(),
-      description: content.trim(),
-      thumbnail: attachedImages[0] ||
-        "https://images.unsplash.com/photo-1578264141195-263ee8c797a0?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxzdW5zZXQlMjBtZWRpdGF0aW9uJTIwd2VsbG5lc3N8ZW58MXx8fHwxNzcxMTcyMjkyfDA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral",
-      author: "Jack Sparrow",
-      date: new Date().toLocaleDateString("en-US", {
-        month: "long",
-        day: "numeric",
-        year: "numeric",
-      }),
+      type: "article", title: title.trim(), description: content.trim(),
+      thumbnail: attachedImages[0] || "https://images.unsplash.com/photo-1578264141195-263ee8c797a0?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxzdW5zZXQlMjBtZWRpdGF0aW9uJTIwd2VsbG5lc3N8ZW58MXx8fHwxNzcxMTcyMjkyfDA&ixlib=rb-4.1.0&q=80&w=1080",
+      author: "Jack Sparrow", date: new Date().toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" }),
     });
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter" && !e.shiftKey && title.trim() && content.trim()) {
-      e.preventDefault();
-      handleSubmit();
-    }
-  };
-
-  const handleAddImage = () => {
-    // Simulate adding a sample image
-    setAttachedImages((prev) => [...prev, imgImage28]);
-  };
-
-  const handleRemoveImage = (index: number) => {
-    setAttachedImages((prev) => prev.filter((_, i) => i !== index));
-  };
-
   return (
-    <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-[20px] shadow-[0px_4px_50px_0px_rgba(0,0,0,0.1)] w-full max-w-[600px] p-[24px] flex flex-col gap-[24px] items-end">
-        {/* Title */}
-        <p className="font-['Poppins'] font-semibold text-[24px] text-black w-full">
-          Post New Article
-        </p>
-
-        {/* Input Fields */}
-        <div className="flex flex-col gap-[4px] items-start w-full">
-          {/* Article Title Input */}
-          <div className="bg-white rounded-[10px] shadow-[0px_4px_29.4px_0px_rgba(0,0,0,0.1)] w-full">
-            <div className="flex items-start p-[16px] w-full">
-              <input
-                type="text"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                onKeyDown={handleKeyDown}
-                placeholder="Article Title"
-                className="font-['Poppins'] font-medium text-[16px] text-black/80 bg-transparent outline-none border-none w-full placeholder:text-black/80"
-              />
-            </div>
+    <ModalBackdrop onClose={onClose}>
+      <div className="relative bg-white rounded-[24px] shadow-2xl p-7 w-full max-w-[560px] z-10 animate-in fade-in zoom-in-95 duration-200">
+        <div className="flex items-center gap-3 mb-6">
+          <div className="w-10 h-10 rounded-[14px] flex items-center justify-center"
+            style={{ background: 'linear-gradient(135deg, #003566, #0967bd)' }}>
+            <FileText className="w-5 h-5 text-white" />
           </div>
-
-          {/* Article Content Textarea */}
-          <div className="bg-white h-[222px] rounded-[10px] shadow-[0px_4px_29.4px_0px_rgba(0,0,0,0.1)] w-full">
-            <div className="flex items-start p-[16px] size-full">
-              <textarea
-                value={content}
-                onChange={(e) => setContent(e.target.value)}
-                placeholder="Article Content"
-                className="font-['Poppins'] text-[16px] text-black/70 leading-[21px] bg-transparent outline-none border-none w-full h-full resize-none placeholder:text-black/70"
-              />
-            </div>
-          </div>
+          <h2 className="text-[22px] font-bold text-[#003566]" style={{ fontFamily: "'DM Serif Display', serif" }}>Post New Article</h2>
+          <button onClick={onClose} className="ml-auto w-8 h-8 rounded-[10px] hover:bg-[#f5f7fa] flex items-center justify-center text-[#94a3b8] hover:text-[#003566] transition-colors cursor-pointer">
+            <X className="w-4 h-4" />
+          </button>
         </div>
 
-        {/* Attached Images Gallery */}
-        <div className="flex gap-[24px] items-center w-full">
-          {attachedImages.map((img, index) => (
-            <div
-              key={index}
-              className="h-[113px] overflow-clip relative rounded-[20px] shrink-0 w-[112px]"
-            >
-              <img
-                alt="Attached"
-                className="absolute inset-0 max-w-none object-cover pointer-events-none size-full"
-                src={img}
-              />
-              {/* Close / Remove Button */}
-              <button
-                type="button"
-                onClick={() => handleRemoveImage(index)}
-                className="absolute left-[90px] top-[7px] size-[13px] cursor-pointer z-10"
-              >
-                <svg className="block size-full" fill="none" viewBox="0 0 13 13">
-                  <rect fill="white" height="13" rx="6.5" width="13" />
-                  <path
-                    d={addSvgPaths.p11434fc0}
-                    stroke="black"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="0.85"
-                  />
-                </svg>
+        <div className="space-y-3 mb-4">
+          <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Article Title"
+            className="w-full h-[44px] border border-[#e2e8f0] rounded-[12px] px-4 text-[14px] font-bold outline-none focus:border-[#0967bd] focus:ring-1 focus:ring-[#0967bd]/20 transition-all text-[#1e293b] placeholder:text-[#94a3b8] bg-white" />
+          <textarea value={content} onChange={(e) => setContent(e.target.value)} placeholder="Write your article content..."
+            rows={7} className="w-full border border-[#e2e8f0] rounded-[12px] px-4 py-3 text-[14px] outline-none focus:border-[#0967bd] focus:ring-1 focus:ring-[#0967bd]/20 transition-all text-[#1e293b] placeholder:text-[#94a3b8] bg-white resize-none leading-relaxed" />
+        </div>
+
+        {/* Attached Images */}
+        <div className="flex items-center gap-3 mb-5">
+          {attachedImages.map((img, i) => (
+            <div key={i} className="relative w-[80px] h-[80px] rounded-[14px] overflow-hidden border border-[#edf0f4]">
+              <img src={img} alt="Attached" className="w-full h-full object-cover" />
+              <button onClick={() => setAttachedImages((p) => p.filter((_, j) => j !== i))}
+                className="absolute top-1 right-1 w-5 h-5 bg-white/90 rounded-full flex items-center justify-center cursor-pointer shadow-sm">
+                <X className="w-3 h-3 text-[#1e293b]" />
               </button>
             </div>
           ))}
-
-          {/* Add Image Button */}
-          <button
-            type="button"
-            onClick={handleAddImage}
-            className="overflow-clip relative shrink-0 size-[47px] cursor-pointer hover:scale-105 transition-transform"
-          >
-            <svg className="block size-full" fill="none" viewBox="0 0 47 47">
-              <circle cx="23.5" cy="23.5" r="23.5" fill="#F77F00" fillOpacity="0.2" />
-              <path
-                d={addSvgPaths.pa4ae8c0}
-                stroke="#F77F00"
-                strokeLinecap="square"
-                strokeLinejoin="round"
-                strokeWidth="2"
-                transform="translate(5.875, 5.875)"
-              />
-            </svg>
+          <button onClick={() => setAttachedImages((p) => [...p, imgImage28])}
+            className="w-[80px] h-[80px] rounded-[14px] border-2 border-dashed border-[#e2e8f0] hover:border-[#f77f00] flex flex-col items-center justify-center cursor-pointer transition-colors group">
+            <ImageIcon className="w-5 h-5 text-[#c1c7ce] group-hover:text-[#f77f00] transition-colors" />
+            <span className="text-[9px] font-medium text-[#c1c7ce] group-hover:text-[#f77f00] mt-1 transition-colors">Add Image</span>
           </button>
         </div>
 
-        {/* Action Buttons */}
-        <div className="flex gap-[16px] items-center w-[337px]">
-          {/* Cancel */}
-          <button
-            type="button"
-            onClick={onClose}
-            className="flex-1 h-[42px] flex items-center justify-center rounded-[20px] border border-[#cc3636] cursor-pointer hover:bg-[#cc3636]/5 transition-colors"
-          >
-            <span className="font-['Poppins'] font-medium text-[14px] text-[#cc3636]">
-              Cancel
-            </span>
+        <div className="flex items-center gap-3">
+          <button onClick={onClose}
+            className="flex-1 h-[44px] rounded-[14px] border border-[#cc3636] text-[#cc3636] font-bold text-[13px] hover:bg-red-50 transition-colors cursor-pointer">
+            Cancel
           </button>
-
-          {/* Post Article */}
-          <button
-            type="button"
-            onClick={handleSubmit}
-            disabled={!title.trim() || !content.trim()}
-            className="flex-1 h-[42px] bg-[#003566] flex items-center justify-center rounded-[20px] cursor-pointer hover:bg-[#002a52] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            <span className="font-['Poppins'] font-medium text-[14px] text-white">
-              Post Article
-            </span>
+          <button onClick={handleSubmit} disabled={!title.trim() || !content.trim()}
+            className="flex-1 h-[44px] rounded-[14px] font-bold text-[13px] text-white transition-all cursor-pointer disabled:opacity-50 hover:shadow-lg"
+            style={{ background: 'linear-gradient(135deg, #003566, #0967bd)' }}>
+            Post Article
           </button>
         </div>
       </div>
-    </div>
+    </ModalBackdrop>
   );
 }
 
-/* ── Article Card Component ── */
-
-interface ArticleCardProps {
-  article: WellnessArticle;
-  onLike: (id: string) => void;
-  onDislike: (id: string) => void;
-  userReaction: "like" | "dislike" | null;
-}
-
-function ArticleCard({ article, onLike, onDislike, userReaction }: ArticleCardProps) {
+/* ── Article Card ── */
+function ArticleCard({ article, onLike, onDislike, userReaction }: {
+  article: WellnessArticle; onLike: (id: string) => void; onDislike: (id: string) => void; userReaction: "like" | "dislike" | null;
+}) {
   return (
-    <div className="bg-white flex flex-col gap-[24px] items-start p-[24px] rounded-[20px] shadow-[0px_4px_50px_0px_rgba(0,0,0,0.1)] w-full">
-      {/* Thumbnail */}
-      <div className="bg-[#9f9f9f] h-[127px] overflow-clip relative rounded-[20px] shrink-0 w-[249px]">
-        <ImageWithFallback
-          src={article.thumbnail}
-          alt={article.title}
-          className="absolute inset-0 max-w-none object-cover pointer-events-none size-full"
-        />
-        {article.type === "video" && <PlayIcon />}
-      </div>
-
-      {/* Content */}
-      <div className="flex flex-col gap-[4px] items-start w-full">
-        <p className="font-['Poppins'] font-medium text-[24px] text-[#003566] w-full">
-          {article.title}
-        </p>
-        <p className="font-['Poppins'] text-[16px] text-black/70 leading-[21px] w-full">
-          {article.description}
-        </p>
-      </div>
-
-      {/* Footer: Author + Reactions */}
-      <div className="flex items-center justify-between w-full">
-        {/* Author */}
-        <div className="flex gap-[10px] items-center">
-          <div className="relative rounded-full shrink-0 size-[55px] overflow-hidden">
-            <div className="absolute bg-[#cacaca] inset-0 rounded-full" />
-            <img
-              alt={article.author}
-              className="absolute h-full left-0 max-w-none top-0 w-full object-cover"
-              src={imgFrame1171275609}
-            />
-          </div>
-          <div className="flex flex-col gap-[10px] items-start">
-            <p className="font-['Poppins'] font-medium text-[14px] text-black/70 leading-[21px]">
-              {article.author}
-            </p>
-            <p className="font-['Poppins'] font-medium text-[12px] text-black/60 leading-[21px]">
-              {article.date}
-            </p>
-          </div>
+    <div className="bg-white rounded-[20px] border border-[#edf0f4] shadow-sm overflow-hidden hover:shadow-lg transition-all duration-300 group">
+      <div className="flex flex-col md:flex-row">
+        {/* Thumbnail */}
+        <div className="relative md:w-[240px] h-[180px] md:h-auto shrink-0 overflow-hidden">
+          <ImageWithFallback src={article.thumbnail} alt={article.title}
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+          {article.type === "video" && (
+            <div className="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/30 transition-colors">
+              <div className="w-12 h-12 rounded-full bg-white/90 flex items-center justify-center shadow-lg">
+                <Play className="w-5 h-5 text-[#003566] ml-0.5" fill="#003566" />
+              </div>
+            </div>
+          )}
+          <span className="absolute top-3 left-3 px-2.5 py-1 rounded-full text-[10px] font-bold text-white uppercase"
+            style={{ background: article.type === "video" ? '#f77f00' : '#0967bd' }}>
+            {article.type}
+          </span>
         </div>
 
-        {/* Like / Dislike */}
-        <div className="flex gap-[24px] items-center">
-          <button
-            type="button"
-            onClick={() => onLike(article.id)}
-            className="cursor-pointer hover:scale-110 transition-transform flex items-center gap-1.5"
-          >
-            <LikeIcon filled={userReaction === "like"} />
-            <span className="font-['Poppins'] text-[12px] text-[#F77F00]">
-              {article.likes}
-            </span>
-          </button>
-          <button
-            type="button"
-            onClick={() => onDislike(article.id)}
-            className="cursor-pointer hover:scale-110 transition-transform flex items-center gap-1.5"
-          >
-            <DislikeIcon filled={userReaction === "dislike"} />
-            <span className="font-['Poppins'] text-[12px] text-[#F77F00]">
-              {article.dislikes}
-            </span>
-          </button>
+        {/* Content */}
+        <div className="flex-1 p-5 md:p-6 flex flex-col justify-between">
+          <div>
+            <h3 className="text-[18px] font-bold text-[#003566] mb-2 leading-tight group-hover:text-[#0967bd] transition-colors"
+              style={{ fontFamily: "'DM Serif Display', serif" }}>
+              {article.title}
+            </h3>
+            <p className="text-[13px] text-[#5a7089] leading-relaxed line-clamp-3 mb-4">
+              {article.description}
+            </p>
+          </div>
+
+          {/* Footer */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-full overflow-hidden shrink-0 border border-[#edf0f4]">
+                <img src={imgFrame1171275609} alt={article.author} className="w-full h-full object-cover" />
+              </div>
+              <div>
+                <p className="text-[12px] font-semibold text-[#1e293b]">{article.author}</p>
+                <p className="text-[10px] text-[#94a3b8]">{article.date}</p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <button onClick={() => onLike(article.id)}
+                className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-[10px] transition-all cursor-pointer ${
+                  userReaction === "like" ? "bg-[#f77f00]/10 text-[#f77f00]" : "hover:bg-[#f5f7fa] text-[#94a3b8]"
+                }`}>
+                <ThumbsUp className="w-3.5 h-3.5" />
+                <span className="text-[11px] font-bold">{article.likes}</span>
+              </button>
+              <button onClick={() => onDislike(article.id)}
+                className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-[10px] transition-all cursor-pointer ${
+                  userReaction === "dislike" ? "bg-[#94a3b8]/10 text-[#5a7089]" : "hover:bg-[#f5f7fa] text-[#94a3b8]"
+                }`}>
+                <ThumbsDown className="w-3.5 h-3.5" />
+                <span className="text-[11px] font-bold">{article.dislikes}</span>
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -397,149 +180,82 @@ function ArticleCard({ article, onLike, onDislike, userReaction }: ArticleCardPr
 }
 
 /* ── Main Component ── */
-
-interface WellnessResourcesViewProps {
-  onBack: () => void;
-}
-
-export function WellnessResourcesView({ onBack }: WellnessResourcesViewProps) {
+export function WellnessResourcesView({ onBack }: { onBack: () => void }) {
   const [articles, setArticles] = useState<WellnessArticle[]>(initialArticles);
   const [reactions, setReactions] = useState<Record<string, "like" | "dislike" | null>>({});
   const [showPostModal, setShowPostModal] = useState(false);
 
   const handleLike = (id: string) => {
-    setReactions((prev) => {
-      const current = prev[id];
-      const next = current === "like" ? null : "like";
-      return { ...prev, [id]: next };
-    });
-
-    setArticles((prev) =>
-      prev.map((a) => {
-        if (a.id !== id) return a;
-        const currentReaction = reactions[id];
-        let likes = a.likes;
-        let dislikes = a.dislikes;
-
-        if (currentReaction === "like") {
-          // Undo like
-          likes -= 1;
-        } else if (currentReaction === "dislike") {
-          // Switch from dislike to like
-          dislikes -= 1;
-          likes += 1;
-        } else {
-          // Fresh like
-          likes += 1;
-        }
-
-        return { ...a, likes, dislikes };
-      })
-    );
+    setReactions((prev) => ({ ...prev, [id]: prev[id] === "like" ? null : "like" }));
+    setArticles((prev) => prev.map((a) => {
+      if (a.id !== id) return a;
+      const cur = reactions[id];
+      let likes = a.likes, dislikes = a.dislikes;
+      if (cur === "like") likes -= 1; else if (cur === "dislike") { dislikes -= 1; likes += 1; } else likes += 1;
+      return { ...a, likes, dislikes };
+    }));
   };
-
   const handleDislike = (id: string) => {
-    setReactions((prev) => {
-      const current = prev[id];
-      const next = current === "dislike" ? null : "dislike";
-      return { ...prev, [id]: next };
-    });
-
-    setArticles((prev) =>
-      prev.map((a) => {
-        if (a.id !== id) return a;
-        const currentReaction = reactions[id];
-        let likes = a.likes;
-        let dislikes = a.dislikes;
-
-        if (currentReaction === "dislike") {
-          // Undo dislike
-          dislikes -= 1;
-        } else if (currentReaction === "like") {
-          // Switch from like to dislike
-          likes -= 1;
-          dislikes += 1;
-        } else {
-          // Fresh dislike
-          dislikes += 1;
-        }
-
-        return { ...a, likes, dislikes };
-      })
-    );
+    setReactions((prev) => ({ ...prev, [id]: prev[id] === "dislike" ? null : "dislike" }));
+    setArticles((prev) => prev.map((a) => {
+      if (a.id !== id) return a;
+      const cur = reactions[id];
+      let likes = a.likes, dislikes = a.dislikes;
+      if (cur === "dislike") dislikes -= 1; else if (cur === "like") { likes -= 1; dislikes += 1; } else dislikes += 1;
+      return { ...a, likes, dislikes };
+    }));
   };
-
-  const handlePostArticle = (
-    newArticle: Omit<WellnessArticle, "id" | "likes" | "dislikes">
-  ) => {
-    const article: WellnessArticle = {
-      ...newArticle,
-      id: Date.now().toString(),
-      likes: 0,
-      dislikes: 0,
-    };
-    setArticles((prev) => [article, ...prev]);
+  const handlePostArticle = (newArticle: Omit<WellnessArticle, "id" | "likes" | "dislikes">) => {
+    setArticles((prev) => [{ ...newArticle, id: Date.now().toString(), likes: 0, dislikes: 0 }, ...prev]);
     setShowPostModal(false);
   };
 
   return (
-    <div className="w-full flex flex-col">
+    <div className="w-full flex flex-col" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
       {/* Header */}
       <div className="flex items-center justify-between mb-6 shrink-0">
-        <div className="flex flex-col items-start pb-1.5">
-          <button
-            type="button"
-            onClick={onBack}
-            className="font-['Poppins'] text-[14px] text-black/60 cursor-pointer hover:text-black/80 transition-colors mb-0.5"
-          >
-            {"< Emotional Wellness"}
+        <div>
+          <button onClick={onBack} className="flex items-center gap-2 text-[#5a7089] hover:text-[#003566] mb-3 transition-colors group cursor-pointer">
+            <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
+            <span className="text-[13px] font-medium">Emotional Wellness</span>
           </button>
-          <h1 className="font-['Poppins'] font-medium text-[40px] text-black leading-tight">
-            Wellness Resources
-          </h1>
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-[14px] flex items-center justify-center"
+              style={{ background: 'linear-gradient(135deg, #0052d4, #6fb1fc)' }}>
+              <BookOpen className="w-5 h-5 text-white" />
+            </div>
+            <h1 className="text-[28px] md:text-[34px] text-[#003566]" style={{ fontFamily: "'DM Serif Display', serif" }}>
+              Wellness Resources
+            </h1>
+          </div>
         </div>
 
-        {/* Post Article Button */}
-        <button
-          type="button"
-          onClick={() => setShowPostModal(true)}
-          className="flex gap-[6px] h-[42px] items-center px-[16px] rounded-[10px] border-2 border-[#003566] cursor-pointer hover:bg-[#003566]/5 transition-colors shrink-0"
-        >
-          <span className="font-['Poppins'] font-medium text-[14px] text-[#003566]">
-            Post Article
-          </span>
-          <PlusIcon />
+        <button onClick={() => setShowPostModal(true)}
+          className="flex items-center gap-2 px-4 h-[42px] rounded-[14px] font-bold text-[13px] text-white cursor-pointer hover:shadow-lg transition-all shrink-0"
+          style={{ background: 'linear-gradient(135deg, #003566, #0967bd)' }}>
+          <Plus className="w-4 h-4" />
+          Post Article
         </button>
       </div>
 
       {/* Articles List */}
-      <div className="flex flex-col gap-[24px] w-full max-w-[1082px]">
+      <div className="flex flex-col gap-5 w-full max-w-[900px]">
         {articles.map((article) => (
-          <ArticleCard
-            key={article.id}
-            article={article}
-            onLike={handleLike}
-            onDislike={handleDislike}
-            userReaction={reactions[article.id] ?? null}
-          />
+          <ArticleCard key={article.id} article={article} onLike={handleLike} onDislike={handleDislike}
+            userReaction={reactions[article.id] ?? null} />
         ))}
-
         {articles.length === 0 && (
           <div className="flex flex-col items-center justify-center py-20">
-            <p className="font-['Poppins'] text-[18px] text-black/40">
-              No resources yet. Be the first to post!
-            </p>
+            <div className="w-16 h-16 rounded-[20px] flex items-center justify-center mb-4" style={{ background: 'rgba(9,103,189,0.06)' }}>
+              <BookOpen className="w-7 h-7 text-[#0967bd]/30" />
+            </div>
+            <p className="text-[14px] font-semibold text-[#5a7089]">No resources yet</p>
+            <p className="text-[12px] text-[#94a3b8] mt-1">Be the first to post an article!</p>
           </div>
         )}
       </div>
 
-      {/* Post Article Modal */}
-      {showPostModal && (
-        <PostArticleModal
-          onClose={() => setShowPostModal(false)}
-          onPost={handlePostArticle}
-        />
-      )}
+      {showPostModal && <PostArticleModal onClose={() => setShowPostModal(false)} onPost={handlePostArticle} />}
     </div>
   );
 }

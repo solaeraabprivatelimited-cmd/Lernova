@@ -5,13 +5,8 @@ import { LoginPage } from '@/app/components/LoginPage';
 import { SignUpPage } from '@/app/components/SignUpPage';
 import { ForgotPasswordPage } from '@/app/components/ForgotPasswordPage';
 
-// Landing Page Components
-import { Navbar } from '@/app/components/Navbar';
-import { Hero } from '@/app/components/Hero';
-import { StudyRooms } from '@/app/components/StudyRooms';
-import { MentorSupport } from '@/app/components/MentorSupport';
-import { Testimonials } from '@/app/components/Testimonials';
-import { Footer } from '@/app/components/Footer';
+// Landing Page Component
+import { LandingPage } from '@/app/components/LandingPage';
 import { auth, getCurrentUser, setCurrentUser, profile as profileApi, seed } from '@/app/lib/api';
 
 type AppView = 'landing' | 'login' | 'signup' | 'forgot-password' | 'dashboard' | 'mentor-dashboard';
@@ -122,12 +117,7 @@ export default function App() {
   // ── Landing Page ───────────────────────────────────────────
   return (
     <div className="min-h-screen bg-white w-full overflow-x-hidden">
-      <Navbar onLogin={() => setView('login')} />
-      <Hero />
-      <div id="study-rooms"><StudyRooms /></div>
-      <div id="mentor-support"><MentorSupport /></div>
-      <div id="testimonials"><Testimonials /></div>
-      <Footer />
+      <LandingPage onLogin={() => setView('login')} onSignUp={() => setView('signup')} />
     </div>
   );
 }

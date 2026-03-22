@@ -1,47 +1,23 @@
 import React, { useState } from 'react';
-import svgPaths from '../../imports/svg-4o6iei54qa';
 
 interface ForgotPasswordPageProps {
   onBack: () => void;
 }
 
-function LearnovaLogo() {
+function EyeIcon({ open }: { open: boolean }) {
+  if (open) {
+    return (
+      <svg viewBox="0 0 24 24" className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+        <circle cx="12" cy="12" r="3" />
+      </svg>
+    );
+  }
   return (
-    <div className="flex items-center gap-2">
-      <div className="relative w-[35px] h-[35px]">
-        <svg fill="none" viewBox="0 0 35 35" className="w-full h-full">
-          <g>
-            <path d={svgPaths.p3781200} fill="#003566" />
-            <path d={svgPaths.p1c6f2500} stroke="#003566" strokeWidth="0.245515" />
-            <path d={svgPaths.p31318300} fill="#003566" />
-            <path d={svgPaths.p275764f0} stroke="#003566" strokeWidth="0.23811" />
-            <circle cx="17.5" cy="17.5" r="15.8594" stroke="#003566" strokeWidth="3.28125" />
-            <g clipPath="url(#clip0_fp)">
-              <path clipRule="evenodd" d={svgPaths.p2338ef00} fill="#F77F00" fillRule="evenodd" />
-            </g>
-            <g clipPath="url(#clip1_fp)">
-              <path clipRule="evenodd" d={svgPaths.p17aefc80} fill="#F77F00" fillRule="evenodd" />
-            </g>
-          </g>
-          <defs>
-            <clipPath id="clip0_fp">
-              <rect fill="white" height="10.5795" transform="translate(10.4914 20.704) rotate(-11.508)" width="10.5795" />
-            </clipPath>
-            <clipPath id="clip1_fp">
-              <rect fill="white" height="10.2012" transform="translate(11.5055 10.7851) rotate(-11.508)" width="10.2012" />
-            </clipPath>
-          </defs>
-        </svg>
-      </div>
-      <span className="font-['Righteous'] text-[#003566] text-[20px]">Learnova</span>
-    </div>
-  );
-}
-
-function EmailIcon() {
-  return (
-    <svg fill="none" viewBox="0 0 24 24" className="w-6 h-6 shrink-0">
-      <path d={svgPaths.p629a600} fill="black" />
+    <svg viewBox="0 0 24 24" className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94" />
+      <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19" />
+      <line x1="1" y1="1" x2="23" y2="23" />
     </svg>
   );
 }
@@ -95,126 +71,238 @@ export function ForgotPasswordPage({ onBack }: ForgotPasswordPageProps) {
     next[index] = value;
     setOtp(next);
     if (value && index < 5) {
-      const nextInput = document.getElementById(`otp-${index + 1}`);
-      nextInput?.focus();
+      document.getElementById(`fp-otp-${index + 1}`)?.focus();
     }
   };
 
   const handleOtpKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Backspace' && !otp[index] && index > 0) {
-      const prevInput = document.getElementById(`otp-${index - 1}`);
-      prevInput?.focus();
+      document.getElementById(`fp-otp-${index - 1}`)?.focus();
     }
     if (e.key === 'Enter') handleVerifyOtp();
   };
 
+  // Stage icon & title config
+  const stageConfig: Record<Stage, { icon: React.ReactNode; title: string; subtitle: string | React.ReactNode }> = {
+    request: {
+      icon: (
+        <svg viewBox="0 0 24 24" className="w-7 h-7" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <rect x="3" y="11" width="18" height="11" rx="2" />
+          <path d="M7 11V7a5 5 0 0110 0v4" />
+        </svg>
+      ),
+      title: 'Forgot your password?',
+      subtitle: "No worries! Enter your email and we'll send you a reset code.",
+    },
+    otp: {
+      icon: (
+        <svg viewBox="0 0 24 24" className="w-7 h-7" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <rect x="2" y="4" width="20" height="16" rx="2" />
+          <path d="M22 7l-10 6L2 7" />
+        </svg>
+      ),
+      title: 'Check your email',
+      subtitle: (
+        <>We sent a 6-digit code to <span className="font-bold text-[#003566]">{email}</span>.</>
+      ),
+    },
+    reset: {
+      icon: (
+        <svg viewBox="0 0 24 24" className="w-7 h-7" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+        </svg>
+      ),
+      title: 'Set new password',
+      subtitle: 'Create a strong, unique password for your account.',
+    },
+    success: {
+      icon: (
+        <svg viewBox="0 0 24 24" className="w-7 h-7" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+          <polyline points="20 6 9 17 4 12" />
+        </svg>
+      ),
+      title: 'Password reset!',
+      subtitle: 'Your password has been successfully reset. You can now log in.',
+    },
+  };
+
+  const cfg = stageConfig[stage];
+
+  const PrimaryButton = ({ onClick, loading, children }: { onClick: () => void; loading: boolean; children: React.ReactNode }) => (
+    <button
+      onClick={onClick}
+      disabled={loading}
+      className="w-full h-[52px] rounded-full flex items-center justify-center gap-2 text-[15px] font-bold text-white transition-all duration-200 shadow-lg disabled:opacity-60"
+      style={{
+        background: 'linear-gradient(135deg, #003566, #0967bd)',
+        boxShadow: '0 4px 20px rgba(0,53,102,0.3)',
+      }}
+      onMouseEnter={(e) => {
+        if (!loading) {
+          e.currentTarget.style.boxShadow = '0 8px 28px rgba(9,103,189,0.4)';
+          e.currentTarget.style.transform = 'translateY(-1px)';
+        }
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.boxShadow = '0 4px 20px rgba(0,53,102,0.3)';
+        e.currentTarget.style.transform = 'translateY(0)';
+      }}
+    >
+      {loading ? (
+        <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+      ) : children}
+    </button>
+  );
+
   return (
-    <div className="min-h-screen bg-white relative flex flex-col">
-      {/* Top-left logo */}
-      <div className="absolute top-10 left-10">
-        <LearnovaLogo />
-      </div>
+    <div
+      className="min-h-screen flex items-center justify-center px-4 py-10 relative overflow-hidden"
+      style={{
+        fontFamily: "'Plus Jakarta Sans', sans-serif",
+        background: '#f8fafd',
+      }}
+    >
+      {/* Background decorations */}
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          backgroundImage:
+            'linear-gradient(rgba(9,103,189,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(9,103,189,0.04) 1px, transparent 1px)',
+          backgroundSize: '80px 80px',
+          maskImage: 'radial-gradient(ellipse 80% 80% at 50% 50%, black 30%, transparent 100%)',
+          WebkitMaskImage: 'radial-gradient(ellipse 80% 80% at 50% 50%, black 30%, transparent 100%)',
+        }}
+      />
+      <div
+        className="absolute -top-40 -right-40 w-[600px] h-[600px] rounded-full pointer-events-none"
+        style={{ background: 'radial-gradient(circle, rgba(9,103,189,0.1) 0%, transparent 70%)' }}
+      />
+      <div
+        className="absolute -bottom-32 -left-32 w-[500px] h-[500px] rounded-full pointer-events-none"
+        style={{ background: 'radial-gradient(circle, rgba(247,127,0,0.08) 0%, transparent 70%)' }}
+      />
 
-      <div className="flex-1 flex items-center justify-center px-4">
-        <div className="w-full max-w-[421px] flex flex-col gap-6">
+      <div className="relative z-10 w-full max-w-[480px]">
+        {/* Card */}
+        <div className="bg-white rounded-[24px] border border-[rgba(0,53,102,0.08)] shadow-xl p-8 sm:p-10 flex flex-col gap-7">
 
-          {/* Back button */}
-          <button
-            onClick={onBack}
-            className="flex items-center gap-2 text-[#003566] font-['Poppins'] text-[14px] hover:opacity-70 transition-opacity self-start"
-          >
-            <svg viewBox="0 0 24 24" className="w-5 h-5" fill="none" stroke="#003566" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M19 12H5M12 19l-7-7 7-7" />
-            </svg>
-            Back to Login
-          </button>
+          {/* Icon badge */}
+          <div className="flex flex-col items-center gap-5">
+            <div
+              className="w-[64px] h-[64px] rounded-full flex items-center justify-center"
+              style={{
+                background: stage === 'success'
+                  ? 'linear-gradient(135deg, #22c55e, #16a34a)'
+                  : 'linear-gradient(135deg, #003566, #0967bd)',
+                boxShadow: stage === 'success'
+                  ? '0 4px 20px rgba(34,197,94,0.3)'
+                  : '0 4px 20px rgba(0,53,102,0.25)',
+              }}
+            >
+              {cfg.icon}
+            </div>
+            <div className="text-center">
+              <h1
+                className="mb-2"
+                style={{
+                  fontFamily: "'DM Serif Display', serif",
+                  fontSize: 'clamp(26px, 4vw, 34px)',
+                  lineHeight: 1.15,
+                  color: '#003566',
+                }}
+              >
+                {cfg.title}
+              </h1>
+              <p className="text-[14px] text-[#5a7089] leading-relaxed max-w-[340px] mx-auto">{cfg.subtitle}</p>
+            </div>
+          </div>
 
           {/* ── STAGE: REQUEST ── */}
           {stage === 'request' && (
             <>
-              <div className="flex flex-col gap-1 pb-1">
-                <p className="font-['Poppins'] font-medium text-[36px] text-black leading-tight">Forgot Password?</p>
-                <p className="font-['Poppins'] text-[14px] text-[rgba(0,0,0,0.6)]">
-                  Enter your email and we'll send you a reset code.
-                </p>
-              </div>
-
-              <div className="flex flex-col gap-[10px] w-full">
-                <label className="font-['Poppins'] text-[16px] text-black">Email</label>
-                <div className="relative rounded-[10px]">
-                  <div className="absolute inset-0 border border-[rgba(0,0,0,0.4)] rounded-[10px] pointer-events-none" />
-                  <div className="flex gap-[10px] items-center px-[10px] h-[39px]">
-                    <EmailIcon />
-                    <input
-                      type="email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      onKeyDown={(e) => e.key === 'Enter' && handleRequestReset()}
-                      placeholder="example@mail.com"
-                      className="flex-1 bg-transparent font-['Poppins'] text-[14px] text-[rgba(0,0,0,0.6)] placeholder:text-[rgba(0,0,0,0.4)] outline-none"
-                    />
+              <div className="flex flex-col gap-2">
+                <label className="text-[14px] font-semibold text-[#0d1b2a]">Email Address</label>
+                <div className="relative">
+                  <div className="absolute left-4 top-1/2 -translate-y-1/2 text-[#5a7089]">
+                    <svg viewBox="0 0 24 24" className="w-[18px] h-[18px]" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                      <rect x="2" y="4" width="20" height="16" rx="2" />
+                      <path d="M22 7l-10 6L2 7" />
+                    </svg>
                   </div>
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && handleRequestReset()}
+                    placeholder="you@example.com"
+                    className="w-full h-[50px] pl-11 pr-4 bg-[#f8fafd] border border-[rgba(0,53,102,0.12)] rounded-[14px] text-[14px] text-[#0d1b2a] placeholder:text-[#5a7089]/50 outline-none focus:border-[#0967bd] focus:ring-2 focus:ring-[#0967bd]/10 transition-all"
+                  />
                 </div>
               </div>
 
-              {error && <p className="font-['Poppins'] text-[13px] text-[#cc3636] -mt-2">{error}</p>}
+              {error && (
+                <div className="flex items-start gap-2 px-4 py-3 bg-[#cc3636]/8 border border-[#cc3636]/20 rounded-[12px]">
+                  <svg viewBox="0 0 24 24" className="w-5 h-5 shrink-0 text-[#cc3636] mt-0.5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="12" cy="12" r="10" />
+                    <line x1="15" y1="9" x2="9" y2="15" />
+                    <line x1="9" y1="9" x2="15" y2="15" />
+                  </svg>
+                  <p className="text-[13px] text-[#cc3636] leading-snug">{error}</p>
+                </div>
+              )}
 
-              <button
-                onClick={handleRequestReset}
-                disabled={isLoading}
-                className="w-full h-[42px] bg-[#003566] hover:bg-[#00284d] disabled:opacity-70 rounded-[24px] flex items-center justify-center transition-colors"
-              >
-                {isLoading
-                  ? <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                  : <span className="font-['Poppins'] font-semibold text-[16px] text-white">Send Reset Code</span>}
-              </button>
+              <PrimaryButton onClick={handleRequestReset} loading={isLoading}>
+                Send Reset Code
+                <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M5 12h14M12 5l7 7-7 7" />
+                </svg>
+              </PrimaryButton>
             </>
           )}
 
           {/* ── STAGE: OTP ── */}
           {stage === 'otp' && (
             <>
-              <div className="flex flex-col gap-1 pb-1">
-                <p className="font-['Poppins'] font-medium text-[36px] text-black leading-tight">Check Your Email</p>
-                <p className="font-['Poppins'] text-[14px] text-[rgba(0,0,0,0.6)]">
-                  We sent a 6-digit code to <span className="font-semibold text-black">{email}</span>. Enter it below.
-                </p>
-              </div>
-
-              {/* OTP Inputs */}
-              <div className="flex gap-3 justify-center">
+              <div className="flex gap-2.5 justify-center">
                 {otp.map((digit, i) => (
                   <input
                     key={i}
-                    id={`otp-${i}`}
+                    id={`fp-otp-${i}`}
                     type="text"
                     inputMode="numeric"
                     maxLength={1}
                     value={digit}
                     onChange={(e) => handleOtpChange(i, e.target.value)}
                     onKeyDown={(e) => handleOtpKeyDown(i, e)}
-                    className="w-[52px] h-[52px] text-center border border-[rgba(0,0,0,0.4)] rounded-[10px] font-['Poppins'] text-[20px] text-black outline-none focus:border-[#003566] transition-colors"
+                    className="w-[52px] h-[56px] text-center border border-[rgba(0,53,102,0.12)] bg-[#f8fafd] rounded-[14px] text-[22px] font-bold text-[#003566] outline-none focus:border-[#0967bd] focus:ring-2 focus:ring-[#0967bd]/10 transition-all"
+                    style={{ fontFamily: "'DM Serif Display', serif" }}
                   />
                 ))}
               </div>
 
-              {error && <p className="font-['Poppins'] text-[13px] text-[#cc3636] text-center">{error}</p>}
+              {error && (
+                <div className="flex items-start gap-2 px-4 py-3 bg-[#cc3636]/8 border border-[#cc3636]/20 rounded-[12px]">
+                  <svg viewBox="0 0 24 24" className="w-5 h-5 shrink-0 text-[#cc3636] mt-0.5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="12" cy="12" r="10" />
+                    <line x1="15" y1="9" x2="9" y2="15" />
+                    <line x1="9" y1="9" x2="15" y2="15" />
+                  </svg>
+                  <p className="text-[13px] text-[#cc3636] leading-snug">{error}</p>
+                </div>
+              )}
 
-              <button
-                onClick={handleVerifyOtp}
-                disabled={isLoading}
-                className="w-full h-[42px] bg-[#003566] hover:bg-[#00284d] disabled:opacity-70 rounded-[24px] flex items-center justify-center transition-colors"
-              >
-                {isLoading
-                  ? <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                  : <span className="font-['Poppins'] font-semibold text-[16px] text-white">Verify Code</span>}
-              </button>
+              <PrimaryButton onClick={handleVerifyOtp} loading={isLoading}>
+                Verify Code
+                <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
+              </PrimaryButton>
 
-              <p className="font-['Poppins'] text-[14px] text-[rgba(0,0,0,0.6)] text-center">
-                Didn't receive it?{' '}
+              <p className="text-center text-[14px] text-[#5a7089]">
+                Didn&apos;t receive it?{' '}
                 <button
-                  onClick={() => { setOtp(['','','','','','']); setError(''); }}
-                  className="text-[#003566] font-semibold hover:opacity-70 transition-opacity"
+                  onClick={() => { setOtp(['', '', '', '', '', '']); setError(''); }}
+                  className="font-bold text-[#003566] hover:text-[#0967bd] transition-colors"
                 >
                   Resend code
                 </button>
@@ -225,119 +313,96 @@ export function ForgotPasswordPage({ onBack }: ForgotPasswordPageProps) {
           {/* ── STAGE: RESET ── */}
           {stage === 'reset' && (
             <>
-              <div className="flex flex-col gap-1 pb-1">
-                <p className="font-['Poppins'] font-medium text-[36px] text-black leading-tight">Reset Password</p>
-                <p className="font-['Poppins'] text-[14px] text-[rgba(0,0,0,0.6)]">
-                  Create a new password for your account.
-                </p>
-              </div>
-
-              {/* New Password */}
-              <div className="flex flex-col gap-[10px] w-full">
-                <label className="font-['Poppins'] text-[16px] text-black">New Password</label>
-                <div className="relative rounded-[10px]">
-                  <div className="absolute inset-0 border border-[rgba(0,0,0,0.4)] rounded-[10px] pointer-events-none" />
-                  <div className="flex items-center justify-between px-[10px] py-[8px]">
-                    <input
-                      type={showNew ? 'text' : 'password'}
-                      value={newPassword}
-                      onChange={(e) => setNewPassword(e.target.value)}
-                      placeholder="••••••••••••"
-                      className="flex-1 bg-transparent font-['Poppins'] text-[14px] text-[rgba(0,0,0,0.6)] placeholder:text-[rgba(0,0,0,0.4)] outline-none"
-                    />
-                    <button type="button" onClick={() => setShowNew(!showNew)} className="p-0.5">
-                      <svg fill="none" viewBox="0 0 24 24" className="w-5 h-5" stroke="black" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" strokeOpacity="0.7">
-                        {showNew ? (
-                          <>
-                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-                            <circle cx="12" cy="12" r="3" />
-                          </>
-                        ) : (
-                          <>
-                            <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94" />
-                            <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19" />
-                            <line x1="1" y1="1" x2="23" y2="23" />
-                          </>
-                        )}
-                      </svg>
-                    </button>
+              <div className="flex flex-col gap-2">
+                <label className="text-[14px] font-semibold text-[#0d1b2a]">New Password</label>
+                <div className="relative">
+                  <div className="absolute left-4 top-1/2 -translate-y-1/2 text-[#5a7089]">
+                    <svg viewBox="0 0 24 24" className="w-[18px] h-[18px]" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                      <rect x="3" y="11" width="18" height="11" rx="2" />
+                      <path d="M7 11V7a5 5 0 0110 0v4" />
+                    </svg>
                   </div>
+                  <input
+                    type={showNew ? 'text' : 'password'}
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    placeholder="Min. 6 characters"
+                    className="w-full h-[50px] pl-11 pr-12 bg-[#f8fafd] border border-[rgba(0,53,102,0.12)] rounded-[14px] text-[14px] text-[#0d1b2a] placeholder:text-[#5a7089]/50 outline-none focus:border-[#0967bd] focus:ring-2 focus:ring-[#0967bd]/10 transition-all"
+                  />
+                  <button type="button" onClick={() => setShowNew(!showNew)} className="absolute right-4 top-1/2 -translate-y-1/2 text-[#5a7089] hover:text-[#003566] transition-colors">
+                    <EyeIcon open={showNew} />
+                  </button>
                 </div>
               </div>
 
-              {/* Confirm Password */}
-              <div className="flex flex-col gap-[10px] w-full">
-                <label className="font-['Poppins'] text-[16px] text-black">Confirm Password</label>
-                <div className="relative rounded-[10px]">
-                  <div className="absolute inset-0 border border-[rgba(0,0,0,0.4)] rounded-[10px] pointer-events-none" />
-                  <div className="flex items-center justify-between px-[10px] py-[8px]">
-                    <input
-                      type={showConfirm ? 'text' : 'password'}
-                      value={confirmPassword}
-                      onChange={(e) => setConfirmPassword(e.target.value)}
-                      onKeyDown={(e) => e.key === 'Enter' && handleResetPassword()}
-                      placeholder="••••••••••••"
-                      className="flex-1 bg-transparent font-['Poppins'] text-[14px] text-[rgba(0,0,0,0.6)] placeholder:text-[rgba(0,0,0,0.4)] outline-none"
-                    />
-                    <button type="button" onClick={() => setShowConfirm(!showConfirm)} className="p-0.5">
-                      <svg fill="none" viewBox="0 0 24 24" className="w-5 h-5" stroke="black" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" strokeOpacity="0.7">
-                        {showConfirm ? (
-                          <>
-                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-                            <circle cx="12" cy="12" r="3" />
-                          </>
-                        ) : (
-                          <>
-                            <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94" />
-                            <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19" />
-                            <line x1="1" y1="1" x2="23" y2="23" />
-                          </>
-                        )}
-                      </svg>
-                    </button>
+              <div className="flex flex-col gap-2">
+                <label className="text-[14px] font-semibold text-[#0d1b2a]">Confirm Password</label>
+                <div className="relative">
+                  <div className="absolute left-4 top-1/2 -translate-y-1/2 text-[#5a7089]">
+                    <svg viewBox="0 0 24 24" className="w-[18px] h-[18px]" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                      <rect x="3" y="11" width="18" height="11" rx="2" />
+                      <path d="M7 11V7a5 5 0 0110 0v4" />
+                    </svg>
                   </div>
+                  <input
+                    type={showConfirm ? 'text' : 'password'}
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && handleResetPassword()}
+                    placeholder="Re-enter your password"
+                    className="w-full h-[50px] pl-11 pr-12 bg-[#f8fafd] border border-[rgba(0,53,102,0.12)] rounded-[14px] text-[14px] text-[#0d1b2a] placeholder:text-[#5a7089]/50 outline-none focus:border-[#0967bd] focus:ring-2 focus:ring-[#0967bd]/10 transition-all"
+                  />
+                  <button type="button" onClick={() => setShowConfirm(!showConfirm)} className="absolute right-4 top-1/2 -translate-y-1/2 text-[#5a7089] hover:text-[#003566] transition-colors">
+                    <EyeIcon open={showConfirm} />
+                  </button>
                 </div>
               </div>
 
-              {error && <p className="font-['Poppins'] text-[13px] text-[#cc3636] -mt-2">{error}</p>}
+              {error && (
+                <div className="flex items-start gap-2 px-4 py-3 bg-[#cc3636]/8 border border-[#cc3636]/20 rounded-[12px]">
+                  <svg viewBox="0 0 24 24" className="w-5 h-5 shrink-0 text-[#cc3636] mt-0.5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="12" cy="12" r="10" />
+                    <line x1="15" y1="9" x2="9" y2="15" />
+                    <line x1="9" y1="9" x2="15" y2="15" />
+                  </svg>
+                  <p className="text-[13px] text-[#cc3636] leading-snug">{error}</p>
+                </div>
+              )}
 
-              <button
-                onClick={handleResetPassword}
-                disabled={isLoading}
-                className="w-full h-[42px] bg-[#003566] hover:bg-[#00284d] disabled:opacity-70 rounded-[24px] flex items-center justify-center transition-colors"
-              >
-                {isLoading
-                  ? <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                  : <span className="font-['Poppins'] font-semibold text-[16px] text-white">Reset Password</span>}
-              </button>
+              <PrimaryButton onClick={handleResetPassword} loading={isLoading}>
+                Reset Password
+                <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                </svg>
+              </PrimaryButton>
             </>
           )}
 
           {/* ── STAGE: SUCCESS ── */}
           {stage === 'success' && (
-            <div className="flex flex-col items-center gap-6 py-8">
-              {/* Checkmark circle */}
-              <div className="w-[80px] h-[80px] rounded-full bg-[#003566] flex items-center justify-center">
-                <svg viewBox="0 0 24 24" className="w-10 h-10" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <polyline points="20 6 9 17 4 12" />
-                </svg>
-              </div>
-              <div className="flex flex-col items-center gap-2 text-center">
-                <p className="font-['Poppins'] font-medium text-[32px] text-black leading-tight">Password Reset!</p>
-                <p className="font-['Poppins'] text-[14px] text-[rgba(0,0,0,0.6)]">
-                  Your password has been successfully reset. You can now log in with your new password.
-                </p>
-              </div>
-              <button
-                onClick={onBack}
-                className="w-full h-[42px] bg-[#003566] hover:bg-[#00284d] rounded-[24px] flex items-center justify-center transition-colors"
-              >
-                <span className="font-['Poppins'] font-semibold text-[16px] text-white">Back to Login</span>
-              </button>
-            </div>
+            <PrimaryButton onClick={onBack} loading={false}>
+              Back to Login
+              <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M5 12h14M12 5l7 7-7 7" />
+              </svg>
+            </PrimaryButton>
           )}
-
         </div>
+
+        {/* Back to login link (below card) */}
+        {stage !== 'success' && (
+          <div className="text-center mt-6">
+            <button
+              onClick={onBack}
+              className="inline-flex items-center gap-1.5 text-[14px] font-semibold text-[#5a7089] hover:text-[#003566] transition-colors group"
+            >
+              <svg className="w-4 h-4 transition-transform group-hover:-translate-x-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M19 12H5M12 5l-7 7 7 7" />
+              </svg>
+              Back to Login
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
