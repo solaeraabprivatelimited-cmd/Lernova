@@ -30,7 +30,7 @@ function EyeIcon({ open }: { open: boolean }) {
 }
 
 export function LoginPage({ onLogin, onMentorLogin, onSignUp, onForgotPassword, onBack }: LoginPageProps) {
-  const [activeTab, setActiveTab] = useState<'user' | 'mentor'>('user');
+  const [activeTab, setActiveTab] = useState<'student' | 'mentor'>('student');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -47,12 +47,12 @@ export function LoginPage({ onLogin, onMentorLogin, onSignUp, onForgotPassword, 
     setIsLoading(true);
     try {
       await auth.login(email.trim(), password);
-      let actualRole: 'user' | 'mentor' = 'user';
+      let actualRole: 'student' | 'mentor' = 'student';
       try {
         const prof = await profileApi.get();
         if (prof) {
           setCurrentUser(prof);
-          actualRole = (prof.role === 'mentor') ? 'mentor' : 'user';
+          actualRole = (prof.role === 'mentor') ? 'mentor' : 'student';
         }
       } catch (profileErr: any) {
         console.log('Login: profile fetch failed (non-fatal):', profileErr.message);
@@ -192,14 +192,14 @@ export function LoginPage({ onLogin, onMentorLogin, onSignUp, onForgotPassword, 
             {/* Tab switcher */}
             <div className="flex rounded-full p-1 bg-white border border-[rgba(0,53,102,0.08)] shadow-sm">
               <button
-                onClick={() => { setActiveTab('user'); setError(''); }}
+                onClick={() => { setActiveTab('student'); setError(''); }}
                 className="flex-1 h-[44px] rounded-full flex items-center justify-center transition-all duration-200 text-[14px] font-semibold"
                 style={{
                   background: !isMentor ? '#003566' : 'transparent',
                   color: !isMentor ? 'white' : '#5a7089',
                 }}
               >
-                User Login
+                Student Login
               </button>
               <button
                 onClick={() => { setActiveTab('mentor'); setError(''); }}

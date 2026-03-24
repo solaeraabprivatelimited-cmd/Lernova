@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { getCurrentUser, profile as profileApi, setCurrentUser } from '../lib/api';
 import svgPaths from '../../imports/svg-awezib197y';
 import svgWellness from '../../imports/svg-fui5khiao7';
 import { CommunityView as MentorCommunityView } from './dashboard/CommunityView';
@@ -2957,6 +2958,39 @@ export function MentorDashboard({ onLogout }: MentorDashboardProps) {
   const [activeNav, setActiveNav] = useState<NavItem>('create-session');
   const [showProfile, setShowProfile] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
+  const [userProfile, setUserProfileState] = useState<{ name: string; role: string; avatar?: string | null }>(() => {
+    const cached = getCurrentUser();
+    return {
+      name: cached?.name || 'User',
+      role: cached?.role || 'mentor',
+      avatar: cached?.avatar || cached?.avatar_url || null,
+    };
+  });
+
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        const prof = await profileApi.get();
+        if (!mounted || !prof) return;
+        setUserProfileState({
+          name: prof.name || 'User',
+          role: prof.role || 'mentor',
+          avatar: prof.avatar || prof.avatar_url || null,
+        });
+        setCurrentUser(prof);
+      } catch {
+        // Keep cached profile if fetch fails.
+      }
+    })();
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  const displayName = userProfile.name || 'User';
+  const displayRole = userProfile.role === 'mentor' ? 'Mentor' : 'Student';
+  const displayAvatar = userProfile.avatar || imgUserAvatar;
 
   const renderContent = () => {
     switch (activeNav) {
@@ -3154,11 +3188,14 @@ export function MentorDashboard({ onLogout }: MentorDashboardProps) {
               onClick={() => { setShowProfile(!showProfile); setShowNotifications(false); }}
             >
               <ImageWithFallback
-                src="https://images.unsplash.com/photo-1758685845906-6f705cde4fb7?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxwcm9mZXNzaW9uYWwlMjBtZW50b3IlMjB0ZWFjaGVyJTIwcG9ydHJhaXR8ZW58MXx8fHwxNzcxNjcwNjM4fDA&ixlib=rb-4.1.0&q=80&w=1080"
-                alt="Jack Sparrow"
+                src={displayAvatar}
+                alt={displayName}
                 className="w-[38px] h-[38px] rounded-full object-cover"
               />
-              <span className="font-['Poppins'] text-[16px] text-black">Jack Sparrow</span>
+              <div className="flex flex-col items-start leading-tight">
+                <span className="font-['Poppins'] text-[15px] text-black">{displayName}</span>
+                <span className="font-['Poppins'] text-[11px] text-[rgba(0,0,0,0.5)]">{displayRole}</span>
+              </div>
             </button>
 
             {showProfile && (

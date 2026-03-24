@@ -28,7 +28,7 @@ function EyeIcon({ open }: { open: boolean }) {
 }
 
 export function SignUpPage({ onSignUp, onLogin, onBack }: SignUpPageProps) {
-  const [activeTab, setActiveTab] = useState<'user' | 'mentor'>('user');
+  const [activeTab, setActiveTab] = useState<'student' | 'mentor'>('student');
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -38,7 +38,7 @@ export function SignUpPage({ onSignUp, onLogin, onBack }: SignUpPageProps) {
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  const isUser = activeTab === 'user';
+  const isUser = activeTab === 'student';
 
   const handleSignUp = async () => {
     setError('');
@@ -168,7 +168,7 @@ export function SignUpPage({ onSignUp, onLogin, onBack }: SignUpPageProps) {
             {/* Tab switcher */}
             <div className="flex rounded-full p-1 bg-white border border-[rgba(0,53,102,0.08)] shadow-sm">
               <button
-                onClick={() => { setActiveTab('user'); setError(''); }}
+                onClick={() => { setActiveTab('student'); setError(''); }}
                 className="flex-1 h-[44px] rounded-full flex items-center justify-center transition-all duration-200 text-[14px] font-semibold"
                 style={{
                   background: isUser ? '#003566' : 'transparent',

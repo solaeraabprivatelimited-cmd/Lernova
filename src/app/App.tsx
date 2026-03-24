@@ -1,18 +1,17 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
+import { Navigate, Route, Routes, useNavigate } from 'react-router-dom';
 import { StudyRoomDashboard } from '@/app/components/dashboard/StudyRoomDashboard';
 import { MentorDashboard } from '@/app/components/MentorDashboard';
 import { LoginPage } from '@/app/components/LoginPage';
 import { SignUpPage } from '@/app/components/SignUpPage';
 import { ForgotPasswordPage } from '@/app/components/ForgotPasswordPage';
-
-// Landing Page Component
 import { LandingPage } from '@/app/components/LandingPage';
+import { ProtectedRoute, AppUser } from '@/app/components/ProtectedRoute';
 import { auth, getCurrentUser, setCurrentUser, profile as profileApi, seed } from '@/app/lib/api';
 
-type AppView = 'landing' | 'login' | 'signup' | 'forgot-password' | 'dashboard' | 'mentor-dashboard';
-
 export default function App() {
-  const [view, setView] = useState<AppView>('landing');
+  const navigate = useNavigate();
+  const [currentUser, setCurrentAppUser] = useState<AppUser | null>(getCurrentUser());
   const [isRestoringSession, setIsRestoringSession] = useState(true);
 
   // On mount: try to restore a previous session
@@ -24,17 +23,16 @@ export default function App() {
           const prof = await profileApi.get();
           if (prof) {
             setCurrentUser(prof);
-            if (prof.role === 'mentor') {
-              setView('mentor-dashboard');
-            } else {
-              setView('dashboard');
-            }
+            setCurrentAppUser(prof);
           }
+        } else {
+          setCurrentAppUser(getCurrentUser());
         }
         // Seed demo data (idempotent)
         try { await seed.demo(); } catch {}
       } catch (e) {
         // No active session, stay on landing
+        setCurrentAppUser(getCurrentUser());
       } finally {
         setIsRestoringSession(false);
       }
@@ -42,82 +40,109 @@ export default function App() {
     restore();
   }, []);
 
-  const handleLogout = async () => {
-    try { await auth.logout(); } catch {}
-    setView('login');
+  const handleAuthSuccess = async () => {
+    try {
+      const prof = await profileApi.get();
+      if (prof) {
+        setCurrentUser(prof);
+        setCurrentAppUser(prof);
+        navigate(resolveHomeRoute(prof), { replace: true });
+        return;
+      }
+    } catch {
+      // Fall back to local user state if profile fetch fails.
+    }
+
+    const localUser = getCurrentUser() as AppUser | null;
+    setCurrentAppUser(localUser);
+    navigate(resolveHomeRoute(localUser), { replace: true });
   };
 
-  // Show a brief loading screen while restoring session
-  if (isRestoringSession) {
-    return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
-        <div className="flex flex-col items-center gap-4">
-          <div className="w-10 h-10 border-[3px] border-[#003566] border-t-transparent rounded-full animate-spin" />
-          <p className="font-['Poppins'] text-[14px] text-black/50">Loading Learnova...</p>
-        </div>
-      </div>
-    );
-  }
+  const handleLogout = async () => {
+    try { await auth.logout(); } catch {}
+    setCurrentAppUser(null);
+    navigate('/login', { replace: true });
+  };
 
-  // ── Mentor Dashboard ───────────────────────────────────────
-  if (view === 'mentor-dashboard') {
-    return (
-      <div className="min-h-screen bg-white w-full overflow-x-hidden">
-        <MentorDashboard onLogout={handleLogout} />
-      </div>
-    );
-  }
-
-  // ── User Dashboard ─────────────────────────────────────────
-  if (view === 'dashboard') {
-    return (
-      <div className="min-h-screen bg-white w-full overflow-x-hidden">
-        <StudyRoomDashboard onLogout={handleLogout} />
-      </div>
-    );
-  }
-
-  // ── Login ──────────────────────────────────────────────────
-  if (view === 'login') {
-    return (
-      <div className="min-h-screen bg-white w-full overflow-x-hidden">
-        <LoginPage
-          onLogin={() => setView('dashboard')}
-          onMentorLogin={() => setView('mentor-dashboard')}
-          onSignUp={() => setView('signup')}
-          onForgotPassword={() => setView('forgot-password')}
-          onBack={() => setView('landing')}
-        />
-      </div>
-    );
-  }
-
-  // ── Sign Up ────────────────────────────────────────────────
-  if (view === 'signup') {
-    return (
-      <div className="min-h-screen bg-white w-full overflow-x-hidden">
-        <SignUpPage
-          onSignUp={() => setView('dashboard')}
-          onLogin={() => setView('login')}
-          onBack={() => setView('landing')}
-        />
-      </div>
-    );
-  }
-
-  // ── Forgot Password ────────────────────────────────────────
-  if (view === 'forgot-password') {
-    return (
-      <div className="min-h-screen bg-white w-full overflow-x-hidden">
-        <ForgotPasswordPage onBack={() => setView('login')} />
-      </div>
-    );
-  }
-
-  // ── Landing Page ───────────────────────────────────────────
   return (
-    <div className="min-h-screen bg-white w-full overflow-x-hidden">
-      <LandingPage onLogin={() => setView('login')} onSignUp={() => setView('signup')} />
-    </div>
+    <Routes>
+      <Route
+        path="/"
+        element={
+          <div className="min-h-screen bg-white w-full overflow-x-hidden">
+            <LandingPage onLogin={() => navigate('/login')} onSignUp={() => navigate('/signup')} />
+          </div>
+        }
+      />
+
+      <Route
+        path="/login"
+        element={
+          <div className="min-h-screen bg-white w-full overflow-x-hidden">
+            <LoginPage
+              onLogin={() => {
+                setCurrentAppUser(getCurrentUser());
+                navigate('/dashboard', { replace: true });
+              }}
+              onMentorLogin={() => {
+                setCurrentAppUser(getCurrentUser());
+                navigate('/mentor-dashboard', { replace: true });
+              }}
+              onSignUp={() => navigate('/signup')}
+              onForgotPassword={() => navigate('/forgot-password')}
+              onBack={() => navigate('/')}
+            />
+          </div>
+        }
+      />
+
+      <Route
+        path="/signup"
+        element={
+          <div className="min-h-screen bg-white w-full overflow-x-hidden">
+            <SignUpPage
+              onSignUp={() => {
+                void handleAuthSuccess();
+              }}
+              onLogin={() => navigate('/login')}
+              onBack={() => navigate('/')}
+            />
+          </div>
+        }
+      />
+
+      <Route
+        path="/forgot-password"
+        element={
+          <div className="min-h-screen bg-white w-full overflow-x-hidden">
+            <ForgotPasswordPage onBack={() => navigate('/login')} />
+          </div>
+        }
+      />
+
+      <Route
+        path="/dashboard/*"
+        element={
+          <ProtectedRoute isRestoringSession={isRestoringSession} user={currentUser} requiredRole="student">
+            <div className="min-h-screen bg-white w-full overflow-x-hidden">
+              <StudyRoomDashboard onLogout={handleLogout} />
+            </div>
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/mentor-dashboard/*"
+        element={
+          <ProtectedRoute isRestoringSession={isRestoringSession} user={currentUser} requiredRole="mentor">
+            <div className="min-h-screen bg-white w-full overflow-x-hidden">
+              <MentorDashboard onLogout={handleLogout} />
+            </div>
+          </ProtectedRoute>
+        }
+      />
+
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
   );
 }

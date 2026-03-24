@@ -14,6 +14,7 @@ import { NotificationsPopup } from "./NotificationsPopup";
 import { ProfilePopup } from "./ProfilePopup";
 import { UserProfileSettings } from "./UserProfileSettings";
 import React from 'react';
+import { getCurrentUser, profile as profileApi, setCurrentUser } from '@/app/lib/api';
 import svgPaths from '@/imports/svg-87v94e0bse';
 import imgEllipse1 from "figma:asset/798eac6e288222603807db12d070c52d1a145785.png";
 import imgImage7 from "figma:asset/0212989c3ffa08119e6582c26d9f347c2e8a406d.png";
@@ -23,6 +24,7 @@ import imgImage9 from "figma:asset/a8edce0ddd1121ba27a502e71878a023f16660b8.png"
 import { ImageWithFallback } from "@/app/components/figma/ImageWithFallback";
 import { Sheet, SheetContent, SheetTrigger, SheetTitle, SheetDescription } from "@/app/components/ui/sheet";
 import { Menu, LogOut } from "lucide-react";
+import { useLocation, useNavigate } from "react-router-dom";
 
 // --- Icons Components based on Figma Import ---
 
@@ -391,11 +393,151 @@ const SidebarContent = ({
   </div>
 );
 
+const sectionRouteMap: Record<string, string> = {
+  "Study Rooms": "",
+  "Mentor Support": "mentor-support",
+  "AI Mentor": "mentor-support/ai",
+  "AI Mentor Voice": "mentor-support/ai/voice",
+  "AI Mentor Chat": "mentor-support/ai/chat",
+  "Human Mentor": "mentor-support/human",
+  "Productivity Tools": "productivity-tools",
+  "Emotional Wellness": "emotional-wellness",
+  "Community": "community",
+  "Profile Settings": "profile-settings",
+};
+
+const modeRouteMap: Record<string, string> = {
+  "Focus Mode": "study-rooms/focus",
+  "Silent Mode": "study-rooms/silent",
+  "Collaborative Mode": "study-rooms/collaborative",
+  "Live Mode": "study-rooms/live",
+};
+
+function normalizeDashboardSubPath(pathname: string): string {
+  const trimmedPath = pathname.replace(/\/+$/, "");
+  if (trimmedPath === "/dashboard") {
+    return "";
+  }
+  if (trimmedPath.startsWith("/dashboard/")) {
+    return trimmedPath.slice("/dashboard/".length);
+  }
+  return "";
+}
+
+function getModeFromSubPath(subPath: string): string | null {
+  const entry = Object.entries(modeRouteMap).find(([, route]) => route === subPath);
+  return entry?.[0] ?? null;
+}
+
+function getSectionFromSubPath(subPath: string): string {
+  if (!subPath || subPath.startsWith("study-rooms")) {
+    return "Study Rooms";
+  }
+  if (subPath === "mentor-support") {
+    return "Mentor Support";
+  }
+  if (subPath === "mentor-support/ai") {
+    return "AI Mentor";
+  }
+  if (subPath === "mentor-support/ai/voice") {
+    return "AI Mentor Voice";
+  }
+  if (subPath === "mentor-support/ai/chat") {
+    return "AI Mentor Chat";
+  }
+  if (subPath === "mentor-support/human") {
+    return "Human Mentor";
+  }
+  if (subPath === "productivity-tools") {
+    return "Productivity Tools";
+  }
+  if (subPath === "emotional-wellness") {
+    return "Emotional Wellness";
+  }
+  if (subPath === "community") {
+    return "Community";
+  }
+  if (subPath === "profile-settings") {
+    return "Profile Settings";
+  }
+  return "Study Rooms";
+}
+
+function isKnownDashboardSubPath(subPath: string): boolean {
+  return subPath === "" ||
+    subPath.startsWith("study-rooms") ||
+    subPath === "mentor-support" ||
+    subPath === "mentor-support/ai" ||
+    subPath === "mentor-support/ai/voice" ||
+    subPath === "mentor-support/ai/chat" ||
+    subPath === "mentor-support/human" ||
+    subPath === "productivity-tools" ||
+    subPath === "emotional-wellness" ||
+    subPath === "community" ||
+    subPath === "profile-settings";
+}
+
 export function StudyRoomDashboard({ onLogout }: { onLogout?: () => void }) {
-  const [activeMode, setActiveMode] = React.useState<string | null>(null);
-  const [activeSection, setActiveSection] = React.useState("Study Rooms");
+  const navigate = useNavigate();
+  const location = useLocation();
+  const dashboardSubPath = normalizeDashboardSubPath(location.pathname);
+  const activeMode = getModeFromSubPath(dashboardSubPath);
+  const activeSection = getSectionFromSubPath(dashboardSubPath);
   const [showNotifications, setShowNotifications] = React.useState(false);
   const [showProfile, setShowProfile] = React.useState(false);
+  const [userProfile, setUserProfile] = React.useState<{ name: string; role: string; avatar?: string | null }>(() => {
+    const cached = getCurrentUser();
+    return {
+      name: cached?.name || 'User',
+      role: cached?.role || 'student',
+      avatar: cached?.avatar || cached?.avatar_url || null,
+    };
+  });
+
+  React.useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        const prof = await profileApi.get();
+        if (!mounted || !prof) return;
+        setUserProfile({
+          name: prof.name || 'User',
+          role: prof.role || 'student',
+          avatar: prof.avatar || prof.avatar_url || null,
+        });
+        setCurrentUser(prof);
+      } catch {
+        // Keep cached profile if fetch fails.
+      }
+    })();
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  React.useEffect(() => {
+    if (!isKnownDashboardSubPath(dashboardSubPath)) {
+      navigate('/dashboard', { replace: true });
+    }
+  }, [dashboardSubPath, navigate]);
+
+  const navigateToSection = React.useCallback((section: string) => {
+    const subPath = sectionRouteMap[section] ?? "";
+    navigate(subPath ? `/dashboard/${subPath}` : '/dashboard');
+  }, [navigate]);
+
+  const navigateToMode = React.useCallback((mode: string) => {
+    const subPath = modeRouteMap[mode];
+    if (!subPath) {
+      navigate('/dashboard');
+      return;
+    }
+    navigate(`/dashboard/${subPath}`);
+  }, [navigate]);
+
+  const displayName = userProfile.name || 'User';
+  const displayRole = userProfile.role === 'mentor' ? 'Mentor' : 'Student';
+  const displayAvatar = userProfile.avatar || imgEllipse1;
 
   const modes = [
     {
@@ -458,19 +600,19 @@ export function StudyRoomDashboard({ onLogout }: { onLogout?: () => void }) {
   ];
 
   if (activeMode === "Focus Mode") {
-    return <FocusMode onLeave={() => setActiveMode(null)} />;
+    return <FocusMode onLeave={() => navigate('/dashboard')} />;
   }
 
   if (activeMode === "Silent Mode") {
-    return <SilentModeView onLeave={() => setActiveMode(null)} />;
+    return <SilentModeView onLeave={() => navigate('/dashboard')} />;
   }
 
   if (activeMode === "Collaborative Mode") {
-    return <CollaborativeModeView onLeave={() => setActiveMode(null)} />;
+    return <CollaborativeModeView onLeave={() => navigate('/dashboard')} />;
   }
 
   if (activeMode === "Live Mode") {
-    return <LiveModeView onLeave={() => setActiveMode(null)} />;
+    return <LiveModeView onLeave={() => navigate('/dashboard')} />;
   }
 
   // --- Router Logic for AI Mentor ---
@@ -478,9 +620,9 @@ export function StudyRoomDashboard({ onLogout }: { onLogout?: () => void }) {
   if (activeSection === "AI Mentor") {
     return (
       <AiMentorHome 
-        onBack={() => setActiveSection("Mentor Support")} 
-        onVoiceMode={() => setActiveSection("AI Mentor Voice")}
-        onChatMode={() => setActiveSection("AI Mentor Chat")}
+        onBack={() => navigateToSection("Mentor Support")} 
+        onVoiceMode={() => navigateToSection("AI Mentor Voice")}
+        onChatMode={() => navigateToSection("AI Mentor Chat")}
       />
     );
   }
@@ -488,8 +630,8 @@ export function StudyRoomDashboard({ onLogout }: { onLogout?: () => void }) {
   if (activeSection === "AI Mentor Voice") {
     return (
       <AiMentorVoiceChat 
-        onBack={() => setActiveSection("Mentor Support")}
-        onTextMode={() => setActiveSection("AI Mentor Chat")}
+        onBack={() => navigateToSection("Mentor Support")}
+        onTextMode={() => navigateToSection("AI Mentor Chat")}
       />
     );
   }
@@ -497,8 +639,8 @@ export function StudyRoomDashboard({ onLogout }: { onLogout?: () => void }) {
   if (activeSection === "AI Mentor Chat") {
     return (
       <AiMentorChat
-        onBack={() => setActiveSection("Mentor Support")}
-        onVoiceMode={() => setActiveSection("AI Mentor Voice")}
+        onBack={() => navigateToSection("Mentor Support")}
+        onVoiceMode={() => navigateToSection("AI Mentor Voice")}
       />
     );
   }
@@ -507,7 +649,7 @@ export function StudyRoomDashboard({ onLogout }: { onLogout?: () => void }) {
   if (activeSection === "Profile Settings") {
     return (
       <div className="flex w-full min-h-screen bg-white font-['Poppins']">
-        <UserProfileSettings onBack={() => setActiveSection("Study Rooms")} />
+        <UserProfileSettings onBack={() => navigateToSection("Study Rooms")} />
       </div>
     );
   }
@@ -546,35 +688,35 @@ export function StudyRoomDashboard({ onLogout }: { onLogout?: () => void }) {
               icon={<IconStudyRooms active={activeSection === "Study Rooms"} light />}
               label="Study Rooms"
               active={activeSection === "Study Rooms"}
-              onClick={() => setActiveSection("Study Rooms")}
+              onClick={() => navigateToSection("Study Rooms")}
               variant="dark"
             />
             <SidebarItem
               icon={<IconMentorSupport active={activeSection === "Mentor Support" || activeSection.startsWith("AI Mentor") || activeSection === "Human Mentor"} light />}
               label="Mentor Support"
               active={activeSection === "Mentor Support" || activeSection.startsWith("AI Mentor") || activeSection === "Human Mentor"}
-              onClick={() => setActiveSection("Mentor Support")}
+              onClick={() => navigateToSection("Mentor Support")}
               variant="dark"
             />
             <SidebarItem
               icon={<IconProductivityTools active={activeSection === "Productivity Tools"} light />}
               label="Productivity Tools"
               active={activeSection === "Productivity Tools"}
-              onClick={() => setActiveSection("Productivity Tools")}
+              onClick={() => navigateToSection("Productivity Tools")}
               variant="dark"
             />
             <SidebarItem
               icon={<IconEmotionalWellness active={activeSection === "Emotional Wellness"} light />}
               label="Emotional Wellness"
               active={activeSection === "Emotional Wellness"}
-              onClick={() => setActiveSection("Emotional Wellness")}
+              onClick={() => navigateToSection("Emotional Wellness")}
               variant="dark"
             />
             <SidebarItem
               icon={<IconCommunity active={activeSection === "Community"} light />}
               label="Community"
               active={activeSection === "Community"}
-              onClick={() => setActiveSection("Community")}
+              onClick={() => navigateToSection("Community")}
               variant="dark"
             />
           </div>
@@ -584,11 +726,11 @@ export function StudyRoomDashboard({ onLogout }: { onLogout?: () => void }) {
             {/* Mini user card */}
             <div className="flex items-center gap-3 px-4 py-3 rounded-[14px] bg-white/[0.06] border border-white/[0.06]">
               <div className="size-[32px] rounded-full overflow-hidden border border-white/[0.15] shrink-0">
-                <ImageWithFallback src={imgEllipse1} alt="User" className="size-full object-cover" />
+                <ImageWithFallback src={displayAvatar} alt={displayName} className="size-full object-cover" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-[13px] font-semibold text-white/80 truncate" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Jack Sparrow</p>
-                <p className="text-[11px] text-white/30">Student</p>
+                <p className="text-[13px] font-semibold text-white/80 truncate" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>{displayName}</p>
+                <p className="text-[11px] text-white/30">{displayRole}</p>
               </div>
             </div>
 
@@ -628,7 +770,7 @@ export function StudyRoomDashboard({ onLogout }: { onLogout?: () => void }) {
                     <SheetDescription className="sr-only">Mobile navigation menu</SheetDescription>
                     <SidebarContent
                       activeSection={activeSection}
-                      onNavigate={(section) => setActiveSection(section)}
+                      onNavigate={(section) => navigateToSection(section)}
                       onLogout={onLogout}
                     />
                   </SheetContent>
@@ -686,11 +828,11 @@ export function StudyRoomDashboard({ onLogout }: { onLogout?: () => void }) {
                     className="flex items-center gap-2.5 cursor-pointer hover:opacity-90 transition-opacity pl-1"
                   >
                     <div className="size-[36px] rounded-[12px] overflow-hidden border-2 border-[#e2e8f0] hover:border-[#0967bd] transition-colors">
-                      <ImageWithFallback src={imgEllipse1} alt="User" className="size-full object-cover" />
+                      <ImageWithFallback src={displayAvatar} alt={displayName} className="size-full object-cover" />
                     </div>
                     <div className="hidden sm:flex flex-col items-start">
-                      <span className="text-[13px] font-semibold text-[#1e293b] leading-tight">Jack Sparrow</span>
-                      <span className="text-[11px] text-[#94a3b8] leading-tight">Student</span>
+                      <span className="text-[13px] font-semibold text-[#1e293b] leading-tight">{displayName}</span>
+                      <span className="text-[11px] text-[#94a3b8] leading-tight">{displayRole}</span>
                     </div>
                     <svg viewBox="0 0 24 24" className="w-4 h-4 text-[#94a3b8] hidden sm:block" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
                       <path d="M6 9l6 6 6-6" />
@@ -699,7 +841,7 @@ export function StudyRoomDashboard({ onLogout }: { onLogout?: () => void }) {
                   <ProfilePopup
                     isOpen={showProfile}
                     onClose={() => setShowProfile(false)}
-                    onProfileSettings={() => setActiveSection("Profile Settings")}
+                    onProfileSettings={() => navigateToSection("Profile Settings")}
                     onLogout={() => onLogout?.()}
                   />
                 </div>
@@ -769,7 +911,7 @@ export function StudyRoomDashboard({ onLogout }: { onLogout?: () => void }) {
 
                 {/* ── Featured Mode (Focus) — Large Hero Card ── */}
                 <div
-                  onClick={() => setActiveMode("Focus Mode")}
+                  onClick={() => navigateToMode("Focus Mode")}
                   className="relative w-full rounded-[22px] overflow-hidden mb-5 cursor-pointer group transition-all duration-300 hover:shadow-2xl"
                   style={{ minHeight: 280 }}
                 >
@@ -836,7 +978,7 @@ export function StudyRoomDashboard({ onLogout }: { onLogout?: () => void }) {
                   {modes.slice(1).map((mode, idx) => (
                     <div
                       key={mode.title}
-                      onClick={() => setActiveMode(mode.title)}
+                      onClick={() => navigateToMode(mode.title)}
                       className="relative rounded-[20px] overflow-hidden cursor-pointer group transition-all duration-300 hover:shadow-xl hover:-translate-y-1"
                       style={{ minHeight: 240 }}
                     >
@@ -909,7 +1051,7 @@ export function StudyRoomDashboard({ onLogout }: { onLogout?: () => void }) {
                       </p>
                     </div>
                     <button
-                      onClick={() => setActiveMode("Focus Mode")}
+                      onClick={() => navigateToMode("Focus Mode")}
                       className="relative z-10 group/btn inline-flex items-center gap-2 px-6 py-3 rounded-full text-[13px] font-bold text-[#003566] bg-white hover:bg-[#f77f00] hover:text-white transition-all duration-300 shrink-0 shadow-lg hover:shadow-xl cursor-pointer"
                     >
                       Try Focus Mode
@@ -924,13 +1066,13 @@ export function StudyRoomDashboard({ onLogout }: { onLogout?: () => void }) {
 
             {activeSection === "Mentor Support" && (
               <MentorSupport
-                onStartAiMentor={() => setActiveSection("AI Mentor")}
-                onStartHumanMentor={() => setActiveSection("Human Mentor")}
+                onStartAiMentor={() => navigateToSection("AI Mentor")}
+                onStartHumanMentor={() => navigateToSection("Human Mentor")}
               />
             )}
 
             {activeSection === "Human Mentor" && (
-              <HumanMentorHome onBack={() => setActiveSection("Mentor Support")} />
+              <HumanMentorHome onBack={() => navigateToSection("Mentor Support")} />
             )}
 
             {activeSection === "Productivity Tools" && (

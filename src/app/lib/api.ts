@@ -7,7 +7,7 @@
 import { projectId, publicAnonKey } from '/utils/supabase/info';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
-export const BASE_URL = `https://${projectId}.supabase.co/functions/v1/make-server-a0923c49`;
+export const BASE_URL = `https://${projectId}.supabase.co/functions/v1/server/make-server-a0923c49`;
 
 // ─── Supabase Auth client (true singleton) ──────────────────────────────────────
 //
@@ -150,7 +150,7 @@ async function apiFetch<T = any>(
 
 export const auth = {
   /** Register a new user or mentor account */
-  async register(name: string, email: string, password: string, role: 'user' | 'mentor') {
+  async register(name: string, email: string, password: string, role: 'student' | 'mentor') {
     return apiFetch('/auth/register', {
       method: 'POST',
       body: JSON.stringify({ name, email, password, role }),
