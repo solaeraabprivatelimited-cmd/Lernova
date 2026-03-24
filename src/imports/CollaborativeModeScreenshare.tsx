@@ -1,13 +1,25 @@
 import svgPaths from "./svg-d03678g4bs";
-import imgImage11 from "figma:asset/0a6d0df68b4e3d2fc770f7b30199a9f65c582ca1.png";
-import imgImage20 from "figma:asset/7fce8823bcca9b12b9a4c48a73765a3fd7d244fa.png";
-import imgFrame427318269 from "figma:asset/ad5368a3315b88119c1a283a49b009c3a7227d4f.png";
-import imgFrame427318272 from "figma:asset/2e6af28c0e5d2548ed01b2eb2977da2ecb16db3e.png";
-import imgFrame427318270 from "figma:asset/68cae3193ae9d107398f30ed207afe03ffcbc3d0.png";
-import imgFrame427318273 from "figma:asset/df134df2839e995d2e6cad8c6199688e372f633b.png";
-import imgFrame427318274 from "figma:asset/96561b5363ed6c4b01aedeb5a19d6daa38ce5958.png";
-import imgFrame427318271 from "figma:asset/c06a1473b2e25c911dc67e55b8db19f784e952b0.png";
-import imgImage15 from "figma:asset/0aa69f592fdcbc59e46001832f55ebdbca9f8cf7.png";
+// Figma asset imports removed - use placeholder or actual image paths
+// import imgImage11 from "figma:asset/0a6d0df68b4e3d2fc770f7b30199a9f65c582ca1.png";
+// import imgImage20 from "figma:asset/7fce8823bcca9b12b9a4c48a73765a3fd7d244fa.png";
+// import imgFrame427318269 from "figma:asset/ad5368a3315b88119c1a283a49b009c3a7227d4f.png";
+// import imgFrame427318272 from "figma:asset/2e6af28c0e5d2548ed01b2eb2977da2ecb16db3e.png";
+// import imgFrame427318270 from "figma:asset/68cae3193ae9d107398f30ed207afe03ffcbc3d0.png";
+// import imgFrame427318273 from "figma:asset/df134df2839e995d2e6cad8c6199688e372f633b.png";
+// import imgFrame427318274 from "figma:asset/96561b5363ed6c4b01aedeb5a19d6daa38ce5958.png";
+// import imgFrame427318271 from "figma:asset/c06a1473b2e25c911dc67e55b8db19f784e952b0.png";
+// import imgImage15 from "figma:asset/0aa69f592fdcbc59e46001832f55ebdbca9f8cf7.png";
+
+// Placeholder for Figma assets
+const imgImage11 = "";
+const imgImage20 = "";
+const imgFrame427318269 = "";
+const imgFrame427318272 = "";
+const imgFrame427318270 = "";
+const imgFrame427318273 = "";
+const imgFrame427318274 = "";
+const imgFrame427318271 = "";
+const imgImage15 = "";
 
 function Frame3() {
   return (
