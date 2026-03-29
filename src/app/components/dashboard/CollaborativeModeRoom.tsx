@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Bell, Mic, MicOff, Video, VideoOff, Upload, Users, Smile, MessageSquare, Timer, StickyNote, ChevronLeft, ChevronRight, Pin, BellOff } from 'lucide-react';
 import imgFrame427318269 from "figma:asset/ad5368a3315b88119c1a283a49b009c3a7227d4f.png";
 import imgFrame427318272 from "figma:asset/2e6af28c0e5d2548ed01b2eb2977da2ecb16db3e.png";
@@ -16,6 +16,10 @@ import { PeoplePanel } from "./PeoplePanel";
 import { ReactionPicker } from "./ReactionPicker";
 import { ReactionBurst } from "./ReactionBurst";
 import { MessagesPanel } from "./MessagesPanel";
+import { getCurrentUser, getSupabaseClient } from '@/app/lib/api';
+import { useStudyRoom } from '@/utils/supabase/useStudyRoom';
+import { useLiveKit } from '@/utils/livekit';
+import { Track, Participant as LiveKitParticipant } from 'livekit-client';
 
 interface CollaborativeModeRoomProps {
   roomName?: string;
@@ -25,11 +29,14 @@ interface CollaborativeModeRoomProps {
 }
 
 interface Participant {
-  id: number;
+  id: string;
+  user_id: string;
   name: string;
   image: string;
   isMuted: boolean;
   isVideoOff: boolean;
+  is_pinned?: boolean;
+  permissions?: string;
 }
 
 interface TimerNotification {
@@ -38,19 +45,12 @@ interface TimerNotification {
   duration: string;
 }
 
-// Participants data
-const participants = [
-  { id: 0, name: "Elizabeth (You)", image: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop", isMuted: false, isVideoOff: false },
-  { id: 1, name: "John", image: "https://images.unsplash.com/photo-1599566150163-29194dcaad36?w=100&h=100&fit=crop", isMuted: true, isVideoOff: false },
-  { id: 2, name: "Franklin", image: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&h=100&fit=crop", isMuted: false, isVideoOff: false },
-  { id: 3, name: "Naomi", image: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&h=100&fit=crop", isMuted: false, isVideoOff: true },
-  { id: 4, name: "Zendaya", image: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=100&h=100&fit=crop", isMuted: false, isVideoOff: false },
-  { id: 5, name: "Steve", image: "https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?w=100&h=100&fit=crop", isMuted: false, isVideoOff: false },
-  { id: 6, name: "Harry", image: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&h=100&fit=crop", isMuted: false, isVideoOff: false },
+// Default fallback participants (used when realtime data not available)
+const defaultParticipants: Participant[] = [
+  { id: '1', user_id: 'user1', name: "You", image: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop", isMuted: false, isVideoOff: false },
+  { id: '2', user_id: 'user2', name: "John", image: "https://images.unsplash.com/photo-1599566150163-29194dcaad36?w=100&h=100&fit=crop", isMuted: true, isVideoOff: false },
+  { id: '3', user_id: 'user3', name: "Franklin", image: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&h=100&fit=crop", isMuted: false, isVideoOff: false },
 ];
-
-const isAdmin = true; // Current user is admin (Elizabeth)
-const currentUserId = 0; // Elizabeth's ID
 
 export function CollaborativeModeRoom({ 
   roomName = 'Study Room', 
@@ -58,11 +58,40 @@ export function CollaborativeModeRoom({
   subject = 'General',
   onLeaveRoom 
 }: CollaborativeModeRoomProps) {
+  const currentUser = getCurrentUser();
+  const userId = currentUser?.id || 'guest';
+  
+  // Use real-time hook for Supabase data
+  const {
+    room,
+    participants: realtimeParticipants,
+    messages,
+    reactions,
+    loading,
+    error,
+    sendMessage,
+    addReaction,
+  } = useStudyRoom({ roomId, userId });
+
+  // Use real participants from realtime, fallback to defaults
+  const participants: Participant[] = realtimeParticipants?.map((p: any) => ({
+    id: p.id,
+    user_id: p.user_id,
+    name: p.user?.name || 'Unknown',
+    image: p.user?.avatar_url || "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop",
+    isMuted: p.is_muted || false,
+    isVideoOff: p.is_video_off || false,
+    is_pinned: p.is_pinned,
+    permissions: p.permissions,
+  })) || defaultParticipants;
+
+  const isAdmin = currentUser?.role === 'mentor' || false;
+  const currentUserId = userId;
+  
   const [isMicOn, setIsMicOn] = useState(true);
   const [isVideoOn, setIsVideoOn] = useState(true);
   const [elapsedTime, setElapsedTime] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
-  const [pinnedParticipantId, setPinnedParticipantId] = useState<number | null>(null);
   const [showFocusTimer, setShowFocusTimer] = useState(false);
   const [timerNotification, setTimerNotification] = useState<TimerNotification | null>(null);
   const [showBlockNotifications, setShowBlockNotifications] = useState(false);
@@ -74,9 +103,24 @@ export function CollaborativeModeRoom({
   const [showReactionPicker, setShowReactionPicker] = useState(false);
   const [reactionBursts, setReactionBursts] = useState<Array<{ id: string; emoji: string }>>([]);
   const [showMessages, setShowMessages] = useState(false);
+  const [otherUsersReactionsToShow, setOtherUsersReactionsToShow] = useState<Array<{ id: string; emoji: string; timestamp: number }>>([]);
   const totalPages = 20;
+  const [pinnedParticipantId, setPinnedParticipantId] = useState<string | null>(null);
+  
+  // LiveKit state
+  const [liveKitToken, setLiveKitToken] = useState<string>('');
+  const [liveKitConnected, setLiveKitConnected] = useState(false);
+  const [liveKitRemoteParticipants, setLiveKitRemoteParticipants] = useState<LiveKitParticipant[]>([]);
+  const localVideoRef = useRef<HTMLVideoElement>(null);
+  const remoteVideoRefsRef = useRef<Map<string, React.RefObject<HTMLVideoElement>>>(new Map());
 
-  // Timer
+  // Helper to get or create remote video ref
+  const getRemoteVideoRef = useCallback((participantSid: string) => {
+    if (!remoteVideoRefsRef.current.has(participantSid)) {
+      remoteVideoRefsRef.current.set(participantSid, React.createRef<HTMLVideoElement>());
+    }
+    return remoteVideoRefsRef.current.get(participantSid)!;
+  }, []);
   useEffect(() => {
     const timer = setInterval(() => {
       setElapsedTime(prev => prev + 1);
@@ -85,6 +129,153 @@ export function CollaborativeModeRoom({
     return () => clearInterval(timer);
   }, []);
 
+  // Generate LiveKit token
+  useEffect(() => {
+    if (!room) return;
+
+    const generateToken = async () => {
+      try {
+        console.log('🔵 Generating LiveKit token...');
+        const supabase = getSupabaseClient();
+        const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+        
+        console.log('Supabase URL:', supabaseUrl);
+
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) {
+          console.warn('⚠️ No session found, using anon key for token generation');
+        }
+
+        const response = await fetch(`${supabaseUrl}/functions/v1/livekit-token`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(session ? { 'Authorization': `Bearer ${session.access_token}` } : {}),
+          },
+          body: JSON.stringify({
+            roomId: roomId,
+            userId: userId,
+            userName: currentUser?.user_metadata?.full_name || 'Guest',
+          }),
+        });
+
+        console.log('Response status:', response.status);
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          const errorMsg = errorData.error || `HTTP ${response.status}`;
+          throw new Error(`Token generation failed: ${errorMsg}`);
+        }
+        
+        const data = await response.json();
+        if (!data.token) {
+          throw new Error('No token in response');
+        }
+        
+        console.log('🟢 Token generated successfully');
+        setLiveKitToken(data.token);
+      } catch (err) {
+        const errorMsg = err instanceof Error ? err.message : String(err);
+        console.error('🔴 Token generation error:', errorMsg);
+      }
+    };
+
+    generateToken();
+  }, [room, roomId, userId, currentUser];
+
+  // LiveKit integration
+  const liveKitCallbacks = useCallback(() => ({
+    onRoomConnected: () => {
+      console.log('✅ Connected to LiveKit');
+      setLiveKitConnected(true);
+    },
+    onRoomDisconnected: () => {
+      console.log('❌ Disconnected from LiveKit');
+      setLiveKitConnected(false);
+    },
+    onParticipantJoined: (participant: LiveKitParticipant) => {
+      console.log('👥 Participant joined:', participant.identity);
+      getRemoteVideoRef(participant.sid);
+      setLiveKitRemoteParticipants((prev) => [...prev, participant]);
+    },
+    onParticipantLeft: (participant: LiveKitParticipant) => {
+      console.log('👥 Participant left:', participant.identity);
+      remoteVideoRefsRef.current.delete(participant.sid);
+      setLiveKitRemoteParticipants((prev) => prev.filter((p) => p.sid !== participant.sid));
+    },
+    onTrackSubscribed: (track: Track, publication: any, participant: LiveKitParticipant) => {
+      if (track.kind === Track.Kind.Video) {
+        const videoRef = getRemoteVideoRef(participant.sid);
+        if (videoRef.current && livekit.manager) {
+          livekit.manager.attachRemoteVideoElement(videoRef.current, participant);
+        }
+      }
+    },
+  }), []);
+
+  const livekit = useLiveKit(
+    {
+      url: import.meta.env.VITE_LIVEKIT_URL || 'ws://localhost:7880',
+      token: liveKitToken,
+    },
+    !!liveKitToken,
+    liveKitCallbacks()
+  );
+
+  // Attach local video
+  useEffect(() => {
+    if (!livekit.connected || !livekit.manager || !localVideoRef.current) return;
+    livekit.manager.attachLocalVideoElement(localVideoRef.current);
+    const timeout = setTimeout(() => {
+      if (localVideoRef.current && livekit.manager) {
+        livekit.manager.attachLocalVideoElement(localVideoRef.current);
+      }
+    }, 1000);
+    return () => clearTimeout(timeout);
+  }, [livekit.connected, livekit.manager]);
+
+  // Attach remote videos  
+  useEffect(() => {
+    if (!livekit.manager || liveKitRemoteParticipants.length === 0) return;
+    liveKitRemoteParticipants.forEach((participant) => {
+      const videoRef = getRemoteVideoRef(participant.sid);
+      if (videoRef.current) {
+        livekit.manager!.attachRemoteVideoElement(videoRef.current, participant);
+      }
+    });
+  }, [liveKitRemoteParticipants, livekit.manager]);
+
+  // Watch for new reactions from other users
+  useEffect(() => {
+    if (!reactions || reactions.length === 0) {
+      console.log('No reactions available');
+      return;
+    }
+
+    console.log('All reactions:', reactions);
+    
+    // Show all other users' reactions (no time limit for existing reactions)
+    const recentOtherReactions = reactions.filter(r => {
+      const isOtherUser = r.user_id !== userId;
+      console.log('Filtering reaction:', { emoji: r.emoji, userId: r.user_id, currentUserId: userId, isOtherUser });
+      return isOtherUser;
+    });
+
+    console.log('Recent other reactions:', recentOtherReactions);
+    
+    if (recentOtherReactions.length > 0) {
+      const newReactionsToShow = recentOtherReactions.map(r => ({
+        id: r.id,
+        emoji: r.emoji,
+        timestamp: new Date(r.created_at).getTime()
+      }));
+      console.log('Setting reactions to show:', newReactionsToShow);
+      setOtherUsersReactionsToShow(newReactionsToShow);
+    } else {
+      console.log('No reactions from other users found');
+      setOtherUsersReactionsToShow([]);
+    }
+  }, [reactions, userId]);
+
   const formatTime = (seconds: number) => {
     const hrs = Math.floor(seconds / 3600);
     const mins = Math.floor((seconds % 3600) / 60);
@@ -92,7 +283,7 @@ export function CollaborativeModeRoom({
     return `${hrs.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
-  const handlePinParticipant = (participantId: number) => {
+  const handlePinParticipant = (participantId: string) => {
     setPinnedParticipantId(pinnedParticipantId === participantId ? null : participantId);
   };
 
@@ -117,13 +308,22 @@ export function CollaborativeModeRoom({
     // Create a unique ID for this burst
     const burstId = Date.now().toString();
     
-    // Log the reaction (in production, this would broadcast to other participants)
-    console.log('Reaction sent:', emoji);
+    console.log('Sending reaction:', { emoji, userId, roomId });
+    
+    // Send emoji reaction to real-time database
+    addReaction(emoji)
+      .then(() => {
+        console.log('Reaction sent successfully:', emoji);
+      })
+      .catch(err => {
+        console.error('Failed to send reaction:', err);
+        console.error('Error details:', { message: err.message, code: err.code });
+      });
     
     // Close the reaction picker
     setShowReactionPicker(false);
     
-    // Add a reaction burst
+    // Add a reaction burst for visual feedback
     setReactionBursts(prev => [...prev, { id: burstId, emoji }]);
     
     // Remove the burst after 3.5 seconds (max animation duration)
@@ -136,6 +336,40 @@ export function CollaborativeModeRoom({
   const otherParticipants = pinnedParticipant 
     ? participants.filter(p => p.id !== pinnedParticipantId)
     : participants.slice(1); // Exclude first participant if no one is pinned
+
+  // Show loading state
+  if (loading) {
+    return (
+      <div className="bg-black h-screen w-full flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-white text-lg">Loading study room...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error state
+  if (error || !room) {
+    const errorMessage = error 
+      ? (typeof error === 'string' ? error : error?.message || 'Unknown error occurred')
+      : 'Room not found or is inactive';
+    
+    return (
+      <div className="bg-black h-screen w-full flex items-center justify-center">
+        <div className="text-center text-white">
+          <h3 className="text-xl font-bold mb-2">Failed to Load Room</h3>
+          <p className="text-gray-300 mb-6">{errorMessage}</p>
+          <button
+            onClick={onLeaveRoom}
+            className="px-6 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors"
+          >
+            Go Back
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-[#1a1a1a] h-screen w-full flex flex-col font-['Poppins'] overflow-hidden">
@@ -409,7 +643,7 @@ export function CollaborativeModeRoom({
             <span className="text-[14px]">Time Elapsed: {formatTime(elapsedTime)}</span>
           </div>
           <div className="text-[14px]">
-            Room ID: {roomId}
+            Room Code: {room?.code || roomId}
           </div>
         </div>
 
@@ -542,6 +776,9 @@ export function CollaborativeModeRoom({
       {showNotes && (
         <NotesPanel
           onClose={() => setShowNotes(false)}
+          isOpen={showNotes}
+          roomId={roomId}
+          userId={userId}
         />
       )}
 
@@ -573,13 +810,39 @@ export function CollaborativeModeRoom({
         />
       ))}
 
+      {/* Other Users' Reactions */}
+      {otherUsersReactionsToShow.length > 0 && (
+        <div className="fixed inset-0 pointer-events-none z-[35] overflow-hidden">
+          {otherUsersReactionsToShow.map((reaction, idx) => {
+            const positionClasses = [
+              'left-[20%] top-[30%]',
+              'left-[35%] top-[38%]',
+              'left-[50%] top-[30%]',
+              'left-[65%] top-[38%]',
+              'left-[40%] top-[50%]',
+            ];
+            const posClass = positionClasses[idx % positionClasses.length];
+            return (
+              <div
+                key={`${reaction.id}-${idx}`}
+                className={`absolute text-5xl drop-shadow-lg animate-float-up-fade ${posClass}`}
+              >
+                {reaction.emoji}
+              </div>
+            );
+          })}
+        </div>
+      )}
+
       {/* Messages Panel */}
       {showMessages && (
         <MessagesPanel
           onClose={() => setShowMessages(false)}
           currentUserId={currentUserId}
-          currentUserName="You"
-          currentUserAvatar={participants[currentUserId].image}
+          currentUserName={currentUser?.name || 'You'}
+          currentUserAvatar={participants.find(p => p.user_id === currentUserId)?.image || currentUser?.avatar_url || "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop"}
+          realtimeMessages={messages}
+          onSendMessage={sendMessage}
         />
       )}
     </div>
