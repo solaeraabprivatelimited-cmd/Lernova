@@ -180,7 +180,7 @@ export function CollaborativeModeRoom({
     };
 
     generateToken();
-  }, [room, roomId, userId, currentUser];
+  }, [room, roomId, userId, currentUser]);
 
   // LiveKit integration
   const liveKitCallbacks = useCallback(() => ({
