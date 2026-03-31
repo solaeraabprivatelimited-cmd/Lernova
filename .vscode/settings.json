@@ -1,0 +1,19 @@
+{
+  "deno.enable": true,
+  "deno.enablePaths": [
+    "supabase/functions"
+  ],
+  "css.lint.validProperties": [
+    "composes"
+  ],
+  "css.lint.compatibleVendorPrefixes": "off",
+  "css.lint.vendorPrefix": "off",
+  "css.lint.universalSelector": "off",
+  "css.lint.zeroUnits": "off",
+  "css.lint.fontFaceProperties": "off",
+  "css.lint.hexColorLength": "off",
+  "[css]": {
+    "editor.defaultFormatter": "prettier"
+  },
+  "stylelint.enable": false
+}

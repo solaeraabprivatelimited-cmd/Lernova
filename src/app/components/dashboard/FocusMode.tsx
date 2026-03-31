@@ -3,7 +3,7 @@ import { ImageWithFallback } from "../figma/ImageWithFallback";
 import { toast } from "sonner";
 import { SilentModeView } from "./SilentModeView";
 import { PostReportNotification } from "./PostReportNotification";
-import { notes as notesApi } from "@/app/lib/api";
+import { notes as notesApi, studySessions } from "@/app/lib/api";
 
 // Import Images
 import imgScreenshot111 from "figma:asset/a474824d07b7e42cbfd6a81ec948e9946f5e4c3e.png";
@@ -49,17 +49,46 @@ function TimerPanel({ onClose }: { onClose: () => void }) {
   const [timeLeft, setTimeLeft] = useState(1500);
   const [isActive, setIsActive] = useState(false);
   const [label, setLabel] = useState("Pomodoro");
+  const [totalStudyHours, setTotalStudyHours] = useState(0);
+  const [totalCompletedSessions, setTotalCompletedSessions] = useState(0);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const refreshStudySummary = useCallback(async () => {
+    try {
+      const summary = await studySessions.summary();
+      setTotalStudyHours(summary.totalHours);
+      setTotalCompletedSessions(summary.totalSessions);
+    } catch {
+      // Non-blocking for timer UX.
+    }
+  }, []);
+
+  const persistCompletedSession = useCallback(async (durationSeconds: number, modeLabel: string) => {
+    const durationMinutes = Number((durationSeconds / 60).toFixed(2));
+    const completedPomodoros = modeLabel.toLowerCase().includes("pomodoro") ? 1 : 0;
+    await studySessions.record(modeLabel.toLowerCase(), durationMinutes, completedPomodoros);
+    await refreshStudySummary();
+  }, [refreshStudySummary]);
+
+  useEffect(() => {
+    void refreshStudySummary();
+  }, [refreshStudySummary]);
 
   useEffect(() => {
     if (isActive && timeLeft > 0) {
       intervalRef.current = setInterval(() => setTimeLeft((p) => p - 1), 1000);
     } else if (timeLeft === 0 && isActive) {
       setIsActive(false);
-      toast.success("Timer complete! Great focus session.");
+      void persistCompletedSession(totalTime, label)
+        .then(() => {
+          toast.success("Timer complete! Session saved to your study history.");
+        })
+        .catch(() => {
+          toast.error("Timer complete, but failed to save session.");
+        });
     }
     return () => { if (intervalRef.current) clearInterval(intervalRef.current); };
-  }, [isActive, timeLeft]);
+  }, [isActive, timeLeft, totalTime, label, persistCompletedSession]);
 
   const progress = totalTime > 0 ? ((totalTime - timeLeft) / totalTime) * 100 : 0;
 
@@ -139,6 +168,18 @@ function TimerPanel({ onClose }: { onClose: () => void }) {
 
         {/* Presets */}
         <div className="px-7 pb-6">
+          <div className="mb-4 rounded-[14px] border border-white/[0.08] bg-white/[0.04] px-4 py-3">
+            <p className="text-[11px] font-semibold text-white/30 uppercase tracking-wider">Your Study Stats</p>
+            <div className="mt-2 flex items-center justify-between">
+              <span className="text-[13px] text-white/70">Total Hours</span>
+              <span className="text-[14px] font-bold text-white">{totalStudyHours.toFixed(2)}h</span>
+            </div>
+            <div className="mt-1 flex items-center justify-between">
+              <span className="text-[13px] text-white/70">Sessions Logged</span>
+              <span className="text-[14px] font-bold text-white">{totalCompletedSessions}</span>
+            </div>
+          </div>
+
           <p className="text-[11px] font-semibold text-white/30 uppercase tracking-wider mb-3">Quick Presets</p>
           <div className="grid grid-cols-2 gap-2">
             {presets.map((p) => (

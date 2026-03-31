@@ -74,6 +74,38 @@ async function syncProfileToDb(profile: any) {
   }
 }
 
+async function syncPublicUserToDb(user: {
+  id: string;
+  email?: string | null;
+  name?: string | null;
+  role?: string | null;
+  avatar?: string | null;
+  avatar_url?: string | null;
+  bio?: string | null;
+}) {
+  try {
+    const supabase = adminClient();
+    const { error } = await supabase
+      .from("users")
+      .upsert({
+        id: user.id,
+        email: user.email ?? "",
+        name: user.name ?? "User",
+        avatar_url: user.avatar_url ?? user.avatar ?? null,
+        role: user.role === "mentor" ? "mentor" : "student",
+        bio: user.bio ?? null,
+        is_active: true,
+        last_login_at: nowIso(),
+      }, { onConflict: "id" });
+
+    if (error) {
+      console.log("DB users sync error:", error.message);
+    }
+  } catch (e: any) {
+    console.log("DB users sync failed:", e.message);
+  }
+}
+
 async function getProfileFromDb(userId: string) {
   try {
     const supabase = adminClient();
@@ -194,6 +226,35 @@ async function pushNotification(userId: string, type: string, category: string, 
   return notif;
 }
 
+async function resolveStudyRoomId(identifier: string): Promise<string | null> {
+  const normalized = identifier.trim();
+  if (!normalized) return null;
+
+  const supabase = adminClient();
+
+  const { data: byId, error: byIdError } = await supabase
+    .from("study_rooms")
+    .select("id")
+    .eq("id", normalized)
+    .maybeSingle();
+
+  if (!byIdError && byId?.id) {
+    return byId.id;
+  }
+
+  const { data: byCode, error: byCodeError } = await supabase
+    .from("study_rooms")
+    .select("id")
+    .eq("code", normalized.toUpperCase())
+    .maybeSingle();
+
+  if (!byCodeError && byCode?.id) {
+    return byCode.id;
+  }
+
+  return null;
+}
+
 // ─────────────────────────────────────────────────────────────
 // Health
 // ─────────────────────────────────────────────────────────────
@@ -242,6 +303,7 @@ app.post("/make-server-a0923c49/auth/register", async (c) => {
     };
     await kv.set(`user:${uid}:profile`, profile);
     await syncProfileToDb(profile);
+    await syncPublicUserToDb(profile);
 
     // If mentor, seed mentor public listing
     if (role === "mentor") {
@@ -347,6 +409,7 @@ app.get("/make-server-a0923c49/profile", async (c) => {
       };
       await kv.set(`user:${uid}:profile`, profile);
       await syncProfileToDb(profile);
+      await syncPublicUserToDb(profile);
       // Send a welcome notification
       await pushNotification(
         uid,

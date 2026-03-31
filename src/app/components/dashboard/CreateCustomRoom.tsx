@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Bell } from 'lucide-react';
 import imgEllipse1 from "figma:asset/798eac6e288222603807db12d070c52d1a145785.png";
 import svgPaths from "../../../imports/svg-r9h2tu6cre";
-import { ShareRoomModal } from "./ShareRoomModal";
 import { LaunchingRoomLoader } from "./LaunchingRoomLoader";
+import { roomAPI } from '@/utils/api/roomAPI';
 
 interface CreateCustomRoomProps {
   onBack: () => void;
@@ -15,35 +15,43 @@ interface RoomData {
   subject: string;
   roomType: 'private' | 'public';
   roomId: string;
+  roomCode: string;
 }
 
 export function CreateCustomRoom({ onBack, onLaunchRoom }: CreateCustomRoomProps) {
   const [roomName, setRoomName] = useState('');
   const [subject, setSubject] = useState('');
   const [roomType, setRoomType] = useState<'private' | 'public'>('private');
-  const [roomId, setRoomId] = useState('');
-  const [showShareModal, setShowShareModal] = useState(false);
   const [isLaunching, setIsLaunching] = useState(false);
 
-  // Generate random room ID on mount
-  useEffect(() => {
-    const generatedId = Math.floor(1000 + Math.random() * 9000).toString();
-    setRoomId(generatedId);
-  }, []);
-
-  const handleLaunchRoom = () => {
+  const handleLaunchRoom = async () => {
     if (roomName.trim() && subject.trim()) {
       setIsLaunching(true);
       
-      // Show loading for 3 seconds, then launch room
-      setTimeout(() => {
-        onLaunchRoom({
-          roomName,
-          subject,
-          roomType,
-          roomId
+      try {
+        // Create room in database
+        const createdRoom = await roomAPI.createRoom({
+          name: roomName,
+          subject: subject,
+          mode: 'collaborative',
+          description: `${roomType} study room`,
+          maxParticipants: 100,
         });
-      }, 3000);
+
+        // Launch room with real database ID while exposing the shareable room code in UI
+        onLaunchRoom({
+          roomName: createdRoom.name,
+          subject: createdRoom.subject || subject,
+          roomType,
+          roomId: createdRoom.id,
+          roomCode: createdRoom.code,
+        });
+      } catch (error) {
+        console.error('Failed to create room:', error);
+        const message = error instanceof Error ? error.message : 'Unknown error';
+        alert(`Failed to create room: ${message}`);
+        setIsLaunching(false);
+      }
     }
   };
 
@@ -51,14 +59,6 @@ export function CreateCustomRoom({ onBack, onLaunchRoom }: CreateCustomRoomProps
   if (isLaunching) {
     return <LaunchingRoomLoader />;
   }
-
-  const handleShareRoom = () => {
-    const shareText = `Join my study room "${roomName}" - Room ID: ${roomId}`;
-    if (navigator.clipboard) {
-      navigator.clipboard.writeText(shareText);
-      alert('Room details copied to clipboard!');
-    }
-  };
 
   return (
     <div className="bg-white h-screen w-full flex font-['Poppins']">
@@ -263,7 +263,7 @@ export function CreateCustomRoom({ onBack, onLaunchRoom }: CreateCustomRoomProps
                       roomType === 'private' ? 'text-black/80' : 'text-black/60'
                     }`}>
                       Accessible only through a<br />
-                      Room ID or invitation link.
+                      Room Code or invitation link.
                     </p>
                   </button>
 
@@ -294,10 +294,10 @@ export function CreateCustomRoom({ onBack, onLaunchRoom }: CreateCustomRoomProps
                 </div>
               </div>
 
-              {/* Your Room ID */}
+              {/* Your Room Code */}
               <div className="flex flex-col gap-2.5">
-                <label className="text-[16px] text-black">Your Room ID</label>
-                <div className="h-[39px] rounded-[10px] border border-black/40 flex items-center gap-2.5 px-2.5">
+                <label className="text-[16px] text-black">Your Room Code</label>
+                <div className="h-[39px] rounded-[10px] border border-black/40 flex items-center gap-2.5 px-2.5 bg-gray-50">
                   <div className="w-[20px] h-[20px] overflow-clip relative">
                     <div className="absolute inset-[3.83%_3.74%_3.82%_3.73%]">
                       <div className="absolute inset-[-4.06%_-4.05%_-4.05%_-4.05%]">
@@ -311,39 +311,31 @@ export function CreateCustomRoom({ onBack, onLaunchRoom }: CreateCustomRoomProps
                       </div>
                     </div>
                   </div>
-                  <span className="text-[14px] font-medium text-black">{roomId}</span>
+                  <span className="text-[14px] font-medium text-gray-400">Assigned when you launch the room</span>
                 </div>
               </div>
 
               {/* Buttons */}
               <div className="flex gap-6 items-center w-[299px] ml-auto">
                 <button
-                  onClick={() => setShowShareModal(true)}
-                  className="flex-1 h-[42px] rounded-[20px] border-2 border-[#003566] text-[14px] font-medium text-[#003566] hover:bg-[#003566]/5 transition-all"
+                  disabled
+                  className="flex-1 h-[42px] rounded-[20px] border-2 border-gray-300 text-[14px] font-medium text-gray-400 cursor-not-allowed opacity-50"
+                  title="Room code will be available after launching"
                 >
                   Share Room
                 </button>
                 <button
                   onClick={handleLaunchRoom}
-                  disabled={!roomName.trim() || !subject.trim()}
+                  disabled={!roomName.trim() || !subject.trim() || isLaunching}
                   className="flex-1 h-[42px] rounded-[20px] bg-[#003566] text-[14px] font-medium text-white hover:bg-[#002849] disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                 >
-                  Launch Room
+                  {isLaunching ? 'Creating...' : 'Launch Room'}
                 </button>
               </div>
             </div>
           </div>
         </div>
       </div>
-
-      {/* Share Room Modal */}
-      {showShareModal && (
-        <ShareRoomModal
-          roomName={roomName}
-          roomId={roomId}
-          onClose={() => setShowShareModal(false)}
-        />
-      )}
     </div>
   );
 }

@@ -49,12 +49,11 @@ export function FloatingReactions({ reactions }: FloatingReactionsProps) {
       {activeReactions.map((reaction) => (
         <div
           key={reaction.id}
-          className="absolute text-[36px] animate-float-up-fade"
+          className="absolute text-[36px] animate-float-up-fade floating-reaction"
           style={{
             left: `${reaction.x}%`,
             top: `${reaction.y}%`,
-            animationDelay: `${reaction.delay}s`
-          }}
+          } as React.CSSProperties}
         >
           {reaction.emoji}
         </div>

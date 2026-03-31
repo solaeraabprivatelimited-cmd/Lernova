@@ -1,11 +1,14 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { X, Search, Plus, ArrowLeft, Trash2 } from 'lucide-react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { X, Search, Plus, ArrowLeft, Trash2, Check } from 'lucide-react';
 import { notes as notesApi } from '@/app/lib/api';
 import { toast } from 'sonner';
+import { useRoomNotes } from '@/utils/supabase/useRoomNotes';
 
 interface NotesPanelProps {
   onClose: () => void;
   isOpen?: boolean;
+  roomId?: string;
+  userId?: string;
 }
 
 interface Note {
@@ -13,23 +16,25 @@ interface Note {
   title: string;
   content: string;
   timestamp: string;
+  hasPendingSave?: boolean;
 }
 
-function mapApiNote(n: any): Note {
+function mapApiNote(n: any, hasPendingSave = false): Note {
   return {
     id: n.id,
     title: n.title || 'Untitled',
     content: n.content || '',
-    timestamp: n.createdAt
-      ? new Date(n.createdAt).toLocaleString('en-US', {
+    timestamp: n.updated_at
+      ? new Date(n.updated_at).toLocaleString('en-US', {
           month: 'short', day: 'numeric',
           hour: '2-digit', minute: '2-digit',
         })
       : 'Just now',
+    hasPendingSave,
   };
 }
 
-export function NotesPanel({ onClose, isOpen }: NotesPanelProps) {
+export function NotesPanel({ onClose, isOpen, roomId, userId }: NotesPanelProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [notesList, setNotesList] = useState<Note[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -39,15 +44,52 @@ export function NotesPanel({ onClose, isOpen }: NotesPanelProps) {
   const [editTitle, setEditTitle] = useState('');
   const [editContent, setEditContent] = useState('');
   const [isSaving, setIsSaving] = useState(false);
+  const [pendingSaveIds, setPendingSaveIds] = useState<Set<string>>(new Set());
 
   // Track when the panel opens to (re)load notes
   const wasOpen = useRef(false);
 
-  // Load notes from backend whenever the panel becomes visible
+  // Use room-based notes if roomId and userId provided, otherwise fall back to API
+  const useRoomNotesMode = roomId && userId;
+
+  // Stable error handler to prevent infinite fetches
+  const handleRoomNotesError = useCallback((error: Error) => {
+    console.error('NotesPanel: room notes error', error);
+    toast.error('Failed to sync notes');
+  }, []);
+  
+  const roomNotesHook = useRoomNotesMode 
+    ? useRoomNotes({ 
+        roomId: roomId!, 
+        userId: userId!,
+        onError: handleRoomNotesError
+      })
+    : null;
+
+  // Load notes - use hook if room mode, otherwise API
   useEffect(() => {
-    // isOpen is undefined (always-mounted mode) or explicitly true
     if (isOpen === false) return;
-    // Only load if not already loaded or if re-opening
+
+    if (useRoomNotesMode && roomNotesHook) {
+      // Room notes mode - automatically loaded by hook
+      wasOpen.current = true;
+      setNotesList(roomNotesHook.notes.map(n => mapApiNote(n, roomNotesHook.hasPendingSaves)));
+      setIsLoading(roomNotesHook.loading);
+    }
+  }, [isOpen, useRoomNotesMode]); // Only depend on stable values
+
+  // Sync notesList when roomNotesHook.notes changes
+  useEffect(() => {
+    if (useRoomNotesMode && roomNotesHook) {
+      setNotesList(roomNotesHook.notes.map(n => mapApiNote(n, roomNotesHook.hasPendingSaves)));
+      setIsLoading(roomNotesHook.loading);
+    }
+  }, [roomNotesHook?.notes, roomNotesHook?.loading, roomNotesHook?.hasPendingSaves]);
+
+  // Load notes from API if not using room mode
+  useEffect(() => {
+    if (isOpen === false || useRoomNotesMode) return;
+
     if (!wasOpen.current || notesList.length === 0) {
       wasOpen.current = true;
       setIsLoading(true);
@@ -59,7 +101,7 @@ export function NotesPanel({ onClose, isOpen }: NotesPanelProps) {
         })
         .finally(() => setIsLoading(false));
     }
-  }, [isOpen]);
+  }, [isOpen, useRoomNotesMode]);
 
   // If controlled via isOpen prop and closed, render nothing (after hooks)
   if (isOpen === false) return null;
@@ -81,25 +123,39 @@ export function NotesPanel({ onClose, isOpen }: NotesPanelProps) {
       setEditingId(null);
       return;
     }
+    
     setIsSaving(true);
     try {
-      if (editingId === 'new') {
-        const created = await notesApi.create(editTitle.trim() || 'Untitled', editContent.trim());
-        setNotesList((prev) => [mapApiNote(created), ...prev]);
-        toast.success('Note saved');
-      } else if (editingId) {
-        await notesApi.update(editingId, {
-          title: editTitle.trim() || 'Untitled',
-          content: editContent.trim(),
-        });
-        setNotesList((prev) =>
-          prev.map((n) =>
-            n.id === editingId
-              ? { ...n, title: editTitle.trim() || 'Untitled', content: editContent.trim() }
-              : n
-          )
-        );
-        toast.success('Note updated');
+      if (useRoomNotesMode && roomNotesHook) {
+        // Room notes mode - use hook
+        if (editingId === 'new') {
+          await roomNotesHook.createNote(editTitle.trim() || 'Untitled', editContent.trim());
+          toast.success('Note saved');
+        } else if (editingId) {
+          await roomNotesHook.updateNoteContent(editingId, editContent.trim());
+          await roomNotesHook.updateNoteTitle(editingId, editTitle.trim() || 'Untitled');
+          toast.success('Note updated');
+        }
+      } else {
+        // Legacy API mode
+        if (editingId === 'new') {
+          const created = await notesApi.create(editTitle.trim() || 'Untitled', editContent.trim());
+          setNotesList((prev) => [mapApiNote(created), ...prev]);
+          toast.success('Note saved');
+        } else if (editingId) {
+          await notesApi.update(editingId, {
+            title: editTitle.trim() || 'Untitled',
+            content: editContent.trim(),
+          });
+          setNotesList((prev) =>
+            prev.map((n) =>
+              n.id === editingId
+                ? { ...n, title: editTitle.trim() || 'Untitled', content: editContent.trim() }
+                : n
+            )
+          );
+          toast.success('Note updated');
+        }
       }
     } catch (e) {
       console.log('NotesPanel: save error', e);
@@ -113,7 +169,13 @@ export function NotesPanel({ onClose, isOpen }: NotesPanelProps) {
   const handleDelete = async (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
     try {
-      await notesApi.delete(id);
+      if (useRoomNotesMode && roomNotesHook) {
+        // Room notes mode - use hook
+        await roomNotesHook.deleteNote(id);
+      } else {
+        // Legacy API mode
+        await notesApi.delete(id);
+      }
       setNotesList((prev) => prev.filter((n) => n.id !== id));
       toast.success('Note deleted');
     } catch (e) {
@@ -130,6 +192,9 @@ export function NotesPanel({ onClose, isOpen }: NotesPanelProps) {
 
   // ── Edit / Create view ──
   if (editingId !== null) {
+    const currentNote = notesList.find(n => n.id === editingId);
+    const hasPendingSave = currentNote?.hasPendingSave || false;
+    
     return (
       <div className="absolute right-8 top-[62px] bg-[rgba(247,247,247,0.15)] backdrop-blur-md rounded-[20px] w-[462px] h-[722px] font-['Poppins'] z-40 overflow-hidden flex flex-col">
         <div className="flex flex-col gap-5 pl-8 pr-4 pt-5 pb-8 h-full">
@@ -143,17 +208,33 @@ export function NotesPanel({ onClose, isOpen }: NotesPanelProps) {
               <ArrowLeft className="w-4 h-4" />
               <span className="text-[14px]">Notes</span>
             </button>
-            <button
-              type="button"
-              onClick={handleSave}
-              disabled={isSaving}
-              className="flex items-center gap-2 bg-white/10 hover:bg-white/20 transition-colors rounded-full px-4 py-1.5 disabled:opacity-50 mr-3"
-            >
-              {isSaving && (
-                <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />
+            <div className="flex items-center gap-2">
+              {useRoomNotesMode && hasPendingSave && (
+                <div className="flex items-center gap-1.5 text-white/60 text-[12px]">
+                  <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse" />
+                  <span>Saving...</span>
+                </div>
               )}
-              <span className="text-[13px] text-white">Save</span>
-            </button>
+              {useRoomNotesMode && !isSaving && editingId !== 'new' && (
+                <div className="flex items-center gap-1.5 text-green-400 text-[12px]">
+                  <Check className="w-3 h-3" />
+                  <span>Saved</span>
+                </div>
+              )}
+              {!useRoomNotesMode && (
+                <button
+                  type="button"
+                  onClick={handleSave}
+                  disabled={isSaving}
+                  className="flex items-center gap-2 bg-white/10 hover:bg-white/20 transition-colors rounded-full px-4 py-1.5 disabled:opacity-50 mr-3"
+                >
+                  {isSaving && (
+                    <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  )}
+                  <span className="text-[13px] text-white">Save</span>
+                </button>
+              )}
+            </div>
           </div>
 
           {/* Title */}
@@ -161,7 +242,12 @@ export function NotesPanel({ onClose, isOpen }: NotesPanelProps) {
             type="text"
             placeholder="Note title…"
             value={editTitle}
-            onChange={(e) => setEditTitle(e.target.value)}
+            onChange={(e) => {
+              setEditTitle(e.target.value);
+              if (useRoomNotesMode && roomNotesHook && editingId !== 'new') {
+                roomNotesHook.updateNoteTitle(editingId as string, e.target.value);
+              }
+            }}
             autoFocus
             className="bg-transparent font-medium text-[20px] text-white outline-none placeholder:text-white/30 border-b border-white/10 pb-3"
           />
@@ -170,12 +256,45 @@ export function NotesPanel({ onClose, isOpen }: NotesPanelProps) {
           <textarea
             placeholder="Start writing your note…"
             value={editContent}
-            onChange={(e) => setEditContent(e.target.value)}
+            onChange={(e) => {
+              setEditContent(e.target.value);
+              if (useRoomNotesMode && roomNotesHook && editingId !== 'new') {
+                roomNotesHook.updateNoteContent(editingId as string, e.target.value);
+              }
+            }}
             className="flex-1 bg-transparent text-[15px] text-white/80 outline-none placeholder:text-white/30 resize-none leading-relaxed"
           />
 
-          {/* Character count */}
-          <p className="text-[11px] text-white/30 text-right pr-3">{editContent.length} characters</p>
+          {/* Character count and save button for API mode */}
+          <div className="flex items-center justify-between">
+            <p className="text-[11px] text-white/30">{editContent.length} characters</p>
+            {useRoomNotesMode && editingId === 'new' && (
+              <button
+                type="button"
+                onClick={handleSave}
+                disabled={isSaving}
+                className="flex items-center gap-2 bg-white/10 hover:bg-white/20 transition-colors rounded-full px-4 py-1.5 disabled:opacity-50"
+              >
+                {isSaving && (
+                  <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                )}
+                <span className="text-[13px] text-white">Create</span>
+              </button>
+            )}
+            {!useRoomNotesMode && (
+              <button
+                type="button"
+                onClick={handleSave}
+                disabled={isSaving}
+                className="flex items-center gap-2 bg-white/10 hover:bg-white/20 transition-colors rounded-full px-4 py-1.5 disabled:opacity-50"
+              >
+                {isSaving && (
+                  <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                )}
+                <span className="text-[13px] text-white">Save</span>
+              </button>
+            )}
+          </div>
         </div>
       </div>
     );
@@ -268,12 +387,7 @@ export function NotesPanel({ onClose, isOpen }: NotesPanelProps) {
 
                   {/* Content preview */}
                   <p
-                    className="text-[14px] text-white/60 leading-normal overflow-hidden"
-                    style={{
-                      display: '-webkit-box',
-                      WebkitLineClamp: 5,
-                      WebkitBoxOrient: 'vertical',
-                    }}
+                    className="text-[14px] text-white/60 leading-normal text-line-clamp-5"
                   >
                     {note.content || <span className="italic text-white/30">Empty note</span>}
                   </p>

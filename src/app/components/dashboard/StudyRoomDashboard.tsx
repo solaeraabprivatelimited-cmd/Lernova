@@ -1,3 +1,5 @@
+/* stylelint-disable no-descending-specificity */
+/* CSS inline styles should not be used - suppressed for Tailwind CSS utility classes */
 import { FocusMode } from "./FocusMode";
 import { SilentModeView } from "./SilentModeView";
 import { CollaborativeModeView } from "./CollaborativeModeView";
@@ -13,8 +15,10 @@ import { CommunityView } from "./CommunityView";
 import { NotificationsPopup } from "./NotificationsPopup";
 import { ProfilePopup } from "./ProfilePopup";
 import { UserProfileSettings } from "./UserProfileSettings";
+import { OnboardingWalkthrough } from "@/app/components/OnboardingWalkthrough";
 import React from 'react';
-import { getCurrentUser, profile as profileApi, setCurrentUser } from '@/app/lib/api';
+import { getCurrentUser, isAuthenticated, notifications as notificationsApi, profile as profileApi, reminders as remindersApi, setCurrentUser } from '@/app/lib/api';
+import { completePendingOnboarding, shouldShowPendingOnboarding } from '@/app/lib/onboarding';
 import svgPaths from '@/imports/svg-87v94e0bse';
 import imgEllipse1 from "figma:asset/798eac6e288222603807db12d070c52d1a145785.png";
 import imgImage7 from "figma:asset/0212989c3ffa08119e6582c26d9f347c2e8a406d.png";
@@ -480,13 +484,17 @@ function isKnownDashboardSubPath(subPath: string): boolean {
 export function StudyRoomDashboard({ onLogout }: { onLogout?: () => void }) {
   const navigate = useNavigate();
   const location = useLocation();
+  const cachedUser = React.useMemo(() => getCurrentUser(), []);
   const dashboardSubPath = normalizeDashboardSubPath(location.pathname);
   const activeMode = getModeFromSubPath(dashboardSubPath);
   const activeSection = getSectionFromSubPath(dashboardSubPath);
   const [showNotifications, setShowNotifications] = React.useState(false);
   const [showProfile, setShowProfile] = React.useState(false);
+  const [unreadNotificationCount, setUnreadNotificationCount] = React.useState(0);
+  const unreadNotificationCountRef = React.useRef(0);
+  const [showOnboarding, setShowOnboarding] = React.useState(() => shouldShowPendingOnboarding(cachedUser?.id, 'student'));
   const [userProfile, setUserProfile] = React.useState<{ name: string; role: string; avatar?: string | null }>(() => {
-    const cached = getCurrentUser();
+    const cached = cachedUser;
     return {
       name: cached?.name || 'User',
       role: cached?.role || 'student',
@@ -495,6 +503,10 @@ export function StudyRoomDashboard({ onLogout }: { onLogout?: () => void }) {
   });
 
   React.useEffect(() => {
+    if (!isAuthenticated()) {
+      return;
+    }
+
     let mounted = true;
     (async () => {
       try {
@@ -521,6 +533,166 @@ export function StudyRoomDashboard({ onLogout }: { onLogout?: () => void }) {
     }
   }, [dashboardSubPath, navigate]);
 
+  React.useEffect(() => {
+    let mounted = true;
+    let unsubscribe: (() => void) | undefined;
+
+    const playNotificationSound = () => {
+      if (typeof window === 'undefined') return;
+      const AudioContextClass =
+        window.AudioContext ||
+        // @ts-expect-error WebKit fallback for Safari.
+        window.webkitAudioContext;
+      if (!AudioContextClass) return;
+
+      try {
+        const audioContext = new AudioContextClass();
+        const oscillator = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
+
+        oscillator.type = 'sine';
+        oscillator.frequency.setValueAtTime(880, audioContext.currentTime);
+        oscillator.frequency.exponentialRampToValueAtTime(660, audioContext.currentTime + 0.18);
+
+        gainNode.gain.setValueAtTime(0.0001, audioContext.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.12, audioContext.currentTime + 0.01);
+        gainNode.gain.exponentialRampToValueAtTime(0.0001, audioContext.currentTime + 0.24);
+
+        oscillator.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+
+        oscillator.start();
+        oscillator.stop(audioContext.currentTime + 0.25);
+        oscillator.onended = () => {
+          audioContext.close().catch(() => {});
+        };
+      } catch (error) {
+        console.log('Notification sound error:', error);
+      }
+    };
+
+    const syncNotifications = async () => {
+      try {
+        const items = await notificationsApi.list();
+        if (!mounted) return;
+        const nextUnreadCount = items.filter((item: any) => !item.read).length;
+        unreadNotificationCountRef.current = nextUnreadCount;
+        setUnreadNotificationCount(nextUnreadCount);
+      } catch {
+        if (mounted) setUnreadNotificationCount(0);
+      }
+    };
+
+    syncNotifications();
+    notificationsApi
+      .subscribe((items) => {
+        if (!mounted) return;
+        const nextUnreadCount = (items ?? []).filter((item: any) => !item.read).length;
+        if (nextUnreadCount > unreadNotificationCountRef.current) {
+          playNotificationSound();
+        }
+        unreadNotificationCountRef.current = nextUnreadCount;
+        setUnreadNotificationCount(nextUnreadCount);
+      })
+      .then((cleanup) => { unsubscribe = cleanup; })
+      .catch(() => {});
+
+    return () => {
+      mounted = false;
+      unsubscribe?.();
+    };
+  }, []);
+
+  React.useEffect(() => {
+    if (typeof window === 'undefined' || typeof Notification === 'undefined') {
+      return;
+    }
+
+    const currentUser = getCurrentUser();
+    const reminderStoragePrefix = `learnova_reminder_notice:${currentUser?.id || 'guest'}:`;
+    let cancelled = false;
+
+    const buildReminderDate = (dateValue?: string | null, timeValue?: string | null) => {
+      if (!dateValue || !timeValue) return null;
+
+      const timeMatch = String(timeValue).match(/^(\d{2}):(\d{2})(?::(\d{2}))?/);
+      if (!timeMatch) return null;
+
+      const date = new Date(`${dateValue}T00:00:00`);
+      if (Number.isNaN(date.getTime())) return null;
+
+      date.setHours(
+        Number(timeMatch[1]),
+        Number(timeMatch[2]),
+        Number(timeMatch[3] ?? '0'),
+        0,
+      );
+      return date;
+    };
+
+    const maybeNotifyReminders = async () => {
+      try {
+        const reminders = await remindersApi.list();
+        if (cancelled) return;
+
+        const now = Date.now();
+        const permission = Notification.permission;
+
+        if (permission === 'default' && reminders.some((reminder: any) => !reminder.completed && reminder.reminderDate && reminder.reminderTime)) {
+          try {
+            await Notification.requestPermission();
+          } catch {
+            return;
+          }
+        }
+
+        if (Notification.permission !== 'granted') return;
+
+        for (const reminder of reminders) {
+          if (reminder?.completed) continue;
+
+          const scheduledAt = buildReminderDate(reminder?.reminderDate, reminder?.reminderTime);
+          if (!scheduledAt) continue;
+
+          const diffMs = now - scheduledAt.getTime();
+          if (diffMs < 0 || diffMs > 60_000) continue;
+
+          const reminderKey = `${reminderStoragePrefix}${reminder.id}:${scheduledAt.toISOString()}`;
+          if (localStorage.getItem(reminderKey)) continue;
+
+          new Notification('Study Reminder', {
+            body: reminder.title || 'You have a reminder due now.',
+            tag: `planner-reminder-${reminder.id}`,
+          });
+
+          try {
+            await notificationsApi.create({
+              type: 'planner_reminder_due',
+              title: 'Reminder Due',
+              content: reminder.title || 'You have a reminder due now.',
+              relatedId: reminder.id,
+              actionUrl: '/dashboard/productivity-tools',
+            });
+          } catch (notificationError) {
+            console.log('Reminder notification insert error:', notificationError);
+          }
+
+          localStorage.setItem(reminderKey, new Date(now).toISOString());
+        }
+      } catch (error) {
+        console.log('Reminder notification check error:', error);
+      }
+    };
+
+    maybeNotifyReminders();
+    const intervalId = window.setInterval(maybeNotifyReminders, 30_000);
+
+    return () => {
+      cancelled = true;
+      window.clearInterval(intervalId);
+    };
+  }, []);
+
   const navigateToSection = React.useCallback((section: string) => {
     const subPath = sectionRouteMap[section] ?? "";
     navigate(subPath ? `/dashboard/${subPath}` : '/dashboard');
@@ -538,6 +710,24 @@ export function StudyRoomDashboard({ onLogout }: { onLogout?: () => void }) {
   const displayName = userProfile.name || 'User';
   const displayRole = userProfile.role === 'mentor' ? 'Mentor' : 'Student';
   const displayAvatar = userProfile.avatar || imgEllipse1;
+  const currentUserId = cachedUser?.id;
+
+  const closeOnboarding = React.useCallback(() => {
+    completePendingOnboarding(currentUserId);
+    setShowOnboarding(false);
+  }, [currentUserId]);
+
+  const handleOnboardingAction = React.useCallback((index: number) => {
+    if (index === 0) {
+      navigateToSection("Study Rooms");
+      return;
+    }
+    if (index === 1) {
+      navigateToSection("Productivity Tools");
+      return;
+    }
+    navigateToSection("Mentor Support");
+  }, [navigateToSection]);
 
   const modes = [
     {
@@ -649,6 +839,20 @@ export function StudyRoomDashboard({ onLogout }: { onLogout?: () => void }) {
   if (activeSection === "Profile Settings") {
     return (
       <div className="flex w-full min-h-screen bg-white font-['Poppins']">
+        <OnboardingWalkthrough
+          open={showOnboarding}
+          role="student"
+          userName={displayName}
+          onOpenChange={(open) => {
+            if (!open) {
+              closeOnboarding();
+              return;
+            }
+            setShowOnboarding(true);
+          }}
+          onFinish={closeOnboarding}
+          onStepAction={handleOnboardingAction}
+        />
         <UserProfileSettings onBack={() => navigateToSection("Study Rooms")} />
       </div>
     );
@@ -656,6 +860,20 @@ export function StudyRoomDashboard({ onLogout }: { onLogout?: () => void }) {
 
   return (
     <div className="flex w-full min-h-screen bg-white font-['Poppins']">
+      <OnboardingWalkthrough
+        open={showOnboarding}
+        role="student"
+        userName={displayName}
+        onOpenChange={(open) => {
+          if (!open) {
+            closeOnboarding();
+            return;
+          }
+          setShowOnboarding(true);
+        }}
+        onFinish={closeOnboarding}
+        onStepAction={handleOnboardingAction}
+      />
       {/* Desktop Sidebar */}
       <aside
         className="w-[280px] shrink-0 flex-col sticky top-0 h-screen z-20 hidden lg:flex overflow-hidden"
@@ -807,7 +1025,11 @@ export function StudyRoomDashboard({ onLogout }: { onLogout?: () => void }) {
                     className="relative w-10 h-10 rounded-[12px] bg-[#f5f7fa] hover:bg-[#edf2f7] flex items-center justify-center transition-all cursor-pointer"
                   >
                     <IconBell />
-                    <span className="absolute top-2 right-2.5 size-2 bg-[#e63946] rounded-full border-[1.5px] border-white" />
+                    {unreadNotificationCount > 0 && (
+                      <span className="absolute top-1.5 right-1.5 min-w-[18px] h-[18px] px-1 bg-[#e63946] rounded-full border-[1.5px] border-white text-white text-[10px] font-bold flex items-center justify-center">
+                        {unreadNotificationCount > 9 ? '9+' : unreadNotificationCount}
+                      </span>
+                    )}
                   </button>
                   <NotificationsPopup
                     isOpen={showNotifications}

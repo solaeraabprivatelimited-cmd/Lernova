@@ -4,6 +4,7 @@ import imgImage17 from "figma:asset/1dab6d19afb3878b8ebec0d7a0fc2a196c946a7c.png
 import imgImage18 from "figma:asset/4c03b875da24497740f219b6c1322d1ce76023cb.png";
 import imgImage19 from "figma:asset/97aed589e8ee3b4f317112befff4385af448de2f.png";
 import imgEllipse1 from "figma:asset/798eac6e288222603807db12d070c52d1a145785.png";
+import { roomAPI } from "@/utils/api/roomAPI";
 import { CreateCustomRoom } from "./CreateCustomRoom";
 import { JoinCustomRoom } from "./JoinCustomRoom";
 import { JoinRandomRoomView } from "./JoinRandomRoomView";
@@ -21,6 +22,7 @@ interface RoomData {
   subject: string;
   roomType: 'private' | 'public';
   roomId: string;
+  roomCode?: string;
 }
 
 type ViewType = 'selection' | 'create-room' | 'join-room' | 'join-random' | 'in-room';
@@ -40,16 +42,22 @@ export function CollaborativeModeView({
     setView('in-room');
   };
 
-  const handleEnterRoom = (roomIdOrLink: string) => {
-    console.log('Entering room:', roomIdOrLink);
-    // Create room data from the ID/link
-    setCurrentRoom({
-      roomName: 'Custom Room',
-      subject: 'General',
-      roomType: 'private',
-      roomId: roomIdOrLink
-    });
-    setView('in-room');
+  const handleEnterRoom = async (roomCodeOrLink: string) => {
+    try {
+      const room = await roomAPI.getRoom(roomCodeOrLink);
+      await roomAPI.joinRoom(roomCodeOrLink);
+      setCurrentRoom({
+        roomName: room.name,
+        subject: room.subject || 'General',
+        roomType: 'private',
+        roomId: room.id,
+        roomCode: room.code,
+      });
+      setView('in-room');
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unable to join room';
+      alert(message);
+    }
   };
 
   const handleJoinRandomRoom = (roomId: string, roomName: string, subject: string) => {
@@ -241,7 +249,7 @@ export function CollaborativeModeView({
                 <div className="flex flex-col gap-4">
                   <h3 className="text-[24px] font-medium text-black">Join Custom Room</h3>
                   <p className="text-[16px] text-black/70 leading-relaxed h-[103px]">
-                    Enter a room ID shared by a friend or mentor to join their study session instantly.
+                    Enter a room code shared by a friend or mentor to join their study session instantly.
                   </p>
                   <button
                     onClick={() => setView('join-room')}

@@ -2,6 +2,7 @@ import React, { useState, useRef } from "react";
 import imgFrame1171275609 from "figma:asset/d0b5e8618139abd2e6c665600d3134442c6ea4a3.png";
 import imgImage27 from "figma:asset/f0a250ad1361e9247b086e20f69a2980c11fcc14.png";
 import { ImageWithFallback } from "../figma/ImageWithFallback";
+import { motivationPosts as motivationPostsApi } from "@/app/lib/api";
 import {
   ArrowLeft, Plus, ThumbsUp, ThumbsDown, Sparkles, Quote, BookOpen,
   ChevronDown, X, Image as ImageIcon, Paperclip
@@ -45,7 +46,7 @@ function ModalBackdrop({ children, onClose }: { children: React.ReactNode; onClo
 /* ── Post Modal ── */
 function PostModal({ onClose, onPost }: {
   onClose: () => void;
-  onPost: (post: Omit<MotivationPost, "id" | "likes" | "dislikes" | "userReaction">) => void;
+  onPost: (post: Omit<MotivationPost, "id" | "likes" | "dislikes" | "userReaction">) => Promise<void> | void;
 }) {
   const [postType, setPostType] = useState<"quote" | "story" | null>(null);
   const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -56,13 +57,13 @@ function PostModal({ onClose, onPost }: {
 
   const canSubmit = postType === "quote" ? quoteText.trim().length > 0 : postType === "story" ? storyText.trim().length > 0 : false;
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!canSubmit) return;
     const now = new Date().toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
     if (postType === "quote") {
-      onPost({ type: "quote", title: "Motivational Quote", quoteText: quoteText.trim(), author: "Jack Sparrow", authorAvatar: imgFrame1171275609, date: now });
+      await onPost({ type: "quote", title: "Motivational Quote", quoteText: quoteText.trim(), author: "Jack Sparrow", authorAvatar: imgFrame1171275609, date: now });
     } else {
-      onPost({ type: "story", title: "Motivational Story", description: storyText.trim(),
+      await onPost({ type: "story", title: "Motivational Story", description: storyText.trim(),
         thumbnail: attachedImages.length > 0 ? attachedImages[0].url : "https://images.unsplash.com/photo-1563208183-17ce26d6e360?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxzdW5zZXQlMjBvY2VhbiUyMGluc3BpcmF0aW9uYWwlMjBsYW5kc2NhcGV8ZW58MXx8fHwxNzcxMTczMzMyfDA&ixlib=rb-4.1.0&q=80&w=1080",
         author: "Jack Sparrow", authorAvatar: imgFrame1171275609, date: now });
     }
@@ -265,6 +266,47 @@ function StoryCard({ post, onLike, onDislike }: { post: MotivationPost; onLike: 
 export function MotivationCornerView({ onBack }: { onBack: () => void }) {
   const [posts, setPosts] = useState<MotivationPost[]>(initialPosts);
   const [showPostModal, setShowPostModal] = useState(false);
+  const [loadingPosts, setLoadingPosts] = useState(true);
+
+  React.useEffect(() => {
+    let mounted = true;
+    motivationPostsApi
+      .list()
+      .then((rows) => {
+        if (!mounted) return;
+        if ((rows ?? []).length === 0) {
+          setPosts([]);
+          return;
+        }
+
+        setPosts((rows ?? []).map((post: any) => ({
+          id: post.id,
+          type: post.type,
+          title: post.title,
+          description: post.type === "story" ? post.content : undefined,
+          quoteText: post.type === "quote" ? post.content : undefined,
+          thumbnail: post.imageUrl || undefined,
+          author: post.author,
+          authorAvatar: post.authorAvatar || imgFrame1171275609,
+          date: post.createdAt
+            ? new Date(post.createdAt).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })
+            : "Today",
+          likes: 0,
+          dislikes: 0,
+          userReaction: null,
+        })));
+      })
+      .catch((error) => {
+        console.log("Motivation posts load error:", error);
+      })
+      .finally(() => {
+        if (mounted) setLoadingPosts(false);
+      });
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   const handleLike = (id: string) => {
     setPosts((prev) => prev.map((p) => {
@@ -280,9 +322,35 @@ export function MotivationCornerView({ onBack }: { onBack: () => void }) {
       return { ...p, dislikes: p.dislikes + 1, likes: p.userReaction === "like" ? p.likes - 1 : p.likes, userReaction: "dislike" as const };
     }));
   };
-  const handleNewPost = (post: Omit<MotivationPost, "id" | "likes" | "dislikes" | "userReaction">) => {
-    setPosts((prev) => [{ ...post, id: Date.now().toString(), likes: 0, dislikes: 0, userReaction: null }, ...prev]);
-    setShowPostModal(false);
+  const handleNewPost = async (post: Omit<MotivationPost, "id" | "likes" | "dislikes" | "userReaction">) => {
+    try {
+      const saved = await motivationPostsApi.create({
+        type: post.type,
+        title: post.title,
+        content: post.type === "quote" ? (post.quoteText || post.title) : (post.description || ""),
+        imageUrl: post.thumbnail || null,
+      });
+
+      setPosts((prev) => [{
+        id: saved.id,
+        type: saved.type,
+        title: saved.title,
+        description: saved.type === "story" ? saved.content : undefined,
+        quoteText: saved.type === "quote" ? saved.content : undefined,
+        thumbnail: saved.imageUrl || undefined,
+        author: saved.author,
+        authorAvatar: saved.authorAvatar || imgFrame1171275609,
+        date: saved.createdAt
+          ? new Date(saved.createdAt).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })
+          : post.date,
+        likes: 0,
+        dislikes: 0,
+        userReaction: null,
+      }, ...prev]);
+      setShowPostModal(false);
+    } catch (error) {
+      console.log("Create motivation post error:", error);
+    }
   };
 
   return (
@@ -315,12 +383,23 @@ export function MotivationCornerView({ onBack }: { onBack: () => void }) {
 
       {/* Posts Feed */}
       <div className="flex flex-col gap-5 overflow-y-auto max-w-[900px] w-full pb-6 min-h-0 flex-1 pr-1">
-        {posts.map((post) =>
-          post.type === "quote" ? (
-            <QuoteCard key={post.id} post={post} onLike={handleLike} onDislike={handleDislike} />
-          ) : (
-            <StoryCard key={post.id} post={post} onLike={handleLike} onDislike={handleDislike} />
+        {loadingPosts ? (
+          <div className="bg-white rounded-[20px] border border-[#edf0f4] shadow-sm p-8 text-center">
+            <p className="text-[14px] text-[#5a7089]">Loading community posts...</p>
+          </div>
+        ) : posts.length > 0 ? (
+          posts.map((post) =>
+            post.type === "quote" ? (
+              <QuoteCard key={post.id} post={post} onLike={handleLike} onDislike={handleDislike} />
+            ) : (
+              <StoryCard key={post.id} post={post} onLike={handleLike} onDislike={handleDislike} />
+            )
           )
+        ) : (
+          <div className="bg-white rounded-[20px] border border-[#edf0f4] shadow-sm p-8 text-center">
+            <p className="text-[15px] font-semibold text-[#003566]">No community posts yet</p>
+            <p className="text-[13px] text-[#94a3b8] mt-2">Be the first to share a quote or motivational story.</p>
+          </div>
         )}
       </div>
 

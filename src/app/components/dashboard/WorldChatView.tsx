@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import imgEllipse1 from "figma:asset/798eac6e288222603807db12d070c52d1a145785.png";
 import { ImageWithFallback } from "../figma/ImageWithFallback";
-import { worldChat, getCurrentUser } from "@/app/lib/api";
+import { worldChat, getCurrentUser, getSupabaseClient } from "@/app/lib/api";
 import {
   ArrowLeft, Send, MessageCircle, Globe, Users, AlertTriangle, X, Flag
 } from "lucide-react";
@@ -9,6 +9,7 @@ import {
 /* ── Types ── */
 interface ChatMessage {
   id: string;
+  senderId: string;
   sender: string;
   avatar: string;
   text: string;
@@ -95,21 +96,48 @@ export function WorldChatView({ onBack }: { onBack: () => void }) {
   const [reportOpenId, setReportOpenId] = useState<string | null>(null);
   const [reportModalOpen, setReportModalOpen] = useState(false);
   const [reportSenderName, setReportSenderName] = useState("");
+  const [reportTarget, setReportTarget] = useState<{ messageId: string; senderId: string; senderName: string } | null>(null);
   const currentUser = getCurrentUser();
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const formatChatTime = (value: string | null | undefined) => {
+    if (!value) return "";
+    const parsed = new Date(value);
+    if (Number.isNaN(parsed.getTime())) return value;
+    return parsed.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
+  };
 
   const loadMessages = async () => {
     try {
       const raw = await worldChat.getMessages();
       const myId = currentUser?.id;
-      setMessages(raw.map((m: any) => ({ ...m, isOwn: m.senderId === myId })));
+      setMessages(raw.map((m: any) => ({
+        ...m,
+        avatar: m.avatar || imgEllipse1,
+        time: formatChatTime(m.time),
+        isOwn: m.senderId === myId,
+      })));
     } catch (e) { console.log("WorldChat load error:", e); }
   };
 
   useEffect(() => {
+    const supabase = getSupabaseClient();
     loadMessages();
+    const channel = supabase
+      .channel("world-chat-feed")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "world_chat_messages" },
+        () => { loadMessages(); },
+      )
+      .subscribe();
+
     pollRef.current = setInterval(loadMessages, 5000);
-    return () => { if (pollRef.current) clearInterval(pollRef.current); };
+
+    return () => {
+      if (pollRef.current) clearInterval(pollRef.current);
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   useEffect(() => {
@@ -137,11 +165,31 @@ export function WorldChatView({ onBack }: { onBack: () => void }) {
     try {
       const name = currentUser?.name || "You";
       const avatar = currentUser?.avatar || imgEllipse1;
-      await worldChat.sendMessage(text, name, avatar);
+      const sent = await worldChat.sendMessage(text, name, avatar);
+      setMessages((prev) => {
+        const next = prev.filter((msg) => msg.id !== sent.id);
+        return [...next, {
+          id: sent.id,
+          senderId: sent.senderId,
+          sender: sent.sender,
+          avatar: sent.avatar || imgEllipse1,
+          text: sent.text,
+          time: formatChatTime(sent.time),
+          isOwn: true,
+        }];
+      });
       await loadMessages();
     } catch (e) {
       console.log("Send message error:", e);
-      setMessages((prev) => [...prev, { id: Date.now().toString(), sender: currentUser?.name || "You", avatar: currentUser?.avatar || imgEllipse1, text, time: getCurrentTime(), isOwn: true }]);
+      setMessages((prev) => [...prev, {
+        id: Date.now().toString(),
+        senderId: currentUser?.id || "local-user",
+        sender: currentUser?.name || "You",
+        avatar: currentUser?.avatar || imgEllipse1,
+        text,
+        time: getCurrentTime(),
+        isOwn: true,
+      }]);
     }
   };
 
@@ -218,7 +266,12 @@ export function WorldChatView({ onBack }: { onBack: () => void }) {
 
               {/* Report popup */}
               {!msg.isOwn && reportOpenId === msg.id && (
-                <button onClick={() => { setReportOpenId(null); setReportSenderName(msg.sender); setReportModalOpen(true); }}
+                <button onClick={() => {
+                  setReportOpenId(null);
+                  setReportSenderName(msg.sender);
+                  setReportTarget({ messageId: msg.id, senderId: msg.senderId, senderName: msg.sender });
+                  setReportModalOpen(true);
+                }}
                   className="mt-1.5 flex items-center gap-1.5 px-3 py-2 rounded-[10px] bg-white border border-[#edf0f4] shadow-lg cursor-pointer hover:bg-red-50 hover:border-[#cc3636]/20 transition-all animate-in fade-in slide-in-from-top-1 duration-150"
                   data-report-area>
                   <AlertTriangle className="w-3 h-3 text-[#cc3636]" />
@@ -253,7 +306,23 @@ export function WorldChatView({ onBack }: { onBack: () => void }) {
 
       {reportModalOpen && (
         <ReportUserModal senderName={reportSenderName} onClose={() => setReportModalOpen(false)}
-          onSubmit={(reason, desc) => { setReportModalOpen(false); setTimeout(() => alert(`${reportSenderName} has been reported. Our team will review this.`), 100); }} />
+          onSubmit={async (reason, desc) => {
+            if (!reportTarget) return;
+            try {
+              await worldChat.reportMessage({
+                messageId: reportTarget.messageId,
+                reportedUserId: reportTarget.senderId,
+                reason,
+                description: desc,
+              });
+              setReportModalOpen(false);
+              setReportTarget(null);
+              setTimeout(() => alert(`${reportTarget.senderName} has been reported. Our team will review this.`), 100);
+            } catch (error) {
+              console.log("Report submission error:", error);
+              setTimeout(() => alert("Unable to submit the report right now. Please try again."), 100);
+            }
+          }} />
       )}
     </div>
   );

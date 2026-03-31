@@ -8,7 +8,7 @@ const app = new Hono();
 app.use("*", logger(console.log));
 app.use("/*", cors({
   origin: "*",
-  allowHeaders: ["Content-Type", "Authorization"],
+  allowHeaders: ["Content-Type", "Authorization", "apikey"],
   allowMethods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   exposeHeaders: ["Content-Length"],
   maxAge: 600,
@@ -71,6 +71,38 @@ async function syncProfileToDb(profile: any) {
     }
   } catch (e: any) {
     console.log("DB profile sync failed:", e.message);
+  }
+}
+
+async function syncPublicUserToDb(user: {
+  id: string;
+  email?: string | null;
+  name?: string | null;
+  role?: string | null;
+  avatar?: string | null;
+  avatar_url?: string | null;
+  bio?: string | null;
+}) {
+  try {
+    const supabase = adminClient();
+    const { error } = await supabase
+      .from("users")
+      .upsert({
+        id: user.id,
+        email: user.email ?? "",
+        name: user.name ?? "User",
+        avatar_url: user.avatar_url ?? user.avatar ?? null,
+        role: user.role === "mentor" ? "mentor" : "student",
+        bio: user.bio ?? null,
+        is_active: true,
+        last_login_at: nowIso(),
+      }, { onConflict: "id" });
+
+    if (error) {
+      console.log("DB users sync error:", error.message);
+    }
+  } catch (e: any) {
+    console.log("DB users sync failed:", e.message);
   }
 }
 
@@ -163,6 +195,32 @@ async function getAuthUser(c: any): Promise<{ id: string; email: string; role?: 
   const { data, error } = await adminClient().auth.getUser(token);
   if (error || !data.user) throw new Error("Invalid or expired token");
   const profile = await kv.get(`user:${data.user.id}:profile`);
+
+  // Keep relational `users` table in sync with authenticated users so
+  // study room inserts don't fail on host_id/user_id foreign keys.
+  try {
+    const userName = profile?.name
+      ?? data.user.user_metadata?.name
+      ?? data.user.email?.split("@")[0]
+      ?? "User";
+    const userRole = profile?.role === "mentor" ? "mentor" : "student";
+
+    await adminClient()
+      .from("users")
+      .upsert({
+        id: data.user.id,
+        email: data.user.email,
+        name: userName,
+        avatar_url: profile?.avatar ?? data.user.user_metadata?.avatar_url ?? null,
+        role: userRole,
+        bio: profile?.bio ?? null,
+        is_active: true,
+        last_login_at: nowIso(),
+      }, { onConflict: "id" });
+  } catch (_syncErr) {
+    // Non-fatal: some deployments may not use this table.
+  }
+
   return { id: data.user.id, email: data.user.email!, role: profile?.role ?? "student" };
 }
 
@@ -194,6 +252,35 @@ async function pushNotification(userId: string, type: string, category: string, 
   return notif;
 }
 
+async function resolveStudyRoomId(identifier: string): Promise<string | null> {
+  const normalized = identifier.trim();
+  if (!normalized) return null;
+
+  const supabase = adminClient();
+
+  const { data: byId, error: byIdError } = await supabase
+    .from("study_rooms")
+    .select("id")
+    .eq("id", normalized)
+    .maybeSingle();
+
+  if (!byIdError && byId?.id) {
+    return byId.id;
+  }
+
+  const { data: byCode, error: byCodeError } = await supabase
+    .from("study_rooms")
+    .select("id")
+    .eq("code", normalized.toUpperCase())
+    .maybeSingle();
+
+  if (!byCodeError && byCode?.id) {
+    return byCode.id;
+  }
+
+  return null;
+}
+
 // ─────────────────────────────────────────────────────────────
 // Health
 // ─────────────────────────────────────────────────────────────
@@ -201,93 +288,13 @@ async function pushNotification(userId: string, type: string, category: string, 
 app.get("/make-server-a0923c49/health", (c) => c.json({ status: "ok", ts: nowIso() }));
 
 // ─────────────────────────────────────────────────────────────
-// AUTH – Register (sign-up)
+// AUTH – Sync Profile After OTP Signup (internal use via verify-auth-otp)
 // ─────────────────────────────────────────────────────────────
+// NOTE: User signup now happens via /send-signup-otp → /verify-auth-otp flow
+// This endpoint is deprecated. Remove or keep for internal admin use only.
 
-app.post("/make-server-a0923c49/auth/register", async (c) => {
-  try {
-    const { name, email, password, role = "student" } = await c.req.json();
-    if (!name || !email || !password) return err(c, "name, email and password are required");
-    if (!["student", "mentor"].includes(role)) return err(c, "role must be 'student' or 'mentor'");
-
-    const supabase = adminClient();
-
-    const { data, error } = await supabase.auth.admin.createUser({
-      email,
-      password,
-      user_metadata: { name, role },
-      email_confirm: true, // auto-confirm since no email server is configured
-    });
-    if (error) {
-      if (/already|exists|registered/i.test(error.message)) {
-        return err(c, "Email already registered");
-      }
-      return err(c, `Registration failed: ${error.message}`);
-    }
-
-    const uid = data.user!.id;
-    const avatarUrl = `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(name)}`;
-
-    // Base profile stored in KV
-    const profile = {
-      id: uid,
-      name,
-      email,
-      role,
-      avatar: avatarUrl,
-      bio: "",
-      gradeLevel: "",
-      subjects: [],
-      joinedAt: nowIso(),
-    };
-    await kv.set(`user:${uid}:profile`, profile);
-    await syncProfileToDb(profile);
-
-    // If mentor, seed mentor public listing
-    if (role === "mentor") {
-      const mentorEntry = {
-        id: uid,
-        name,
-        email,
-        avatar: avatarUrl,
-        bio: "New mentor on Learnova",
-        subjects: [],
-        rating: "5.0",
-        studentsHelped: "0",
-        experience: "New",
-        hourlyRate: 0,
-        joinedAt: nowIso(),
-      };
-      await kv.set(`mentor:${uid}:public`, mentorEntry);
-      // Add to mentors index
-      const idx: string[] = (await kv.get("mentors:index")) ?? [];
-      if (!idx.includes(uid)) idx.push(uid);
-      await kv.set("mentors:index", idx);
-
-      // Seed earnings
-      await kv.set(`mentor:${uid}:earnings`, {
-        total: 0,
-        thisMonth: 0,
-        lastMonth: 0,
-        thisWeek: 0,
-        totalSessions: 0,
-        history: [],
-      });
-    }
-
-    // Welcome notification
-    await pushNotification(uid, "system", "System and Platform Alerts", "Welcome to Learnova! 🎉",
-      role === "mentor"
-        ? "Your mentor account is ready. Set up your profile to start accepting sessions."
-        : "Your account is all set. Start exploring Study Rooms, AI Mentor, and more!"
-    );
-
-    return c.json({ success: true, userId: uid, role });
-  } catch (e: any) {
-    console.log("Register error:", e.message);
-    return err(c, e.message, 500);
-  }
-});
+// DEPRECATED: Old registration endpoint removed since signup now uses OTP flow
+// See supabase/functions/verify-auth-otp for the new signup logic
 
 // ─────────────────────────────────────────────────────────────
 // PROFILE – Get / Update
@@ -347,6 +354,7 @@ app.get("/make-server-a0923c49/profile", async (c) => {
       };
       await kv.set(`user:${uid}:profile`, profile);
       await syncProfileToDb(profile);
+      await syncPublicUserToDb(profile);
       // Send a welcome notification
       await pushNotification(
         uid,
@@ -1307,6 +1315,242 @@ app.post("/make-server-a0923c49/seed/demo", async (c) => {
     return c.json({ success: true, message: "Demo data seeded" });
   } catch (e: any) {
     return err(c, e.message, 500);
+  }
+});
+
+// ─────────────────────────────────────────────────────────────
+// STUDY ROOMS – Realtime collaboration
+// ─────────────────────────────────────────────────────────────
+
+app.post("/make-server-a0923c49/rooms", async (c) => {
+  try {
+    const user = await getAuthUser(c);
+    const { name, mode = "collaborative", subject, description, maxParticipants = 50 } = await c.req.json();
+    
+    if (!name) return err(c, "name is required");
+    if (!["focus", "silent", "collaborative", "live"].includes(mode)) {
+      return err(c, "invalid mode");
+    }
+
+    const supabase = adminClient();
+    const roomCode = `STUDY-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
+    
+    const { data, error } = await supabase
+      .from("study_rooms")
+      .insert({
+        code: roomCode,
+        name,
+        mode,
+        host_id: user.id,
+        subject: subject || null,
+        description: description || null,
+        max_participants: maxParticipants,
+        is_active: true,
+      })
+      .select()
+      .single();
+
+    if (error) throw error;
+    
+    // Auto-add host as participant
+    await supabase.from("room_participants").insert({
+      room_id: data.id,
+      user_id: user.id,
+      permissions: "host",
+    });
+
+    return c.json(data, 201);
+  } catch (e: any) {
+    return err(c, e.message, 401);
+  }
+});
+
+app.get("/make-server-a0923c49/rooms/:roomId", async (c) => {
+  try {
+    const { roomId } = c.req.param();
+    const resolvedRoomId = await resolveStudyRoomId(roomId);
+    if (!resolvedRoomId) return err(c, "Room not found", 404);
+    const supabase = adminClient();
+
+    const { data, error } = await supabase
+      .from("study_rooms")
+      .select(`
+        *,
+        host:users(id, name, avatar_url),
+        participants:room_participants(
+          id, user_id, is_pinned, is_muted, is_video_off, permissions,
+          user:users(id, name, avatar_url)
+        )
+      `)
+      .eq("id", resolvedRoomId)
+      .maybeSingle();
+
+    if (error) throw error;
+    if (!data) return err(c, "Room not found", 404);
+
+    return c.json(data);
+  } catch (e: any) {
+    return err(c, e.message, 401);
+  }
+});
+
+app.get("/make-server-a0923c49/rooms", async (c) => {
+  try {
+    const supabase = adminClient();
+
+    const { data, error } = await supabase
+      .from("study_rooms")
+      .select(`
+        *,
+        host:users(id, name, avatar_url),
+        participants:room_participants(id)
+      `)
+      .eq("is_active", true)
+      .order("created_at", { ascending: false });
+
+    if (error) throw error;
+
+    return c.json(data || []);
+  } catch (e: any) {
+    return err(c, e.message, 401);
+  }
+});
+
+app.post("/make-server-a0923c49/rooms/:roomId/join", async (c) => {
+  try {
+    const user = await getAuthUser(c);
+    const { roomId } = c.req.param();
+    const resolvedRoomId = await resolveStudyRoomId(roomId);
+    if (!resolvedRoomId) return err(c, "Room not found", 404);
+    const supabase = adminClient();
+
+    // Check if already in room
+    const { data: existing } = await supabase
+      .from("room_participants")
+      .select("id")
+      .eq("room_id", resolvedRoomId)
+      .eq("user_id", user.id)
+      .is("left_at", null)
+      .maybeSingle();
+
+    if (existing) {
+      return c.json({ message: "Already in room" }, 200);
+    }
+
+    // Add participant
+    const { data, error } = await supabase
+      .from("room_participants")
+      .insert({
+        room_id: resolvedRoomId,
+        user_id: user.id,
+        permissions: "member",
+      })
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    return c.json(data, 201);
+  } catch (e: any) {
+    return err(c, e.message, 401);
+  }
+});
+
+app.post("/make-server-a0923c49/rooms/:roomId/leave", async (c) => {
+  try {
+    const user = await getAuthUser(c);
+    const { roomId } = c.req.param();
+    const resolvedRoomId = await resolveStudyRoomId(roomId);
+    if (!resolvedRoomId) return err(c, "Room not found", 404);
+    const supabase = adminClient();
+
+    const now = new Date().toISOString();
+
+    const { error } = await supabase
+      .from("room_participants")
+      .update({ left_at: now })
+      .eq("room_id", resolvedRoomId)
+      .eq("user_id", user.id);
+
+    if (error) throw error;
+
+    return c.json({ message: "Left room" });
+  } catch (e: any) {
+    return err(c, e.message, 401);
+  }
+});
+
+app.put("/make-server-a0923c49/rooms/:roomId/close", async (c) => {
+  try {
+    const user = await getAuthUser(c);
+    const { roomId } = c.req.param();
+    const resolvedRoomId = await resolveStudyRoomId(roomId);
+    if (!resolvedRoomId) return err(c, "Room not found", 404);
+    const supabase = adminClient();
+
+    // Verify host
+    const { data: room, error: roomErr } = await supabase
+      .from("study_rooms")
+      .select("host_id")
+      .eq("id", resolvedRoomId)
+      .maybeSingle();
+
+    if (roomErr || !room) return err(c, "Room not found", 404);
+    if (room.host_id !== user.id) return err(c, "Only host can close room", 403);
+
+    // Close room
+    const { error } = await supabase
+      .from("study_rooms")
+      .update({ is_active: false })
+      .eq("id", resolvedRoomId);
+
+    if (error) throw error;
+
+    return c.json({ message: "Room closed" });
+  } catch (e: any) {
+    return err(c, e.message, 401);
+  }
+});
+
+app.put("/make-server-a0923c49/participants/:participantId", async (c) => {
+  try {
+    const user = await getAuthUser(c);
+    const { participantId } = c.req.param();
+    const updates = await c.req.json();
+    const supabase = adminClient();
+
+    // Verify permission (host/moderator only for certain updates)
+    const { data: participant, error: pErr } = await supabase
+      .from("room_participants")
+      .select("room_id, user_id")
+      .eq("id", participantId)
+      .maybeSingle();
+
+    if (pErr || !participant) return err(c, "Participant not found", 404);
+
+    const { data: room } = await supabase
+      .from("study_rooms")
+      .select("host_id")
+      .eq("id", participant.room_id)
+      .maybeSingle();
+
+    const isHost = room?.host_id === user.id;
+    const isOwnParticipant = participant.user_id === user.id;
+
+    if (!isHost && !isOwnParticipant) {
+      return err(c, "Permission denied", 403);
+    }
+
+    const { error } = await supabase
+      .from("room_participants")
+      .update(updates)
+      .eq("id", participantId);
+
+    if (error) throw error;
+
+    return c.json({ message: "Participant updated" });
+  } catch (e: any) {
+    return err(c, e.message, 401);
   }
 });
 

@@ -1,6 +1,7 @@
 import React from 'react';
 import { ArrowLeft, Plus, Search, Mic, Send, MessageSquare, Sparkles, Clock, Bot, Zap, BookOpen, HelpCircle, Brain, ListChecks } from 'lucide-react';
 import { ImageWithFallback } from "./figma/ImageWithFallback";
+import { getCurrentUser } from '@/app/lib/api';
 import imgSayHi1 from "figma:asset/5e91c4f0fbdda278a8c62c9c5428eca49ba69e08.png";
 
 interface AiMentorHomeProps {
@@ -87,6 +88,8 @@ const SidebarPanel = ({ onBack, onChatMode }: { onBack: () => void; onChatMode?:
 
 export function AiMentorHome({ onBack, onVoiceMode, onChatMode }: AiMentorHomeProps) {
   const [inputValue, setInputValue] = React.useState("");
+  const currentUser = getCurrentUser();
+  const userName = currentUser?.name?.split(' ')[0] || 'there';
 
   const capabilities = [
     { icon: <HelpCircle className="w-4 h-4" />, title: "Explain Concepts", desc: "Break down complex topics into simple terms", color: "#0967bd" },
@@ -142,7 +145,7 @@ export function AiMentorHome({ onBack, onVoiceMode, onChatMode }: AiMentorHomePr
             </div>
             <h1 className="text-[26px] md:text-[32px] lg:text-[38px] text-[#003566] leading-[1.15] mb-3"
               style={{ fontFamily: "'DM Serif Display', serif" }}>
-              Good Morning, Jack
+              Good Morning, {userName}
             </h1>
             <p className="text-[15px] md:text-[16px] text-[#7a8ea3] max-w-[400px] mx-auto leading-relaxed">
               I'm your AI study companion. Ask me anything, or pick a topic to get started.

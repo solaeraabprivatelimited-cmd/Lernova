@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { auth } from '../lib/api';
 
 interface ForgotPasswordPageProps {
   onBack: () => void;
@@ -39,9 +40,14 @@ export function ForgotPasswordPage({ onBack }: ForgotPasswordPageProps) {
     setError('');
     if (!email.trim()) { setError('Please enter your email address.'); return; }
     setIsLoading(true);
-    await new Promise((r) => setTimeout(r, 800));
-    setIsLoading(false);
-    setStage('otp');
+    try {
+      await auth.requestPasswordResetCode(email.trim());
+      setStage('otp');
+    } catch (e: any) {
+      setError(e.message || 'Failed to send reset code. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleVerifyOtp = async () => {
@@ -49,9 +55,14 @@ export function ForgotPasswordPage({ onBack }: ForgotPasswordPageProps) {
     const code = otp.join('');
     if (code.length < 6) { setError('Please enter the 6-digit code.'); return; }
     setIsLoading(true);
-    await new Promise((r) => setTimeout(r, 800));
-    setIsLoading(false);
-    setStage('reset');
+    try {
+      // Just mark code as verified, move to reset stage
+      setStage('reset');
+    } catch (e: any) {
+      setError(e.message || 'Failed to verify code.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleResetPassword = async () => {
@@ -60,9 +71,15 @@ export function ForgotPasswordPage({ onBack }: ForgotPasswordPageProps) {
     if (newPassword.length < 6) { setError('Password must be at least 6 characters.'); return; }
     if (newPassword !== confirmPassword) { setError('Passwords do not match.'); return; }
     setIsLoading(true);
-    await new Promise((r) => setTimeout(r, 800));
-    setIsLoading(false);
-    setStage('success');
+    try {
+      const code = otp.join('');
+      await auth.verifyPasswordResetCode(email, code, newPassword);
+      setStage('success');
+    } catch (e: any) {
+      setError(e.message || 'Failed to reset password. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleOtpChange = (index: number, value: string) => {

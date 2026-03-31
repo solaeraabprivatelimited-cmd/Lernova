@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import imgSayHi1 from "figma:asset/5e91c4f0fbdda278a8c62c9c5428eca49ba69e08.png";
+import { moodCheckins } from "@/app/lib/api";
 import { ArrowLeft, Send, Mic, MicOff, Bot, User, Sparkles, Heart, X } from "lucide-react";
 
 /* ── Types ── */
@@ -8,6 +9,14 @@ interface ChatMessage {
   sender: "user" | "ai";
   text: string;
   timestamp: Date;
+}
+
+interface SavedMoodCheckin {
+  id: string;
+  mood: string;
+  note?: string;
+  emoji?: string;
+  timestamp: string;
 }
 
 /* ── Simulated voice transcriptions ── */
@@ -54,6 +63,26 @@ function getAIResponse(message: string): string {
   return "Thank you for sharing. I'm here to listen and support you. Can you tell me more about how you're feeling? You can describe your emotions in any way that feels natural to you.";
 }
 
+function inferMoodFromText(message: string): { mood: string; emoji: string } | null {
+  const lowerMsg = message.toLowerCase();
+  if (["happy", "great", "good", "amazing", "excited", "grateful", "motivated"].some((word) => lowerMsg.includes(word))) {
+    return { mood: "good", emoji: "😊" };
+  }
+  if (["okay", "fine", "alright", "normal"].some((word) => lowerMsg.includes(word))) {
+    return { mood: "okay", emoji: "😐" };
+  }
+  if (["stressed", "stress", "anxious", "anxiety", "angry"].some((word) => lowerMsg.includes(word))) {
+    return { mood: "stressed", emoji: "😰" };
+  }
+  if (["sad", "low", "lonely", "overwhelmed", "upset", "confused"].some((word) => lowerMsg.includes(word))) {
+    return { mood: "overwhelmed", emoji: "😔" };
+  }
+  if (["tired", "sleepy", "drained", "exhausted"].some((word) => lowerMsg.includes(word))) {
+    return { mood: "tired", emoji: "😴" };
+  }
+  return null;
+}
+
 /* ── Waveform component ── */
 function WaveformBars({ active }: { active: boolean }) {
   return (
@@ -81,23 +110,37 @@ export function MoodCheckInView({ onBack }: MoodCheckInViewProps) {
   const [isTyping, setIsTyping] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const [listeningSeconds, setListeningSeconds] = useState(0);
+  const [savedCheckins, setSavedCheckins] = useState<SavedMoodCheckin[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const listeningTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => { messagesEndRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages, isTyping]);
   useEffect(() => { return () => { if (listeningTimerRef.current) clearInterval(listeningTimerRef.current); }; }, []);
+  useEffect(() => { moodCheckins.list().then(setSavedCheckins).catch(console.log); }, []);
 
-  const sendMessage = useCallback((text: string) => {
+  const persistMoodCheckin = useCallback(async (message: string, forcedMood?: { mood: string; emoji: string }) => {
+    const detected = forcedMood ?? inferMoodFromText(message);
+    if (!detected) return;
+    try {
+      const saved = await moodCheckins.create(detected.mood, detected.emoji, message);
+      setSavedCheckins((prev) => [saved, ...prev].slice(0, 20));
+    } catch (error) {
+      console.log("Mood check-in save error:", error);
+    }
+  }, []);
+
+  const sendMessage = useCallback((text: string, forcedMood?: { mood: string; emoji: string }) => {
     const trimmed = text.trim();
     if (!trimmed) return;
     setMessages((prev) => [...prev, { id: Date.now().toString(), sender: "user", text: trimmed, timestamp: new Date() }]);
+    persistMoodCheckin(trimmed, forcedMood);
     setInputValue("");
     setIsTyping(true);
     setTimeout(() => {
       setMessages((prev) => [...prev, { id: (Date.now() + 1).toString(), sender: "ai", text: getAIResponse(trimmed), timestamp: new Date() }]);
       setIsTyping(false);
     }, 1200 + Math.random() * 800);
-  }, []);
+  }, [persistMoodCheckin]);
 
   const handleSend = () => sendMessage(inputValue);
   const handleKeyDown = (e: React.KeyboardEvent) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSend(); } };
@@ -114,14 +157,22 @@ export function MoodCheckInView({ onBack }: MoodCheckInViewProps) {
 
   const formatTime = (s: number) => `${Math.floor(s / 60).toString().padStart(2, "0")}:${(s % 60).toString().padStart(2, "0")}`;
   const hasMessages = messages.length > 0;
+  const moodCounts: Record<string, number> = {};
+  savedCheckins.forEach((entry) => { moodCounts[entry.mood] = (moodCounts[entry.mood] || 0) + 1; });
+  const topMood = Object.entries(moodCounts).sort((a, b) => b[1] - a[1])[0]?.[0] || "—";
+  const thisMonthCount = savedCheckins.filter((entry) => {
+    const date = new Date(entry.timestamp);
+    const now = new Date();
+    return date.getMonth() === now.getMonth() && date.getFullYear() === now.getFullYear();
+  }).length;
 
   const quickMoods = [
-    { emoji: "😊", label: "Happy", msg: "I'm feeling happy today!" },
-    { emoji: "😔", label: "Sad", msg: "I'm feeling a bit sad right now." },
-    { emoji: "😰", label: "Stressed", msg: "I'm feeling stressed out." },
-    { emoji: "😴", label: "Tired", msg: "I'm feeling really tired." },
-    { emoji: "🙏", label: "Grateful", msg: "I'm feeling grateful today." },
-    { emoji: "😤", label: "Angry", msg: "I'm feeling angry about something." },
+    { emoji: "??", label: "Happy", msg: "I'm feeling happy today!", mood: "good" },
+    { emoji: "??", label: "Sad", msg: "I'm feeling a bit sad right now.", mood: "overwhelmed" },
+    { emoji: "??", label: "Stressed", msg: "I'm feeling stressed out.", mood: "stressed" },
+    { emoji: "??", label: "Tired", msg: "I'm feeling really tired.", mood: "tired" },
+    { emoji: "??", label: "Grateful", msg: "I'm feeling grateful today.", mood: "good" },
+    { emoji: "??", label: "Angry", msg: "I'm feeling angry about something.", mood: "stressed" },
   ];
 
   return (
@@ -174,13 +225,55 @@ export function MoodCheckInView({ onBack }: MoodCheckInViewProps) {
               {/* Quick mood buttons */}
               <div className="flex flex-wrap justify-center gap-2.5 max-w-[460px]">
                 {quickMoods.map((m) => (
-                  <button key={m.label} onClick={() => sendMessage(m.msg)}
+                  <button key={m.label} onClick={() => sendMessage(m.msg, { mood: m.mood, emoji: m.emoji })}
                     className="flex items-center gap-2 px-4 py-2.5 rounded-[14px] bg-white border border-[#edf0f4] hover:border-[#b91d73]/20 hover:shadow-md transition-all cursor-pointer group">
                     <span className="text-[18px]">{m.emoji}</span>
                     <span className="text-[12px] font-semibold text-[#5a7089] group-hover:text-[#003566] transition-colors">{m.label}</span>
                   </button>
                 ))}
               </div>
+
+              {savedCheckins.length > 0 && (
+                <div className="w-full max-w-[760px] mt-10">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
+                    <div className="bg-white rounded-[18px] border border-[#edf0f4] px-4 py-4">
+                      <p className="text-[11px] text-[#94a3b8]">Total Check-ins</p>
+                      <p className="text-[20px] font-bold text-[#003566]">{savedCheckins.length}</p>
+                    </div>
+                    <div className="bg-white rounded-[18px] border border-[#edf0f4] px-4 py-4">
+                      <p className="text-[11px] text-[#94a3b8]">Top Mood</p>
+                      <p className="text-[20px] font-bold text-[#b91d73] capitalize">{topMood.replace(/_/g, " ")}</p>
+                    </div>
+                    <div className="bg-white rounded-[18px] border border-[#edf0f4] px-4 py-4">
+                      <p className="text-[11px] text-[#94a3b8]">This Month</p>
+                      <p className="text-[20px] font-bold text-[#003566]">{thisMonthCount}</p>
+                    </div>
+                  </div>
+
+                  <div className="bg-white rounded-[20px] border border-[#edf0f4] p-5 shadow-sm">
+                    <div className="flex items-center justify-between mb-3">
+                      <h3 className="text-[15px] font-bold text-[#003566]">Recent Mood History</h3>
+                      <span className="text-[11px] text-[#94a3b8]">Latest {Math.min(5, savedCheckins.length)}</span>
+                    </div>
+                    <div className="flex flex-col gap-2.5">
+                      {savedCheckins.slice(0, 5).map((entry) => (
+                        <div key={entry.id} className="flex items-center gap-3 px-4 py-3 rounded-[14px] bg-[#fafbfc] border border-[#edf0f4]">
+                          <div className="w-10 h-10 rounded-[12px] bg-[#fdf2f8] flex items-center justify-center text-[20px]">
+                            {entry.emoji || "🙂"}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-[13px] font-semibold text-[#003566] capitalize">{entry.mood.replace(/_/g, " ")}</p>
+                            {entry.note && <p className="text-[12px] text-[#5a7089] truncate">{entry.note}</p>}
+                          </div>
+                          <p className="text-[11px] text-[#94a3b8] shrink-0">
+                            {new Date(entry.timestamp).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           ) : (
             /* Chat Messages */
@@ -289,3 +382,4 @@ export function MoodCheckInView({ onBack }: MoodCheckInViewProps) {
     </div>
   );
 }
+

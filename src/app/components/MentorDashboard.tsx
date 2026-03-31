@@ -1,11 +1,15 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { getCurrentUser, profile as profileApi, setCurrentUser } from '../lib/api';
+import { getCurrentUser, mentorDashboard, profile as profileApi, setCurrentUser } from '../lib/api';
+import { OnboardingWalkthrough } from './OnboardingWalkthrough';
+import { completePendingOnboarding, shouldShowPendingOnboarding } from '../lib/onboarding';
 import svgPaths from '../../imports/svg-awezib197y';
 import svgWellness from '../../imports/svg-fui5khiao7';
 import { CommunityView as MentorCommunityView } from './dashboard/CommunityView';
 import { MentorProfileSettings } from './dashboard/MentorProfileSettings';
+import { WorldChatView as SharedWorldChatView } from './dashboard/WorldChatView';
 import { ImageWithFallback } from './figma/ImageWithFallback';
 import { Building2, AlignLeft, Lock, Globe, Hash, Link2 } from 'lucide-react';
+import { toast } from 'sonner';
 import imgChatAvatar from 'figma:asset/798eac6e288222603807db12d070c52d1a145785.png';
 import imgUserAvatar from 'figma:asset/1d3b37310d86db33d00fb05038f712cfa0e01556.png';
 import imgSayHi from 'figma:asset/5e91c4f0fbdda278a8c62c9c5428eca49ba69e08.png';
@@ -146,7 +150,7 @@ function UserIcon() {
 // Types
 // ────────────────────────────────────────────────────────────────────────────────
 
-type NavItem = 'create-session' | 'session-requests' | 'study-room' | 'world-chat' | 'wellness' | 'community' | 'profile';
+type NavItem = 'create-session' | 'session-requests' | 'study-room' | 'wellness' | 'community' | 'profile';
 
 interface TimeSlot {
   id: string;
@@ -159,6 +163,85 @@ interface SessionPost {
   rate: string;
   timeSlots: TimeSlot[];
   hours: number[];
+  readOnly?: boolean;
+}
+
+interface MentorStats {
+  totalSessions: number;
+  completedSessions: number;
+  totalEarnings: number;
+  averageRating: number | null;
+}
+
+function formatInr(amount: number): string {
+  return `₹${Math.max(0, Math.round(amount)).toLocaleString('en-IN')}`;
+}
+
+function formatRating(rating: number | null): string {
+  if (rating == null || Number.isNaN(rating)) return '--';
+  return rating.toFixed(1);
+}
+
+function formatRateLabel(amountPaise: number | null): string {
+  if (amountPaise == null || Number.isNaN(amountPaise)) return '--';
+  return `${formatInr(amountPaise / 100)}/hr`;
+}
+
+function parseDatabaseDateTime(value: string): Date | null {
+  if (!value) return null;
+  if (value.includes('T') || value.endsWith('Z')) {
+    const isoDate = new Date(value);
+    return Number.isNaN(isoDate.getTime()) ? null : isoDate;
+  }
+
+  const match = value.match(/^(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2})(?::(\d{2}))?/);
+  if (!match) {
+    const fallback = new Date(value);
+    return Number.isNaN(fallback.getTime()) ? null : fallback;
+  }
+
+  const [, year, month, day, hour, minute, second] = match;
+  return new Date(
+    Number(year),
+    Number(month) - 1,
+    Number(day),
+    Number(hour),
+    Number(minute),
+    Number(second ?? '0'),
+    0
+  );
+}
+
+function formatTimestampForDb(date: Date): string {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  const hours = String(date.getHours()).padStart(2, '0');
+  const minutes = String(date.getMinutes()).padStart(2, '0');
+  const seconds = String(date.getSeconds()).padStart(2, '0');
+  return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+}
+
+function formatSessionSlot(datetime: string): string {
+  if (typeof datetime === 'string' && datetime.includes('|')) {
+    return datetime;
+  }
+
+  const date = parseDatabaseDateTime(datetime);
+  if (!date || Number.isNaN(date.getTime())) return datetime || 'Schedule unavailable';
+
+  const datePart = date.toLocaleDateString('en-GB', {
+    day: '2-digit',
+    month: '2-digit',
+    year: '2-digit',
+  });
+  const timePart = date.toLocaleTimeString('en-IN', {
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true,
+  }).toUpperCase();
+
+  return `${datePart} | ${timePart}`;
 }
 
 // ────────────────────────────────────────────────────────────────────────────────
@@ -401,22 +484,28 @@ function SessionCard({ session, onDelete, onEdit }: SessionCardProps) {
       </div>
 
       {/* Actions */}
-      <div className="flex justify-end gap-4">
-        <button
-          onClick={onDelete}
-          className="flex items-center gap-1.5 h-[42px] px-6 border border-[#cc3636] rounded-[20px] hover:bg-[#fde8e8] transition-colors"
-        >
-          <DeleteIcon />
-          <span className="font-['Poppins'] font-medium text-[14px] text-[#cc3636]">Delete</span>
-        </button>
-        <button
-          onClick={onEdit}
-          className="flex items-center gap-1.5 h-[42px] px-6 border border-[#003566] rounded-[20px] hover:bg-[#e8f0fa] transition-colors"
-        >
-          <EditIcon />
-          <span className="font-['Poppins'] font-medium text-[14px] text-[#003566]">Edit</span>
-        </button>
-      </div>
+      {session.readOnly ? (
+        <div className="flex justify-end">
+          <p className="font-['Poppins'] text-[12px] text-[rgba(0,0,0,0.45)]">Synced from your live mentor bookings</p>
+        </div>
+      ) : (
+        <div className="flex justify-end gap-4">
+          <button
+            onClick={onDelete}
+            className="flex items-center gap-1.5 h-[42px] px-6 border border-[#cc3636] rounded-[20px] hover:bg-[#fde8e8] transition-colors"
+          >
+            <DeleteIcon />
+            <span className="font-['Poppins'] font-medium text-[14px] text-[#cc3636]">Delete</span>
+          </button>
+          <button
+            onClick={onEdit}
+            className="flex items-center gap-1.5 h-[42px] px-6 border border-[#003566] rounded-[20px] hover:bg-[#e8f0fa] transition-colors"
+          >
+            <EditIcon />
+            <span className="font-['Poppins'] font-medium text-[14px] text-[#003566]">Edit</span>
+          </button>
+        </div>
+      )}
     </div>
   );
 }
@@ -445,6 +534,17 @@ interface CreateSessionDateTimeModalProps {
   onClose: () => void;
 }
 
+function selectedSlotToDate(slot: SelectedSlot): Date {
+  const [time, meridiemRaw] = slot.time.split(' ');
+  const [rawHour, rawMinute] = time.split(':').map(Number);
+  const meridiem = meridiemRaw?.toUpperCase();
+  let hour = rawHour % 12;
+  if (meridiem === 'PM') hour += 12;
+  const date = new Date(slot.date);
+  date.setHours(hour, rawMinute || 0, 0, 0);
+  return date;
+}
+
 function CreateSessionDateTimeModal({ title = 'Create Session', initialSlots = [], onNext, onClose }: CreateSessionDateTimeModalProps) {
   const today = new Date();
   const [viewYear,  setViewYear]  = useState(today.getFullYear());
@@ -452,6 +552,7 @@ function CreateSessionDateTimeModal({ title = 'Create Session', initialSlots = [
   const [selDate,   setSelDate]   = useState<Date | null>(null);
   const [selTime,   setSelTime]   = useState<string | null>(null);
   const [slots,     setSlots]     = useState<SelectedSlot[]>(initialSlots);
+  const [pickerError, setPickerError] = useState('');
   const MAX_SLOTS = 3;
   const timeScrollRef = useRef<HTMLDivElement>(null);
 
@@ -486,9 +587,15 @@ function CreateSessionDateTimeModal({ title = 'Create Session', initialSlots = [
   const addCurrentSlot = () => {
     if (!selDate || !selTime) return;
     if (slots.length >= MAX_SLOTS) return;
+    const candidate = selectedSlotToDate({ id: 'candidate', date: selDate, time: selTime });
+    if (candidate.getTime() <= Date.now()) {
+      setPickerError('Please choose a future date and time.');
+      return;
+    }
     // prevent duplicate
     const dup = slots.find(s => isSameDay(s.date, selDate) && s.time === selTime);
     if (dup) return;
+    setPickerError('');
     setSlots(prev => [...prev, { id: Date.now().toString(), date: new Date(selDate), time: selTime }]);
   };
 
@@ -499,6 +606,10 @@ function CreateSessionDateTimeModal({ title = 'Create Session', initialSlots = [
 
   const handleNext = () => {
     if (slots.length === 0) return;
+    if (slots.some((slot) => selectedSlotToDate(slot).getTime() <= Date.now())) {
+      setPickerError('Remove any past slots before continuing.');
+      return;
+    }
     onNext(slots);
   };
 
@@ -596,11 +707,12 @@ function CreateSessionDateTimeModal({ title = 'Create Session', initialSlots = [
               style={{ scrollbarWidth: 'thin', scrollbarColor: '#003566 rgba(0,0,0,0.2)' }}>
               {TIME_SLOTS.map(t => {
                 const active = selTime === t;
+                const isPastTime = !selDate || selectedSlotToDate({ id: 'preview', date: selDate, time: t }).getTime() <= Date.now();
                 return (
                   <button
                     key={t}
                     onClick={() => setSelTime(t)}
-                    disabled={!selDate}
+                    disabled={isPastTime}
                     className={`w-full rounded-[5px] px-3 py-[5px] text-left transition-colors border font-['Poppins'] text-[12px]
                       ${active
                         ? 'bg-[#dff0ff] border-[#003566] font-semibold text-[#003566]'
@@ -620,6 +732,9 @@ function CreateSessionDateTimeModal({ title = 'Create Session', initialSlots = [
           <p className="font-['Poppins'] font-medium text-[14px] text-[rgba(0,0,0,0.8)]">
             Selected Slots ({slots.length}/{MAX_SLOTS})
           </p>
+          {pickerError && (
+            <p className="font-['Poppins'] text-[12px] text-[#cc3636]">{pickerError}</p>
+          )}
 
           {/* Existing slot cards */}
           {slots.map(slot => (
@@ -876,8 +991,68 @@ function parseExistingSlot(slot: TimeSlot): SelectedSlot {
   }
 }
 
-function CreateSessionView() {
-  const [sessions, setSessions] = useState<SessionPost[]>(DEFAULT_SESSIONS);
+interface CreateSessionViewProps {
+  stats: MentorStats;
+  loadingStats: boolean;
+  mentorName: string;
+}
+
+function CreateSessionView({ stats, loadingStats, mentorName }: CreateSessionViewProps) {
+  const [sessions, setSessions] = useState<SessionPost[]>([]);
+  const [loadingSessions, setLoadingSessions] = useState(true);
+  const [savingSession, setSavingSession] = useState(false);
+
+  const refreshSessions = async () => {
+    setLoadingSessions(true);
+    try {
+      const liveSessions = await mentorDashboard.listActiveSessions();
+      setSessions(
+        liveSessions.map((session: any) => ({
+          id: session.id,
+          mentorName: session.mentorName || mentorName,
+          rate: formatRateLabel(session.hourlyRate),
+          timeSlots: [{ id: `${session.id}-slot`, datetime: formatSessionSlot(session.scheduledAt) }],
+          hours: [session.durationHours],
+          readOnly: Boolean(session.readOnly),
+        }))
+      );
+    } catch {
+      setSessions([]);
+    } finally {
+      setLoadingSessions(false);
+    }
+  };
+
+  useEffect(() => {
+    let mounted = true;
+
+    (async () => {
+      try {
+        const liveSessions = await mentorDashboard.listActiveSessions();
+        if (!mounted) return;
+
+        setSessions(
+          liveSessions.map((session: any) => ({
+            id: session.id,
+            mentorName: session.mentorName || mentorName,
+            rate: formatRateLabel(session.hourlyRate),
+            timeSlots: [{ id: `${session.id}-slot`, datetime: formatSessionSlot(session.scheduledAt) }],
+            hours: [session.durationHours],
+            readOnly: Boolean(session.readOnly),
+          }))
+        );
+      } catch {
+        if (!mounted) return;
+        setSessions([]);
+      } finally {
+        if (mounted) setLoadingSessions(false);
+      }
+    })();
+
+    return () => {
+      mounted = false;
+    };
+  }, [mentorName]);
 
   // ── Create flow ──────────────────────────────────────
   const [showCreateStep1, setShowCreateStep1] = useState(false);
@@ -900,15 +1075,34 @@ function CreateSessionView() {
     setShowCreateStep2(true);
   };
   const handleCreateBack = () => { setShowCreateStep2(false); setShowCreateStep1(true); };
-  const handleCreate = (fee: string, _pm: string, hours: number) => {
-    const timeSlots: TimeSlot[] = createPendingSlots.map(s => ({
-      id: s.id,
-      datetime: `${s.date.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: '2-digit' })} | ${s.time}`,
-    }));
-    setSessions(prev => [...prev, { id: Date.now().toString(), mentorName: 'Jack Sparrow', rate: `₹${fee}/hr`, timeSlots, hours: [hours] }]);
-    setCreatePendingSlots([]);
-    setShowCreateStep2(false);
-    setShowSuccess(true);
+  const handleCreate = async (fee: string, _pm: string, hours: number) => {
+    const hourlyRatePaise = Math.max(0, Math.round((Number(fee) || 0) * 100));
+    const scheduledAts = createPendingSlots.map((slot) => {
+      const [time, meridiem] = slot.time.split(' ');
+      const [rawHour, rawMinute] = time.split(':').map(Number);
+      let hour = rawHour % 12;
+      if (meridiem?.toUpperCase() === 'PM') hour += 12;
+      const date = new Date(slot.date);
+      date.setHours(hour, rawMinute || 0, 0, 0);
+      return formatTimestampForDb(date);
+    });
+
+    setSavingSession(true);
+    try {
+      await mentorDashboard.createAvailabilitySessions({
+        hourlyRatePaise,
+        durationHours: hours,
+        scheduledAts,
+      });
+      await refreshSessions();
+      setCreatePendingSlots([]);
+      setShowCreateStep2(false);
+      setShowSuccess(true);
+    } catch (error: any) {
+      toast.error(error?.message || 'Unable to save this session right now.');
+    } finally {
+      setSavingSession(false);
+    }
   };
   const closeCreate = () => { setShowCreateStep1(false); setShowCreateStep2(false); setCreatePendingSlots([]); };
 
@@ -924,26 +1118,49 @@ function CreateSessionView() {
     setShowEditStep2(true);
   };
   const handleEditBack = () => { setShowEditStep2(false); setShowEditStep1(true); };
-  const handleEditPost = (fee: string, _pm: string, hours: number) => {
+  const handleEditPost = async (fee: string, _pm: string, hours: number) => {
     if (!sessionBeingEdited) return;
-    const timeSlots: TimeSlot[] = editPendingSlots.map(s => ({
-      id: s.id,
-      datetime: `${s.date.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: '2-digit' })} | ${s.time}`,
-    }));
-    setSessions(prev => prev.map(p => p.id === sessionBeingEdited.id
-      ? { ...p, rate: `₹${fee}/hr`, timeSlots, hours: [hours] }
-      : p
-    ));
-    setSessionBeingEdited(null);
-    setEditPendingSlots([]);
-    setShowEditStep2(false);
-    setShowSuccess(true);
+    const slot = editPendingSlots[0];
+    if (!slot) return;
+
+    const [time, meridiem] = slot.time.split(' ');
+    const [rawHour, rawMinute] = time.split(':').map(Number);
+    let hour = rawHour % 12;
+    if (meridiem?.toUpperCase() === 'PM') hour += 12;
+    const scheduledAt = new Date(slot.date);
+    scheduledAt.setHours(hour, rawMinute || 0, 0, 0);
+
+    setSavingSession(true);
+    try {
+      await mentorDashboard.updateAvailabilitySession(sessionBeingEdited.id, {
+        hourlyRatePaise: Math.max(0, Math.round((Number(fee) || 0) * 100)),
+        durationHours: hours,
+        scheduledAt: formatTimestampForDb(scheduledAt),
+      });
+      await refreshSessions();
+      setSessionBeingEdited(null);
+      setEditPendingSlots([]);
+      setShowEditStep2(false);
+      setShowSuccess(true);
+    } catch (error: any) {
+      toast.error(error?.message || 'Unable to update this session right now.');
+    } finally {
+      setSavingSession(false);
+    }
   };
   const closeEdit = () => { setShowEditStep1(false); setShowEditStep2(false); setSessionBeingEdited(null); setEditPendingSlots([]); };
 
-  const handleDelete = (id: string) => {
-    setSessions(prev => prev.filter(s => s.id !== id));
-    setDeletingId(null);
+  const handleDelete = async (id: string) => {
+    setSavingSession(true);
+    try {
+      await mentorDashboard.deleteAvailabilitySession(id);
+      await refreshSessions();
+      setDeletingId(null);
+    } catch (error: any) {
+      toast.error(error?.message || 'Unable to delete this session right now.');
+    } finally {
+      setSavingSession(false);
+    }
   };
 
   // Pre-fill values for edit Step 2
@@ -957,10 +1174,39 @@ function CreateSessionView() {
         <div>
           <p className="font-['Poppins'] font-medium text-[40px] text-black leading-tight">Create Session</p>
           <p className="font-['Poppins'] text-[14px] text-[rgba(0,0,0,0.6)]">Define your session details and get ready to teach.</p>
+
+          <div className="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-3 max-w-[760px]">
+            <div className="bg-white border border-[rgba(0,0,0,0.08)] rounded-[12px] px-4 py-3">
+              <p className="font-['Poppins'] text-[12px] text-[rgba(0,0,0,0.6)]">Total Sessions</p>
+              <p className="font-['Poppins'] font-semibold text-[20px] text-[#003566]">
+                {loadingStats ? '--' : stats.totalSessions}
+              </p>
+              <p className="font-['Poppins'] text-[11px] text-[rgba(0,0,0,0.45)]">
+                {loadingStats ? 'Loading...' : `${stats.completedSessions} completed`}
+              </p>
+            </div>
+
+            <div className="bg-white border border-[rgba(0,0,0,0.08)] rounded-[12px] px-4 py-3">
+              <p className="font-['Poppins'] text-[12px] text-[rgba(0,0,0,0.6)]">Total Earnings</p>
+              <p className="font-['Poppins'] font-semibold text-[20px] text-[#003566]">
+                {loadingStats ? '--' : formatInr(stats.totalEarnings)}
+              </p>
+              <p className="font-['Poppins'] text-[11px] text-[rgba(0,0,0,0.45)]">From completed paid sessions</p>
+            </div>
+
+            <div className="bg-white border border-[rgba(0,0,0,0.08)] rounded-[12px] px-4 py-3">
+              <p className="font-['Poppins'] text-[12px] text-[rgba(0,0,0,0.6)]">Average Rating</p>
+              <p className="font-['Poppins'] font-semibold text-[20px] text-[#003566]">
+                {loadingStats ? '--' : formatRating(stats.averageRating)}
+              </p>
+              <p className="font-['Poppins'] text-[11px] text-[rgba(0,0,0,0.45)]">Live mentor profile score</p>
+            </div>
+          </div>
         </div>
         <button
           onClick={() => setShowCreateStep1(true)}
-          className="w-[49px] h-[49px] bg-[#003566] rounded-[12px] flex items-center justify-center hover:bg-[#00284d] transition-colors shrink-0"
+          disabled={savingSession}
+          className="w-[49px] h-[49px] bg-[#003566] rounded-[12px] flex items-center justify-center hover:bg-[#00284d] transition-colors shrink-0 disabled:cursor-not-allowed disabled:opacity-60"
         >
           <svg fill="none" viewBox="0 0 49 49" className="w-full h-full">
             <rect fill="#003566" height="49" rx="12" width="49" />
@@ -970,7 +1216,15 @@ function CreateSessionView() {
       </div>
 
       {/* Session list */}
-      {sessions.length > 0 ? (
+      {loadingSessions ? (
+        <div className="flex flex-col items-center justify-center py-20 gap-4 text-center">
+          <div className="w-[70px] h-[70px] bg-[#c9e5ff] rounded-full flex items-center justify-center">
+            <CreateSessionIcon />
+          </div>
+          <p className="font-['Poppins'] font-medium text-[18px] text-[rgba(0,0,0,0.6)]">Loading live sessions...</p>
+          <p className="font-['Poppins'] text-[14px] text-[rgba(0,0,0,0.4)] max-w-[300px]">Fetching your booked mentor sessions and current schedule from the database.</p>
+        </div>
+      ) : sessions.length > 0 ? (
         <div className="flex flex-col gap-4">
           <p className="font-['Poppins'] text-[16px] text-black">Active Session Post{sessions.length > 1 ? 's' : ''}:</p>
           {sessions.map(session => (
@@ -1062,23 +1316,28 @@ interface SessionRequest {
   oldDatetime?: string;   // postponed: original time
 }
 
-const INITIAL_REQUESTS: SessionRequest[] = [
-  { id: '1', student: 'Anjali Singh', datetime: '28/10/25  |  9:00PM', hours: 2, status: 'pending',  canJoin: false },
-  { id: '2', student: 'Rahul Verma',  datetime: '27/10/25  |  5:00PM', hours: 1, status: 'pending',  canJoin: false },
-  { id: '3', student: 'Krishna',      datetime: '25/10/25  |  4:00PM', hours: 3, status: 'pending',  canJoin: false },
-  { id: '4', student: 'Tharun',       datetime: '24/10/25  |  3:00PM', hours: 2, status: 'pending',  canJoin: false },
-  // Pre-seeded Upcoming demo rows (gray = not yet time, blue = ready to join)
-  { id: '5', student: 'Anjali Singh', datetime: '28/10/25  |  9:00PM', hours: 2, status: 'accepted',  canJoin: false },
-  { id: '6', student: 'Rahul Verma',  datetime: '27/10/25  |  5:00PM', hours: 1, status: 'accepted',  canJoin: true  },
-  // Pre-seeded Postponed demo rows
-  { id: '7', student: 'Anjali Singh', datetime: '28/10/25  |  9:00PM', hours: 2, status: 'postponed', newDatetime: '30/10/25  |  9:00PM', oldDatetime: '28/10/25  |  9:00PM' },
-  { id: '8', student: 'Rahul Verma',  datetime: '27/10/25  |  5:00PM', hours: 1, status: 'postponed', newDatetime: '29/10/25  |  5:00PM', oldDatetime: '27/10/25  |  5:00PM' },
-  // Pre-seeded Completed demo rows
-  { id: '9',  student: 'Anjali Singh', datetime: '28/10/25  |  9:00PM', hours: 2, status: 'completed' },
-  { id: '10', student: 'Rahul Verma',  datetime: '27/10/25  |  5:00PM', hours: 1, status: 'completed' },
-  { id: '11', student: 'Krishna',      datetime: '25/10/25  |  4:00PM', hours: 3, status: 'completed' },
-  { id: '12', student: 'Tharun',       datetime: '24/10/25  |  3:00PM', hours: 2, status: 'completed' },
-];
+function canJoinSession(datetime: string): boolean {
+  const parts = datetime.split('|').map((part) => part.trim());
+  if (parts.length !== 2) return false;
+
+  const dateBits = parts[0].split(/[-/]/).map(Number);
+  if (dateBits.length !== 3 || dateBits.some((bit) => Number.isNaN(bit))) return false;
+
+  const [day, month, yearShort] = dateBits;
+  const year = yearShort < 100 ? 2000 + yearShort : yearShort;
+  const parsed = new Date(`${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')} ${parts[1]}`);
+  if (Number.isNaN(parsed.getTime())) return false;
+
+  const diffMs = parsed.getTime() - Date.now();
+  return diffMs <= 10 * 60 * 1000 && diffMs >= -2 * 60 * 60 * 1000;
+}
+
+function mapBookingStatusToRequestStatus(status: string): RequestStatus {
+  if (status === 'pending') return 'pending';
+  if (status === 'confirmed') return 'accepted';
+  if (status === 'cancelled') return 'postponed';
+  return 'completed';
+}
 
 function TickIcon() {
   return (
@@ -1137,25 +1396,76 @@ const TAB_STATUS_MAP: Record<FilterTab, RequestStatus> = {
 };
 
 function SessionRequestsView() {
-  const [requests, setRequests] = useState<SessionRequest[]>(INITIAL_REQUESTS);
+  const [requests, setRequests] = useState<SessionRequest[]>([]);
   const [activeTab, setActiveTab] = useState<FilterTab>('requests');
+  const [loadingRequests, setLoadingRequests] = useState(true);
+  const [busyRequestId, setBusyRequestId] = useState<string | null>(null);
+
+  useEffect(() => {
+    let mounted = true;
+
+    (async () => {
+      try {
+        const rows = await mentorDashboard.listSessionRequests();
+        if (!mounted) return;
+
+        setRequests(
+          (rows ?? []).map((row: any) => ({
+            id: row.id,
+            student: row.student,
+            datetime: row.datetime,
+            hours: row.hours,
+            status: mapBookingStatusToRequestStatus(row.status),
+            canJoin: mapBookingStatusToRequestStatus(row.status) === 'accepted' ? canJoinSession(row.datetime) : false,
+            oldDatetime: mapBookingStatusToRequestStatus(row.status) === 'postponed' ? row.datetime : undefined,
+          }))
+        );
+      } catch {
+        if (!mounted) return;
+        setRequests([]);
+      } finally {
+        if (mounted) setLoadingRequests(false);
+      }
+    })();
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   const visibleRows = requests.filter(r => r.status === TAB_STATUS_MAP[activeTab]);
 
-  const acceptRequest   = (id: string) => setRequests(p => p.map(r => r.id === id ? { ...r, status: 'accepted'  as RequestStatus } : r));
-  const postponeRequest = (id: string) => setRequests(p => p.map(r => {
-    if (r.id !== id) return r;
-    // Derive a rescheduled datetime: parse day part and add 2, keep time
-    const parts = r.datetime.split('  |  ');
-    let newDt = r.datetime;
-    if (parts.length === 2) {
-      const [datePart, timePart] = parts;
-      const [dd, mm, yy] = datePart.trim().split('/').map(Number);
-      const newDay = String(dd + 2).padStart(2, '0');
-      newDt = `${newDay}/${String(mm).padStart(2, '0')}/${yy}  |  ${timePart}`;
+  const acceptRequest = async (id: string) => {
+    setBusyRequestId(id);
+    try {
+      await mentorDashboard.acceptBooking(id);
+      setRequests(prev => prev.map(request => {
+        if (request.id !== id) return request;
+        return {
+          ...request,
+          status: 'accepted' as RequestStatus,
+          canJoin: canJoinSession(request.datetime),
+        };
+      }));
+      toast.success('Session accepted and student notified.');
+    } catch (error: any) {
+      toast.error(error?.message || 'Unable to accept this booking right now.');
+    } finally {
+      setBusyRequestId(current => (current === id ? null : current));
     }
-    return { ...r, status: 'postponed' as RequestStatus, oldDatetime: r.datetime, newDatetime: newDt };
-  }));
+  };
+  const postponeRequest = async (id: string) => {
+    setBusyRequestId(id);
+    try {
+      await mentorDashboard.postponeBooking(id);
+      setRequests(prev => prev.filter(request => request.id !== id));
+      toast.success('Student notified and booking removed.');
+    } catch (error: any) {
+      toast.error(error?.message || 'Unable to postpone this booking right now.');
+    } finally {
+      setBusyRequestId(current => (current === id ? null : current));
+    }
+  };
 
   return (
     <div className="flex flex-col gap-6">
@@ -1240,7 +1550,11 @@ function SessionRequestsView() {
         </div>
 
         {/* Empty state */}
-        {visibleRows.length === 0 ? (
+        {loadingRequests ? (
+          <div className="flex items-center justify-center py-14">
+            <p className="font-['Poppins'] text-[14px] text-[rgba(0,0,0,0.4)]">Loading session requests...</p>
+          </div>
+        ) : visibleRows.length === 0 ? (
           <div className="flex items-center justify-center py-14">
             <p className="font-['Poppins'] text-[14px] text-[rgba(0,0,0,0.4)]">
               {activeTab === 'requests'  && 'No pending session requests.'}
@@ -1302,17 +1616,23 @@ function SessionRequestsView() {
                   <>
                     <button
                       onClick={() => acceptRequest(req.id)}
-                      className="flex-1 h-full bg-[rgba(52,177,97,0.4)] rounded-[20px] flex items-center justify-center gap-[6px] hover:bg-[rgba(52,177,97,0.55)] transition-colors"
+                      disabled={busyRequestId === req.id}
+                      className="flex-1 h-full bg-[rgba(52,177,97,0.4)] rounded-[20px] flex items-center justify-center gap-[6px] hover:bg-[rgba(52,177,97,0.55)] transition-colors disabled:cursor-not-allowed disabled:opacity-60"
                     >
                       <TickIcon />
-                      <span className="font-['Poppins'] font-medium text-[12px] text-[#34b161]">Accept</span>
+                      <span className="font-['Poppins'] font-medium text-[12px] text-[#34b161]">
+                        {busyRequestId === req.id ? 'Accepting...' : 'Accept'}
+                      </span>
                     </button>
                     <button
                       onClick={() => postponeRequest(req.id)}
-                      className="flex-1 h-full bg-[rgba(255,94,94,0.4)] rounded-[20px] flex items-center justify-center gap-[10px] hover:bg-[rgba(255,94,94,0.55)] transition-colors"
+                      disabled={busyRequestId === req.id}
+                      className="flex-1 h-full bg-[rgba(255,94,94,0.4)] rounded-[20px] flex items-center justify-center gap-[10px] hover:bg-[rgba(255,94,94,0.55)] transition-colors disabled:cursor-not-allowed disabled:opacity-60"
                     >
                       <ClockIconSR />
-                      <span className="font-['Poppins'] font-medium text-[12px] text-[#cc3636]">Postpone</span>
+                      <span className="font-['Poppins'] font-medium text-[12px] text-[#cc3636]">
+                        {busyRequestId === req.id ? 'Postponing...' : 'Postpone'}
+                      </span>
                     </button>
                   </>
                 )}
@@ -1619,192 +1939,6 @@ const REPORT_OPTIONS = [
   'Other',
 ];
 
-const INITIAL_CHAT_MESSAGES: ChatMessage[] = [
-  { id: '1', sender: 'other', senderName: 'Alex', text: 'Hey, there everyone', time: '10:14PM' },
-  { id: '2', sender: 'me',    senderName: 'You',  text: 'Hey, there everyone', time: '10:14PM' },
-];
-
-function WorldChatView() {
-  const [messages, setMessages] = useState<ChatMessage[]>(INITIAL_CHAT_MESSAGES);
-  const [inputText, setInputText]         = useState('');
-  const [selectedMsgId, setSelectedMsgId] = useState<string | null>(null);
-  const [showReportModal, setShowReportModal] = useState(false);
-  const [reportReason, setReportReason]       = useState(REPORT_OPTIONS[0]);
-  const [reportDescription, setReportDescription] = useState('');
-  const [reportSubmitted, setReportSubmitted]     = useState(false);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
-
-  const now = () => new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true }).replace(' ', '');
-
-  const sendMessage = () => {
-    const text = inputText.trim();
-    if (!text) return;
-    const t = now();
-    setMessages(prev => [...prev, { id: Date.now().toString(), sender: 'me', senderName: 'You', text, time: t }]);
-    setInputText('');
-    setTimeout(() => {
-      setMessages(prev => [...prev, { id: (Date.now() + 1).toString(), sender: 'other', senderName: 'Alex', text: 'Thanks for sharing! 👍', time: now() }]);
-    }, 1200);
-  };
-
-  const handleBubbleClick = (msg: ChatMessage) => {
-    if (msg.sender === 'me') return;
-    setSelectedMsgId(prev => prev === msg.id ? null : msg.id);
-  };
-
-  const closeReport = () => {
-    setShowReportModal(false);
-    setReportDescription('');
-    setReportReason(REPORT_OPTIONS[0]);
-    setReportSubmitted(false);
-  };
-
-  const handleSubmitReport = () => {
-    setReportSubmitted(true);
-    setTimeout(() => closeReport(), 1500);
-  };
-
-  return (
-    <div className="flex flex-col h-full">
-      {/* Page title */}
-      <p className="font-['Poppins'] font-medium text-[40px] text-black leading-tight shrink-0 mb-4">World Chat</p>
-
-      {/* Messages area */}
-      <div className="flex-1 overflow-y-auto flex flex-col gap-4 pr-1">
-        {messages.map(msg => (
-          <div key={msg.id} className={`flex gap-2 items-end ${msg.sender === 'me' ? 'flex-row-reverse' : 'flex-row'}`}>
-            {/* Avatar */}
-            <img
-              src={msg.sender === 'other' ? imgChatAvatar : imgUserAvatar}
-              alt={msg.senderName}
-              className="w-[38px] h-[38px] rounded-full object-cover shrink-0"
-            />
-
-            {/* Bubble column */}
-            <div className={`flex flex-col gap-[3px] flex-1 ${msg.sender === 'me' ? 'items-end' : 'items-start'}`}>
-              {/* Name | time */}
-              <p className="font-['Poppins'] text-[12px] text-[rgba(0,0,0,0.6)]">
-                <span className="text-black">{msg.senderName}</span>
-                {` | ${msg.time}`}
-              </p>
-
-              {/* Message bubble */}
-              <div
-                className={`h-[40px] rounded-[12px] shadow-[0px_4px_60px_5px_rgba(0,0,0,0.15)] flex items-center px-4 cursor-pointer w-full transition-opacity ${
-                  msg.sender === 'other' ? 'bg-white' : 'bg-[#c9e5ff]'
-                }`}
-                onClick={() => handleBubbleClick(msg)}
-              >
-                <p className="font-['Poppins'] text-[16px] text-[rgba(0,0,0,0.7)]">{msg.text}</p>
-              </div>
-
-              {/* Report button (other's messages only) */}
-              {selectedMsgId === msg.id && msg.sender === 'other' && (
-                <div className="mt-0.5">
-                  <button
-                    onClick={() => { setShowReportModal(true); setSelectedMsgId(null); }}
-                    className="bg-white h-[40px] px-6 rounded-[12px] shadow-[0px_4px_60px_5px_rgba(0,0,0,0.15)] font-['Poppins'] font-medium text-[12px] text-[#ff5e5e] hover:bg-red-50 transition-colors"
-                  >
-                    Report
-                  </button>
-                </div>
-              )}
-            </div>
-          </div>
-        ))}
-        <div ref={messagesEndRef} />
-      </div>
-
-      {/* Input bar */}
-      <div className="flex gap-5 items-center pt-4 shrink-0">
-        <div className="flex-1 h-[54px] bg-white rounded-[12px] shadow-[0px_4px_60px_5px_rgba(0,0,0,0.15)] flex items-center px-4">
-          <input
-            value={inputText}
-            onChange={e => setInputText(e.target.value)}
-            onKeyDown={e => e.key === 'Enter' && sendMessage()}
-            placeholder="Type here"
-            className="w-full bg-transparent outline-none font-['Poppins'] font-medium text-[16px] text-[rgba(0,0,0,0.6)] placeholder:text-[rgba(0,0,0,0.6)]"
-          />
-        </div>
-        <button
-          onClick={sendMessage}
-          className="w-[54px] h-[54px] bg-[#003566] rounded-full flex items-center justify-center shrink-0 hover:bg-[#00284d] transition-colors"
-        >
-          <svg fill="none" viewBox="0 0 24 24" className="w-5 h-5" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-            <line x1="22" y1="2" x2="11" y2="13" />
-            <polygon points="22 2 15 22 11 13 2 9 22 2" fill="white" stroke="white" strokeWidth="2" strokeLinejoin="round" />
-          </svg>
-        </button>
-      </div>
-
-      {/* Report User Modal */}
-      {showReportModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20 p-4">
-          <div
-            className="fixed inset-0"
-            onClick={closeReport}
-          />
-          <div className="relative bg-white rounded-[20px] shadow-[0px_4px_60px_5px_rgba(0,0,0,0.15)] w-[436px] overflow-hidden">
-            <div className="flex flex-col gap-[26px] p-6">
-              {/* Header */}
-              <div className="flex flex-col gap-[6px]">
-                <p className="font-['Poppins'] font-semibold text-[24px] text-black">Report User</p>
-                <p className="font-['Poppins'] text-[12px] text-black">Help us maintain a calm and distraction-free study environment</p>
-              </div>
-
-              {/* Radio options */}
-              <div className="flex flex-col gap-[15px]">
-                {REPORT_OPTIONS.map(option => (
-                  <button
-                    key={option}
-                    onClick={() => setReportReason(option)}
-                    className="flex gap-2 items-center text-left"
-                  >
-                    <svg fill="none" viewBox="0 0 18 18" className="w-[18px] h-[18px] shrink-0">
-                      <circle cx="9" cy="9" r="9" fill="#D9D9D9" />
-                      {reportReason === option && <circle cx="9" cy="9" r="4" fill="#003566" />}
-                    </svg>
-                    <p className="font-['Poppins'] text-[14px] text-black">{option}</p>
-                  </button>
-                ))}
-
-                {/* Description textarea */}
-                <div className="bg-[#d9d9d9] rounded-[20px] p-4 h-[127px] flex items-start">
-                  <textarea
-                    value={reportDescription}
-                    onChange={e => setReportDescription(e.target.value)}
-                    placeholder="Describe the issue briefly"
-                    className="w-full h-full bg-transparent outline-none resize-none font-['Poppins'] text-[12px] text-[rgba(0,0,0,0.7)] placeholder:text-[rgba(0,0,0,0.7)]"
-                  />
-                </div>
-              </div>
-
-              {/* Action buttons */}
-              <div className="flex gap-4 items-center justify-end">
-                <button
-                  onClick={closeReport}
-                  className="h-[42px] w-[156px] rounded-[20px] border border-black font-['Poppins'] text-[14px] text-black hover:bg-gray-50 transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleSubmitReport}
-                  className="h-[42px] w-[156px] rounded-[20px] bg-[#ff5e5e] font-['Poppins'] font-medium text-[14px] text-white hover:bg-[#e54e4e] transition-colors"
-                >
-                  {reportSubmitted ? 'Submitted ✓' : 'Submit'}
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
 
 // ────────────────────────────────────────────────────────────────────────────────
 // Emotional Wellness View
@@ -1847,27 +1981,6 @@ const QUOTES = [
 
 function EmotionalWellnessView() {
   const [activeCard, setActiveCard] = useState<WellnessSubView | null>(null);
-  // ── World Chat state ──
-  const [wcMessages, setWcMessages] = useState([
-    { id: 1, sender: 'alex' as const, name: 'Alex', text: 'Hey, there everyone', time: '10:14PM' },
-    { id: 2, sender: 'you'  as const, name: 'You',  text: 'Hey, there everyone', time: '10:14PM' },
-  ]);
-  const [wcInput,        setWcInput]        = useState('');
-  const [wcReportMsgId,  setWcReportMsgId]  = useState<number | null>(null);
-  const [wcShowReport,   setWcShowReport]   = useState(false);
-  const [wcReportReason, setWcReportReason] = useState(0);
-  const [wcReportText,   setWcReportText]   = useState('');
-  const wcEndRef = useRef<HTMLDivElement>(null);
-
-  const wcSend = () => {
-    const t = wcInput.trim();
-    if (!t) return;
-    const now = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
-    setWcMessages(prev => [...prev, { id: Date.now(), sender: 'you', name: 'You', text: t, time: now }]);
-    setWcInput('');
-    setWcReportMsgId(null);
-    setTimeout(() => wcEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 80);
-  };
 
   // ── Motivation Corner state ──
   const [mcShowPostModal,  setMcShowPostModal]  = useState(false);
@@ -2395,171 +2508,7 @@ function EmotionalWellnessView() {
 
   /* ─── World Chat sub-view ─── */
   if (activeCard === 'chat') {
-    const card = cards[2];
-
-    const WC_REPORT_OPTIONS = [
-      'Inappropriate visuals or gestures',
-      'Camera showing disturbing or distracting content',
-      'Using unrelated or misleading video feed',
-      'Other',
-    ];
-
-    return (
-      <div className="flex flex-col h-full min-h-0">
-        {/* Header */}
-        <SubHeader card={card} />
-
-        {/* Scrollable message list */}
-        <div
-          className="flex-1 min-h-0 overflow-y-auto flex flex-col gap-[16px] py-4 pr-1"
-          style={{ scrollbarWidth: 'thin', scrollbarColor: '#003566 rgba(0,53,102,0.15)' }}
-          onClick={() => setWcReportMsgId(null)}
-        >
-          {wcMessages.map(msg => (
-            <div key={msg.id}>
-              {msg.sender === 'alex' ? (
-                /* Other-user message */
-                <div
-                  className="flex gap-[8px] items-end cursor-pointer"
-                  onClick={e => { e.stopPropagation(); setWcReportMsgId(wcReportMsgId === msg.id ? null : msg.id); }}
-                >
-                  <div className="relative shrink-0 size-[38px]">
-                    <img alt="" className="absolute block max-w-none size-full rounded-full" src={imgWcAvatar} />
-                  </div>
-                  <div className="flex flex-col gap-[3px] flex-1">
-                    <p className="font-['Poppins'] text-[12px] text-[rgba(0,0,0,0.6)]">
-                      <span className="text-black">{msg.name}</span>{` | ${msg.time}`}
-                    </p>
-                    <div className="bg-white h-[40px] rounded-[12px] shadow-[0px_4px_60px_5px_rgba(0,0,0,0.15)] flex items-center px-[16px]">
-                      <p className="font-['Poppins'] text-[16px] text-[rgba(0,0,0,0.7)]">{msg.text}</p>
-                    </div>
-                    {/* Report pill */}
-                    {wcReportMsgId === msg.id && (
-                      <button
-                        onClick={e => { e.stopPropagation(); setWcShowReport(true); setWcReportMsgId(null); }}
-                        className="mt-1 bg-white h-[40px] w-[147px] rounded-[12px] shadow-[0px_4px_60px_5px_rgba(0,0,0,0.15)] flex items-center justify-center hover:bg-[#fff0f0] transition-colors"
-                      >
-                        <p className="font-['Poppins'] font-medium text-[12px] text-[#ff5e5e]">Report</p>
-                      </button>
-                    )}
-                  </div>
-                </div>
-              ) : (
-                /* Your message */
-                <div className="flex gap-[8px] items-end">
-                  <div className="flex flex-col gap-[3px] flex-1 items-end">
-                    <p className="font-['Poppins'] text-[12px] text-[rgba(0,0,0,0.6)] text-right w-full">
-                      <span className="text-black">{msg.name}</span>{` | ${msg.time}`}
-                    </p>
-                    <div className="bg-[#c9e5ff] h-[40px] rounded-[12px] shadow-[0px_4px_60px_5px_rgba(0,0,0,0.15)] flex items-center px-[16px] w-full">
-                      <p className="font-['Poppins'] text-[16px] text-[rgba(0,0,0,0.7)]">{msg.text}</p>
-                    </div>
-                  </div>
-                  <div className="relative shrink-0 size-[38px]">
-                    <img alt="" className="absolute block max-w-none size-full rounded-full" src={imgWcAvatar} />
-                  </div>
-                </div>
-              )}
-            </div>
-          ))}
-          <div ref={wcEndRef} />
-        </div>
-
-        {/* Input bar */}
-        <div className="flex gap-[20px] items-center shrink-0 pt-3">
-          <input
-            value={wcInput}
-            onChange={e => setWcInput(e.target.value)}
-            onKeyDown={e => { if (e.key === 'Enter') wcSend(); }}
-            placeholder="Type here"
-            className="flex-1 h-[54px] rounded-[12px] shadow-[0px_4px_60px_5px_rgba(0,0,0,0.15)] bg-white px-[16px] font-['Poppins'] font-medium text-[16px] text-[rgba(0,0,0,0.6)] placeholder:text-[rgba(0,0,0,0.6)] outline-none"
-          />
-          {/* Send button: navy circle with masked paper-plane */}
-          <button
-            onClick={wcSend}
-            className="bg-[#003566] overflow-hidden relative rounded-full shrink-0 size-[54px] hover:bg-[#004580] transition-colors flex items-center justify-center"
-          >
-            <div
-              className="bg-white size-[24px]"
-              style={{
-                maskImage: `url('${imgWcSendMask}')`,
-                WebkitMaskImage: `url('${imgWcSendMask}')`,
-                maskSize: '24px 24px',
-                WebkitMaskSize: '24px 24px',
-                maskRepeat: 'no-repeat',
-                WebkitMaskRepeat: 'no-repeat',
-                maskPosition: 'center',
-                WebkitMaskPosition: 'center',
-              }}
-            />
-          </button>
-        </div>
-
-        {/* ── Report User Modal ── */}
-        {wcShowReport && (
-          <div
-            className="fixed inset-0 z-50 flex items-center justify-center"
-            style={{ backgroundColor: 'rgba(0,0,0,0.2)' }}
-            onClick={e => { if (e.target === e.currentTarget) setWcShowReport(false); }}
-          >
-            <div className="bg-white h-[454px] w-[436px] overflow-hidden rounded-[20px] shadow-[0px_4px_60px_5px_rgba(0,0,0,0.15)] flex flex-col gap-[26px] p-[24px]">
-              {/* Heading */}
-              <div className="flex flex-col gap-[6px]">
-                <p className="font-['Poppins'] font-semibold text-[24px] text-black">Report User</p>
-                <p className="font-['Poppins'] text-[12px] text-black">Help us maintain a clam and distraction-free study environment</p>
-              </div>
-
-              {/* Radio options + textarea */}
-              <div className="flex flex-col gap-[15px]">
-                {WC_REPORT_OPTIONS.map((opt, i) => (
-                  <button
-                    key={i}
-                    onClick={() => setWcReportReason(i)}
-                    className="flex gap-[8px] items-center text-left"
-                  >
-                    {/* Radio circle */}
-                    <div className="relative shrink-0 size-[18px]">
-                      <svg className="absolute block size-full" fill="none" viewBox="0 0 18 18">
-                        <circle cx="9" cy="9" fill="#D9D9D9" r="9" />
-                        {wcReportReason === i && <circle cx="9" cy="9" fill="#003566" r="4" />}
-                      </svg>
-                    </div>
-                    <p className="font-['Poppins'] text-[14px] text-black">{opt}</p>
-                  </button>
-                ))}
-
-                {/* Textarea */}
-                <div className="relative mt-1">
-                  <textarea
-                    value={wcReportText}
-                    onChange={e => setWcReportText(e.target.value)}
-                    placeholder="Describe the issue briefly"
-                    className="bg-[#d9d9d9] w-full h-[127px] rounded-[20px] px-[16px] pt-[16px] font-['Poppins'] text-[12px] text-[rgba(0,0,0,0.7)] placeholder:text-[rgba(0,0,0,0.7)] outline-none resize-none"
-                  />
-                </div>
-              </div>
-
-              {/* Buttons */}
-              <div className="flex gap-[16px] items-center justify-end mt-auto">
-                <button
-                  onClick={() => { setWcShowReport(false); setWcReportReason(0); setWcReportText(''); }}
-                  className="relative h-[42px] w-[156px] rounded-[20px] flex items-center justify-center hover:bg-[#f5f5f5] transition-colors"
-                >
-                  <div aria-hidden="true" className="absolute border border-black inset-[-1px] pointer-events-none rounded-[21px]" />
-                  <p className="font-['Poppins'] text-[14px] text-black">Cancel</p>
-                </button>
-                <button
-                  onClick={() => { setWcShowReport(false); setWcReportReason(0); setWcReportText(''); }}
-                  className="bg-[#ff5e5e] h-[42px] w-[156px] rounded-[20px] flex items-center justify-center hover:bg-[#e04c4c] transition-colors"
-                >
-                  <p className="font-['Poppins'] font-medium text-[14px] text-white">Submit</p>
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
-    );
+    return <SharedWorldChatView onBack={() => setActiveCard(null)} />;
   }
 
   /* ─── Motivation Corner sub-view ─── */
@@ -2864,7 +2813,6 @@ const NAV_ITEMS: { id: NavItem; label: string; icon: React.ReactNode }[] = [
   { id: 'create-session', label: 'Create Session', icon: <CreateSessionIcon /> },
   { id: 'session-requests', label: 'Session Requests', icon: <SessionRequestsIcon /> },
   { id: 'study-room', label: 'Create Study Room', icon: <StudyRoomIcon /> },
-  { id: 'world-chat', label: 'World Chat', icon: <WorldChatIcon /> },
   { id: 'wellness', label: 'Emotional Wellness', icon: <WellnessIcon /> },
   { id: 'community', label: 'Community', icon: <CommunityIcon /> },
 ];
@@ -2955,11 +2903,20 @@ function ProfileDropdown({ onLogout, onClose, onNavigate }: ProfileDropdownProps
 // ────────────────────────────────────────────────────────────────────────────────
 
 export function MentorDashboard({ onLogout }: MentorDashboardProps) {
+  const cachedUser = React.useMemo(() => getCurrentUser(), []);
   const [activeNav, setActiveNav] = useState<NavItem>('create-session');
   const [showProfile, setShowProfile] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
+  const [showOnboarding, setShowOnboarding] = useState(() => shouldShowPendingOnboarding(cachedUser?.id, 'mentor'));
+  const [mentorStats, setMentorStats] = useState<MentorStats>({
+    totalSessions: 0,
+    completedSessions: 0,
+    totalEarnings: 0,
+    averageRating: null,
+  });
+  const [mentorStatsLoading, setMentorStatsLoading] = useState(true);
   const [userProfile, setUserProfileState] = useState<{ name: string; role: string; avatar?: string | null }>(() => {
-    const cached = getCurrentUser();
+    const cached = cachedUser;
     return {
       name: cached?.name || 'User',
       role: cached?.role || 'mentor',
@@ -2988,16 +2945,58 @@ export function MentorDashboard({ onLogout }: MentorDashboardProps) {
     };
   }, []);
 
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        const stats = await mentorDashboard.getStats();
+        if (!mounted) return;
+        setMentorStats(stats);
+      } catch {
+        if (!mounted) return;
+        setMentorStats({
+          totalSessions: 0,
+          completedSessions: 0,
+          totalEarnings: 0,
+          averageRating: null,
+        });
+      } finally {
+        if (mounted) setMentorStatsLoading(false);
+      }
+    })();
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
   const displayName = userProfile.name || 'User';
   const displayRole = userProfile.role === 'mentor' ? 'Mentor' : 'Student';
   const displayAvatar = userProfile.avatar || imgUserAvatar;
+  const currentUserId = cachedUser?.id;
+
+  const closeOnboarding = React.useCallback(() => {
+    completePendingOnboarding(currentUserId);
+    setShowOnboarding(false);
+  }, [currentUserId]);
+
+  const handleOnboardingAction = React.useCallback((index: number) => {
+    if (index === 0) {
+      setActiveNav('create-session');
+      return;
+    }
+    if (index === 1) {
+      setActiveNav('session-requests');
+      return;
+    }
+    setActiveNav('profile');
+  }, []);
 
   const renderContent = () => {
     switch (activeNav) {
-      case 'create-session': return <CreateSessionView />;
+      case 'create-session': return <CreateSessionView stats={mentorStats} loadingStats={mentorStatsLoading} mentorName={displayName} />;
       case 'session-requests': return <SessionRequestsView />;
       case 'study-room': return <CreateStudyRoomView />;
-      case 'world-chat': return <WorldChatView />;
       case 'wellness': return <EmotionalWellnessView />;
       case 'community': return <MentorCommunityView />;
       case 'profile':   return <MentorProfileSettings onBack={() => setActiveNav('create-session')} />;
@@ -3006,6 +3005,20 @@ export function MentorDashboard({ onLogout }: MentorDashboardProps) {
 
   return (
     <div className="flex h-screen bg-[#f8fafc] overflow-hidden">
+      <OnboardingWalkthrough
+        open={showOnboarding}
+        role="mentor"
+        userName={displayName}
+        onOpenChange={(open) => {
+          if (!open) {
+            closeOnboarding();
+            return;
+          }
+          setShowOnboarding(true);
+        }}
+        onFinish={closeOnboarding}
+        onStepAction={handleOnboardingAction}
+      />
       {/* Sidebar — hidden when profile settings is open (it has its own sidebar) */}
       {activeNav !== 'profile' && (
         <div className="w-[278px] shrink-0 h-full overflow-y-auto">
@@ -3052,7 +3065,7 @@ export function MentorDashboard({ onLogout }: MentorDashboardProps) {
                       <p className="text-[rgba(0,0,0,0.7)] leading-normal"><span className="text-black">Student Name:</span> Ravi Kumar</p>
                       <p className="text-[rgba(0,0,0,0.7)] leading-normal">18-10-2025 &nbsp;|&nbsp; 9:00PM - 10:00PM</p>
                       <div className="flex items-center gap-[2px]">
-                        <p className="text-[rgba(0,0,0,0.7)] leading-normal"><span className="text-black">Rating:</span> 4.5</p>
+                        <p className="text-[rgba(0,0,0,0.7)] leading-normal"><span className="text-black">Rating:</span> {mentorStatsLoading ? '--' : formatRating(mentorStats.averageRating)}</p>
                         <svg className="size-[14px]" fill="none" viewBox="0 0 20 20">
                           <path d="M10 14.3958L6.54167 16.4792C6.38889 16.5764 6.22917 16.6181 6.0625 16.6042C5.89583 16.5903 5.75 16.5347 5.625 16.4375C5.5 16.3403 5.40278 16.2189 5.33333 16.0733C5.26389 15.9278 5.25 15.7644 5.29167 15.5833L6.20833 11.6458L3.14583 9C3.00694 8.875 2.92028 8.7325 2.88583 8.5725C2.85139 8.4125 2.86167 8.25639 2.91667 8.10417C2.97167 7.95195 3.055 7.82694 3.16667 7.72917C3.27833 7.63139 3.43111 7.56889 3.625 7.54167L7.66667 7.1875L9.22917 3.47917C9.29861 3.3125 9.40639 3.1875 9.5525 3.10417C9.69861 3.02083 9.84778 2.97917 10 2.97917C10.1522 2.97917 10.3014 3.02083 10.4475 3.10417C10.5936 3.1875 10.7014 3.3125 10.7708 3.47917L12.3333 7.1875L16.375 7.54167C16.5694 7.56945 16.7222 7.63194 16.8333 7.72917C16.9444 7.82639 17.0278 7.95139 17.0833 8.10417C17.1389 8.25695 17.1494 8.41333 17.115 8.57333C17.0806 8.73333 16.9936 8.87556 16.8542 9L13.7917 11.6458L14.7083 15.5833C14.75 15.7639 14.7361 15.9272 14.6667 16.0733C14.5972 16.2194 14.5 16.3408 14.375 16.4375C14.25 16.5342 14.1042 16.5897 13.9375 16.6042C13.7708 16.6186 13.6111 16.5769 13.4583 16.4792L10 14.3958Z" fill="#F77F00" />
                         </svg>
@@ -3155,7 +3168,7 @@ export function MentorDashboard({ onLogout }: MentorDashboardProps) {
                     </div>
                     <div className="flex flex-col font-['Poppins'] text-[12px] flex-1">
                       <p className="text-[14px] text-black leading-normal">Withdraw Successful</p>
-                      <p className="text-[rgba(0,0,0,0.7)] leading-normal"><span className="text-black">Amount:</span> ₹1500</p>
+                      <p className="text-[rgba(0,0,0,0.7)] leading-normal"><span className="text-black">Amount:</span> {mentorStatsLoading ? '--' : formatInr(mentorStats.totalEarnings)}</p>
                       <p className="text-[rgba(0,0,0,0.7)] leading-normal"><span className="text-black">Mode:</span> UPI</p>
                       <p className="text-[rgba(0,0,0,0.7)] leading-normal">30-10-2025 &nbsp;|&nbsp; 8:00PM</p>
                     </div>
@@ -3170,7 +3183,7 @@ export function MentorDashboard({ onLogout }: MentorDashboardProps) {
                     </div>
                     <div className="flex flex-col font-['Poppins'] text-[12px] flex-1">
                       <p className="text-[14px] text-black leading-normal">Withdraw Failed</p>
-                      <p className="text-[rgba(0,0,0,0.7)] leading-normal"><span className="text-black">Amount:</span> ₹1500</p>
+                      <p className="text-[rgba(0,0,0,0.7)] leading-normal"><span className="text-black">Amount:</span> {mentorStatsLoading ? '--' : formatInr(mentorStats.totalEarnings)}</p>
                       <p className="text-[rgba(0,0,0,0.7)] leading-normal"><span className="text-black">Mode:</span> UPI</p>
                       <p className="text-[rgba(0,0,0,0.7)] leading-normal">28-10-2025 &nbsp;|&nbsp; 8:00PM</p>
                     </div>
@@ -3216,3 +3229,6 @@ export function MentorDashboard({ onLogout }: MentorDashboardProps) {
     </div>
   );
 }
+
+
+

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import imgNotesImage from "figma:asset/00ae786af8ac4c0943552db9a6f6dfd10268ca06.png";
 import imgPlannerImage from "figma:asset/3bed40028d21e55021d8008bb0100eca00d08ab3.png";
-import { notes as notesApi, tasks as tasksApi, reminders as remindersApi, studyPlans as studyPlansApi } from "@/app/lib/api";
+import { notes as notesApi, notifications as notificationsApi, tasks as tasksApi, reminders as remindersApi, studyPlans as studyPlansApi } from "@/app/lib/api";
 import {
   ArrowLeft, Plus, Search, FileText, Sparkles, ArrowRight,
   StickyNote, ClipboardList, Clock, ChevronDown, Check, Trash2, X,
@@ -189,8 +189,15 @@ function NotesApp({ onBack }: { onBack: () => void }) {
     if (!editingNote) return;
     setIsSaving(true);
     try {
-      await notesApi.update(editingNote.id, { title: editingNote.title, content: editingNote.content });
-      setNotes(notes.map((n) => (n.id === editingNote.id ? editingNote : n)));
+      const updated = await notesApi.update(editingNote.id, { title: editingNote.title, content: editingNote.content });
+      const timeStr = updated.updatedAt
+        ? new Date(updated.updatedAt).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })
+        : "Now";
+      setNotes(notes.map((n) => (
+        n.id === editingNote.id
+          ? { ...editingNote, timestamp: timeStr }
+          : n
+      )));
       setEditingNote(null);
     } catch (e) {
       console.log("Update note error:", e);
@@ -515,20 +522,30 @@ function PlannerApp({ onBack }: { onBack: () => void }) {
   const [formPriority, setFormPriority] = useState<"high" | "medium" | "low">("low");
 
   useEffect(() => {
-    Promise.all([tasksApi.list(), remindersApi.list(), studyPlansApi.list()])
-      .then(([t, r, sp]) => {
-        setTasks(t.map((x: any) => ({ id: x.id, title: x.title, completed: x.completed })));
-        setReminders(
-          r.map((x: any) => ({
-            id: x.id,
-            title: `${x.title}  | ${x.frequency}${x.reminderTime ? " at " + x.reminderTime : ""}`,
-            completed: x.completed,
-          }))
-        );
-        const active = sp.filter((x: any) => !x.completed);
-        const done = sp.filter((x: any) => x.completed);
-        setStudyPlans(active.map((x: any) => ({ id: x.id, title: x.subject, time: x.timeStr || "TBD", progress: x.progress || 0, priority: x.priority || "low" })));
-        setCompletedPlans(done.map((x: any) => ({ id: x.id, title: x.subject, date: x.startDate || "", time: x.timeStr || "" })));
+    Promise.allSettled([tasksApi.list(), remindersApi.list(), studyPlansApi.list()])
+      .then(([tasksResult, remindersResult, studyPlansResult]) => {
+        if (tasksResult.status === "fulfilled") {
+          setTasks(tasksResult.value.map((x: any) => ({ id: x.id, title: x.title, completed: x.completed })));
+        }
+
+        if (remindersResult.status === "fulfilled") {
+          setReminders(
+            remindersResult.value.map((x: any) => ({
+              id: x.id,
+              title: `${x.title}  | ${x.frequency}${x.reminderTime ? " at " + x.reminderTime : ""}`,
+              completed: x.completed,
+            }))
+          );
+        } else {
+          console.log("Reminder load error:", remindersResult.reason);
+        }
+
+        if (studyPlansResult.status === "fulfilled") {
+          const active = studyPlansResult.value.filter((x: any) => !x.completed);
+          const done = studyPlansResult.value.filter((x: any) => x.completed);
+          setStudyPlans(active.map((x: any) => ({ id: x.id, title: x.subject, time: x.timeStr || "TBD", progress: x.progress || 0, priority: x.priority || "low" })));
+          setCompletedPlans(done.map((x: any) => ({ id: x.id, title: x.subject, date: x.startDate || "", time: x.timeStr || "" })));
+        }
       })
       .catch(console.log)
       .finally(() => setIsLoading(false));
@@ -551,7 +568,7 @@ function PlannerApp({ onBack }: { onBack: () => void }) {
     if (!title) return;
     setIsSavingTask(true); setNewTaskTitle(""); setShowAddTaskInput(false);
     try { const saved = await tasksApi.create(title); setTasks((prev) => [{ id: saved.id, title: saved.title, completed: false }, ...prev]); }
-    catch (e) { console.log("Add task error:", e); setTasks((prev) => [{ id: Date.now().toString(), title, completed: false }, ...prev]); }
+    catch (e) { console.log("Add task error:", e); }
     finally { setIsSavingTask(false); }
   };
 
@@ -572,15 +589,31 @@ function PlannerApp({ onBack }: { onBack: () => void }) {
     if (!name) return;
     setIsSavingReminder(true);
     const freqStr = reminderFrequency;
-    const timeStr = reminderTime || "TBD";
-    const displayTitle = `${name} | ${freqStr} at ${timeStr}`;
+    const shouldRequestNotificationPermission =
+      typeof window !== "undefined" &&
+      typeof Notification !== "undefined" &&
+      Notification.permission === "default" &&
+      Boolean(reminderDate && reminderTime);
     setNewReminderTitle(""); setReminderFrequency("Daily"); setReminderDate(""); setReminderTime(""); setShowAddReminderInput(false);
     try {
+      if (shouldRequestNotificationPermission) {
+        try {
+          await Notification.requestPermission();
+        } catch (permissionError) {
+          console.log("Notification permission request error:", permissionError);
+        }
+      }
       const saved = await remindersApi.create({ title: name, frequency: freqStr, reminderDate, reminderTime });
       setReminders((prev) => [{ id: saved.id, title: `${saved.title}  | ${saved.frequency}${saved.reminderTime ? " at " + saved.reminderTime : ""}`, completed: false }, ...prev]);
+      await notificationsApi.create({
+        type: "planner_reminder_created",
+        title: "Reminder Created",
+        content: `${saved.title} has been added to your reminders${saved.reminderTime ? ` for ${saved.reminderTime}` : ""}.`,
+        relatedId: saved.id,
+        actionUrl: "/dashboard/productivity-tools",
+      });
     } catch (e) {
       console.log("Add reminder error:", e);
-      setReminders((prev) => [{ id: Date.now().toString(), title: displayTitle, completed: false }, ...prev]);
     } finally { setIsSavingReminder(false); }
   };
 
@@ -591,8 +624,14 @@ function PlannerApp({ onBack }: { onBack: () => void }) {
     setIsSavingPlan(true);
     try {
       const saved = await studyPlansApi.create({ subject: formSubject, goal: formGoal, startDate: formStartDate, endDate: formEndDate, startTime: formStartTime, endTime: formEndTime, reminder: formReminder, priority: formPriority });
-      const timeStr = formStartTime && formEndTime ? `${formStartTime} - ${formEndTime}` : "TBD";
-      setStudyPlans((prev) => [...prev, { id: saved.id, title: formSubject, time: timeStr, progress: 0, priority: formPriority }]);
+      setStudyPlans((prev) => [...prev, { id: saved.id, title: saved.subject, time: saved.timeStr || "TBD", progress: saved.progress || 0, priority: saved.priority || formPriority }]);
+      await notificationsApi.create({
+        type: "study_plan_created",
+        title: "Study Plan Created",
+        content: `${saved.subject} has been added to your study plans.`,
+        relatedId: saved.id,
+        actionUrl: "/dashboard/productivity-tools",
+      });
       resetForm(); setShowCreateModal(false);
     } catch (e) { console.log("Create study plan error:", e); } finally { setIsSavingPlan(false); }
   };
@@ -603,7 +642,16 @@ function PlannerApp({ onBack }: { onBack: () => void }) {
     const now = new Date();
     const dateStr = now.toLocaleDateString("en-US", { month: "short", day: "numeric" });
     setCompletedPlans((prev) => [{ id: planId, title: plan.title, date: dateStr, time: plan.time }, ...prev]);
-    try { await studyPlansApi.update(planId, { completed: true, progress: 100 }); }
+    try {
+      await studyPlansApi.update(planId, { completed: true, progress: 100 });
+      await notificationsApi.create({
+        type: "study_plan_completed",
+        title: "Study Plan Completed",
+        content: `Nice work finishing ${plan.title}.`,
+        relatedId: planId,
+        actionUrl: "/dashboard/productivity-tools",
+      });
+    }
     catch (e) { console.log("Complete study plan error:", e); setStudyPlans((prev) => [plan, ...prev]); setCompletedPlans((prev) => prev.filter((p) => p.id !== planId)); }
   };
   const deleteStudyPlan = async (planId: string) => {

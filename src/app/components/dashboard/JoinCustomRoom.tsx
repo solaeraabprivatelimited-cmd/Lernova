@@ -6,7 +6,7 @@ import { JoiningRoomLoader } from "./JoiningRoomLoader";
 
 interface JoinCustomRoomProps {
   onBack: () => void;
-  onEnterRoom: (roomIdOrLink: string) => void;
+  onEnterRoom: (roomCodeOrLink: string) => void;
 }
 
 export function JoinCustomRoom({ onBack, onEnterRoom }: JoinCustomRoomProps) {
@@ -162,15 +162,15 @@ export function JoinCustomRoom({ onBack, onEnterRoom }: JoinCustomRoomProps) {
           
           <div className="mb-12">
             <h1 className="text-[40px] font-medium text-black mb-1.5">Join Custom Room</h1>
-            <p className="text-[14px] text-black/60">Enter a Room ID or link to join your session.</p>
+            <p className="text-[14px] text-black/60">Enter a room code or shared link to join your session.</p>
           </div>
 
           {/* Form Card */}
           <div className="bg-white rounded-[20px] shadow-[0px_4px_50px_5px_rgba(0,0,0,0.1)] p-6 w-[467px]">
             <div className="flex flex-col gap-6">
-              {/* Room ID / Link */}
+              {/* Room Code / Link */}
               <div className="flex flex-col gap-2.5">
-                <label className="text-[16px] text-black">Room ID / Link</label>
+                <label className="text-[16px] text-black">Room Code / Link</label>
                 <div className="h-[39px] rounded-[10px] border border-black/40 flex items-center gap-2.5 px-2.5">
                   <svg width="27" height="27" viewBox="0 0 27 27" fill="none">
                     <path d={svgPaths.p6efe00} fill="black" />
@@ -181,7 +181,7 @@ export function JoinCustomRoom({ onBack, onEnterRoom }: JoinCustomRoomProps) {
                     value={roomInput}
                     onChange={(e) => setRoomInput(e.target.value)}
                     onKeyPress={handleKeyPress}
-                    placeholder="Enter Room ID or Paste Room Link"
+                    placeholder="Enter Room Code or Paste Room Link"
                     className="flex-1 outline-none text-[14px] text-black placeholder:text-black/60 bg-transparent"
                   />
                 </div>

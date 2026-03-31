@@ -1,6 +1,9 @@
 import React from 'react';
 import { ArrowLeft, Search, Star, GraduationCap, Briefcase, Loader2, ArrowRight, Users, Clock, X, CheckCircle, XCircle } from 'lucide-react';
 import { ImageWithFallback } from "./figma/ImageWithFallback";
+import { getCurrentUser, mentors as mentorsApi } from '@/app/lib/api';
+import { saveMentorBooking, sendBookingConfirmation } from '@/utils/supabase/mentorBooking';
+import { toast } from 'sonner';
 import imgRavi from "figma:asset/ee75b3f7fd75b317c92ab5dcaa912db9eddbf3e7.png";
 import imgRiya from "figma:asset/0aaa9a026db3fff583a4d805f37def4bf33531fe.png";
 import imgSarah from "figma:asset/1febea968fb6ef6c5fe4a446aa07bfe8857031ea.png";
@@ -42,6 +45,7 @@ interface HumanMentorHomeProps {
 }
 
 interface Mentor {
+  id?: string;
   name: string;
   description: string;
   image: string;
@@ -49,9 +53,113 @@ interface Mentor {
   studentsHelped: string;
   subject: string;
   experience: string;
+  hourlyRate?: number;
+  verified?: boolean;
+  availableSlots: string[];
+  availableSlotOptions: Array<{
+    id: string;
+    raw: string;
+    label: string;
+    durationMins: number;
+  }>;
+  availableSessionCount: number;
+  isAvailable: boolean;
 }
 
-const MentorCard = ({ name, description, image, rating, studentsHelped, subject, experience, onBook }: Mentor & { onBook: () => void }) => {
+const fallbackMentorImages = [imgRavi, imgRiya, imgSarah];
+
+function formatMentorRating(rating: number | null | undefined): string {
+  if (rating == null || Number.isNaN(rating)) return '--';
+  return rating.toFixed(1);
+}
+
+function formatStudentsHelped(sessionCount: number): string {
+  if (!sessionCount || sessionCount <= 0) return 'New mentor';
+  if (sessionCount >= 1000) return `${(sessionCount / 1000).toFixed(1)}K+ sessions`;
+  return `${sessionCount}+ sessions`;
+}
+
+function formatMentorExperience(totalHours: number, verified: boolean, isAvailable: boolean): string {
+  if (!isAvailable) return 'Currently unavailable';
+  if (totalHours > 0) return `${totalHours}+ hrs taught`;
+  return verified ? 'Verified mentor' : 'Available now';
+}
+
+function formatRupees(amount: number): string {
+  return `₹${Math.max(0, Math.round(amount)).toLocaleString('en-IN')}`;
+}
+
+function formatBookingSlot(date: Date): string {
+  const datePart = date.toLocaleDateString('en-GB', {
+    day: '2-digit',
+    month: '2-digit',
+    year: '2-digit',
+  }).replace(/\//g, '-');
+  const timePart = date.toLocaleTimeString('en-IN', {
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true,
+  }).toUpperCase();
+  return `${datePart} | ${timePart}`;
+}
+
+function parseDatabaseDateTime(value: string): Date | null {
+  if (!value) return null;
+  if (value.includes('T') || value.endsWith('Z')) {
+    const isoDate = new Date(value);
+    return Number.isNaN(isoDate.getTime()) ? null : isoDate;
+  }
+
+  const match = value.match(/^(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2})(?::(\d{2}))?/);
+  if (!match) {
+    const fallback = new Date(value);
+    return Number.isNaN(fallback.getTime()) ? null : fallback;
+  }
+
+  const [, year, month, day, hour, minute, second] = match;
+  return new Date(
+    Number(year),
+    Number(month) - 1,
+    Number(day),
+    Number(hour),
+    Number(minute),
+    Number(second ?? '0'),
+    0
+  );
+}
+
+function normalizeMentorSlot(slot: string): string {
+  if (slot.includes('|')) return slot;
+  const parsed = parseDatabaseDateTime(slot);
+  if (!parsed || Number.isNaN(parsed.getTime())) return slot;
+  return formatBookingSlot(parsed);
+}
+
+function parseDurationHours(value: string): number {
+  const hours = Number.parseInt(value, 10);
+  return Number.isFinite(hours) && hours > 0 ? hours : 1;
+}
+
+function buildDurationOptions(durationMins: number): string[] {
+  const wholeHours = Math.max(1, Math.floor(durationMins / 60));
+  return Array.from({ length: wholeHours }, (_, index) => {
+    const hours = index + 1;
+    return `${hours} hour${hours === 1 ? '' : 's'}`;
+  });
+}
+
+const MentorCard = ({
+  name,
+  description,
+  image,
+  rating,
+  studentsHelped,
+  subject,
+  experience,
+  isAvailable,
+  availableSessionCount,
+  onBook,
+}: Mentor & { onBook: () => void }) => {
   return (
     <div className="group bg-white rounded-[20px] overflow-hidden flex flex-col h-full border border-gray-100/60 shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1"
       style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
@@ -95,6 +203,13 @@ const MentorCard = ({ name, description, image, rating, studentsHelped, subject,
             <span className="text-[11px] font-medium text-[#0967bd]">{studentsHelped}</span>
           </div>
           <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-[10px]"
+            style={{ background: isAvailable ? 'rgba(52,177,97,0.08)' : 'rgba(204,54,54,0.08)' }}>
+            <Clock className={`w-3.5 h-3.5 ${isAvailable ? 'text-[#34b161]' : 'text-[#cc3636]'}`} />
+            <span className={`text-[11px] font-medium ${isAvailable ? 'text-[#34b161]' : 'text-[#cc3636]'}`}>
+              {isAvailable ? `${availableSessionCount} slot${availableSessionCount === 1 ? '' : 's'} open` : 'Unavailable'}
+            </span>
+          </div>
+          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-[10px]"
             style={{ background: 'rgba(247,127,0,0.06)' }}>
             <Briefcase className="w-3.5 h-3.5 text-[#f77f00]" />
             <span className="text-[11px] font-medium text-[#f77f00]">{experience}</span>
@@ -104,11 +219,14 @@ const MentorCard = ({ name, description, image, rating, studentsHelped, subject,
         {/* Action Button */}
         <button
           onClick={onBook}
-          className="w-full h-[44px] mt-2 rounded-[14px] font-bold text-[13px] transition-all duration-300 flex items-center justify-center gap-2 cursor-pointer group/btn"
-          style={{ background: 'linear-gradient(135deg, #003566, #0967bd)', color: 'white', boxShadow: '0 4px 16px rgba(0,53,102,0.2)' }}
+          disabled={!isAvailable}
+          className="w-full h-[44px] mt-2 rounded-[14px] font-bold text-[13px] transition-all duration-300 flex items-center justify-center gap-2 group/btn disabled:cursor-not-allowed disabled:shadow-none"
+          style={isAvailable
+            ? { background: 'linear-gradient(135deg, #003566, #0967bd)', color: 'white', boxShadow: '0 4px 16px rgba(0,53,102,0.2)' }
+            : { background: '#e2e8f0', color: '#64748b' }}
         >
-          Book a Session
-          <ArrowRight className="w-4 h-4 transition-transform group-hover/btn:translate-x-0.5" />
+          {isAvailable ? 'Book a Session' : 'Mentor Unavailable'}
+          {isAvailable && <ArrowRight className="w-4 h-4 transition-transform group-hover/btn:translate-x-0.5" />}
         </button>
       </div>
     </div>
@@ -117,7 +235,11 @@ const MentorCard = ({ name, description, image, rating, studentsHelped, subject,
 
 export function HumanMentorHome({ onBack }: HumanMentorHomeProps) {
   const [selectedMentor, setSelectedMentor] = React.useState<Mentor | null>(null);
-  const [selectedSlot, setSelectedSlot] = React.useState<string>("18-10-25 | 7:00 PM");
+  const [mentors, setMentors] = React.useState<Mentor[]>([]);
+  const [searchQuery, setSearchQuery] = React.useState("");
+  const [loadingMentors, setLoadingMentors] = React.useState(true);
+  const [selectedSlot, setSelectedSlot] = React.useState<string>('');
+  const [selectedSlotId, setSelectedSlotId] = React.useState<string>('');
   const [selectedDuration, setSelectedDuration] = React.useState<string>("1 hour");
 
   // Payment Modal States
@@ -129,43 +251,106 @@ export function HumanMentorHome({ onBack }: HumanMentorHomeProps) {
   const [selectedApp, setSelectedApp] = React.useState<string | null>('Google Pay');
   const [upiId, setUpiId] = React.useState<string>("");
 
-  const mentors: Mentor[] = [
-    {
-      name: "Ravi Kumar",
-      description: "Dedicated Math tutor helping students simplify complex problems and build confidence in quantitative reasoning.",
-      image: imgRavi,
-      rating: "4.5",
-      studentsHelped: "980+",
-      subject: "Maths",
-      experience: "6 years"
-    },
-    {
-      name: "Dr. Riya Nair",
-      description: "Passionate physics educator who simplifies complex theories with visual explanations and real-world connections.",
-      image: imgRiya,
-      rating: "4.5",
-      studentsHelped: "1,120+",
-      subject: "Physics (IIT-JEE, NEET)",
-      experience: "9 years"
-    },
-    {
-      name: "Sarah Thomas",
-      description: "Certified IELTS trainer boosting confidence & band scores with personalized strategies.",
-      image: imgSarah,
-      rating: "4.5",
-      studentsHelped: "870+",
-      subject: "IELTS (English)",
-      experience: "5 years"
-    }
-  ];
+  React.useEffect(() => {
+    let mounted = true;
 
-  const timeSlots = ["18-10-25 | 7:00 PM", "22-10-25 | 6:00 PM", "25-10-25 | 8:00 PM"];
-  const durationOptions = ["1 hour", "2 hours", "3 hours"];
+    (async () => {
+      try {
+        const rows = await mentorsApi.list();
+        if (!mounted) return;
+
+        setMentors(
+          (rows ?? []).map((mentor: any, index: number) => ({
+            id: mentor.id,
+            name: mentor.name,
+            description: mentor.bio?.trim() || 'Experienced mentor ready to guide students through focused, personalized sessions.',
+            image: mentor.avatarUrl || fallbackMentorImages[index % fallbackMentorImages.length],
+            rating: formatMentorRating(mentor.rating),
+            studentsHelped: formatStudentsHelped(mentor.sessionCount),
+            subject: mentor.specializations?.[0] || 'General Mentoring',
+            availableSlots: (mentor.availableSlots ?? []).map((slot: any) => normalizeMentorSlot(slot.scheduledAt ?? slot)),
+            availableSlotOptions: (mentor.availableSlots ?? []).map((slot: any) => ({
+              id: String(slot.id),
+              raw: String(slot.scheduledAt ?? ''),
+              label: normalizeMentorSlot(slot.scheduledAt ?? ''),
+              durationMins: Math.max(60, Number(slot.durationMins) || 60),
+            })),
+            availableSessionCount: Number(mentor.availableSessionCount ?? 0),
+            isAvailable: Boolean(mentor.isAvailable),
+            experience: formatMentorExperience(mentor.totalHours, mentor.verified, Boolean(mentor.isAvailable)),
+            hourlyRate: mentor.hourlyRate,
+            verified: mentor.verified,
+          }))
+        );
+      } catch (error) {
+        if (!mounted) return;
+        console.error('[HumanMentorHome] Mentor load error:', error);
+        setMentors([]);
+        toast.error('Unable to load mentors right now.');
+      } finally {
+        if (mounted) setLoadingMentors(false);
+      }
+    })();
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  const filteredMentors = mentors.filter((mentor) => {
+    const q = searchQuery.trim().toLowerCase();
+    if (!q) return true;
+    return [
+      mentor.name,
+      mentor.subject,
+      mentor.description,
+      mentor.experience,
+    ].some((value) => value.toLowerCase().includes(q));
+  });
+  const averageRatingValue = mentors.length > 0
+    ? (mentors.reduce((sum, mentor) => sum + (Number.parseFloat(mentor.rating) || 0), 0) / mentors.length).toFixed(1)
+    : '--';
+  const totalHelpedValue = mentors.reduce((sum, mentor) => {
+    const count = Number.parseInt(mentor.studentsHelped.replace(/[^\d]/g, ''), 10);
+    return sum + (Number.isFinite(count) ? count : 0);
+  }, 0);
+  const selectedSlotOption = React.useMemo(
+    () => selectedMentor?.availableSlotOptions.find((slot) => slot.id === selectedSlotId) ?? null,
+    [selectedMentor, selectedSlotId],
+  );
+  const durationOptions = React.useMemo(
+    () => buildDurationOptions(selectedSlotOption?.durationMins ?? 60),
+    [selectedSlotOption],
+  );
+  const selectedMentorPrice = (selectedMentor?.hourlyRate ? selectedMentor.hourlyRate / 100 : 500) * parseDurationHours(selectedDuration);
+
+  React.useEffect(() => {
+    if (!selectedMentor) return;
+    const nextSlot = selectedMentor.availableSlotOptions.find((slot) => slot.id === selectedSlotId) ?? selectedMentor.availableSlotOptions[0] ?? null;
+    if (!nextSlot) return;
+
+    if (nextSlot.id !== selectedSlotId) {
+      setSelectedSlotId(nextSlot.id);
+    }
+    if (nextSlot.label !== selectedSlot) {
+      setSelectedSlot(nextSlot.label);
+    }
+
+    const allowedDurations = buildDurationOptions(nextSlot.durationMins);
+    if (!allowedDurations.includes(selectedDuration)) {
+      setSelectedDuration(allowedDurations[0] ?? '1 hour');
+    }
+  }, [selectedDuration, selectedMentor, selectedSlot, selectedSlotId]);
 
   const handleBookClick = (mentor: Mentor) => {
+    if (!mentor.isAvailable || mentor.availableSlots.length === 0) {
+      toast.error(`${mentor.name} has no available sessions right now.`);
+      return;
+    }
     setSelectedMentor(mentor);
-    setSelectedSlot("18-10-25 | 7:00 PM");
-    setSelectedDuration("1 hour");
+    setSelectedSlotId(mentor.availableSlotOptions[0]?.id ?? '');
+    setSelectedSlot(mentor.availableSlotOptions[0]?.label ?? '');
+    setSelectedDuration(buildDurationOptions(mentor.availableSlotOptions[0]?.durationMins ?? 60)[0] ?? "1 hour");
     setShowPaymentModal(false);
     setShowProcessingModal(false);
     setShowSuccessModal(false);
@@ -174,21 +359,121 @@ export function HumanMentorHome({ onBack }: HumanMentorHomeProps) {
   };
 
   const handleBookingConfirm = () => {
+    if (!selectedSlot) {
+      toast.error('No available session slot selected.');
+      return;
+    }
     setShowPaymentModal(true);
   };
 
-  const handlePaymentConfirm = () => {
+  const handlePaymentConfirm = async () => {
+    if (!selectedMentor) return;
+    if (!selectedSlotOption) {
+      toast.error('No available session slot selected.');
+      return;
+    }
+
+    const currentUser = getCurrentUser();
+    if (!currentUser?.id) {
+      toast.error('User not authenticated');
+      return;
+    }
+
     setShowPaymentModal(false);
     setShowProcessingModal(true);
-    setTimeout(() => {
-      setShowProcessingModal(false);
-      const shouldFail = Math.random() < 0.3 || upiId.toLowerCase().includes('fail');
-      if (shouldFail) {
-        setShowFailedModal(true);
-      } else {
-        setShowSuccessModal(true);
+
+    try {
+      // Prepare booking data
+      const bookingData: any = {
+        availability_session_id: selectedSlotOption.id,
+        availability_session_duration_mins: parseDurationHours(selectedDuration) * 60,
+        mentor_id: selectedMentor.id,
+        mentor_name: selectedMentor.name,
+        mentor_subject: selectedMentor.subject,
+        selected_date_time: selectedSlotOption.raw,
+        duration: selectedDuration,
+        status: 'pending',
+        payment_method: paymentMethod,
+        booking_price: selectedMentorPrice,
+      };
+
+      // Add payment-specific fields
+      if (paymentMethod === 'UPI') {
+        bookingData.payment_app = selectedApp;
+        bookingData.upi_id = upiId;
+      } else if (paymentMethod === 'Bank') {
+        bookingData.bank_account_holder = (document.querySelector('input[placeholder="Enter your name"]') as HTMLInputElement)?.value || '';
+        bookingData.bank_name = (document.querySelector('input[placeholder="Enter your bank name"]') as HTMLInputElement)?.value || '';
+        bookingData.bank_account_number = (document.querySelector('input[placeholder="Enter your bank account number"]') as HTMLInputElement)?.value || '';
+        bookingData.bank_ifsc_code = (document.querySelector('input[placeholder="Enter your bank IFSC code"]') as HTMLInputElement)?.value || '';
       }
-    }, 2000);
+
+      // Save booking to database
+      const { success, bookingId, error } = await saveMentorBooking(currentUser.id, bookingData);
+
+      if (!success) {
+        throw new Error(error || 'Failed to save booking');
+      }
+
+      // Notification should not block booking success while payment/email is in progress.
+      try {
+        await sendBookingConfirmation(
+          currentUser.id,
+          bookingData,
+          currentUser.name || 'Student',
+          currentUser.email || ''
+        );
+      } catch (notifyErr) {
+        console.warn('[HumanMentorHome] Confirmation notification skipped:', notifyErr);
+      }
+
+      console.log('[HumanMentorHome] Booking confirmed:', { bookingId, ...bookingData });
+
+      // Temporary bypass: treat this as a confirmed booking without payment gateway integration.
+      setTimeout(() => {
+        setMentors((current) => current.map((mentor) => {
+          if (mentor.id !== selectedMentor.id) return mentor;
+          const remainingSlots = mentor.availableSlotOptions
+            .map((slot) => {
+              if (slot.id !== selectedSlotOption.id) return slot;
+              const remainingMinutes = slot.durationMins - parseDurationHours(selectedDuration) * 60;
+              if (remainingMinutes < 60) return null;
+
+              const startDate = parseDatabaseDateTime(slot.raw);
+              if (!startDate) return null;
+              startDate.setMinutes(startDate.getMinutes() + parseDurationHours(selectedDuration) * 60);
+              const nextRaw = `${startDate.getFullYear()}-${String(startDate.getMonth() + 1).padStart(2, '0')}-${String(startDate.getDate()).padStart(2, '0')} ${String(startDate.getHours()).padStart(2, '0')}:${String(startDate.getMinutes()).padStart(2, '0')}:${String(startDate.getSeconds()).padStart(2, '0')}`;
+
+              return {
+                ...slot,
+                raw: nextRaw,
+                label: normalizeMentorSlot(nextRaw),
+                durationMins: remainingMinutes,
+              };
+            })
+            .filter(Boolean) as Mentor['availableSlotOptions'];
+
+          return {
+            ...mentor,
+            availableSlotOptions: remainingSlots,
+            availableSlots: remainingSlots.map((slot) => slot.label),
+            availableSessionCount: remainingSlots.length,
+            isAvailable: remainingSlots.length > 0,
+            experience: remainingSlots.length > 0 ? mentor.experience : 'Currently unavailable',
+          };
+        }));
+        setShowProcessingModal(false);
+        setShowSuccessModal(true);
+        toast.success('Session request sent successfully!');
+      }, 2000);
+    } catch (err) {
+      const error = err instanceof Error ? err : new Error(String(err));
+      console.error('[HumanMentorHome] Booking error:', error);
+      
+      setShowProcessingModal(false);
+      setShowFailedModal(true);
+      toast.error('Booking failed: ' + error.message);
+    }
   };
 
   const handleTryAgain = () => {
@@ -198,6 +483,7 @@ export function HumanMentorHome({ onBack }: HumanMentorHomeProps) {
 
   const handleCloseModal = () => {
     setSelectedMentor(null);
+    setSelectedSlotId('');
     setShowPaymentModal(false);
     setShowProcessingModal(false);
     setShowSuccessModal(false);
@@ -240,9 +526,9 @@ export function HumanMentorHome({ onBack }: HumanMentorHomeProps) {
           {/* Quick stats */}
           <div className="flex gap-3 shrink-0">
             {[
-              { value: "3", label: "Mentors" },
-              { value: "4.5", label: "Avg Rating" },
-              { value: "2.9K+", label: "Helped" },
+              { value: String(mentors.length), label: "Mentors" },
+              { value: averageRatingValue, label: "Avg Rating" },
+              { value: totalHelpedValue > 0 ? `${totalHelpedValue}+` : "--", label: "Sessions" },
             ].map((stat) => (
               <div key={stat.label}
                 className="flex flex-col items-center px-5 py-4 rounded-[18px] min-w-[80px]"
@@ -264,6 +550,8 @@ export function HumanMentorHome({ onBack }: HumanMentorHomeProps) {
         <input
           type="text"
           placeholder="Search by Name, Subject, Exam, or Language..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
           className="flex-1 bg-transparent border-none outline-none text-[13px] text-[#1e293b] placeholder:text-[#94a3b8] font-medium"
         />
       </div>
@@ -272,24 +560,36 @@ export function HumanMentorHome({ onBack }: HumanMentorHomeProps) {
       <div className="flex items-center gap-3 mb-5">
         <div className="w-1 h-5 rounded-full bg-[#f77f00]" />
         <h2 className="text-[16px] font-bold text-[#003566]">Available Mentors</h2>
-        <span className="text-[12px] font-medium text-[#94a3b8] ml-auto">{mentors.length} mentors</span>
+        <span className="text-[12px] font-medium text-[#94a3b8] ml-auto">{filteredMentors.length} mentors</span>
       </div>
 
       {/* Mentors Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-        {mentors.map((mentor, index) => (
-          <MentorCard
-            key={index}
-            {...mentor}
-            onBook={() => handleBookClick(mentor)}
-          />
-        ))}
-      </div>
+      {loadingMentors ? (
+        <div className="rounded-[20px] border border-[#e2e8f0] bg-white py-16 flex flex-col items-center justify-center gap-3">
+          <Loader2 className="w-6 h-6 animate-spin text-[#0967bd]" />
+          <p className="text-[14px] font-medium text-[#003566]">Loading mentors...</p>
+        </div>
+      ) : filteredMentors.length > 0 ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+          {filteredMentors.map((mentor) => (
+            <MentorCard
+              key={mentor.id ?? mentor.name}
+              {...mentor}
+              onBook={() => handleBookClick(mentor)}
+            />
+          ))}
+        </div>
+      ) : (
+        <div className="rounded-[20px] border border-[#e2e8f0] bg-white py-16 px-6 text-center">
+          <p className="text-[16px] font-semibold text-[#003566]">No mentors found</p>
+          <p className="text-[13px] text-[#5a7089] mt-2">Try a different search or add mentor profiles in Supabase.</p>
+        </div>
+      )}
 
       {/* ── Modal Overlay ── */}
       {selectedMentor && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-[#001d3d]/40 backdrop-blur-sm" onClick={handleCloseModal} />
+          <div className="absolute inset-0 bg-[#001d3d]/55" onClick={handleCloseModal} />
 
           {showSuccessModal ? (
             /* ── SUCCESS MODAL ── */
@@ -472,7 +772,7 @@ export function HumanMentorHome({ onBack }: HumanMentorHomeProps) {
               <div className="rounded-[14px] px-5 py-4 flex items-center justify-between mt-6 mb-6"
                 style={{ background: 'rgba(9,103,189,0.04)', border: '1px solid rgba(9,103,189,0.08)' }}>
                 <span className="text-[13px] font-semibold text-[#5a7089]">Total Amount</span>
-                <span className="text-[28px] font-bold text-[#003566]" style={{ fontFamily: "'DM Serif Display', serif" }}>₹500</span>
+                <span className="text-[28px] font-bold text-[#003566]" style={{ fontFamily: "'DM Serif Display', serif" }}>{formatRupees(selectedMentorPrice)}</span>
               </div>
 
               {/* Action Buttons */}
@@ -488,14 +788,14 @@ export function HumanMentorHome({ onBack }: HumanMentorHomeProps) {
                   className="flex-1 h-[44px] rounded-[14px] font-bold text-[13px] text-white transition-all hover:shadow-xl cursor-pointer"
                   style={{ background: 'linear-gradient(135deg, #003566, #0967bd)' }}
                 >
-                  Pay ₹500
+                  {`Pay ${formatRupees(selectedMentorPrice)}`}
                 </button>
               </div>
             </div>
 
           ) : (
             /* ── BOOKING DETAILS MODAL ── */
-            <div className="bg-white rounded-[24px] shadow-2xl w-full max-w-[860px] overflow-hidden flex animate-in fade-in zoom-in-95 duration-200 max-h-[90vh]">
+            <div className="bg-white rounded-[24px] shadow-2xl w-full max-w-[860px] overflow-hidden flex animate-in fade-in zoom-in-95 duration-200 max-h-[90vh] z-10 relative">
               {/* Left Side - Image */}
               <div className="w-[300px] relative shrink-0 hidden md:block">
                 <ImageWithFallback src={selectedMentor.image} alt={selectedMentor.name} className="w-full h-full object-cover" />
@@ -536,20 +836,30 @@ export function HumanMentorHome({ onBack }: HumanMentorHomeProps) {
                       <h3 className="text-[14px] font-bold text-[#003566]">Available Slots</h3>
                     </div>
                     <div className="flex flex-wrap gap-2">
-                      {timeSlots.map((slot) => (
+                      {selectedMentor.availableSlotOptions.length > 0 ? selectedMentor.availableSlotOptions.map((slot) => (
                         <button
-                          key={slot}
-                          onClick={() => setSelectedSlot(slot)}
+                          key={slot.id}
+                          onClick={() => {
+                            setSelectedSlotId(slot.id);
+                            setSelectedSlot(slot.label);
+                          }}
                           className={`px-4 py-2.5 rounded-[12px] text-[13px] font-medium transition-all cursor-pointer ${
-                            selectedSlot === slot
+                            selectedSlotId === slot.id
                               ? 'text-white shadow-md'
                               : 'bg-[#f5f7fa] text-[#5a7089] border border-transparent hover:border-[#e2e8f0]'
                           }`}
-                          style={selectedSlot === slot ? { background: 'linear-gradient(135deg, #003566, #0967bd)' } : {}}
+                          style={selectedSlotId === slot.id ? { background: 'linear-gradient(135deg, #003566, #0967bd)' } : {}}
                         >
-                          {slot}
+                          {slot.label}
+                          <span className="ml-2 text-[11px] opacity-80">
+                            {Math.round(slot.durationMins / 60)}h open
+                          </span>
                         </button>
-                      ))}
+                      )) : (
+                        <div className="w-full rounded-[12px] border border-[#e2e8f0] bg-[#f8fafc] px-4 py-3">
+                          <p className="text-[13px] font-medium text-[#64748b]">This mentor has no available sessions right now.</p>
+                        </div>
+                      )}
                     </div>
                   </div>
 
@@ -582,7 +892,7 @@ export function HumanMentorHome({ onBack }: HumanMentorHomeProps) {
                 <div className="mt-6 pt-6 border-t border-[#f0f2f5] flex items-center justify-between">
                   <div>
                     <p className="text-[11px] font-semibold text-[#94a3b8] uppercase tracking-wider">Total Amount</p>
-                    <p className="text-[24px] font-bold text-[#003566]" style={{ fontFamily: "'DM Serif Display', serif" }}>₹500</p>
+                    <p className="text-[24px] font-bold text-[#003566]" style={{ fontFamily: "'DM Serif Display', serif" }}>{formatRupees(selectedMentorPrice)}</p>
                   </div>
 
                   <div className="flex items-center gap-3">
@@ -594,11 +904,14 @@ export function HumanMentorHome({ onBack }: HumanMentorHomeProps) {
                     </button>
                     <button
                       onClick={handleBookingConfirm}
+                      disabled={selectedMentor.availableSlotOptions.length === 0 || !selectedSlotId}
                       className="px-6 h-[44px] rounded-[14px] font-bold text-[13px] text-white transition-all hover:shadow-xl cursor-pointer flex items-center gap-2"
-                      style={{ background: 'linear-gradient(135deg, #003566, #0967bd)' }}
+                      style={selectedMentor.availableSlotOptions.length === 0 || !selectedSlotId
+                        ? { background: '#cbd5e1', color: '#64748b' }
+                        : { background: 'linear-gradient(135deg, #003566, #0967bd)' }}
                     >
-                      Proceed to Pay
-                      <ArrowRight className="w-4 h-4" />
+                      {selectedMentor.availableSlotOptions.length === 0 ? 'Unavailable' : 'Proceed to Pay'}
+                      {selectedMentor.availableSlotOptions.length > 0 && <ArrowRight className="w-4 h-4" />}
                     </button>
                   </div>
                 </div>

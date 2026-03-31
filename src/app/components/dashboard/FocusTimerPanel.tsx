@@ -1,9 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { X, Play, Trash2 } from 'lucide-react';
+import { studySessions } from '@/app/lib/api';
 
 interface FocusTimerPanelProps {
   onClose: () => void;
   onTimerComplete?: (label: string, duration: number) => void;
+  isOpen?: boolean;
+  onTimerStart?: (duration: number, label: string) => void;
 }
 
 interface SavedTimer {
@@ -12,7 +15,7 @@ interface SavedTimer {
   label: string;
 }
 
-export function FocusTimerPanel({ onClose, onTimerComplete }: FocusTimerPanelProps) {
+export function FocusTimerPanel({ onClose, onTimerComplete, isOpen = true, onTimerStart }: FocusTimerPanelProps) {
   const [timerLabel, setTimerLabel] = useState('');
   const [hours, setHours] = useState(0);
   const [minutes, setMinutes] = useState(1);
@@ -20,10 +23,25 @@ export function FocusTimerPanel({ onClose, onTimerComplete }: FocusTimerPanelPro
   const [isRunning, setIsRunning] = useState(false);
   const [timeLeft, setTimeLeft] = useState(60); // Default 1 minute
   const [currentLabel, setCurrentLabel] = useState('');
+  const [activeDurationSeconds, setActiveDurationSeconds] = useState(60);
+  const [totalStudyHours, setTotalStudyHours] = useState(0);
+  const [totalCompletedSessions, setTotalCompletedSessions] = useState(0);
   const [savedTimers, setSavedTimers] = useState<SavedTimer[]>([
     { id: '1', duration: 60, label: 'Break' },
     { id: '2', duration: 300, label: 'Problem Solving' }
   ]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    void studySessions.summary()
+      .then((summary) => {
+        setTotalStudyHours(summary.totalHours);
+        setTotalCompletedSessions(summary.totalSessions);
+      })
+      .catch(() => {
+        // Non-blocking for timer panel UX.
+      });
+  }, [isOpen]);
 
   useEffect(() => {
     let interval: NodeJS.Timeout | null = null;
@@ -35,8 +53,19 @@ export function FocusTimerPanel({ onClose, onTimerComplete }: FocusTimerPanelPro
             setIsRunning(false);
             // Timer completed - trigger notification
             if (onTimerComplete) {
-              onTimerComplete(currentLabel, timeLeft);
+              onTimerComplete(currentLabel, activeDurationSeconds);
             }
+            const durationMinutes = Number((activeDurationSeconds / 60).toFixed(2));
+            const completedPomodoros = currentLabel.toLowerCase().includes('pomodoro') ? 1 : 0;
+            void studySessions.record('focus', durationMinutes, completedPomodoros)
+              .then(() => studySessions.summary())
+              .then((summary) => {
+                setTotalStudyHours(summary.totalHours);
+                setTotalCompletedSessions(summary.totalSessions);
+              })
+              .catch(() => {
+                // Keep timer functional even if tracking call fails.
+              });
             return 0;
           }
           return prev - 1;
@@ -47,7 +76,7 @@ export function FocusTimerPanel({ onClose, onTimerComplete }: FocusTimerPanelPro
     return () => {
       if (interval) clearInterval(interval);
     };
-  }, [isRunning, timeLeft, currentLabel, onTimerComplete]);
+  }, [isRunning, timeLeft, currentLabel, activeDurationSeconds, onTimerComplete]);
 
   const formatTime = (totalSeconds: number) => {
     const hrs = Math.floor(totalSeconds / 3600);
@@ -68,8 +97,10 @@ export function FocusTimerPanel({ onClose, onTimerComplete }: FocusTimerPanelPro
       const totalSeconds = hours * 3600 + minutes * 60 + seconds;
       if (totalSeconds > 0) {
         setTimeLeft(totalSeconds);
+        setActiveDurationSeconds(totalSeconds);
         setIsRunning(true);
         setCurrentLabel(timerLabel || 'Timer');
+        onTimerStart?.(totalSeconds, timerLabel || 'Timer');
       }
     }
   };
@@ -80,9 +111,16 @@ export function FocusTimerPanel({ onClose, onTimerComplete }: FocusTimerPanelPro
 
   const handlePlaySaved = (duration: number) => {
     setTimeLeft(duration);
+    setActiveDurationSeconds(duration);
     setIsRunning(true);
-    setCurrentLabel(timerLabel || 'Timer');
+    const derivedLabel = timerLabel || 'Timer';
+    setCurrentLabel(derivedLabel);
+    onTimerStart?.(duration, derivedLabel);
   };
+
+  if (!isOpen) {
+    return null;
+  }
 
   const handleDeleteSaved = (id: string) => {
     setSavedTimers(prev => prev.filter(t => t.id !== id));
@@ -145,6 +183,18 @@ export function FocusTimerPanel({ onClose, onTimerComplete }: FocusTimerPanelPro
 
       {/* Recents Section */}
       <div className="flex flex-col gap-2.5 flex-1">
+        <div className="bg-white/10 rounded-[20px] px-6 py-4 flex flex-col gap-1">
+          <p className="text-[12px] text-white/60 uppercase tracking-wider">Your Study Stats</p>
+          <div className="flex items-center justify-between">
+            <span className="text-[14px] text-white/70">Total Hours</span>
+            <span className="text-[16px] text-white font-semibold">{totalStudyHours.toFixed(2)}h</span>
+          </div>
+          <div className="flex items-center justify-between">
+            <span className="text-[14px] text-white/70">Sessions Logged</span>
+            <span className="text-[16px] text-white font-semibold">{totalCompletedSessions}</span>
+          </div>
+        </div>
+
         <p className="text-[16px] font-medium text-white">Recents</p>
         
         <div className="flex flex-col gap-2.5">

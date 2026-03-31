@@ -3,12 +3,12 @@ import svgPaths from "../../../imports/svg-kcct7ihsaj";
 
 interface ShareRoomModalProps {
   roomName: string;
-  roomId: string;
+  roomCode: string;
   onClose: () => void;
 }
 
-export function ShareRoomModal({ roomName, roomId, onClose }: ShareRoomModalProps) {
-  const joinLink = `learnova.com/room/${roomId}`;
+export function ShareRoomModal({ roomName, roomCode, onClose }: ShareRoomModalProps) {
+  const joinLink = `learnova.com/room/${roomCode}`;
 
   const handleCopyLink = () => {
     if (navigator.clipboard) {
@@ -63,9 +63,9 @@ export function ShareRoomModal({ roomName, roomId, onClose }: ShareRoomModalProp
             </div>
           </div>
 
-          {/* Room ID */}
+          {/* Room Code */}
           <div className="flex flex-col gap-2.5">
-            <label className="text-[16px] text-black">Room ID</label>
+            <label className="text-[16px] text-black">Room Code</label>
             <div className="h-[39px] rounded-[10px] border border-black/40 flex items-center gap-2.5 px-2.5">
               <div className="w-[20px] h-[20px] overflow-clip relative">
                 <div className="absolute inset-[3.83%_3.74%_3.82%_3.73%]">
@@ -80,7 +80,7 @@ export function ShareRoomModal({ roomName, roomId, onClose }: ShareRoomModalProp
                   </div>
                 </div>
               </div>
-              <p className="text-[14px] font-medium text-black">{roomId}</p>
+              <p className="text-[14px] font-medium text-black">{roomCode}</p>
             </div>
           </div>
 

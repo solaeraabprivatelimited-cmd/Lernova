@@ -1,4 +1,5 @@
 import React, { useState, useRef } from "react";
+import { getCurrentUser } from '@/app/lib/api';
 import svgPaths from "../../../imports/svg-xt2w7tivwg";
 import svgPathsHistory from "../../../imports/svg-w70tgomgpc";
 import svgPathsPerf from "../../../imports/svg-nif9w3w5t2";
@@ -1791,10 +1792,12 @@ function NotificationsView() {
 /* ── Main component ── */
 
 export function MentorProfileSettings({ onBack }: MentorProfileSettingsProps) {
+  const currentUser = getCurrentUser();
+  const initialName = currentUser?.name || "Jack Sparrow";
   const [activeNav, setActiveNav] = useState<ProfileSubNav>("basic");
 
   /* ── Form state ── */
-  const [fullName,   setFullName]   = useState("Jack Sparrow");
+  const [fullName,   setFullName]   = useState(initialName);
   const [email,      setEmail]      = useState("jacksparrow@mail.com");
   const [grade,      setGrade]      = useState("5-10 years");
   const [expertise,  setExpertise]  = useState("Maths");

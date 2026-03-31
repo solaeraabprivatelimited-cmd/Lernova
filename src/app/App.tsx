@@ -9,6 +9,13 @@ import { LandingPage } from '@/app/components/LandingPage';
 import { ProtectedRoute, AppUser } from '@/app/components/ProtectedRoute';
 import { auth, getCurrentUser, setCurrentUser, profile as profileApi, seed } from '@/app/lib/api';
 
+function resolveHomeRoute(user: AppUser | null): string {
+  if (user?.role === 'mentor') {
+    return '/mentor-dashboard';
+  }
+  return '/dashboard';
+}
+
 export default function App() {
   const navigate = useNavigate();
   const [currentUser, setCurrentAppUser] = useState<AppUser | null>(getCurrentUser());
@@ -20,19 +27,28 @@ export default function App() {
       try {
         const session = await auth.restoreSession();
         if (session) {
-          const prof = await profileApi.get();
-          if (prof) {
-            setCurrentUser(prof);
-            setCurrentAppUser(prof);
+          try {
+            const prof = await profileApi.get();
+            if (prof) {
+              setCurrentUser(prof);
+              setCurrentAppUser(prof);
+            }
+          } catch {
+            // Keep the session-backed local user if profile endpoint fails.
+            setCurrentAppUser(getCurrentUser());
           }
         } else {
-          setCurrentAppUser(getCurrentUser());
+          setCurrentUser(null);
+          setCurrentAppUser(null);
         }
-        // Seed demo data (idempotent)
-        try { await seed.demo(); } catch {}
+        // Seed demo data only when authenticated (endpoint requires auth).
+        if (getCurrentUser()) {
+          try { await seed.demo(); } catch {}
+        }
       } catch (e) {
         // No active session, stay on landing
-        setCurrentAppUser(getCurrentUser());
+        setCurrentUser(null);
+        setCurrentAppUser(null);
       } finally {
         setIsRestoringSession(false);
       }
@@ -81,12 +97,10 @@ export default function App() {
           <div className="min-h-screen bg-white w-full overflow-x-hidden">
             <LoginPage
               onLogin={() => {
-                setCurrentAppUser(getCurrentUser());
-                navigate('/dashboard', { replace: true });
+                void handleAuthSuccess();
               }}
               onMentorLogin={() => {
-                setCurrentAppUser(getCurrentUser());
-                navigate('/mentor-dashboard', { replace: true });
+                void handleAuthSuccess();
               }}
               onSignUp={() => navigate('/signup')}
               onForgotPassword={() => navigate('/forgot-password')}

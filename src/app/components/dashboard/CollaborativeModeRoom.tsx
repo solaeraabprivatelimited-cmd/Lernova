@@ -1,12 +1,6 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { Bell, Mic, MicOff, Video, VideoOff, Upload, Users, Smile, MessageSquare, Timer, StickyNote, ChevronLeft, ChevronRight, Pin, BellOff } from 'lucide-react';
-import imgFrame427318269 from "figma:asset/ad5368a3315b88119c1a283a49b009c3a7227d4f.png";
-import imgFrame427318272 from "figma:asset/2e6af28c0e5d2548ed01b2eb2977da2ecb16db3e.png";
-import imgFrame427318270 from "figma:asset/68cae3193ae9d107398f30ed207afe03ffcbc3d0.png";
-import imgFrame427318273 from "figma:asset/df134df2839e995d2e6cad8c6199688e372f633b.png";
-import imgFrame427318271 from "figma:asset/c06a1473b2e25c911dc67e55b8db19f784e952b0.png";
-import imgFrame427318274 from "figma:asset/96561b5363ed6c4b01aedeb5a19d6daa38ce5958.png";
-import imgImage15 from "figma:asset/0aa69f592fdcbc59e46001832f55ebdbca9f8cf7.png";
+import { useState, useEffect, useCallback, useRef } from 'react';
+import { Bell, Mic, MicOff, Video, VideoOff, Users, Smile, MessageSquare, Timer, StickyNote, BellOff, Settings } from 'lucide-react';
+import '@/styles/collaborative-mode-room.css';
 import { FocusTimerPanel } from "./FocusTimerPanel";
 import { FocusTimerNotification } from "./FocusTimerNotification";
 import { BlockNotificationsPanel } from "./BlockNotificationsPanel";
@@ -16,15 +10,12 @@ import { PeoplePanel } from "./PeoplePanel";
 import { ReactionPicker } from "./ReactionPicker";
 import { ReactionBurst } from "./ReactionBurst";
 import { MessagesPanel } from "./MessagesPanel";
-import { getCurrentUser, getSupabaseClient } from '@/app/lib/api';
+import { getCurrentUser } from '@/app/lib/api';
 import { useStudyRoom } from '@/utils/supabase/useStudyRoom';
-import { useLiveKit } from '@/utils/livekit';
-import { Track, Participant as LiveKitParticipant } from 'livekit-client';
+import { useWebRTC } from '@/utils/webrtc/useWebRTC';
 
 interface CollaborativeModeRoomProps {
-  roomName?: string;
   roomId?: string;
-  subject?: string;
   onLeaveRoom: () => void;
 }
 
@@ -53,9 +44,7 @@ const defaultParticipants: Participant[] = [
 ];
 
 export function CollaborativeModeRoom({ 
-  roomName = 'Study Room', 
   roomId = '2458', 
-  subject = 'General',
   onLeaveRoom 
 }: CollaborativeModeRoomProps) {
   const currentUser = getCurrentUser();
@@ -74,53 +63,244 @@ export function CollaborativeModeRoom({
   } = useStudyRoom({ roomId, userId });
 
   // Use real participants from realtime, fallback to defaults
-  const participants: Participant[] = realtimeParticipants?.map((p: any) => ({
-    id: p.id,
-    user_id: p.user_id,
-    name: p.user?.name || 'Unknown',
-    image: p.user?.avatar_url || "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop",
-    isMuted: p.is_muted || false,
-    isVideoOff: p.is_video_off || false,
-    is_pinned: p.is_pinned,
-    permissions: p.permissions,
-  })) || defaultParticipants;
+  const participants: Participant[] = Array.isArray(realtimeParticipants) 
+    ? realtimeParticipants.map((p: any) => ({
+        id: p.id,
+        user_id: p.user_id,
+        name: p.user?.name || 'Unknown',
+        image: p.user?.avatar_url || "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop",
+        isMuted: p.is_muted || false,
+        isVideoOff: p.is_video_off || false,
+        is_pinned: p.is_pinned,
+        permissions: p.permissions, 
+      }))
+    : defaultParticipants;
 
   const isAdmin = currentUser?.role === 'mentor' || false;
   const currentUserId = userId;
   
-  const [isMicOn, setIsMicOn] = useState(true);
-  const [isVideoOn, setIsVideoOn] = useState(true);
+  // Get current user's real name from participants (database) instead of currentUser object
+  const currentUserFromParticipants = participants.find(p => p.user_id === userId);
+  const currentUserDisplayName = currentUserFromParticipants?.name || currentUser?.user_metadata?.full_name || currentUser?.name || 'Guest';
+  console.log('🔍 Current user display name:', { 
+    fromParticipants: currentUserFromParticipants?.name, 
+    fromUserMeta: currentUser?.user_metadata?.full_name,
+    fromUser: currentUser?.name,
+    final: currentUserDisplayName,
+    userId 
+  });
+  
   const [elapsedTime, setElapsedTime] = useState(0);
-  const [currentPage, setCurrentPage] = useState(1);
   const [showFocusTimer, setShowFocusTimer] = useState(false);
   const [timerNotification, setTimerNotification] = useState<TimerNotification | null>(null);
   const [showBlockNotifications, setShowBlockNotifications] = useState(false);
   const [isNotificationsBlocked, setIsNotificationsBlocked] = useState(false);
   const [showNotes, setShowNotes] = useState(false);
-  const [isScreenSharing, setIsScreenSharing] = useState(false);
-  const [thumbnailScrollPosition, setThumbnailScrollPosition] = useState(0);
   const [showPeople, setShowPeople] = useState(false);
   const [showReactionPicker, setShowReactionPicker] = useState(false);
   const [reactionBursts, setReactionBursts] = useState<Array<{ id: string; emoji: string }>>([]);
   const [showMessages, setShowMessages] = useState(false);
-  const [otherUsersReactionsToShow, setOtherUsersReactionsToShow] = useState<Array<{ id: string; emoji: string; timestamp: number }>>([]);
-  const totalPages = 20;
+  const [otherUsersReactionsToShow, setOtherUsersReactionsToShow] = useState<Array<{ id: string; emoji: string; timestamp: number }>>([] as Array<{ id: string; emoji: string; timestamp: number }>);
   const [pinnedParticipantId, setPinnedParticipantId] = useState<string | null>(null);
+  const [isScreenSharing, setIsScreenSharing] = useState(false);
+  const [showDeviceSettings, setShowDeviceSettings] = useState(false);
   
-  // LiveKit state
-  const [liveKitToken, setLiveKitToken] = useState<string>('');
-  const [liveKitConnected, setLiveKitConnected] = useState(false);
-  const [liveKitRemoteParticipants, setLiveKitRemoteParticipants] = useState<LiveKitParticipant[]>([]);
-  const localVideoRef = useRef<HTMLVideoElement>(null);
-  const remoteVideoRefsRef = useRef<Map<string, React.RefObject<HTMLVideoElement>>>(new Map());
-
-  // Helper to get or create remote video ref
-  const getRemoteVideoRef = useCallback((participantSid: string) => {
-    if (!remoteVideoRefsRef.current.has(participantSid)) {
-      remoteVideoRefsRef.current.set(participantSid, React.createRef<HTMLVideoElement>());
+  // Device selection state
+  const [audioDevices, setAudioDevices] = useState<MediaDeviceInfo[]>([]);
+  const [videoDevices, setVideoDevices] = useState<MediaDeviceInfo[]>([]);
+  const [selectedAudioDeviceId, setSelectedAudioDeviceId] = useState<string>('default');
+  const [selectedVideoDeviceId, setSelectedVideoDeviceId] = useState<string>('default');
+  
+  // Enumerate available media devices
+  const enumerateDevices = useCallback(async () => {
+    try {
+      // Check if mediaDevices is available
+      if (!navigator.mediaDevices || !navigator.mediaDevices.enumerateDevices) {
+        console.warn('⚠️ mediaDevices not available - may not be in secure context (HTTPS/localhost)');
+        return;
+      }
+      
+      const devices = await navigator.mediaDevices.enumerateDevices();
+      const audioInputs = devices.filter(device => device.kind === 'audioinput');
+      const videoInputs = devices.filter(device => device.kind === 'videoinput');
+      
+      console.log('🎤 Available audio devices:', audioInputs.map(d => ({ deviceId: d.deviceId, label: d.label })));
+      console.log('🎥 Available video devices:', videoInputs.map(d => ({ deviceId: d.deviceId, label: d.label })));
+      
+      setAudioDevices(audioInputs);
+      setVideoDevices(videoInputs);
+    } catch (error) {
+      console.error('Failed to enumerate devices:', error);
     }
-    return remoteVideoRefsRef.current.get(participantSid)!;
   }, []);
+  
+  // Enumerate devices on mount and when permissions granted
+  useEffect(() => {
+    enumerateDevices();
+    
+    // Check if mediaDevices is available before adding listener
+    if (navigator.mediaDevices && navigator.mediaDevices.addEventListener) {
+      navigator.mediaDevices.addEventListener('devicechange', enumerateDevices);
+      
+      return () => {
+        if (navigator.mediaDevices) {
+          navigator.mediaDevices.removeEventListener('devicechange', enumerateDevices);
+        }
+      };
+    }
+  }, [enumerateDevices]);
+  
+  // WebRTC state
+  const webrtcResult = useWebRTC({
+    roomId: roomId || '2458',
+    userId: userId,
+    userName: currentUserDisplayName,
+    enabled: !!roomId,
+  });
+  
+  console.log('📡 WebRTC Name being sent:', currentUserDisplayName);
+  
+  // Ensure remoteStreams is always an array
+  const localStream = webrtcResult?.localStream || null;
+  // Filter out any streams that belong to the current user (shouldn't happen but safety check)
+  const remoteStreams = Array.isArray(webrtcResult?.remoteStreams) 
+    ? webrtcResult.remoteStreams.filter((rs: any) => rs.userId !== userId)
+    : [];
+  const isAudioOn = webrtcResult?.isAudioOn ?? true;
+  const isVideoOn = webrtcResult?.isVideoOn ?? true;
+  const toggleAudio = webrtcResult?.toggleAudio || (() => {});
+  const toggleVideo = webrtcResult?.toggleVideo || (() => {});
+  const disconnect = webrtcResult?.disconnect || (() => {});
+  const reinitializeStream = webrtcResult?.reinitializeStream || (async () => {});
+  const webrtcError = webrtcResult?.error || null;
+
+  // Log remote streams on every change
+  useEffect(() => {
+    console.log('📊 [RENDER] Remote streams count:', remoteStreams.length);
+    remoteStreams.forEach((rs, index) => {
+      console.log(`📊 [RENDER] Remote stream [${index}]: userId=${rs.userId}, userName=${rs.userName}, tracks=${rs.stream?.getTracks().length || 0}`);
+    });
+  }, [remoteStreams]);
+
+  // Handle device change
+  const handleAudioDeviceChange = async (deviceId: string) => {
+    setSelectedAudioDeviceId(deviceId);
+    await reinitializeStream(deviceId, selectedVideoDeviceId);
+  };
+
+  const handleVideoDeviceChange = async (deviceId: string) => {
+    setSelectedVideoDeviceId(deviceId);
+    await reinitializeStream(selectedAudioDeviceId, deviceId);
+  };
+
+  // Refs for video elements
+  const localVideoRef = useRef<HTMLVideoElement>(null);
+  const remoteVideoRefsRef = useRef<Map<string, HTMLVideoElement>>(new Map());
+
+  // Store video element in map when mounted
+  const setRemoteVideoRef = useCallback((userId: string, element: HTMLVideoElement | null) => {
+    if (element) {
+      remoteVideoRefsRef.current.set(userId, element);
+      console.log('📹 Video ref registered for:', userId);
+    } else {
+      remoteVideoRefsRef.current.delete(userId);
+      console.log('📹 Video ref removed for:', userId);
+    }
+  }, []);
+
+  // Attach local stream to video element with retry logic
+  useEffect(() => {
+    let isMounted = true;
+    let retryCount = 0;
+    const maxRetries = 5;
+
+    const attachStream = () => {
+      if (!isMounted) return;
+      
+      if (localStream && localVideoRef.current) {
+        const tracks = localStream.getTracks();
+        console.log('🎬 Attaching local stream to video element with', tracks.length, 'tracks');
+        console.log('🎬 Track details:', tracks.map(t => ({ kind: t.kind, enabled: t.enabled, readyState: t.readyState })));
+        
+        localVideoRef.current.srcObject = localStream;
+        
+        // Force play on next tick
+        setTimeout(() => {
+          if (localVideoRef.current && isMounted) {
+            localVideoRef.current.play().catch(err => {
+              console.error('⚠️ Failed to play local video:', err);
+            });
+          }
+        }, 100);
+      } else if (retryCount < maxRetries) {
+        console.warn(`⚠️ Retry ${retryCount + 1}/${maxRetries} - Cannot attach local stream - stream:`, !!localStream, 'ref:', !!localVideoRef.current);
+        retryCount++;
+        // Retry after 200ms
+        setTimeout(attachStream, 200);
+      } else {
+        console.error('❌ Failed to attach local stream after', maxRetries, 'retries');
+      }
+    };
+
+    // Start with a small delay to ensure DOM is ready
+    const timeout = setTimeout(attachStream, 50);
+    return () => {
+      isMounted = false;
+      clearTimeout(timeout);
+    };
+  }, [localStream]);
+
+  // Attach remote streams to video elements with retry logic
+  useEffect(() => {
+    console.log('🎬 Remote streams updated:', remoteStreams.length);
+    let isMounted = true;
+
+    remoteStreams.forEach(({ userId, stream }: { userId: string; stream: MediaStream }) => {
+      const tracks = stream.getTracks();
+      console.log(`🎬 Processing remote stream for ${userId} with ${tracks.length} tracks`);
+      console.log(`🎬 Track details for ${userId}:`, tracks.map(t => ({ kind: t.kind, enabled: t.enabled, readyState: t.readyState })));
+      
+      let retryCount = 0;
+      const maxRetries = 5;
+      
+      const attachRemoteStream = () => {
+        if (!isMounted) return;
+        
+        const videoElement = remoteVideoRefsRef.current.get(userId);
+        console.log(`🎬 [Attempt ${retryCount + 1}/${maxRetries + 1}] Looking for video element for ${userId}, found:`, !!videoElement);
+        
+        if (videoElement) {
+          console.log(`✅ Found video element for ${userId}, attaching stream...`);
+          videoElement.srcObject = null; // Clear first
+          setTimeout(() => {
+            if (videoElement && isMounted) {
+              videoElement.srcObject = stream;
+              console.log(`✅ Remote stream attached to ${userId}`);
+              // Force play on next tick
+              videoElement.play().catch(err => {
+                console.error(`⚠️ Failed to play remote video for ${userId}:`, err);
+              });
+            }
+          }, 50);
+        } else if (retryCount < maxRetries) {
+          console.warn(`⚠️ Retry ${retryCount + 1}/${maxRetries} - Video element not found for ${userId}. Available refs:`, Array.from(remoteVideoRefsRef.current.keys()));
+          retryCount++;
+          // Retry after 200ms
+          setTimeout(attachRemoteStream, 200);
+        } else {
+          console.error(`❌ Failed to find video element for ${userId} after ${maxRetries} retries. Available refs:`, Array.from(remoteVideoRefsRef.current.keys()));
+        }
+      };
+
+      // Start with a small delay to ensure DOM is ready
+      setTimeout(attachRemoteStream, 50);
+    });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [remoteStreams]);
+
   useEffect(() => {
     const timer = setInterval(() => {
       setElapsedTime(prev => prev + 1);
@@ -129,120 +309,14 @@ export function CollaborativeModeRoom({
     return () => clearInterval(timer);
   }, []);
 
-  // Generate LiveKit token
+
+
+  // Cleanup WebRTC on unmount
   useEffect(() => {
-    if (!room) return;
-
-    const generateToken = async () => {
-      try {
-        console.log('🔵 Generating LiveKit token...');
-        const supabase = getSupabaseClient();
-        const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-        
-        console.log('Supabase URL:', supabaseUrl);
-
-        const { data: { session } } = await supabase.auth.getSession();
-        if (!session) {
-          console.warn('⚠️ No session found, using anon key for token generation');
-        }
-
-        const response = await fetch(`${supabaseUrl}/functions/v1/livekit-token`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            ...(session ? { 'Authorization': `Bearer ${session.access_token}` } : {}),
-          },
-          body: JSON.stringify({
-            roomId: roomId,
-            userId: userId,
-            userName: currentUser?.user_metadata?.full_name || 'Guest',
-          }),
-        });
-
-        console.log('Response status:', response.status);
-        if (!response.ok) {
-          const errorData = await response.json().catch(() => ({}));
-          const errorMsg = errorData.error || `HTTP ${response.status}`;
-          throw new Error(`Token generation failed: ${errorMsg}`);
-        }
-        
-        const data = await response.json();
-        if (!data.token) {
-          throw new Error('No token in response');
-        }
-        
-        console.log('🟢 Token generated successfully');
-        setLiveKitToken(data.token);
-      } catch (err) {
-        const errorMsg = err instanceof Error ? err.message : String(err);
-        console.error('🔴 Token generation error:', errorMsg);
-      }
+    return () => {
+      disconnect();
     };
-
-    generateToken();
-  }, [room, roomId, userId, currentUser]);
-
-  // LiveKit integration
-  const liveKitCallbacks = useCallback(() => ({
-    onRoomConnected: () => {
-      console.log('✅ Connected to LiveKit');
-      setLiveKitConnected(true);
-    },
-    onRoomDisconnected: () => {
-      console.log('❌ Disconnected from LiveKit');
-      setLiveKitConnected(false);
-    },
-    onParticipantJoined: (participant: LiveKitParticipant) => {
-      console.log('👥 Participant joined:', participant.identity);
-      getRemoteVideoRef(participant.sid);
-      setLiveKitRemoteParticipants((prev) => [...prev, participant]);
-    },
-    onParticipantLeft: (participant: LiveKitParticipant) => {
-      console.log('👥 Participant left:', participant.identity);
-      remoteVideoRefsRef.current.delete(participant.sid);
-      setLiveKitRemoteParticipants((prev) => prev.filter((p) => p.sid !== participant.sid));
-    },
-    onTrackSubscribed: (track: Track, publication: any, participant: LiveKitParticipant) => {
-      if (track.kind === Track.Kind.Video) {
-        const videoRef = getRemoteVideoRef(participant.sid);
-        if (videoRef.current && livekit.manager) {
-          livekit.manager.attachRemoteVideoElement(videoRef.current, participant);
-        }
-      }
-    },
-  }), []);
-
-  const livekit = useLiveKit(
-    {
-      url: import.meta.env.VITE_LIVEKIT_URL || 'ws://localhost:7880',
-      token: liveKitToken,
-    },
-    !!liveKitToken,
-    liveKitCallbacks()
-  );
-
-  // Attach local video
-  useEffect(() => {
-    if (!livekit.connected || !livekit.manager || !localVideoRef.current) return;
-    livekit.manager.attachLocalVideoElement(localVideoRef.current);
-    const timeout = setTimeout(() => {
-      if (localVideoRef.current && livekit.manager) {
-        livekit.manager.attachLocalVideoElement(localVideoRef.current);
-      }
-    }, 1000);
-    return () => clearTimeout(timeout);
-  }, [livekit.connected, livekit.manager]);
-
-  // Attach remote videos  
-  useEffect(() => {
-    if (!livekit.manager || liveKitRemoteParticipants.length === 0) return;
-    liveKitRemoteParticipants.forEach((participant) => {
-      const videoRef = getRemoteVideoRef(participant.sid);
-      if (videoRef.current) {
-        livekit.manager!.attachRemoteVideoElement(videoRef.current, participant);
-      }
-    });
-  }, [liveKitRemoteParticipants, livekit.manager]);
+  }, [disconnect]);
 
   // Watch for new reactions from other users
   useEffect(() => {
@@ -254,7 +328,7 @@ export function CollaborativeModeRoom({
     console.log('All reactions:', reactions);
     
     // Show all other users' reactions (no time limit for existing reactions)
-    const recentOtherReactions = reactions.filter(r => {
+    const recentOtherReactions = reactions.filter((r: any) => {
       const isOtherUser = r.user_id !== userId;
       console.log('Filtering reaction:', { emoji: r.emoji, userId: r.user_id, currentUserId: userId, isOtherUser });
       return isOtherUser;
@@ -263,7 +337,7 @@ export function CollaborativeModeRoom({
     console.log('Recent other reactions:', recentOtherReactions);
     
     if (recentOtherReactions.length > 0) {
-      const newReactionsToShow = recentOtherReactions.map(r => ({
+      const newReactionsToShow = recentOtherReactions.map((r: any) => ({
         id: r.id,
         emoji: r.emoji,
         timestamp: new Date(r.created_at).getTime()
@@ -281,6 +355,14 @@ export function CollaborativeModeRoom({
     const mins = Math.floor((seconds % 3600) / 60);
     const secs = seconds % 60;
     return `${hrs.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  const handleLeaveRoom = async () => {
+    console.log('👋 [LEAVE] User initiated leave room');
+    // Explicitly disconnect WebRTC and untrack presence
+    await disconnect();
+    console.log('👋 [LEAVE] Disconnected successfully, calling onLeaveRoom');
+    onLeaveRoom();
   };
 
   const handlePinParticipant = (participantId: string) => {
@@ -315,7 +397,7 @@ export function CollaborativeModeRoom({
       .then(() => {
         console.log('Reaction sent successfully:', emoji);
       })
-      .catch(err => {
+      .catch((err: any) => {
         console.error('Failed to send reaction:', err);
         console.error('Error details:', { message: err.message, code: err.code });
       });
@@ -332,12 +414,7 @@ export function CollaborativeModeRoom({
     }, 3500);
   };
 
-  const pinnedParticipant = pinnedParticipantId ? participants.find(p => p.id === pinnedParticipantId) : null;
-  const otherParticipants = pinnedParticipant 
-    ? participants.filter(p => p.id !== pinnedParticipantId)
-    : participants.slice(1); // Exclude first participant if no one is pinned
 
-  // Show loading state
   if (loading) {
     return (
       <div className="bg-black h-screen w-full flex items-center justify-center">
@@ -349,17 +426,17 @@ export function CollaborativeModeRoom({
     );
   }
 
-  // Show error state
-  if (error || !room) {
-    const errorMessage = error 
-      ? (typeof error === 'string' ? error : error?.message || 'Unknown error occurred')
-      : 'Room not found or is inactive';
-    
+  // Check for WebRTC errors first
+  if (webrtcError) {
     return (
       <div className="bg-black h-screen w-full flex items-center justify-center">
-        <div className="text-center text-white">
-          <h3 className="text-xl font-bold mb-2">Failed to Load Room</h3>
-          <p className="text-gray-300 mb-6">{errorMessage}</p>
+        <div className="text-center text-white max-w-md">
+          <div className="text-6xl mb-4">📹</div>
+          <h3 className="text-2xl font-bold mb-2">Camera/Microphone Error</h3>
+          <p className="text-gray-300 mb-6 text-sm">{webrtcError}</p>
+          <p className="text-gray-400 text-xs mb-4">
+            Make sure your browser has permission to access camera and microphone
+          </p>
           <button
             onClick={onLeaveRoom}
             className="px-6 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors"
@@ -371,268 +448,220 @@ export function CollaborativeModeRoom({
     );
   }
 
+  // Show error state
+  if (error || !room) {
+    const errorMessage = error 
+      ? (typeof error === 'string' ? error : error?.message || 'Unknown error occurred')
+      : 'Room not found or is inactive';
+    
+    // Check for specific WebRTC errors
+    const isWebRTCError = errorMessage.includes('media') || 
+                          errorMessage.includes('camera') || 
+                          errorMessage.includes('microphone') || 
+                          errorMessage.includes('Permission');
+    
+    return (
+      <div className="bg-black h-screen w-full flex items-center justify-center">
+        <div className="text-center text-white max-w-md">
+          <div className="text-6xl mb-4">{isWebRTCError ? '📹' : '⚠️'}</div>
+          <h3 className="text-2xl font-bold mb-2">
+            {isWebRTCError ? 'Camera/Microphone Error' : 'Failed to Load Room'}
+          </h3>
+          <p className="text-gray-300 mb-6 text-sm">{errorMessage}</p>
+          {isWebRTCError && (
+            <p className="text-gray-400 text-xs mb-4">
+              Make sure your browser has permission to access camera and microphone
+            </p>
+          )}
+          <button
+            onClick={onLeaveRoom}
+            className="px-6 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors"
+          >
+            Go Back
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Calculate grid columns based on participant count
+  const allParticipants = [
+    { 
+      id: 'local', 
+      user_id: userId, 
+      name: 'You', 
+      isLocal: true, 
+      ...(participants && participants[0] ? participants[0] : {}) 
+    },
+    ...(Array.isArray(remoteStreams) ? remoteStreams.map(rs => ({ id: rs.userId, user_id: rs.userId, name: rs.userName, isLocal: false })) : []),
+  ];
+  
+  // Calculate grid columns based on number of remote streams (1 local + remote streams)
+  const totalParticipants = 1 + remoteStreams.length;
+  const gridCols = totalParticipants === 1 ? 'grid-cols-1' : 
+                   totalParticipants <= 4 ? 'grid-cols-2' : 
+                   'grid-cols-3';
+  
+  console.log('📊 Grid Layout - Total participants:', totalParticipants, 'Remote streams:', remoteStreams.length, 'Grid:', gridCols);
+
   return (
     <div className="bg-[#1a1a1a] h-screen w-full flex flex-col font-['Poppins'] overflow-hidden">
-      {/* Main Content Area */}
-      <div className="flex-1 flex items-center justify-center p-8 gap-6 relative">
-        {isScreenSharing ? (
-          // Screen Share Layout
-          <div className="w-full h-full flex flex-col relative">
-            {/* Top Participant Thumbnails */}
-            <div className="flex items-center justify-center gap-6 mb-6 relative">
-              {/* Navigation */}
-              <button 
-                onClick={() => setThumbnailScrollPosition(prev => Math.max(0, prev - 1))}
-                disabled={thumbnailScrollPosition === 0}
-                className="text-white hover:opacity-70 disabled:opacity-30 transition-opacity"
-              >
-                <ChevronLeft className="w-8 h-8" />
-              </button>
-
-              {/* Participant Thumbnails */}
-              <div className="flex gap-6 overflow-hidden">
-                {participants.slice(thumbnailScrollPosition, thumbnailScrollPosition + 6).map((participant) => (
-                  <div 
-                    key={participant.id}
-                    className="relative bg-[#2a2a2a] rounded-[20px] overflow-hidden w-[144px] h-[138px] flex-shrink-0"
-                  >
-                    <img 
-                      src={participant.image} 
-                      alt={participant.name}
-                      className="w-full h-full object-cover"
-                    />
-                    {/* Pin Icon */}
-                    <button
-                      onClick={() => handlePinParticipant(participant.id)}
-                      className="absolute top-2 left-2 bg-white/10 backdrop-blur-sm rounded-full p-1.5 hover:bg-white/20 transition-colors"
-                    >
-                      <Pin className="w-[14px] h-[14px] text-white" />
-                    </button>
-                    {/* Mute Icon */}
-                    {participant.isMuted && (
-                      <div className="absolute top-2 right-2 bg-white/10 backdrop-blur-sm rounded-full p-1.5">
-                        <MicOff className="w-[14px] h-[14px] text-white" />
-                      </div>
-                    )}
-                    {/* Name Badge */}
-                    <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 bg-white rounded-full px-3 py-1">
-                      <span className="text-[10px] text-black font-medium">{participant.name}</span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              <button 
-                onClick={() => setThumbnailScrollPosition(prev => Math.min(participants.length - 6, prev + 1))}
-                disabled={thumbnailScrollPosition >= participants.length - 6}
-                className="text-white hover:opacity-70 disabled:opacity-30 transition-opacity"
-              >
-                <ChevronRight className="w-8 h-8" />
-              </button>
-
-              {/* Page Indicator */}
-              <div className="absolute top-0 right-8 text-white text-[14px]">
-                {currentPage}/{totalPages}
-              </div>
+      {/* Main Content Area - Responsive Video Grid */}
+      <div className={`flex-1 grid ${gridCols} gap-4 p-6 auto-rows-fr overflow-y-auto`}>
+        {/* LOCAL VIDEO - Always shown */}
+        <div className="relative bg-[#2a2a2a] rounded-[20px] overflow-hidden h-full">
+          {/* Video element always rendered for ref attachment */}
+          <video
+            ref={localVideoRef}
+            autoPlay
+            muted
+            playsInline
+            crossOrigin="anonymous"
+            className="w-full h-full object-cover local-video-flipped"
+            style={{ display: localStream && isVideoOn ? 'block' : 'none' }}
+          />
+          
+          {/* Placeholder when video is off */}
+          {!isVideoOn && (
+            <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-[#3a3a3a] to-[#1a1a1a]">
+              <span className="text-white text-center">
+                <div className="text-4xl mb-2">📷</div>
+                <div className="text-sm">Camera Off</div>
+              </span>
             </div>
-
-            {/* Main Screen Share Area */}
-            <div className="flex-1 bg-[#c4c4c4] rounded-[20px] overflow-hidden relative">
-              <img 
-                src="https://images.unsplash.com/photo-1688236551531-370fdaf09984?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHx3aW5kb3dzJTIwZGVza3RvcCUyMGNvbXB1dGVyJTIwc2NyZWVufGVufDF8fHx8MTc2ODEwNjczN3ww&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral" 
-                alt="Screen share" 
-                className="w-full h-full object-cover"
-              />
-            </div>
-
-            {/* Picture-in-Picture Presenter Video */}
-            <div className="absolute bottom-8 right-8 bg-[#c4c4c4] rounded-[13px] overflow-hidden w-[179px] h-[147px]">
-              <img 
-                src={imgImage15} 
-                alt="Presenter" 
-                className="w-full h-full object-cover"
-              />
-            </div>
+          )}
+          {/* Name Badge */}
+          <div className="absolute bottom-3 left-3 bg-white/20 backdrop-blur-sm rounded-full px-3 py-1 border border-white/30">
+            <span className="text-[12px] text-white font-medium">You</span>
           </div>
-        ) : pinnedParticipant ? (
-          // Pinned Layout
+          {/* Status Icons */}
+          <div className="absolute top-3 right-3 flex gap-2">
+            {!isVideoOn && (
+              <div className="bg-red-600/80 backdrop-blur-sm rounded-full p-2">
+                <VideoOff className="w-3 h-3 text-white" />
+              </div>
+            )}
+            {!isAudioOn && (
+              <div className="bg-red-600/80 backdrop-blur-sm rounded-full p-2">
+                <MicOff className="w-3 h-3 text-white" />
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* REMOTE VIDEOS */}
+        {Array.isArray(remoteStreams) && remoteStreams.length > 0 && (
           <>
-            {/* Left - Single Small Participant */}
-            <div className="relative">
-              <div className="bg-[#2a2a2a] rounded-[20px] overflow-hidden w-[160px] h-[217px] relative">
-                <img 
-                  src={participants[0].image} 
-                  alt={participants[0].name}
-                  className="w-full h-full object-cover"
+            {remoteStreams.map(({ userId, userName, stream }) => {
+              // Use WebRTC userName directly - this is what was announced by the remote peer
+              // This is the source of truth for the remote participant's name
+              const participantName = userName || 'Unknown';
+              const audioTracks = stream?.getAudioTracks() || [];
+              const videoTracks = stream?.getVideoTracks() || [];
+              console.log(`🎥 Rendering remote video - userId: ${userId}, name: ${participantName}, audioTracks: ${audioTracks.length}, videoTracks: ${videoTracks.length}`);
+              if (audioTracks.length > 0) {
+                console.log(`🔊 Audio track found for ${userId}: enabled=${audioTracks[0].enabled}, state=${audioTracks[0].readyState}`);
+              } else {
+                console.warn(`🔇 NO audio track in stream for ${userId}!`);
+              }
+              return (
+              <div key={userId} className="relative bg-[#2a2a2a] rounded-[20px] overflow-hidden h-full">
+                {/* Audio playback element - CRITICAL for hearing remote audio */}
+                <audio
+                  autoPlay
+                  playsInline
+                  crossOrigin="anonymous"
+                  style={{ display: 'none' }}
+                  onLoadedMetadata={() => {
+                    console.log(`🔊 Audio metadata loaded for ${userId}`);
+                  }}
+                  onPlay={() => {
+                    console.log(`▶️ Audio playing for ${userId}`);
+                  }}
+                  onError={(e) => {
+                    console.error(`❌ Audio error for ${userId}:`, e);
+                  }}
+                  ref={(el) => {
+                    if (el && stream) {
+                      el.srcObject = stream;
+                      console.log(`🎧 Audio element connected to stream for ${userId}`);
+                    }
+                  }}
                 />
-                {/* Pin Icon */}
-                <button
-                  onClick={() => handlePinParticipant(participants[0].id)}
-                  className="absolute top-3 left-3 bg-white/10 backdrop-blur-sm rounded-full p-2 hover:bg-white/20 transition-colors"
-                >
-                  <Pin className="w-[18px] h-[18px] text-white" />
-                </button>
-                {/* Mute Icon */}
-                {participants[0].isMuted && (
-                  <div className="absolute top-3 right-3 bg-white/10 backdrop-blur-sm rounded-full p-2">
-                    <MicOff className="w-[18px] h-[18px] text-white" />
-                  </div>
-                )}
+                
+                {/* Video playback element */}
+                <video
+                  ref={(el) => {
+                    console.log(`📹 Ref callback for ${userId}:`, !!el);
+                    if (el && stream) {
+                      el.srcObject = stream;
+                    }
+                    setRemoteVideoRef(userId, el);
+                  }}
+                  autoPlay
+                  playsInline
+                  crossOrigin="anonymous"
+                  className="w-full h-full object-cover"
+                  style={{ display: 'block' }}
+                  onLoadedMetadata={() => {
+                    console.log(`📹 Video metadata loaded for ${userId}`);
+                  }}
+                  onPlay={() => {
+                    console.log(`▶️ Video playing for ${userId}`);
+                  }}
+                  onError={(e) => {
+                    console.error(`❌ Video error for ${userId}:`, e);
+                  }}
+                />
+                {/* Name Badge */}
+                <div className="absolute bottom-3 left-3 bg-white/20 backdrop-blur-sm rounded-full px-3 py-1 border border-white/30">
+                  <span className="text-[12px] text-white font-medium">{participantName}</span>
+                </div>
               </div>
-            </div>
-
-            {/* Center - Large Pinned Participant */}
-            <div className="bg-[#2a2a2a] rounded-[20px] overflow-hidden h-full max-h-[716px] w-full max-w-[626px] relative">
-              <img 
-                src={pinnedParticipant.image} 
-                alt={pinnedParticipant.name}
-                className="w-full h-full object-cover"
-              />
-              {/* Pin Icon */}
-              <button
-                onClick={() => handlePinParticipant(pinnedParticipant.id)}
-                className="absolute top-3 left-3 bg-white/10 backdrop-blur-sm rounded-full p-2 hover:bg-white/20 transition-colors"
-              >
-                <Pin className="w-[18px] h-[18px] text-white" />
-              </button>
-              {/* Name Badge */}
-              <div className="absolute bottom-4 right-4 bg-white rounded-full px-4 py-1.5">
-                <span className="text-[14px] text-black font-medium">{pinnedParticipant.name}</span>
-              </div>
-            </div>
-
-            {/* Right - 2x3 Grid of Participants */}
-            <div className="flex flex-col gap-4">
-              {/* Pagination */}
-              <div className="flex items-center justify-end gap-2 mb-2">
-                <button 
-                  onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-                  disabled={currentPage === 1}
-                  className="text-white hover:opacity-70 disabled:opacity-30 transition-opacity"
-                >
-                  <ChevronLeft className="w-5 h-5" />
-                </button>
-                <span className="text-white text-[14px]">{currentPage}/{totalPages}</span>
-                <button 
-                  onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
-                  disabled={currentPage === totalPages}
-                  className="text-white hover:opacity-70 disabled:opacity-30 transition-opacity"
-                >
-                  <ChevronRight className="w-5 h-5" />
-                </button>
-              </div>
-
-              {/* Participant Cards */}
-              <div className="grid grid-cols-2 gap-4">
-                {otherParticipants.slice(0, 6).map((participant) => (
-                  <div 
-                    key={participant.id}
-                    className="relative bg-[#2a2a2a] rounded-[20px] overflow-hidden w-[174px] h-[137px]"
-                  >
-                    <img 
-                      src={participant.image} 
-                      alt={participant.name}
-                      className="w-full h-full object-cover"
-                    />
-                    {/* Pin Icon */}
-                    <button
-                      onClick={() => handlePinParticipant(participant.id)}
-                      className="absolute top-3 left-3 bg-white/10 backdrop-blur-sm rounded-full p-2 hover:bg-white/20 transition-colors"
-                    >
-                      <Pin className="w-[18px] h-[18px] text-white" />
-                    </button>
-                    {/* Video Off Icon */}
-                    {participant.isVideoOff && (
-                      <div className="absolute top-3 right-3 bg-white/10 backdrop-blur-sm rounded-full p-2">
-                        <VideoOff className="w-[18px] h-[18px] text-white" />
-                      </div>
-                    )}
-                    {/* Mute Icon */}
-                    {participant.isMuted && !participant.isVideoOff && (
-                      <div className="absolute top-3 right-3 bg-white/10 backdrop-blur-sm rounded-full p-2">
-                        <MicOff className="w-[18px] h-[18px] text-white" />
-                      </div>
-                    )}
-                    {/* Name Badge */}
-                    <div className="absolute bottom-3 right-3 bg-white rounded-full px-3 py-1">
-                      <span className="text-[12px] text-black font-medium">{participant.name}</span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
+            );
+            })}
           </>
-        ) : (
-          // Default Layout (No Pin)
-          <>
-            {/* Main Video Feed */}
-            <div className="bg-[#c4c4c4] rounded-[20px] overflow-hidden h-full max-h-[716px] w-full max-w-[868px] relative flex items-center justify-center">
-              {isVideoOn ? (
-                <img 
-                  src={imgImage15} 
-                  alt="Main participant" 
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center">
-                  <span className="text-[32px] text-black font-normal">Your Camera is off</span>
+        )}
+
+        {/* FALLBACK PARTICIPANT AVATARS (when no streams) */}
+        {Array.isArray(remoteStreams) && remoteStreams.length === 0 && Array.isArray(participants) && participants.slice(1, 10).map((participant) => (
+          <div key={participant.id} className="relative bg-[#2a2a2a] rounded-[20px] overflow-hidden">
+            <img
+              src={participant.image}
+              alt={participant.name}
+              className="w-full h-full object-cover"
+            />
+            {/* Name Badge */}
+            <div className="absolute bottom-3 left-3 bg-white/20 backdrop-blur-sm rounded-full px-3 py-1 border border-white/30">
+              <span className="text-[12px] text-white font-medium">{participant.name}</span>
+            </div>
+            {/* Status Icons */}
+            <div className="absolute top-3 right-3 flex gap-2">
+              {participant.isVideoOff && (
+                <div className="bg-red-600/80 backdrop-blur-sm rounded-full p-2">
+                  <VideoOff className="w-3 h-3 text-white" />
+                </div>
+              )}
+              {participant.isMuted && (
+                <div className="bg-red-600/80 backdrop-blur-sm rounded-full p-2">
+                  <MicOff className="w-3 h-3 text-white" />
                 </div>
               )}
             </div>
-
-            {/* Participant Grid */}
-            <div className="flex flex-col gap-4">
-              {/* Pagination */}
-              <div className="flex items-center justify-end gap-2 mb-2">
-                <button 
-                  onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-                  disabled={currentPage === 1}
-                  className="text-white hover:opacity-70 disabled:opacity-30 transition-opacity"
-                >
-                  <ChevronLeft className="w-5 h-5" />
-                </button>
-                <span className="text-white text-[14px]">{currentPage}/{totalPages}</span>
-                <button 
-                  onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
-                  disabled={currentPage === totalPages}
-                  className="text-white hover:opacity-70 disabled:opacity-30 transition-opacity"
-                >
-                  <ChevronRight className="w-5 h-5" />
-                </button>
-              </div>
-
-              {/* Participant Cards */}
-              <div className="grid grid-cols-2 gap-4">
-                {participants.slice(0, 6).map((participant) => (
-                  <div 
-                    key={participant.id}
-                    className="relative bg-[#2a2a2a] rounded-[20px] overflow-hidden w-[174px] h-[137px]"
-                  >
-                    <img 
-                      src={participant.image} 
-                      alt={participant.name}
-                      className="w-full h-full object-cover"
-                    />
-                    {/* Pin Icon */}
-                    <button
-                      onClick={() => handlePinParticipant(participant.id)}
-                      className="absolute top-3 left-3 bg-white/10 backdrop-blur-sm rounded-full p-2 hover:bg-white/20 transition-colors"
-                    >
-                      <Pin className="w-[18px] h-[18px] text-white" />
-                    </button>
-                    {/* Mute Icon */}
-                    {participant.isMuted && (
-                      <div className="absolute top-3 right-3 bg-white/10 backdrop-blur-sm rounded-full p-2">
-                        <MicOff className="w-[18px] h-[18px] text-white" />
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </div>
-          </>
-        )}
+          </div>
+        ))}
       </div>
+
+      {/* EMPTY STATE - Show only when no remote streams */} 
+      {remoteStreams.length === 0 && (
+        <div className="absolute inset-0 flex items-center justify-center bg-black/30 pointer-events-none">
+          <div className="text-center">
+            <div className="text-6xl mb-4">👥</div>
+            <div className="text-white text-xl">Waiting for other participants...</div>
+            <div className="text-white/60 text-sm mt-2">Room Code: {room?.code || roomId}</div>
+          </div>
+        </div>
+      )}
 
       {/* Bottom Control Bar */}
       <div className="bg-[#2a2a2a] px-8 py-4 flex items-center justify-between">
@@ -679,7 +708,7 @@ export function CollaborativeModeRoom({
 
           {/* Video Button */}
           <button 
-            onClick={() => setIsVideoOn(!isVideoOn)}
+            onClick={() => toggleVideo(!isVideoOn)}
             className={`${
               isVideoOn ? 'bg-[#3a3a3a] hover:bg-[#4a4a4a]' : 'bg-red-600 hover:bg-red-700'
             } rounded-full p-3 transition-colors`}
@@ -693,12 +722,12 @@ export function CollaborativeModeRoom({
 
           {/* Mic Button */}
           <button 
-            onClick={() => setIsMicOn(!isMicOn)}
+            onClick={() => toggleAudio(!isAudioOn)}
             className={`${
-              isMicOn ? 'bg-[#3a3a3a] hover:bg-[#4a4a4a]' : 'bg-red-600 hover:bg-red-700'
+              isAudioOn ? 'bg-[#3a3a3a] hover:bg-[#4a4a4a]' : 'bg-red-600 hover:bg-red-700'
             } rounded-full p-3 transition-colors`}
           >
-            {isMicOn ? (
+            {isAudioOn ? (
               <Mic className="w-6 h-6 text-white" />
             ) : (
               <MicOff className="w-6 h-6 text-white" />
@@ -735,11 +764,19 @@ export function CollaborativeModeRoom({
           >
             <MessageSquare className="w-6 h-6 text-white" />
           </button>
+
+          {/* Settings Button */}
+          <button
+            onClick={() => setShowDeviceSettings(!showDeviceSettings)}
+            className="bg-[#3a3a3a] hover:bg-[#4a4a4a] rounded-full p-3 transition-colors"
+          >
+            <Settings className="w-6 h-6 text-white" />
+          </button>
         </div>
 
         {/* Right Side - Leave Room */}
         <button
-          onClick={onLeaveRoom}
+          onClick={handleLeaveRoom}
           className="bg-[#ef4444] hover:bg-[#dc2626] text-white rounded-[20px] px-6 h-[42px] text-[14px] font-medium transition-colors"
         >
           Leave Room
@@ -786,11 +823,11 @@ export function CollaborativeModeRoom({
       {showPeople && (
         <PeoplePanel
           onClose={() => setShowPeople(false)}
-          participants={participants}
-          onPinParticipant={handlePinParticipant}
-          pinnedParticipantId={pinnedParticipantId}
+          participants={participants as any}
+          onPinParticipant={handlePinParticipant as any}
+          pinnedParticipantId={pinnedParticipantId as any}
           isAdmin={isAdmin}
-          currentUserId={currentUserId}
+          currentUserId={currentUserId as any}
         />
       )}
 
@@ -813,7 +850,7 @@ export function CollaborativeModeRoom({
       {/* Other Users' Reactions */}
       {otherUsersReactionsToShow.length > 0 && (
         <div className="fixed inset-0 pointer-events-none z-[35] overflow-hidden">
-          {otherUsersReactionsToShow.map((reaction, idx) => {
+          {otherUsersReactionsToShow.map((reaction: { id: string; emoji: string; timestamp: number }, idx: number) => {
             const positionClasses = [
               'left-[20%] top-[30%]',
               'left-[35%] top-[38%]',
@@ -844,6 +881,68 @@ export function CollaborativeModeRoom({
           realtimeMessages={messages}
           onSendMessage={sendMessage}
         />
+      )}
+
+      {/* Device Settings Panel */}
+      {showDeviceSettings && (
+        <div className="fixed right-6 bottom-24 bg-[#2a2a2a] rounded-[16px] border border-[#3a3a3a] p-5 w-72 shadow-2xl z-40">
+          <div className="space-y-4">
+            {/* Header */}
+            <div className="flex items-center justify-between mb-4 pb-3 border-b border-[#3a3a3a]">
+              <h3 className="text-white font-semibold flex items-center gap-2">
+                <Settings className="w-4 h-4" />
+                Device Settings
+              </h3>
+              <button
+                onClick={() => setShowDeviceSettings(false)}
+                className="text-gray-400 hover:text-white text-xl font-light"
+              >
+                ×
+              </button>
+            </div>
+
+            {/* Microphone Selection */}
+            <div>
+              <label className="text-gray-300 text-sm font-medium block mb-2">Microphone</label>
+              <select
+                value={selectedAudioDeviceId}
+                onChange={(e) => handleAudioDeviceChange(e.target.value)}
+                className="w-full bg-[#3a3a3a] text-white rounded-lg px-3 py-2 text-sm border border-[#4a4a4a] hover:border-[#5a5a5a] focus:outline-none focus:border-blue-500"
+              >
+                <option value="default">Default Microphone</option>
+                {audioDevices.map((device) => (
+                  <option key={device.deviceId} value={device.deviceId}>
+                    {device.label || `Microphone ${device.deviceId.slice(0, 5)}...`}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Camera Selection */}
+            <div>
+              <label className="text-gray-300 text-sm font-medium block mb-2">Camera</label>
+              <select
+                value={selectedVideoDeviceId}
+                onChange={(e) => handleVideoDeviceChange(e.target.value)}
+                className="w-full bg-[#3a3a3a] text-white rounded-lg px-3 py-2 text-sm border border-[#4a4a4a] hover:border-[#5a5a5a] focus:outline-none focus:border-blue-500"
+              >
+                <option value="default">Default Camera</option>
+                {videoDevices.map((device) => (
+                  <option key={device.deviceId} value={device.deviceId}>
+                    {device.label || `Camera ${device.deviceId.slice(0, 5)}...`}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Device Info */}
+            {(audioDevices.length === 0 || videoDevices.length === 0) && (
+              <div className="bg-[#3a3a3a]/50 border border-[#4a4a4a] rounded-lg p-3 text-xs text-gray-400">
+                <p className="mb-1">💡 Tip: Grant camera/microphone permissions to see available devices</p>
+              </div>
+            )}
+          </div>
+        </div>
       )}
     </div>
   );

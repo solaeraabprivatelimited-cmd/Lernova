@@ -13,33 +13,45 @@ interface Message {
 
 interface MessagesPanelProps {
   onClose: () => void;
-  currentUserId: number;
+  currentUserId: string;
   currentUserName: string;
   currentUserAvatar: string;
+  realtimeMessages?: Array<{
+    id: string;
+    user_id: string;
+    content: string;
+    created_at: string;
+    user?: {
+      id: string;
+      name: string;
+      avatar_url?: string;
+    };
+  }>;
+  onSendMessage?: (content: string) => Promise<void>;
 }
 
-export function MessagesPanel({ onClose, currentUserId, currentUserName, currentUserAvatar }: MessagesPanelProps) {
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: '1',
-      userId: 0,
-      userName: 'You',
-      userAvatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop',
-      text: 'Hey, there everyone',
-      timestamp: '10:14PM',
-      isOwn: true,
-    },
-    {
-      id: '2',
-      userId: 2,
-      userName: 'Alex',
-      userAvatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&h=100&fit=crop',
-      text: 'Hello',
-      timestamp: '10:15PM',
-      isOwn: false,
-    },
-  ]);
+export function MessagesPanel({ onClose, currentUserId, currentUserName, currentUserAvatar, realtimeMessages = [], onSendMessage }: MessagesPanelProps) {
   const [inputText, setInputText] = useState('');
+  const [isSending, setIsSending] = useState(false);
+  
+  // Convert realtime messages to display format
+  const messages: Message[] = realtimeMessages.map(msg => {
+    const timestamp = new Date(msg.created_at).toLocaleTimeString('en-US', { 
+      hour: 'numeric', 
+      minute: '2-digit',
+      hour12: true 
+    });
+    
+    return {
+      id: msg.id,
+      userId: msg.user_id,
+      userName: msg.user?.name || 'Unknown',
+      userAvatar: msg.user?.avatar_url || 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop',
+      text: msg.content,
+      timestamp,
+      isOwn: msg.user_id === currentUserId,
+    };
+  });
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -50,27 +62,20 @@ export function MessagesPanel({ onClose, currentUserId, currentUserName, current
     scrollToBottom();
   }, [messages]);
 
-  const handleSendMessage = () => {
-    if (inputText.trim()) {
-      const now = new Date();
-      const hours = now.getHours();
-      const minutes = now.getMinutes();
-      const ampm = hours >= 12 ? 'PM' : 'AM';
-      const displayHours = hours % 12 || 12;
-      const timestamp = `${displayHours}:${minutes.toString().padStart(2, '0')}${ampm}`;
-
-      const newMessage: Message = {
-        id: Date.now().toString(),
-        userId: currentUserId,
-        userName: currentUserName,
-        userAvatar: currentUserAvatar,
-        text: inputText,
-        timestamp,
-        isOwn: true,
-      };
-
-      setMessages(prev => [...prev, newMessage]);
+  const handleSendMessage = async () => {
+    if (!inputText.trim()) return;
+    
+    try {
+      setIsSending(true);
+      if (onSendMessage) {
+        await onSendMessage(inputText);
+      }
       setInputText('');
+    } catch (err) {
+      console.error('Failed to send message:', err);
+      alert('Failed to send message');
+    } finally {
+      setIsSending(false);
     }
   };
 
@@ -102,7 +107,7 @@ export function MessagesPanel({ onClose, currentUserId, currentUserName, current
           {messages.map((message) => (
             <div
               key={message.id}
-              className={`flex gap-2 items-end ${message.isOwn ? 'flex-row' : 'flex-row-reverse'}`}
+              className={`flex gap-2 items-end ${message.isOwn ? 'flex-row-reverse' : 'flex-row'}`}
             >
               {/* Avatar */}
               <div className="shrink-0 w-[38px] h-[38px] rounded-full overflow-hidden">
@@ -114,7 +119,7 @@ export function MessagesPanel({ onClose, currentUserId, currentUserName, current
               </div>
 
               {/* Message Content */}
-              <div className={`flex flex-col gap-[3px] w-[344px] ${message.isOwn ? 'items-start' : 'items-end'}`}>
+              <div className={`flex flex-col gap-[3px] w-[344px] ${message.isOwn ? 'items-end' : 'items-start'}`}>
                 <p className="font-['Poppins'] text-[12px] text-white/60 leading-normal">
                   <span className="text-white">{message.userName}</span>
                   <span> | {message.timestamp}</span>
@@ -148,7 +153,7 @@ export function MessagesPanel({ onClose, currentUserId, currentUserName, current
         />
         <button
           onClick={handleSendMessage}
-          disabled={!inputText.trim()}
+          disabled={!inputText.trim() || isSending}
           className="ml-4 flex items-center justify-center hover:opacity-80 transition-opacity disabled:opacity-40"
         >
           <Send className="w-[27px] h-[27px] text-white" strokeWidth={1.5} />
