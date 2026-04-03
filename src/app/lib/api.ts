@@ -7,7 +7,7 @@
 import { projectId, publicAnonKey } from '../../../utils/supabase/info';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
-export const BASE_URL = `https://${projectId}.supabase.co/functions/v1/server/make-server-a0923c49`;
+export const BASE_URL = `https://${projectId}.supabase.co/functions/v1/server`;
 
 // ─── Supabase Auth client (true singleton) ──────────────────────────────────────
 //
@@ -267,6 +267,8 @@ async function apiFetch<T = any>(
     headers: {
       'Content-Type': 'application/json',
       ...(authHeader ? { Authorization: authHeader } : {}),
+      // Send API key as fallback for Supabase Edge Functions auth
+      'apikey': publicAnonKey,
       ...(options.headers ?? {}),
     },
   });

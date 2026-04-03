@@ -10,7 +10,6 @@ import { WorldChatView as SharedWorldChatView } from './dashboard/WorldChatView'
 import { ImageWithFallback } from './figma/ImageWithFallback';
 import { Building2, AlignLeft, Lock, Globe, Hash, Link2 } from 'lucide-react';
 import { toast } from 'sonner';
-import imgChatAvatar from 'figma:asset/798eac6e288222603807db12d070c52d1a145785.png';
 import imgUserAvatar from 'figma:asset/1d3b37310d86db33d00fb05038f712cfa0e01556.png';
 import imgSayHi from 'figma:asset/5e91c4f0fbdda278a8c62c9c5428eca49ba69e08.png';
 import svgMic from '../../imports/svg-xoj20dj40s';
@@ -20,8 +19,6 @@ import imgResAuthor from 'figma:asset/d0b5e8618139abd2e6c665600d3134442c6ea4a3.p
 import imgResAttach from 'figma:asset/605a593a8aec5bcd93a6caef17da90dbf55364dc.png';
 import svgWellRes from '../../imports/svg-spu5c0og85';
 import svgWellResFill from '../../imports/svg-ux77gu3q65';
-import imgWcAvatar from 'figma:asset/798eac6e288222603807db12d070c52d1a145785.png';
-import imgWcSendMask from 'figma:asset/e1dadbc98b774e2ab4d6bd1189e0b24dd17951cb.png';
 
 interface MentorDashboardProps {
   onLogout: () => void;
@@ -90,14 +87,6 @@ function StudyRoomIcon() {
   return (
     <svg fill="none" viewBox="0 0 20 20" className="w-5 h-5 shrink-0">
       <path d={svgPaths.p12a85400} fill="black" fillOpacity="0.6" />
-    </svg>
-  );
-}
-
-function WorldChatIcon() {
-  return (
-    <svg fill="none" viewBox="0 0 24 24" className="w-5 h-5 shrink-0" stroke="black" strokeOpacity="0.6" strokeWidth="2" strokeLinecap="round">
-      <path d={svgPaths.p39188800} />
     </svg>
   );
 }
@@ -802,7 +791,7 @@ interface CreateSessionDetailsModalProps {
   onPost: (fee: string, paymentMode: string, hours: number) => void;
 }
 
-function CreateSessionDetailsModal({ title = 'Create Session', slots, initialFee = '', initialPaymentMode = null, initialHours = null, onBack, onClose, onPost }: CreateSessionDetailsModalProps) {
+function CreateSessionDetailsModal({ title = 'Create Session', initialFee = '', initialPaymentMode = null, initialHours = null, onBack, onClose, onPost }: CreateSessionDetailsModalProps) {
   const [fee, setFee] = useState(initialFee);
   const [paymentMode, setPaymentMode] = useState<'upi' | 'bank' | null>(initialPaymentMode ?? null);
   const [sessionHours, setSessionHours] = useState<number | null>(initialHours ?? null);
@@ -960,24 +949,6 @@ function SuccessToast({ onClose }: { onClose: () => void }) {
     </div>
   );
 }
-
-// ────────────────────────────────────────────────────────────────────────────────
-// Create Session View
-// ────────────────────────────────────────────────────────────────────────────────
-
-const DEFAULT_SESSIONS: SessionPost[] = [
-  {
-    id: '1',
-    mentorName: 'Ravi Kumar',
-    rate: '₹500/hr',
-    timeSlots: [
-      { id: 'a', datetime: '18-10-25 | 7:00 PM' },
-      { id: 'b', datetime: '22-10-25 | 6:00 PM' },
-      { id: 'c', datetime: '25-10-25 | 8:00 PM' },
-    ],
-    hours: [1, 2, 3],
-  },
-];
 
 // Parse a stored "dd-mm-yy | H:MM AM/PM" string into a SelectedSlot
 function parseExistingSlot(slot: TimeSlot): SelectedSlot {
@@ -1686,6 +1657,7 @@ function CreateStudyRoomView() {
   const [roomName, setRoomName] = useState('');
   const [subject, setSubject] = useState('');
   const [roomType, setRoomType] = useState<'private' | 'public'>('private');
+  const [maxParticipants, setMaxParticipants] = useState(8);
   const [roomId] = useState(() => Math.floor(1000 + Math.random() * 9000).toString());
   const [copied, setCopied] = useState(false);
 
@@ -1707,6 +1679,7 @@ function CreateStudyRoomView() {
     setRoomName('');
     setSubject('');
     setRoomType('private');
+    setMaxParticipants(8);
   };
 
   /* ── Shared page header ── */
@@ -1855,6 +1828,25 @@ function CreateStudyRoomView() {
             </div>
           </div>
 
+          {/* Max Participants */}
+          <div className="flex flex-col gap-2.5">
+            <p className="font-['Poppins'] text-[16px] text-black">Max Participants</p>
+            <div className="flex gap-2.5 items-center">
+              <input
+                type="range"
+                min="2"
+                max="50"
+                value={maxParticipants}
+                onChange={(e) => setMaxParticipants(parseInt(e.target.value))}
+                className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-[#003566]"
+              />
+              <div className="bg-[#003566] text-white rnded-[8px] px-3 py-1.5 min-w-[50px] text-center font-['Poppins'] text-[14px] font-medium">
+                {maxParticipants}
+              </div>
+            </div>
+            <p className="font-['Poppins'] text-[12px] text-[rgba(0,0,0,0.6)]">2–50 participants (recommended: 4–8)</p>
+          </div>
+
           {/* Room Type */}
           <div className="flex flex-col gap-2.5">
             <p className="font-['Poppins'] text-[16px] text-black">Select Room Type</p>
@@ -1921,26 +1913,6 @@ function CreateStudyRoomView() {
 }
 
 // ────────────────────────────────────────────────────────────────────────────────
-// World Chat View
-// ────────────────────────────────────────────────────────────────────────────────
-
-interface ChatMessage {
-  id: string;
-  sender: 'other' | 'me';
-  senderName: string;
-  text: string;
-  time: string;
-}
-
-const REPORT_OPTIONS = [
-  'Inappropriate or offensive messages',
-  'Spamming or sending repetitive messages',
-  'Harassing or targeting other users',
-  'Other',
-];
-
-
-// ────────────────────────────────────────────────────────────────────────────────
 // Emotional Wellness View
 // ────────────────────────────────────────────────────────────────────────────────
 
@@ -1961,22 +1933,6 @@ const AI_RESPONSES = [
   "Thank you for sharing. Your feelings are valid. Let me help you work through this.",
   "That sounds really meaningful. Remember, every step forward counts, no matter how small.",
   "I'm here with you. Take a deep breath — you're doing great by reaching out.",
-];
-
-const WELLNESS_ARTICLES = [
-  { title: '5 Breathing Techniques to Reduce Stress', tag: 'Article', time: '5 min read', tagColor: '#00c6ff' },
-  { title: 'Understanding Emotional Triggers', tag: 'Video', time: '8 min watch', tagColor: '#0072ff' },
-  { title: 'Mindfulness for Students', tag: 'Article', time: '4 min read', tagColor: '#00c6ff' },
-  { title: 'How I Overcame Exam Anxiety', tag: 'Story', time: '6 min read', tagColor: '#56ab2f' },
-  { title: 'Sleep Hygiene and Academic Performance', tag: 'Article', time: '7 min read', tagColor: '#f77f00' },
-  { title: 'Journaling for Mental Clarity', tag: 'Video', time: '10 min watch', tagColor: '#b91d73' },
-];
-
-const QUOTES = [
-  { quote: "Believe you can and you're halfway there.", author: 'Theodore Roosevelt' },
-  { quote: "It always seems impossible until it's done.", author: 'Nelson Mandela' },
-  { quote: 'The secret of getting ahead is getting started.', author: 'Mark Twain' },
-  { quote: 'You are braver than you believe, stronger than you seem.', author: 'A.A. Milne' },
 ];
 
 function EmotionalWellnessView() {
@@ -2446,7 +2402,7 @@ function EmotionalWellnessView() {
                   >
                     <div aria-hidden="true" className="absolute border border-[#f77f00] border-solid inset-0 pointer-events-none rounded-[10px] shadow-[0px_4px_29.4px_0px_rgba(0,0,0,0.1)]" />
                     <svg fill="none" viewBox="0 0 20 20" className="relative shrink-0 size-[20px]">
-                      <path d={svgWellResFill.p350cac80} stroke="#F77F00" strokeLinecap="square" strokeWidth="2" />
+                      <path d={svgWellResFill.pa4ae8c0} stroke="#F77F00" strokeLinecap="square" strokeWidth="2" />
                     </svg>
                     <p className="font-['Poppins'] font-medium leading-normal text-[#f77f00] text-[12px] relative">Attach Image, Video</p>
                   </button>
@@ -2682,7 +2638,7 @@ function EmotionalWellnessView() {
                     >
                       <div aria-hidden="true" className="absolute border border-[#f77f00] border-solid inset-0 pointer-events-none rounded-[10px] shadow-[0px_4px_29.4px_0px_rgba(0,0,0,0.1)]" />
                       <svg fill="none" viewBox="0 0 20 20" className="relative shrink-0 size-[20px]">
-                        <path d={svgWellResFill.p350cac80} stroke="#F77F00" strokeLinecap="square" strokeWidth="2" />
+                        <path d={svgWellResFill.pa4ae8c0} stroke="#F77F00" strokeLinecap="square" strokeWidth="2" />
                       </svg>
                       <p className="font-['Poppins'] font-medium leading-normal text-[#f77f00] text-[12px] relative">Attach Image, Video</p>
                     </button>
@@ -3222,7 +3178,7 @@ export function MentorDashboard({ onLogout }: MentorDashboardProps) {
         </div>
 
         {/* Page content */}
-        <div className={`flex-1 ${activeNav === 'world-chat' || activeNav === 'wellness' ? 'overflow-hidden flex flex-col p-10' : activeNav === 'profile' ? 'overflow-hidden flex flex-col' : 'overflow-y-auto p-10'}`}>
+        <div className={`flex-1 ${activeNav === 'wellness' ? 'overflow-hidden flex flex-col p-10' : activeNav === 'profile' ? 'overflow-hidden flex flex-col' : 'overflow-y-auto p-10'}`}>
           {renderContent()}
         </div>
       </div>

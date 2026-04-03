@@ -233,7 +233,7 @@ async function resolveStudyRoomId(identifier: string): Promise<string | null> {
   const supabase = adminClient();
 
   const { data: byId, error: byIdError } = await supabase
-    .from("study_rooms")
+    .from("webrtc_rooms")
     .select("id")
     .eq("id", normalized)
     .maybeSingle();
@@ -243,7 +243,7 @@ async function resolveStudyRoomId(identifier: string): Promise<string | null> {
   }
 
   const { data: byCode, error: byCodeError } = await supabase
-    .from("study_rooms")
+    .from("webrtc_rooms")
     .select("id")
     .eq("code", normalized.toUpperCase())
     .maybeSingle();

@@ -23,6 +23,7 @@ interface RoomData {
   roomType: 'private' | 'public';
   roomId: string;
   roomCode?: string;
+  maxParticipants?: number;
 }
 
 type ViewType = 'selection' | 'create-room' | 'join-room' | 'join-random' | 'in-room';
@@ -45,13 +46,13 @@ export function CollaborativeModeView({
   const handleEnterRoom = async (roomCodeOrLink: string) => {
     try {
       const room = await roomAPI.getRoom(roomCodeOrLink);
-      await roomAPI.joinRoom(roomCodeOrLink);
       setCurrentRoom({
         roomName: room.name,
         subject: room.subject || 'General',
         roomType: 'private',
         roomId: room.id,
         roomCode: room.code,
+        maxParticipants: room.max_participants,
       });
       setView('in-room');
     } catch (error) {
@@ -66,7 +67,8 @@ export function CollaborativeModeView({
       roomName,
       subject,
       roomType: 'public',
-      roomId
+      roomId,
+      maxParticipants: 20,
     });
     setView('in-room');
   };
@@ -81,6 +83,8 @@ export function CollaborativeModeView({
       <CollaborativeModeRoom
         roomName={currentRoom.roomName}
         roomId={currentRoom.roomId}
+        roomCode={currentRoom.roomCode}
+        maxParticipants={currentRoom.maxParticipants}
         subject={currentRoom.subject}
         onLeaveRoom={handleLeaveRoom}
       />

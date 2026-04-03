@@ -1,345 +1,674 @@
 /**
- * React hook for WebRTC P2P connections with Supabase Realtime signaling
+ * useWebRTC - React hook for WebRTC peer connections
+ * 
+ * Manages:
+ * - Peer connections lifecycle
+ * - Media streams
+ * - Signaling via backend
+ * - Error handling and recovery
+ * - Connection state
  */
 
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { getSupabaseClient, getCurrentUser } from '@/app/lib/api';
-import { WebRTCManager } from './WebRTCManager';
+import { BASE_URL, getSupabaseClient } from '../../app/lib/api';
+import { publicAnonKey } from '../../../utils/supabase/info';
+import { roomAPI } from '../api/roomAPI';
+import WebRTCManager, { WebRTCDiagnosticsReport } from './WebRTCManager';
 
-interface RemoteStream {
-  userId: string;
-  stream: MediaStream;
-  userName: string;
-}
-
-export interface UseWebRTCConfig {
+interface UseWebRTCOptions {
   roomId: string;
-  userId?: string;
-  userName?: string;
-  enabled?: boolean;
+  userId: string;
+  enableVideo?: boolean;
+  enableAudio?: boolean;
+  onError?: (error: Error) => void;
+  autoStart?: boolean;
 }
 
-// Generate unique session ID for each WebRTC instance
-const generateSessionId = () => `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+interface PeerState {
+  peerId: string;
+  connectionState: 'new' | 'connecting' | 'connected' | 'disconnected' | 'failed' | 'closed';
+  stream?: MediaStream;
+}
 
-export function useWebRTC({ roomId, userId: providedUserId, userName: providedUserName, enabled = true }: UseWebRTCConfig) {
-  const [localStream, setLocalStream] = useState<MediaStream | null>(null);
-  const [remoteStreams, setRemoteStreams] = useState<RemoteStream[]>([]);
-  const [isConnected, setIsConnected] = useState(false);
-  const [isAudioOn, setIsAudioOn] = useState(true);
-  const [isVideoOn, setIsVideoOn] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [participants, setParticipants] = useState<Map<string, string>>(new Map());
+type SignalType = 'offer' | 'answer' | 'ice-candidate' | 'renegotiate' | 'reconnect';
 
+function normalizeSignalPayload(payload: unknown) {
+  if (typeof payload !== 'string') {
+    return payload;
+  }
+
+  try {
+    return JSON.parse(payload);
+  } catch {
+    return payload;
+  }
+}
+
+function shouldCreateOffer(localUserId: string, remoteUserId: string) {
+  return localUserId.trim().toLowerCase() < remoteUserId.trim().toLowerCase();
+}
+
+/**
+ * Get valid access token from Supabase session
+ */
+async function getValidAccessToken(): Promise<string | null> {
+  try {
+    const supabase = getSupabaseClient();
+    const { data: sessionData } = await supabase.auth.getSession();
+    let session = sessionData?.session;
+
+    if (!session) {
+      console.warn('[useWebRTC] No active session');
+      return null;
+    }
+
+    // Check if token is near expiry (less than 30 seconds left)
+    const expiresAtMs = (session?.expires_at ?? 0) * 1000;
+    if (expiresAtMs <= Date.now() + 30_000) {
+      console.log('[useWebRTC] Token near expiry, refreshing...');
+      const { data: refreshed, error } = await supabase.auth.refreshSession();
+      if (error || !refreshed.session) {
+        console.error('[useWebRTC] Token refresh failed:', error?.message);
+        return null;
+      }
+      session = refreshed.session;
+    }
+
+    if (!session.access_token) {
+      console.error('[useWebRTC] No access token in session');
+      return null;
+    }
+
+    console.log('[useWebRTC] Token obtained, user:', session.user?.id);
+    return session.access_token;
+  } catch (err) {
+    console.error('[useWebRTC] Error getting token:', err);
+    return null;
+  }
+}
+
+export function useWebRTC({
+  roomId,
+  userId,
+  enableVideo = true,
+  enableAudio = true,
+  onError,
+  // autoStart = false, // Reserved for future use
+}: UseWebRTCOptions) {
   const managerRef = useRef<WebRTCManager | null>(null);
-  const channelRef = useRef<any>(null);
-  const participantsRef = useRef<Map<string, string>>(new Map());
+  const initiatedPeersRef = useRef<Set<string>>(new Set());
+  const initiatedPeerTimestampsRef = useRef<Map<string, number>>(new Map());
+  const knownPeersRef = useRef<Set<string>>(new Set());
+  const peerConnectionStateRef = useRef<Map<string, PeerState['connectionState']>>(new Map());
+  const processedSignalIdsRef = useRef<Set<string>>(new Set());
 
-  const currentUser = getCurrentUser();
-  // Use provided userId or fall back to current user's ID
-  const userId = providedUserId || currentUser?.id || `user-${Math.random().toString(36).substr(2, 9)}`;
-  const userName = providedUserName || currentUser?.name || 'Anonymous';
+  // State
+  const [initialized, setInitialized] = useState(false);
+  const [localStream, setLocalStream] = useState<MediaStream | null>(null);
+  const [peers, setPeers] = useState<Map<string, PeerState>>(new Map());
+  const [error, setError] = useState<Error | null>(null);
+  const [metrics, setMetrics] = useState<any>(null);
+  const [diagnostics, setDiagnostics] = useState<WebRTCDiagnosticsReport | null>(null);
+  const [isConnecting, setIsConnecting] = useState(false);
+  const [isScreenSharing, setIsScreenSharing] = useState(false);
 
-  // Initialize WebRTC manager and Supabase channel
+  const sendSignal = useCallback(
+    async (signal: {
+      toUserId: string;
+      signalType: SignalType;
+      payload: unknown;
+    }) => {
+      const token = await getValidAccessToken();
+      if (!token) {
+        throw new Error('Authentication required for WebRTC signaling');
+      }
+
+      const response = await fetch(`${BASE_URL}/webrtc/signal`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+          apikey: publicAnonKey,
+        },
+        body: JSON.stringify({
+          roomId,
+          fromUserId: userId,
+          toUserId: signal.toUserId,
+          signalType: signal.signalType,
+          payload: signal.payload,
+        }),
+      });
+
+      if (!response.ok) {
+        const details = await response.text().catch(() => response.statusText);
+        throw new Error(`Signal ${signal.signalType} failed (${response.status}): ${details}`);
+      }
+    },
+    [roomId, userId]
+  );
+
+  const createAndSendOffer = useCallback(
+    async (peerId: string) => {
+      if (!managerRef.current || !initialized) {
+        throw new Error('Manager not initialized');
+      }
+
+      initiatedPeersRef.current.add(peerId);
+      initiatedPeerTimestampsRef.current.set(peerId, Date.now());
+      setPeers((prev) => {
+        const updated = new Map(prev);
+        updated.set(peerId, { peerId, connectionState: 'connecting' });
+        return updated;
+      });
+
+      const offer = await managerRef.current.createOffer(peerId);
+      await sendSignal({
+        toUserId: peerId,
+        signalType: 'offer',
+        payload: offer,
+      });
+    },
+    [initialized, sendSignal]
+  );
+
+  // Initialize WebRTC manager
   useEffect(() => {
-    if (!enabled) return;
+    if (!roomId || !userId) {
+      setInitialized(false);
+      setLocalStream(null);
+      setPeers(new Map());
+      setIsScreenSharing(false);
+      initiatedPeersRef.current.clear();
+      initiatedPeerTimestampsRef.current.clear();
+      knownPeersRef.current.clear();
+      peerConnectionStateRef.current.clear();
+      processedSignalIdsRef.current.clear();
+      return;
+    }
 
-    const initWebRTC = async () => {
+    let cancelled = false;
+
+    const initManager = async () => {
       try {
-        const supabase = getSupabaseClient();
+        setInitialized(false);
+        setError(null);
+        setPeers(new Map());
 
-        // Create Supabase Realtime channel for signaling
-        const channel = supabase.channel(`webrtc-${roomId}`, {
-          config: {
-            broadcast: { self: false },
-            presence: { key: userId },
-          },
+        const manager = new WebRTCManager({
+          enableVideo,
+          enableAudio,
         });
 
-        channelRef.current = channel;
-
-        // Track participants and connect to peers
-        channel.on('presence', { event: 'sync' }, async () => {
-          console.log('📡 [Presence Sync] Triggered, manager state:', !!managerRef.current);
-          try {
-            const state = channel.presenceState();
-            const manager = managerRef.current;
-            
-            console.log('📡 [Presence Sync] Raw state:', state);
-            console.log('📡 [Presence Sync] State entries:', Object.keys(state).length);
-            console.log('📡 [Presence Sync] State keys:', Object.keys(state));
-            
-            let totalUsers = 0;
-            Object.entries(state).forEach(([key, users]: [string, any]) => {
-              console.log(`📡 [Presence Sync] Processing key "${key}"`, Array.isArray(users) ? `${users.length} users` : 'not array');
-              if (Array.isArray(users)) {
-                console.log(`📡 [Presence Sync] Key "${key}" has ${users.length} users`);
-                users.forEach((user: any, idx: number) => {
-                  totalUsers++;
-                  console.log(`📡 [Presence Sync] [${idx}] User: id=${user.user_id}, name=${user.user_name}, Me=${userId}, isSelf=${user.user_id === userId}`);
-                  participantsRef.current.set(user.user_id, user.user_name);
-                  // Connect to peer if manager is initialized and not self
-                  if (manager && user.user_id !== userId) {
-                    console.log(`🔌 [Presence Sync] CONNECTING to peer:`, user.user_id, '(' + user.user_name + ')');
-                    manager.connectToPeer(user.user_id, user.user_name).catch(console.error);
-                  }
-                });
-              }
-            });
-            console.log('📡 [Presence Sync] Total users found:', totalUsers);
-            setParticipants(new Map(participantsRef.current));
-          } catch (err) {
-            console.error('❌ [Presence Sync] Error:', err);
-          }
-        });
-
-        channel.on('presence', { event: 'join' }, async ({ newPresences }: any) => {
-          console.log('📡 [Presence Join] Triggered, new presences count:', newPresences?.length || 0);
-          const manager = managerRef.current;
-          
-          if (!Array.isArray(newPresences)) {
-            console.warn('📡 [Presence Join] newPresences is not an array:', typeof newPresences);
-            return;
-          }
-          
-          console.log('📡 [Presence Join] Processing', newPresences.length, 'new presences');
-          newPresences.forEach((presence: any, idx: number) => {
-            console.log(`📡 [Presence Join] [${idx}] User: id=${presence.user_id}, name=${presence.user_name}, Me=${userId}, isSelf=${presence.user_id === userId}`);
-            participantsRef.current.set(presence.user_id, presence.user_name);
-            // Connect to new peer
-            if (manager && presence.user_id !== userId) {
-              console.log(`🔌 [Presence Join] CONNECTING to new peer:`, presence.user_id, '(' + presence.user_name + ')');
-              manager.connectToPeer(presence.user_id, presence.user_name).catch(console.error);
-            }
+        // Setup event handlers
+        manager.on('stream-received', (peerId: string, stream: MediaStream) => {
+          console.log('[useWebRTC] Stream received from', peerId);
+          peerConnectionStateRef.current.set(peerId, 'connected');
+          setPeers((prev) => {
+            const updated = new Map(prev);
+            const peerState = updated.get(peerId) || { peerId, connectionState: 'connected' };
+            peerState.stream = stream;
+            updated.set(peerId, peerState);
+            return updated;
           });
-          setParticipants(new Map(participantsRef.current));
         });
 
-        channel.on('presence', { event: 'leave' }, ({ leftPresences }: any) => {
-          leftPresences.forEach((presence: any) => {
-            participantsRef.current.delete(presence.user_id);
+        manager.on('peer-connected', (peerId: string) => {
+          console.log('[useWebRTC] Peer connected:', peerId);
+          peerConnectionStateRef.current.set(peerId, 'connected');
+          setPeers((prev) => {
+            const updated = new Map(prev);
+            const peerState = updated.get(peerId) || { peerId, connectionState: 'connected' };
+            peerState.connectionState = 'connected';
+            updated.set(peerId, peerState);
+            return updated;
           });
-          setParticipants(new Map(participantsRef.current));
         });
 
-        // Subscribe to channel
-        const subscribePromise = new Promise<void>((resolve, reject) => {
-          channel.subscribe(async (status) => {
-            console.log('📡 Channel subscription status:', status);
-            if (status === 'SUBSCRIBED') {
-              // CRITICAL: Track presence after subscription
-              console.log('📡 [TRACK] Tracking presence with userId:', userId);
-              await channel.track({
-                user_id: userId,
-                user_name: userName,
-                joined_at: new Date().toISOString(),
-              }).catch((err: any) => {
-                console.error('❌ [TRACK] Failed to track presence:', err);
+        manager.on('peer-disconnected', (peerId: string) => {
+          console.log('[useWebRTC] Peer disconnected:', peerId);
+          initiatedPeersRef.current.delete(peerId);
+          initiatedPeerTimestampsRef.current.delete(peerId);
+          knownPeersRef.current.delete(peerId);
+          peerConnectionStateRef.current.delete(peerId);
+          setPeers((prev) => {
+            const updated = new Map(prev);
+            updated.delete(peerId);
+            return updated;
+          });
+        });
+
+        manager.on('connection-state-change', (peerId: string, state: any) => {
+          peerConnectionStateRef.current.set(peerId, state);
+          setPeers((prev) => {
+            const updated = new Map(prev);
+            const peerState = updated.get(peerId) || { peerId, connectionState: state };
+            peerState.connectionState = state;
+            updated.set(peerId, peerState);
+            return updated;
+          });
+        });
+
+        manager.on('ice-candidate', (peerId: string, candidate: RTCIceCandidateInit) => {
+          (async () => {
+            try {
+              await sendSignal({
+                toUserId: peerId,
+                signalType: 'ice-candidate',
+                payload: candidate,
               });
-              console.log('✅ [TRACK] Presence tracked successfully');
-              resolve();
-            } else if (status === 'CLOSED' || status === 'CHANNEL_ERROR') {
-              reject(new Error(`Channel subscription failed: ${status}`));
+            } catch (err) {
+              console.warn('[useWebRTC] Failed to send ICE candidate:', err);
             }
-          });
+          })();
         });
 
-        await Promise.race([
-          subscribePromise,
-          new Promise((_, reject) =>
-            setTimeout(() => reject(new Error('Channel subscription timeout')), 10000)
-          ),
-        ]);
+        manager.on('local-stream-updated', (stream: MediaStream) => {
+          setLocalStream(stream);
+        });
 
-        // Create WebRTC manager
-        const manager = new WebRTCManager(
-          {
-            roomId,
-            userId,
-            userName,
-            signalingChannel: channel,
-          },
-          {
-            onLocalStreamReady: (stream) => {
-              setLocalStream(stream);
-              setIsConnected(true);
-            },
-            onRemoteStream: (peerId, stream) => {
-              console.log('🔴 [onRemoteStream] Received stream from peer:', peerId, 'stream:', !!stream, 'tracks:', stream?.getTracks().length || 0);
-              if (stream) {
-                stream.getTracks().forEach(track => {
-                  console.log(`🔴 [onRemoteStream] Track - kind: ${track.kind}, enabled: ${track.enabled}, state: ${track.readyState}`);
-                });
-              }
-              setRemoteStreams((prev) => {
-                const existing = prev.find(s => s.userId === peerId);
-                if (existing) {
-                  console.log('🔴 [onRemoteStream] Stream already exists for peer:', peerId, 'REPLACING with new stream');
-                  return prev.map(s => s.userId === peerId ? { userId: peerId, stream, userName: s.userName } : s);
-                }
-                const peerName = participantsRef.current.get(peerId) || 'Unknown';
-                console.log('🔴 [onRemoteStream] Adding new remote stream [userId:', peerId, 'userName:', peerName, ']');
-                console.log('🔴 [onRemoteStream] New remoteStreams count will be:', prev.length + 1);
-                return [...prev, { userId: peerId, stream, userName: peerName }];
-              });
-            },
-            onRemoteStreamRemoved: (peerId) => {
-              setRemoteStreams((prev) => prev.filter(s => s.userId !== peerId));
-            },
-            onError: (error) => {
-              console.error('WebRTC error:', error);
-              setError(error.message);
-            },
-          }
-        );
+        manager.on('metrics', (metrics: any) => {
+          setMetrics(metrics);
+        });
+
+        manager.on('error', (error: Error, context?: string) => {
+          console.error('[useWebRTC] Error:', context, error);
+          setError(error);
+          onError?.(error);
+        });
+
+        // Initialize local media
+        const stream = await manager.initializeLocalMedia();
+        if (cancelled) {
+          manager.closeAll();
+          return;
+        }
+        setLocalStream(stream);
 
         managerRef.current = manager;
-        console.log('✅ WebRTCManager created with userId:', userId);
-
-        // Initialize local stream
-        console.log('🎥 Initializing local stream...');
-        await manager.initLocalStream();
-
-        // Announce presence to other peers
-        console.log('📣 Announcing presence with userId:', userId);
-        await manager.announcePresence();
-        
-        // Check presence state after announcement
-        setTimeout(() => {
-          const state = channel.presenceState();
-          console.log('📡 [After announce] Presence state:', state);
-          console.log('📡 [After announce] State keys:', Object.keys(state));
-        }, 100);
-
-        // Connect to existing participants (presence sync will be called after)
-        setTimeout(() => {
-          console.log('⏱️ [500ms timeout] Checking for existing participants, manager ready:', !!managerRef.current);
-          const state = channel.presenceState();
-          const presenceEntries = Object.entries(state);
-          console.log('⏱️ [500ms timeout] Presence state:', state);
-          console.log('⏱️ [500ms timeout] Presence state entries:', presenceEntries.length);
-          
-          Object.entries(state).forEach(([key, users]: [string, any]) => {
-            if (Array.isArray(users)) {
-              console.log(`⏱️ [500ms timeout] Key "${key}" has ${users.length} users`);
-              users.forEach((user: any) => {
-                console.log(`⏱️ [500ms timeout] Checking user:`, user.user_id, 'vs me:', userId, 'match:', user.user_id === userId);
-                if (user.user_id !== userId && managerRef.current) {
-                  console.log(`🔌 [500ms timeout] Connecting to:`, user.user_id);
-                  managerRef.current.connectToPeer(user.user_id, user.user_name).catch(console.error);
-                }
-              });
-            }
-          });
-        }, 500);
-
+        setInitialized(true);
         setError(null);
+
+        console.log('[useWebRTC] Initialized successfully');
       } catch (err) {
-        const errorMsg = err instanceof Error ? err.message : 'Failed to initialize WebRTC';
-        console.error('WebRTC initialization error:', errorMsg);
-        setError(errorMsg);
+        if (cancelled) return;
+        const error = err instanceof Error ? err : new Error(String(err));
+        console.error('[useWebRTC] Initialization error:', error);
+        setError(error);
+        onError?.(error);
       }
     };
 
-    initWebRTC();
+    initManager();
 
-    // Cleanup on unmount
     return () => {
-      console.log('🧹 [CLEANUP] Cleaning up WebRTC');
-      const cleanup = async () => {
-        try {
-          // Disconnect from peers first
-          if (managerRef.current) {
-            console.log('🧹 [CLEANUP] Disconnecting from peers');
-            await managerRef.current.disconnect();
-          }
-          
-          // Then untrack presence
-          if (channelRef.current) {
-            console.log('🧹 [CLEANUP] Untracking presence');
-            await channelRef.current.untrack();
-            console.log('🧹 [CLEANUP] Presence untracked successfully');
-          }
-          
-          // Finally unsubscribe
-          if (channelRef.current) {
-            console.log('🧹 [CLEANUP] Unsubscribing from channel');
-            await channelRef.current.unsubscribe();
-            console.log('🧹 [CLEANUP] Channel unsubscribed');
-          }
-        } catch (err: any) {
-          console.error('❌ [CLEANUP] Error during cleanup:', err?.message || err);
-        }
-      };
-      cleanup();
+      cancelled = true;
+      if (managerRef.current) {
+        managerRef.current.closeAll();
+        managerRef.current = null;
+      }
+      setInitialized(false);
+      setLocalStream(null);
+      setPeers(new Map());
+      setIsScreenSharing(false);
+      initiatedPeersRef.current.clear();
+      initiatedPeerTimestampsRef.current.clear();
+      knownPeersRef.current.clear();
+      peerConnectionStateRef.current.clear();
+      processedSignalIdsRef.current.clear();
     };
-  }, [enabled, roomId, userId, userName]);
+  }, [enableVideo, enableAudio, onError, roomId, userId, sendSignal]);
 
-  // Update audio/video states when manager changes
   useEffect(() => {
+    if (!initialized || !managerRef.current || !userId || !roomId) return;
+
+    const rosterInterval = 3000;
+    let timer: NodeJS.Timeout | null = null;
+    let active = true;
+
+    const syncRoomRoster = async () => {
+      if (!active || !managerRef.current) return;
+
+      try {
+        const room = await roomAPI.getRoom(roomId);
+        const remotePeerIds = (room.participants ?? [])
+          .filter((participant) => participant.user_id && participant.user_id !== userId)
+          .filter((participant) => participant.disconnected_at == null)
+          .map((participant) => participant.user_id);
+
+        knownPeersRef.current = new Set(remotePeerIds);
+
+        setPeers((prev) => {
+          const updated = new Map(prev);
+
+          remotePeerIds.forEach((peerId) => {
+            if (!updated.has(peerId)) {
+              updated.set(peerId, { peerId, connectionState: 'new' });
+            }
+          });
+
+          Array.from(updated.keys()).forEach((peerId) => {
+            if (!remotePeerIds.includes(peerId) && updated.get(peerId)?.connectionState !== 'connected') {
+              updated.delete(peerId);
+              initiatedPeersRef.current.delete(peerId);
+            }
+          });
+
+          return updated;
+        });
+
+        for (const peerId of remotePeerIds) {
+          if (!shouldCreateOffer(userId, peerId)) continue;
+
+          const currentState = peerConnectionStateRef.current.get(peerId);
+          if (currentState === 'connected') continue;
+
+          const initiatedAt = initiatedPeerTimestampsRef.current.get(peerId) ?? 0;
+          const recentlyInitiated =
+            initiatedPeersRef.current.has(peerId) &&
+            Date.now() - initiatedAt < 12_000;
+          if (currentState === 'connecting' && recentlyInitiated) continue;
+
+          try {
+            initiatedPeersRef.current.delete(peerId);
+            console.log('[useWebRTC] Creating peer offer for room member:', peerId);
+            await createAndSendOffer(peerId);
+          } catch (err) {
+            initiatedPeersRef.current.delete(peerId);
+            initiatedPeerTimestampsRef.current.delete(peerId);
+            console.warn('[useWebRTC] Failed to create peer offer:', err);
+          }
+        }
+      } catch (err) {
+        console.warn('[useWebRTC] Room roster sync error:', err);
+      }
+
+      if (active) {
+        timer = setTimeout(syncRoomRoster, rosterInterval);
+      }
+    };
+
+    timer = setTimeout(syncRoomRoster, 300);
+
+    return () => {
+      active = false;
+      if (timer) clearTimeout(timer);
+    };
+  }, [createAndSendOffer, initialized, roomId, userId]);
+
+  // Setup signaling - poll backend for signals (with graceful degradation)
+  useEffect(() => {
+    if (!initialized || !managerRef.current || !userId) return;
+
+    const pollInterval = 2000; // Poll every 2 seconds
+    let pollTimer: NodeJS.Timeout | null = null;
+    let isPolling = true;
+    let consecutiveErrors = 0;
+
+    const pollForSignals = async () => {
+      if (!isPolling) return;
+
+      try {
+        const token = await getValidAccessToken();
+        if (!token) {
+          console.log('[useWebRTC] Waiting for valid auth token...');
+          consecutiveErrors++;
+          if (consecutiveErrors <= 3) {
+            pollTimer = setTimeout(pollForSignals, pollInterval);
+          }
+          return;
+        }
+
+        const response = await fetch(`${BASE_URL}/webrtc/signal/${userId}?roomId=${roomId}`, {
+          headers: { 
+            Authorization: `Bearer ${token}`,
+            apikey: publicAnonKey,
+          },
+        });
+
+        if (!response.ok) {
+          if (response.status === 401) {
+            console.error('[useWebRTC] Authorization failed (401):');
+            console.error('  - Token starts with:', token.substring(0, 30) + '...');
+            console.error('  - Your token may be invalid/expired or the backend rejected it');
+            console.error('  - Stopping signaling polling');
+            isPolling = false;
+            return;
+          }
+          if (response.status === 404) {
+            console.log('[useWebRTC] Signal endpoint not found (404), stopping signaling');
+            isPolling = false;
+            return;
+          }
+          console.warn('[useWebRTC] Failed to fetch signals:', response.statusText);
+          consecutiveErrors++;
+          if (consecutiveErrors > 5) {
+            console.log('[useWebRTC] Too many signal errors, stopping polling');
+            isPolling = false;
+            return;
+          }
+          pollTimer = setTimeout(pollForSignals, pollInterval);
+          return;
+        }
+
+        consecutiveErrors = 0; // Reset error counter on success
+        const signals = await response.json();
+
+        for (const signal of signals) {
+          const signalId = typeof signal?.id === 'string' ? signal.id : '';
+          if (signalId && processedSignalIdsRef.current.has(signalId)) {
+            continue;
+          }
+          if (signalId) {
+            processedSignalIdsRef.current.add(signalId);
+            if (processedSignalIdsRef.current.size > 2000) {
+              const recent = Array.from(processedSignalIdsRef.current).slice(-1000);
+              processedSignalIdsRef.current = new Set(recent);
+            }
+          }
+
+          const { from_user_id, signal_type, payload } = signal;
+          const signalPayload = normalizeSignalPayload(payload);
+
+          if (from_user_id === userId) continue; // Ignore own messages
+
+          try {
+            switch (signal_type) {
+              case 'offer':
+                console.log('[useWebRTC] Received offer from', from_user_id);
+                knownPeersRef.current.add(from_user_id);
+                const answer = await managerRef.current!.handleOffer(from_user_id, signalPayload);
+                await sendSignal({
+                  toUserId: from_user_id,
+                  signalType: 'answer',
+                  payload: answer,
+                });
+                break;
+
+              case 'answer':
+                console.log('[useWebRTC] Received answer from', from_user_id);
+                await managerRef.current!.handleAnswer(from_user_id, signalPayload);
+                break;
+
+              case 'ice-candidate':
+                console.log('[useWebRTC] Received ICE candidate from', from_user_id);
+                await managerRef.current!.addICECandidate(from_user_id, signalPayload);
+                break;
+
+              default:
+                console.warn('[useWebRTC] Unknown signal type:', signal_type);
+            }
+          } catch (err) {
+            console.error('[useWebRTC] Signaling error:', err);
+          }
+        }
+      } catch (err) {
+        console.error('[useWebRTC] Poll error:', err);
+        consecutiveErrors++;
+      }
+
+      if (isPolling) {
+        pollTimer = setTimeout(pollForSignals, pollInterval);
+      }
+    };
+
+    // Start polling
+    pollTimer = setTimeout(pollForSignals, 100); // Start after 100ms
+
+    return () => {
+      isPolling = false;
+      if (pollTimer) clearTimeout(pollTimer);
+    };
+  }, [initialized, roomId, userId, sendSignal]);
+
+  // Connect to a peer
+  const connectToPeer = useCallback(
+    async (peerId: string) => {
+      if (!managerRef.current || !initialized) {
+        console.error('[useWebRTC] Manager not initialized');
+        return;
+      }
+
+      try {
+        setIsConnecting(true);
+        console.log('[useWebRTC] Connecting to peer:', peerId);
+        await createAndSendOffer(peerId);
+
+        setIsConnecting(false);
+      } catch (err) {
+        const error = err instanceof Error ? err : new Error(String(err));
+        console.error('[useWebRTC] Connection error:', error);
+        setError(error);
+        onError?.(error);
+        setIsConnecting(false);
+      }
+    },
+    [createAndSendOffer, initialized, onError]
+  );
+
+  // Disconnect from peer
+  const disconnectFromPeer = useCallback((peerId: string) => {
     if (managerRef.current) {
-      setIsAudioOn(managerRef.current.isAudioOn());
-      setIsVideoOn(managerRef.current.isVideoOn());
+      managerRef.current.closeConnection(peerId);
+      setPeers((prev) => {
+        const updated = new Map(prev);
+        updated.delete(peerId);
+        return updated;
+      });
     }
   }, []);
 
-  const toggleAudio = useCallback(
-    (enabled: boolean) => {
-      if (managerRef.current) {
-        managerRef.current.toggleAudio(enabled);
-        setIsAudioOn(enabled);
+  const setMediaDevices = useCallback(
+    async (audioDeviceId?: string, videoDeviceId?: string) => {
+      if (!managerRef.current || !initialized) {
+        throw new Error('WebRTC is not initialized yet');
       }
+
+      const stream = await managerRef.current.switchMediaDevices(
+        audioDeviceId,
+        videoDeviceId
+      );
+      setLocalStream(stream);
+    },
+    [initialized]
+  );
+
+  const startScreenShare = useCallback(async () => {
+    if (!managerRef.current || !initialized) {
+      throw new Error('WebRTC is not initialized yet');
+    }
+
+    const stream = await managerRef.current.startScreenShare();
+    setLocalStream(stream);
+    setIsScreenSharing(true);
+  }, [initialized]);
+
+  const stopScreenShare = useCallback(async () => {
+    if (!managerRef.current || !initialized) {
+      throw new Error('WebRTC is not initialized yet');
+    }
+
+    const stream = await managerRef.current.stopScreenShare();
+    setLocalStream(stream);
+    setIsScreenSharing(false);
+  }, [initialized]);
+
+  // Send message via data channel
+  const sendMessage = useCallback(
+    (peerId: string, message: any) => {
+      if (managerRef.current) {
+        return managerRef.current.sendMessage(peerId, message);
+      }
+      return false;
     },
     []
+  );
+
+  // Get diagnostics
+  const getDiagnostics = useCallback(() => {
+    if (managerRef.current) {
+      return managerRef.current.getDiagnosticsReport();
+    }
+    return null;
+  }, []);
+
+  // Update diagnostics periodically
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const diags = getDiagnostics();
+      if (diags) {
+        setDiagnostics(diags);
+      }
+    }, 10000); // Every 10 seconds
+
+    return () => clearInterval(interval);
+  }, [getDiagnostics]);
+
+  // Update local stream volume control (optional)
+  const toggleAudio = useCallback(
+    async (enabled: boolean) => {
+      if (!managerRef.current || !initialized) {
+        throw new Error('WebRTC is not initialized yet');
+      }
+      const stream = await managerRef.current.setAudioEnabled(enabled);
+      setLocalStream(stream);
+    },
+    [initialized]
   );
 
   const toggleVideo = useCallback(
-    (enabled: boolean) => {
-      if (managerRef.current) {
-        managerRef.current.toggleVideo(enabled);
-        setIsVideoOn(enabled);
+    async (enabled: boolean) => {
+      if (!managerRef.current || !initialized) {
+        throw new Error('WebRTC is not initialized yet');
+      }
+      const stream = await managerRef.current.setVideoEnabled(enabled);
+      setLocalStream(stream);
+      if (!enabled) {
+        setIsScreenSharing(false);
+      } else {
+        setIsScreenSharing(managerRef.current.isScreenShareActive());
       }
     },
-    []
+    [initialized]
   );
 
-  const disconnect = useCallback(async () => {
-    if (managerRef.current) {
-      await managerRef.current.disconnect();
-      setLocalStream(null);
-      setRemoteStreams([]);
-      setIsConnected(false);
-    }
-    if (channelRef.current) {
-      await channelRef.current.unsubscribe();
-    }
-  }, []);
-
-  const reinitializeStream = useCallback(async (audioDeviceId?: string, videoDeviceId?: string) => {
-    if (managerRef.current) {
-      try {
-        console.log('🔄 Reinitializing WebRTC stream with devices:', { audioDeviceId, videoDeviceId });
-        await managerRef.current.reinitializeStream(audioDeviceId, videoDeviceId);
-        // Local stream should be updated via onLocalStreamReady callback
-      } catch (error) {
-        console.error('Failed to reinitialize stream:', error);
-        setError(error instanceof Error ? error.message : 'Failed to reinitialize stream');
-      }
-    }
-  }, []);
-
   return {
+    initialized,
     localStream,
-    remoteStreams,
-    isConnected,
-    isAudioOn,
-    isVideoOn,
+    peers: Array.from(peers.values()),
     error,
-    participants: Array.from(participants.entries()).map(([id, name]) => ({ id, name })),
+    metrics,
+    diagnostics,
+    isConnecting,
+    isScreenSharing,
+    connectToPeer,
+    disconnectFromPeer,
+    setMediaDevices,
+    startScreenShare,
+    stopScreenShare,
+    sendMessage,
+    getDiagnostics,
     toggleAudio,
     toggleVideo,
-    disconnect,
-    reinitializeStream,
   };
 }
 

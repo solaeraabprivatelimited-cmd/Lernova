@@ -3,6 +3,7 @@ import { cors } from "npm:hono/cors";
 import { logger } from "npm:hono/logger";
 import * as kv from "./kv_store.tsx";
 import { createClient } from "jsr:@supabase/supabase-js@2.49.8";
+import { registerWebRTCRoutes } from "./webrtc.ts";
 
 const app = new Hono();
 app.use("*", logger(console.log));
@@ -20,6 +21,32 @@ app.use("/*", cors({
 
 const adminClient = () =>
   createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+
+const SUPABASE_ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY") || "";
+
+// Middleware to validate API key or JWT
+function validateAuth(c: any) {
+  const authHeader = c.req.header("Authorization");
+  const apiKey = c.req.header("apikey") || c.req.header("x-api-key");
+  
+  // Accept either Bearer JWT or API key
+  if (!authHeader && !apiKey) {
+    return { valid: false, reason: "Missing authorization" };
+  }
+  
+  // Check if using API key
+  if (apiKey) {
+    // Accept any API key - validation happens at Supabase level
+    return { valid: true, type: "apikey" };
+  }
+  
+  // Check if using Bearer token
+  if (authHeader?.startsWith("Bearer ")) {
+    return { valid: true, type: "jwt" };
+  }
+  
+  return { valid: false, reason: "Invalid auth format" };
+}
 
 const genId = () => crypto.randomUUID();
 const nowIso = () => new Date().toISOString();
@@ -252,34 +279,7 @@ async function pushNotification(userId: string, type: string, category: string, 
   return notif;
 }
 
-async function resolveStudyRoomId(identifier: string): Promise<string | null> {
-  const normalized = identifier.trim();
-  if (!normalized) return null;
 
-  const supabase = adminClient();
-
-  const { data: byId, error: byIdError } = await supabase
-    .from("study_rooms")
-    .select("id")
-    .eq("id", normalized)
-    .maybeSingle();
-
-  if (!byIdError && byId?.id) {
-    return byId.id;
-  }
-
-  const { data: byCode, error: byCodeError } = await supabase
-    .from("study_rooms")
-    .select("id")
-    .eq("code", normalized.toUpperCase())
-    .maybeSingle();
-
-  if (!byCodeError && byCode?.id) {
-    return byCode.id;
-  }
-
-  return null;
-}
 
 // ─────────────────────────────────────────────────────────────
 // Health
@@ -1318,241 +1318,22 @@ app.post("/make-server-a0923c49/seed/demo", async (c) => {
   }
 });
 
-// ─────────────────────────────────────────────────────────────
-// STUDY ROOMS – Realtime collaboration
-// ─────────────────────────────────────────────────────────────
-
-app.post("/make-server-a0923c49/rooms", async (c) => {
-  try {
-    const user = await getAuthUser(c);
-    const { name, mode = "collaborative", subject, description, maxParticipants = 50 } = await c.req.json();
-    
-    if (!name) return err(c, "name is required");
-    if (!["focus", "silent", "collaborative", "live"].includes(mode)) {
-      return err(c, "invalid mode");
-    }
-
-    const supabase = adminClient();
-    const roomCode = `STUDY-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
-    
-    const { data, error } = await supabase
-      .from("study_rooms")
-      .insert({
-        code: roomCode,
-        name,
-        mode,
-        host_id: user.id,
-        subject: subject || null,
-        description: description || null,
-        max_participants: maxParticipants,
-        is_active: true,
-      })
-      .select()
-      .single();
-
-    if (error) throw error;
-    
-    // Auto-add host as participant
-    await supabase.from("room_participants").insert({
-      room_id: data.id,
-      user_id: user.id,
-      permissions: "host",
-    });
-
-    return c.json(data, 201);
-  } catch (e: any) {
-    return err(c, e.message, 401);
-  }
+// Health check endpoint - public
+app.get("/health", async (c: Context) => {
+  return c.json({ status: "ok", timestamp: nowIso() });
 });
 
-app.get("/make-server-a0923c49/rooms/:roomId", async (c) => {
-  try {
-    const { roomId } = c.req.param();
-    const resolvedRoomId = await resolveStudyRoomId(roomId);
-    if (!resolvedRoomId) return err(c, "Room not found", 404);
-    const supabase = adminClient();
-
-    const { data, error } = await supabase
-      .from("study_rooms")
-      .select(`
-        *,
-        host:users(id, name, avatar_url),
-        participants:room_participants(
-          id, user_id, is_pinned, is_muted, is_video_off, permissions,
-          user:users(id, name, avatar_url)
-        )
-      `)
-      .eq("id", resolvedRoomId)
-      .maybeSingle();
-
-    if (error) throw error;
-    if (!data) return err(c, "Room not found", 404);
-
-    return c.json(data);
-  } catch (e: any) {
-    return err(c, e.message, 401);
-  }
+// Public ping endpoint 
+app.post("/public/ping", async (c: Context) => {
+  return c.json({ 
+    status: "pong", 
+    timestamp: nowIso(),
+    message: "Pong"
+  });
 });
 
-app.get("/make-server-a0923c49/rooms", async (c) => {
-  try {
-    const supabase = adminClient();
-
-    const { data, error } = await supabase
-      .from("study_rooms")
-      .select(`
-        *,
-        host:users(id, name, avatar_url),
-        participants:room_participants(id)
-      `)
-      .eq("is_active", true)
-      .order("created_at", { ascending: false });
-
-    if (error) throw error;
-
-    return c.json(data || []);
-  } catch (e: any) {
-    return err(c, e.message, 401);
-  }
-});
-
-app.post("/make-server-a0923c49/rooms/:roomId/join", async (c) => {
-  try {
-    const user = await getAuthUser(c);
-    const { roomId } = c.req.param();
-    const resolvedRoomId = await resolveStudyRoomId(roomId);
-    if (!resolvedRoomId) return err(c, "Room not found", 404);
-    const supabase = adminClient();
-
-    // Check if already in room
-    const { data: existing } = await supabase
-      .from("room_participants")
-      .select("id")
-      .eq("room_id", resolvedRoomId)
-      .eq("user_id", user.id)
-      .is("left_at", null)
-      .maybeSingle();
-
-    if (existing) {
-      return c.json({ message: "Already in room" }, 200);
-    }
-
-    // Add participant
-    const { data, error } = await supabase
-      .from("room_participants")
-      .insert({
-        room_id: resolvedRoomId,
-        user_id: user.id,
-        permissions: "member",
-      })
-      .select()
-      .single();
-
-    if (error) throw error;
-
-    return c.json(data, 201);
-  } catch (e: any) {
-    return err(c, e.message, 401);
-  }
-});
-
-app.post("/make-server-a0923c49/rooms/:roomId/leave", async (c) => {
-  try {
-    const user = await getAuthUser(c);
-    const { roomId } = c.req.param();
-    const resolvedRoomId = await resolveStudyRoomId(roomId);
-    if (!resolvedRoomId) return err(c, "Room not found", 404);
-    const supabase = adminClient();
-
-    const now = new Date().toISOString();
-
-    const { error } = await supabase
-      .from("room_participants")
-      .update({ left_at: now })
-      .eq("room_id", resolvedRoomId)
-      .eq("user_id", user.id);
-
-    if (error) throw error;
-
-    return c.json({ message: "Left room" });
-  } catch (e: any) {
-    return err(c, e.message, 401);
-  }
-});
-
-app.put("/make-server-a0923c49/rooms/:roomId/close", async (c) => {
-  try {
-    const user = await getAuthUser(c);
-    const { roomId } = c.req.param();
-    const resolvedRoomId = await resolveStudyRoomId(roomId);
-    if (!resolvedRoomId) return err(c, "Room not found", 404);
-    const supabase = adminClient();
-
-    // Verify host
-    const { data: room, error: roomErr } = await supabase
-      .from("study_rooms")
-      .select("host_id")
-      .eq("id", resolvedRoomId)
-      .maybeSingle();
-
-    if (roomErr || !room) return err(c, "Room not found", 404);
-    if (room.host_id !== user.id) return err(c, "Only host can close room", 403);
-
-    // Close room
-    const { error } = await supabase
-      .from("study_rooms")
-      .update({ is_active: false })
-      .eq("id", resolvedRoomId);
-
-    if (error) throw error;
-
-    return c.json({ message: "Room closed" });
-  } catch (e: any) {
-    return err(c, e.message, 401);
-  }
-});
-
-app.put("/make-server-a0923c49/participants/:participantId", async (c) => {
-  try {
-    const user = await getAuthUser(c);
-    const { participantId } = c.req.param();
-    const updates = await c.req.json();
-    const supabase = adminClient();
-
-    // Verify permission (host/moderator only for certain updates)
-    const { data: participant, error: pErr } = await supabase
-      .from("room_participants")
-      .select("room_id, user_id")
-      .eq("id", participantId)
-      .maybeSingle();
-
-    if (pErr || !participant) return err(c, "Participant not found", 404);
-
-    const { data: room } = await supabase
-      .from("study_rooms")
-      .select("host_id")
-      .eq("id", participant.room_id)
-      .maybeSingle();
-
-    const isHost = room?.host_id === user.id;
-    const isOwnParticipant = participant.user_id === user.id;
-
-    if (!isHost && !isOwnParticipant) {
-      return err(c, "Permission denied", 403);
-    }
-
-    const { error } = await supabase
-      .from("room_participants")
-      .update(updates)
-      .eq("id", participantId);
-
-    if (error) throw error;
-
-    return c.json({ message: "Participant updated" });
-  } catch (e: any) {
-    return err(c, e.message, 401);
-  }
-});
+// Mount WebRTC API routes
+registerWebRTCRoutes(app, adminClient);
 
 Deno.serve((req) => {
   const url = new URL(req.url);

@@ -8,6 +8,7 @@ import { ForgotPasswordPage } from '@/app/components/ForgotPasswordPage';
 import { LandingPage } from '@/app/components/LandingPage';
 import { ProtectedRoute, AppUser } from '@/app/components/ProtectedRoute';
 import { auth, getCurrentUser, setCurrentUser, profile as profileApi, seed } from '@/app/lib/api';
+import { RoomLinkEntry } from '@/app/components/dashboard/RoomLinkEntry';
 
 function resolveHomeRoute(user: AppUser | null): string {
   if (user?.role === 'mentor') {
@@ -152,6 +153,15 @@ export default function App() {
             <div className="min-h-screen bg-white w-full overflow-x-hidden">
               <MentorDashboard onLogout={handleLogout} />
             </div>
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/room/:roomCode"
+        element={
+          <ProtectedRoute isRestoringSession={isRestoringSession} user={currentUser}>
+            <RoomLinkEntry onExit={() => navigate(resolveHomeRoute(currentUser), { replace: true })} />
           </ProtectedRoute>
         }
       />

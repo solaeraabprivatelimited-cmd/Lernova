@@ -6,7 +6,7 @@ import { JoiningRoomLoader } from "./JoiningRoomLoader";
 
 interface JoinCustomRoomProps {
   onBack: () => void;
-  onEnterRoom: (roomCodeOrLink: string) => void;
+  onEnterRoom: (roomCodeOrLink: string) => Promise<void>;
 }
 
 export function JoinCustomRoom({ onBack, onEnterRoom }: JoinCustomRoomProps) {
@@ -17,10 +17,13 @@ export function JoinCustomRoom({ onBack, onEnterRoom }: JoinCustomRoomProps) {
     if (roomInput.trim()) {
       setIsJoining(true);
       
-      // Show loading for 3 seconds, then join room
-      setTimeout(() => {
-        onEnterRoom(roomInput.trim());
-      }, 3000);
+      setTimeout(async () => {
+        try {
+          await onEnterRoom(roomInput.trim());
+        } finally {
+          setIsJoining(false);
+        }
+      }, 1500);
     }
   };
 
@@ -162,7 +165,7 @@ export function JoinCustomRoom({ onBack, onEnterRoom }: JoinCustomRoomProps) {
           
           <div className="mb-12">
             <h1 className="text-[40px] font-medium text-black mb-1.5">Join Custom Room</h1>
-            <p className="text-[14px] text-black/60">Enter a room code or shared link to join your session.</p>
+            <p className="text-[14px] text-black/60">Paste a room code like STUDY-AB12CD or drop in the share link.</p>
           </div>
 
           {/* Form Card */}
@@ -181,10 +184,11 @@ export function JoinCustomRoom({ onBack, onEnterRoom }: JoinCustomRoomProps) {
                     value={roomInput}
                     onChange={(e) => setRoomInput(e.target.value)}
                     onKeyPress={handleKeyPress}
-                    placeholder="Enter Room Code or Paste Room Link"
+                    placeholder="STUDY-AB12CD"
                     className="flex-1 outline-none text-[14px] text-black placeholder:text-black/60 bg-transparent"
                   />
                 </div>
+                <p className="text-[12px] text-black/60">Study rooms support up to 20 live participants with end-to-end encrypted audio and video.</p>
               </div>
 
               {/* Enter Room Button */}

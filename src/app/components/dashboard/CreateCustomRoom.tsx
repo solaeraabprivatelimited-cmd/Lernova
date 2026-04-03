@@ -16,13 +16,16 @@ interface RoomData {
   roomType: 'private' | 'public';
   roomId: string;
   roomCode: string;
+  maxParticipants?: number;
 }
 
 export function CreateCustomRoom({ onBack, onLaunchRoom }: CreateCustomRoomProps) {
   const [roomName, setRoomName] = useState('');
   const [subject, setSubject] = useState('');
   const [roomType, setRoomType] = useState<'private' | 'public'>('private');
+  const [maxParticipants, setMaxParticipants] = useState(6);
   const [isLaunching, setIsLaunching] = useState(false);
+  const roomCodePreview = 'STUDY-XXXXXX';
 
   const handleLaunchRoom = async () => {
     if (roomName.trim() && subject.trim()) {
@@ -35,7 +38,7 @@ export function CreateCustomRoom({ onBack, onLaunchRoom }: CreateCustomRoomProps
           subject: subject,
           mode: 'collaborative',
           description: `${roomType} study room`,
-          maxParticipants: 100,
+          maxParticipants: maxParticipants,
         });
 
         // Launch room with real database ID while exposing the shareable room code in UI
@@ -45,6 +48,7 @@ export function CreateCustomRoom({ onBack, onLaunchRoom }: CreateCustomRoomProps
           roomType,
           roomId: createdRoom.id,
           roomCode: createdRoom.code,
+          maxParticipants: createdRoom.max_participants,
         });
       } catch (error) {
         console.error('Failed to create room:', error);
@@ -228,6 +232,25 @@ export function CreateCustomRoom({ onBack, onLaunchRoom }: CreateCustomRoomProps
                 </div>
               </div>
 
+              {/* Max Participants */}
+              <div className="flex flex-col gap-2.5">
+                <label className="text-[16px] text-black">Max Participants</label>
+                <div className="flex gap-2.5 items-center">
+                  <input
+                    type="range"
+                    min="2"
+                    max="20"
+                    value={maxParticipants}
+                    onChange={(e) => setMaxParticipants(parseInt(e.target.value))}
+                    className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-[#003566]"
+                  />
+                  <div className="bg-[#003566] text-white rounded-[8px] px-3 py-1.5 min-w-[50px] text-center text-[14px] font-medium">
+                    {maxParticipants}
+                  </div>
+                </div>
+                <p className="text-[12px] text-black/60">2–50 participants (recommended: 4–8)</p>
+              </div>
+
               {/* Select Room Type */}
               <div className="flex flex-col gap-2.5">
                 <label className="text-[16px] text-black">Select Room Type</label>
@@ -311,8 +334,9 @@ export function CreateCustomRoom({ onBack, onLaunchRoom }: CreateCustomRoomProps
                       </div>
                     </div>
                   </div>
-                  <span className="text-[14px] font-medium text-gray-400">Assigned when you launch the room</span>
+                  <span className="text-[14px] font-medium text-gray-500">{roomCodePreview}</span>
                 </div>
+                <p className="text-[12px] text-black/60">A real room code is generated on launch and can be pasted into Join Custom Room.</p>
               </div>
 
               {/* Buttons */}

@@ -1,949 +1,1058 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
-import { Bell, Mic, MicOff, Video, VideoOff, Users, Smile, MessageSquare, Timer, StickyNote, BellOff, Settings } from 'lucide-react';
-import '@/styles/collaborative-mode-room.css';
-import { FocusTimerPanel } from "./FocusTimerPanel";
-import { FocusTimerNotification } from "./FocusTimerNotification";
-import { BlockNotificationsPanel } from "./BlockNotificationsPanel";
-import { NotesPanel } from "./NotesPanel";
-import { ScreenShareMenu } from "./ScreenShareMenu";
-import { PeoplePanel } from "./PeoplePanel";
-import { ReactionPicker } from "./ReactionPicker";
-import { ReactionBurst } from "./ReactionBurst";
-import { MessagesPanel } from "./MessagesPanel";
-import { getCurrentUser } from '@/app/lib/api';
-import { useStudyRoom } from '@/utils/supabase/useStudyRoom';
+/**
+ * CollaborativeModeRoom - Main collaborative study room component
+ * Manages WebRTC connections, video/audio streams, and room interactions
+ */
+
+import { useState, useEffect, useCallback } from 'react';
 import { useWebRTC } from '@/utils/webrtc/useWebRTC';
+import { getSupabaseClient } from '../../lib/api';
+import { roomAPI, RoomChatMessage, RoomNoteEntry } from '@/utils/api/roomAPI';
 
 interface CollaborativeModeRoomProps {
-  roomId?: string;
+  roomName: string;
+  roomId: string;
+  roomCode?: string;
+  maxParticipants?: number;
+  subject: string;
   onLeaveRoom: () => void;
 }
 
-interface Participant {
-  id: string;
-  user_id: string;
-  name: string;
-  image: string;
-  isMuted: boolean;
-  isVideoOff: boolean;
-  is_pinned?: boolean;
-  permissions?: string;
+function hasErrorCode(error: unknown, code: string): boolean {
+  const message = String(error instanceof Error ? error.message : error);
+  return message.includes(`"${code}"`) || message.includes(code);
 }
 
-interface TimerNotification {
-  id: string;
-  timerName: string;
-  duration: string;
-}
-
-// Default fallback participants (used when realtime data not available)
-const defaultParticipants: Participant[] = [
-  { id: '1', user_id: 'user1', name: "You", image: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop", isMuted: false, isVideoOff: false },
-  { id: '2', user_id: 'user2', name: "John", image: "https://images.unsplash.com/photo-1599566150163-29194dcaad36?w=100&h=100&fit=crop", isMuted: true, isVideoOff: false },
-  { id: '3', user_id: 'user3', name: "Franklin", image: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&h=100&fit=crop", isMuted: false, isVideoOff: false },
-];
-
-export function CollaborativeModeRoom({ 
-  roomId = '2458', 
-  onLeaveRoom 
+export function CollaborativeModeRoom({
+  roomName,
+  roomId,
+  roomCode,
+  maxParticipants = 20,
+  subject,
+  onLeaveRoom,
 }: CollaborativeModeRoomProps) {
-  const currentUser = getCurrentUser();
-  const userId = currentUser?.id || 'guest';
-  
-  // Use real-time hook for Supabase data
-  const {
-    room,
-    participants: realtimeParticipants,
-    messages,
-    reactions,
-    loading,
-    error,
-    sendMessage,
-    addReaction,
-  } = useStudyRoom({ roomId, userId });
-
-  // Use real participants from realtime, fallback to defaults
-  const participants: Participant[] = Array.isArray(realtimeParticipants) 
-    ? realtimeParticipants.map((p: any) => ({
-        id: p.id,
-        user_id: p.user_id,
-        name: p.user?.name || 'Unknown',
-        image: p.user?.avatar_url || "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop",
-        isMuted: p.is_muted || false,
-        isVideoOff: p.is_video_off || false,
-        is_pinned: p.is_pinned,
-        permissions: p.permissions, 
-      }))
-    : defaultParticipants;
-
-  const isAdmin = currentUser?.role === 'mentor' || false;
-  const currentUserId = userId;
-  
-  // Get current user's real name from participants (database) instead of currentUser object
-  const currentUserFromParticipants = participants.find(p => p.user_id === userId);
-  const currentUserDisplayName = currentUserFromParticipants?.name || currentUser?.user_metadata?.full_name || currentUser?.name || 'Guest';
-  console.log('🔍 Current user display name:', { 
-    fromParticipants: currentUserFromParticipants?.name, 
-    fromUserMeta: currentUser?.user_metadata?.full_name,
-    fromUser: currentUser?.name,
-    final: currentUserDisplayName,
-    userId 
-  });
-  
-  const [elapsedTime, setElapsedTime] = useState(0);
-  const [showFocusTimer, setShowFocusTimer] = useState(false);
-  const [timerNotification, setTimerNotification] = useState<TimerNotification | null>(null);
-  const [showBlockNotifications, setShowBlockNotifications] = useState(false);
-  const [isNotificationsBlocked, setIsNotificationsBlocked] = useState(false);
-  const [showNotes, setShowNotes] = useState(false);
-  const [showPeople, setShowPeople] = useState(false);
-  const [showReactionPicker, setShowReactionPicker] = useState(false);
-  const [reactionBursts, setReactionBursts] = useState<Array<{ id: string; emoji: string }>>([]);
-  const [showMessages, setShowMessages] = useState(false);
-  const [otherUsersReactionsToShow, setOtherUsersReactionsToShow] = useState<Array<{ id: string; emoji: string; timestamp: number }>>([] as Array<{ id: string; emoji: string; timestamp: number }>);
-  const [pinnedParticipantId, setPinnedParticipantId] = useState<string | null>(null);
-  const [isScreenSharing, setIsScreenSharing] = useState(false);
-  const [showDeviceSettings, setShowDeviceSettings] = useState(false);
-  
-  // Device selection state
+  const [userId, setUserId] = useState<string>('');
+  const [currentUserName, setCurrentUserName] = useState('You');
+  const [participantId, setParticipantId] = useState<string | null>(null);
+  const [audioEnabled, setAudioEnabled] = useState(true);
+  const [videoEnabled, setVideoEnabled] = useState(true);
+  const [codeCopyFeedback, setCodeCopyFeedback] = useState('');
+  const [linkCopyFeedback, setLinkCopyFeedback] = useState('');
+  const [participantCount, setParticipantCount] = useState(1);
   const [audioDevices, setAudioDevices] = useState<MediaDeviceInfo[]>([]);
   const [videoDevices, setVideoDevices] = useState<MediaDeviceInfo[]>([]);
-  const [selectedAudioDeviceId, setSelectedAudioDeviceId] = useState<string>('default');
-  const [selectedVideoDeviceId, setSelectedVideoDeviceId] = useState<string>('default');
-  
-  // Enumerate available media devices
-  const enumerateDevices = useCallback(async () => {
-    try {
-      // Check if mediaDevices is available
-      if (!navigator.mediaDevices || !navigator.mediaDevices.enumerateDevices) {
-        console.warn('⚠️ mediaDevices not available - may not be in secure context (HTTPS/localhost)');
-        return;
-      }
-      
-      const devices = await navigator.mediaDevices.enumerateDevices();
-      const audioInputs = devices.filter(device => device.kind === 'audioinput');
-      const videoInputs = devices.filter(device => device.kind === 'videoinput');
-      
-      console.log('🎤 Available audio devices:', audioInputs.map(d => ({ deviceId: d.deviceId, label: d.label })));
-      console.log('🎥 Available video devices:', videoInputs.map(d => ({ deviceId: d.deviceId, label: d.label })));
-      
-      setAudioDevices(audioInputs);
-      setVideoDevices(videoInputs);
-    } catch (error) {
-      console.error('Failed to enumerate devices:', error);
-    }
-  }, []);
-  
-  // Enumerate devices on mount and when permissions granted
+  const [selectedAudioDeviceId, setSelectedAudioDeviceId] = useState('');
+  const [selectedVideoDeviceId, setSelectedVideoDeviceId] = useState('');
+  const [switchingDevices, setSwitchingDevices] = useState(false);
+  const [roomJoinError, setRoomJoinError] = useState('');
+  const [roomNotes, setRoomNotes] = useState<RoomNoteEntry[]>([]);
+  const [selectedRoomNoteId, setSelectedRoomNoteId] = useState<string | null>(null);
+  const [loadingRoomNotes, setLoadingRoomNotes] = useState(false);
+  const [savingRoomNote, setSavingRoomNote] = useState(false);
+  const [deletingRoomNote, setDeletingRoomNote] = useState(false);
+  const [noteSaveStatus, setNoteSaveStatus] = useState('');
+  const [noteHeading, setNoteHeading] = useState('');
+  const [noteBody, setNoteBody] = useState('');
+  const [chatMessages, setChatMessages] = useState<RoomChatMessage[]>([]);
+  const [chatInput, setChatInput] = useState('');
+  const [sendingChat, setSendingChat] = useState(false);
+  const [chatError, setChatError] = useState('');
+  const [participantDirectory, setParticipantDirectory] = useState<Record<string, string>>({});
+  const [activeSideTab, setActiveSideTab] = useState<'notes' | 'chat'>('chat');
+
+  // Get current user ID and verify authentication
   useEffect(() => {
-    enumerateDevices();
-    
-    // Check if mediaDevices is available before adding listener
-    if (navigator.mediaDevices && navigator.mediaDevices.addEventListener) {
-      navigator.mediaDevices.addEventListener('devicechange', enumerateDevices);
-      
-      return () => {
-        if (navigator.mediaDevices) {
-          navigator.mediaDevices.removeEventListener('devicechange', enumerateDevices);
+    const getCurrentUser = async () => {
+      try {
+        const supabase = getSupabaseClient();
+        const { data: { session } } = await supabase.auth.getSession();
+        const { data: { user } } = await supabase.auth.getUser();
+        
+        if (!session || !user) {
+          console.error('[CollaborativeModeRoom] Not authenticated - no session');
+          // Optionally redirect to login
+          return;
         }
-      };
-    }
-  }, [enumerateDevices]);
-  
-  // WebRTC state
-  const webrtcResult = useWebRTC({
-    roomId: roomId || '2458',
-    userId: userId,
-    userName: currentUserDisplayName,
-    enabled: !!roomId,
-  });
-  
-  console.log('📡 WebRTC Name being sent:', currentUserDisplayName);
-  
-  // Ensure remoteStreams is always an array
-  const localStream = webrtcResult?.localStream || null;
-  // Filter out any streams that belong to the current user (shouldn't happen but safety check)
-  const remoteStreams = Array.isArray(webrtcResult?.remoteStreams) 
-    ? webrtcResult.remoteStreams.filter((rs: any) => rs.userId !== userId)
-    : [];
-  const isAudioOn = webrtcResult?.isAudioOn ?? true;
-  const isVideoOn = webrtcResult?.isVideoOn ?? true;
-  const toggleAudio = webrtcResult?.toggleAudio || (() => {});
-  const toggleVideo = webrtcResult?.toggleVideo || (() => {});
-  const disconnect = webrtcResult?.disconnect || (() => {});
-  const reinitializeStream = webrtcResult?.reinitializeStream || (async () => {});
-  const webrtcError = webrtcResult?.error || null;
-
-  // Log remote streams on every change
-  useEffect(() => {
-    console.log('📊 [RENDER] Remote streams count:', remoteStreams.length);
-    remoteStreams.forEach((rs, index) => {
-      console.log(`📊 [RENDER] Remote stream [${index}]: userId=${rs.userId}, userName=${rs.userName}, tracks=${rs.stream?.getTracks().length || 0}`);
-    });
-  }, [remoteStreams]);
-
-  // Handle device change
-  const handleAudioDeviceChange = async (deviceId: string) => {
-    setSelectedAudioDeviceId(deviceId);
-    await reinitializeStream(deviceId, selectedVideoDeviceId);
-  };
-
-  const handleVideoDeviceChange = async (deviceId: string) => {
-    setSelectedVideoDeviceId(deviceId);
-    await reinitializeStream(selectedAudioDeviceId, deviceId);
-  };
-
-  // Refs for video elements
-  const localVideoRef = useRef<HTMLVideoElement>(null);
-  const remoteVideoRefsRef = useRef<Map<string, HTMLVideoElement>>(new Map());
-
-  // Store video element in map when mounted
-  const setRemoteVideoRef = useCallback((userId: string, element: HTMLVideoElement | null) => {
-    if (element) {
-      remoteVideoRefsRef.current.set(userId, element);
-      console.log('📹 Video ref registered for:', userId);
-    } else {
-      remoteVideoRefsRef.current.delete(userId);
-      console.log('📹 Video ref removed for:', userId);
-    }
-  }, []);
-
-  // Attach local stream to video element with retry logic
-  useEffect(() => {
-    let isMounted = true;
-    let retryCount = 0;
-    const maxRetries = 5;
-
-    const attachStream = () => {
-      if (!isMounted) return;
-      
-      if (localStream && localVideoRef.current) {
-        const tracks = localStream.getTracks();
-        console.log('🎬 Attaching local stream to video element with', tracks.length, 'tracks');
-        console.log('🎬 Track details:', tracks.map(t => ({ kind: t.kind, enabled: t.enabled, readyState: t.readyState })));
         
-        localVideoRef.current.srcObject = localStream;
-        
-        // Force play on next tick
-        setTimeout(() => {
-          if (localVideoRef.current && isMounted) {
-            localVideoRef.current.play().catch(err => {
-              console.error('⚠️ Failed to play local video:', err);
-            });
-          }
-        }, 100);
-      } else if (retryCount < maxRetries) {
-        console.warn(`⚠️ Retry ${retryCount + 1}/${maxRetries} - Cannot attach local stream - stream:`, !!localStream, 'ref:', !!localVideoRef.current);
-        retryCount++;
-        // Retry after 200ms
-        setTimeout(attachStream, 200);
-      } else {
-        console.error('❌ Failed to attach local stream after', maxRetries, 'retries');
+        console.log('[CollaborativeModeRoom] Authenticated as:', user.id);
+        setUserId(user.id);
+        const metadata = user.user_metadata ?? {};
+        const resolvedName =
+          (typeof metadata.name === 'string' && metadata.name.trim()) ||
+          (typeof metadata.full_name === 'string' && metadata.full_name.trim()) ||
+          user.email?.split('@')[0] ||
+          'You';
+        setCurrentUserName(resolvedName);
+      } catch (err) {
+        console.error('[CollaborativeModeRoom] Auth check error:', err);
       }
     };
+    getCurrentUser();
+  }, []);
 
-    // Start with a small delay to ensure DOM is ready
-    const timeout = setTimeout(attachStream, 50);
-    return () => {
-      isMounted = false;
-      clearTimeout(timeout);
-    };
+  // Memoize error handler
+  const handleWebRTCError = useCallback((err: Error) => {
+    console.error('[CollaborativeModeRoom] WebRTC error:', err);
+  }, []);
+
+  // Initialize WebRTC with audio enabled
+  const {
+    initialized,
+    localStream,
+    peers,
+    error: webrtcError,
+    toggleAudio,
+    toggleVideo,
+    setMediaDevices,
+    isScreenSharing,
+    startScreenShare,
+    stopScreenShare,
+  } = useWebRTC({
+    roomId,
+    userId,
+    enableVideo: true,
+    enableAudio: true,
+    onError: handleWebRTCError,
+  });
+
+  // Handle audio toggle
+  const handleToggleAudio = async () => {
+    const nextState = !audioEnabled;
+    try {
+      await toggleAudio(nextState);
+      setAudioEnabled(nextState);
+      if (participantId) {
+        await roomAPI.updateParticipant(participantId, {
+          is_muted: !nextState,
+          connection_state: 'connected',
+        });
+      }
+    } catch (err) {
+      console.error('[CollaborativeModeRoom] Failed to toggle audio device state:', err);
+    }
+  };
+
+  // Handle video toggle
+  const handleToggleVideo = async () => {
+    const nextState = !videoEnabled;
+    try {
+      await toggleVideo(nextState);
+      setVideoEnabled(nextState);
+      if (participantId) {
+        await roomAPI.updateParticipant(participantId, {
+          is_video_off: !nextState,
+          connection_state: 'connected',
+        });
+      }
+    } catch (err) {
+      console.error('[CollaborativeModeRoom] Failed to toggle video device state:', err);
+    }
+  };
+
+  const handleToggleScreenShare = async () => {
+    try {
+      if (isScreenSharing) {
+        await stopScreenShare();
+      } else {
+        await startScreenShare();
+      }
+    } catch (err) {
+      console.error('[CollaborativeModeRoom] Failed to toggle screen sharing:', err);
+    }
+  };
+
+  const enumerateInputDevices = useCallback(async () => {
+    if (!navigator.mediaDevices?.enumerateDevices) return;
+
+    const devices = await navigator.mediaDevices.enumerateDevices();
+    const audioInputs = devices.filter((device) => device.kind === 'audioinput');
+    const videoInputs = devices.filter((device) => device.kind === 'videoinput');
+
+    setAudioDevices(audioInputs);
+    setVideoDevices(videoInputs);
+
+    const currentAudioDeviceId = localStream?.getAudioTracks()[0]?.getSettings().deviceId ?? '';
+    const currentVideoDeviceId = localStream?.getVideoTracks()[0]?.getSettings().deviceId ?? '';
+
+    setSelectedAudioDeviceId((prev) => {
+      if (currentAudioDeviceId && audioInputs.some((device) => device.deviceId === currentAudioDeviceId)) {
+        return currentAudioDeviceId;
+      }
+      if (prev && audioInputs.some((device) => device.deviceId === prev)) {
+        return prev;
+      }
+      return audioInputs[0]?.deviceId ?? '';
+    });
+
+    setSelectedVideoDeviceId((prev) => {
+      if (currentVideoDeviceId && videoInputs.some((device) => device.deviceId === currentVideoDeviceId)) {
+        return currentVideoDeviceId;
+      }
+      if (prev && videoInputs.some((device) => device.deviceId === prev)) {
+        return prev;
+      }
+      return videoInputs[0]?.deviceId ?? '';
+    });
   }, [localStream]);
 
-  // Attach remote streams to video elements with retry logic
+  const handleCopyRoomCode = useCallback(async () => {
+    if (!roomCode) return;
+
+    try {
+      await navigator.clipboard.writeText(roomCode);
+      setCodeCopyFeedback('Copied');
+      window.setTimeout(() => setCodeCopyFeedback(''), 1500);
+    } catch (err) {
+      console.error('[CollaborativeModeRoom] Failed to copy room code:', err);
+      setCodeCopyFeedback('Copy failed');
+      window.setTimeout(() => setCodeCopyFeedback(''), 1500);
+    }
+  }, [roomCode]);
+
+  const roomShareUrl =
+    roomCode && typeof window !== 'undefined'
+      ? `${window.location.origin}/room/${roomCode}`
+      : '';
+
+  const handleCopyRoomLink = useCallback(async () => {
+    if (!roomShareUrl) return;
+
+    try {
+      await navigator.clipboard.writeText(roomShareUrl);
+      setLinkCopyFeedback('Copied');
+      window.setTimeout(() => setLinkCopyFeedback(''), 1500);
+    } catch (err) {
+      console.error('[CollaborativeModeRoom] Failed to copy room link:', err);
+      setLinkCopyFeedback('Copy failed');
+      window.setTimeout(() => setLinkCopyFeedback(''), 1500);
+    }
+  }, [roomShareUrl]);
+
   useEffect(() => {
-    console.log('🎬 Remote streams updated:', remoteStreams.length);
-    let isMounted = true;
+    if (!initialized) return;
 
-    remoteStreams.forEach(({ userId, stream }: { userId: string; stream: MediaStream }) => {
-      const tracks = stream.getTracks();
-      console.log(`🎬 Processing remote stream for ${userId} with ${tracks.length} tracks`);
-      console.log(`🎬 Track details for ${userId}:`, tracks.map(t => ({ kind: t.kind, enabled: t.enabled, readyState: t.readyState })));
-      
-      let retryCount = 0;
-      const maxRetries = 5;
-      
-      const attachRemoteStream = () => {
-        if (!isMounted) return;
-        
-        const videoElement = remoteVideoRefsRef.current.get(userId);
-        console.log(`🎬 [Attempt ${retryCount + 1}/${maxRetries + 1}] Looking for video element for ${userId}, found:`, !!videoElement);
-        
-        if (videoElement) {
-          console.log(`✅ Found video element for ${userId}, attaching stream...`);
-          videoElement.srcObject = null; // Clear first
-          setTimeout(() => {
-            if (videoElement && isMounted) {
-              videoElement.srcObject = stream;
-              console.log(`✅ Remote stream attached to ${userId}`);
-              // Force play on next tick
-              videoElement.play().catch(err => {
-                console.error(`⚠️ Failed to play remote video for ${userId}:`, err);
-              });
-            }
-          }, 50);
-        } else if (retryCount < maxRetries) {
-          console.warn(`⚠️ Retry ${retryCount + 1}/${maxRetries} - Video element not found for ${userId}. Available refs:`, Array.from(remoteVideoRefsRef.current.keys()));
-          retryCount++;
-          // Retry after 200ms
-          setTimeout(attachRemoteStream, 200);
-        } else {
-          console.error(`❌ Failed to find video element for ${userId} after ${maxRetries} retries. Available refs:`, Array.from(remoteVideoRefsRef.current.keys()));
-        }
-      };
-
-      // Start with a small delay to ensure DOM is ready
-      setTimeout(attachRemoteStream, 50);
+    enumerateInputDevices().catch((err) => {
+      console.warn('[CollaborativeModeRoom] Failed to enumerate media devices:', err);
     });
 
-    return () => {
-      isMounted = false;
+    const handleDeviceChange = () => {
+      enumerateInputDevices().catch((err) => {
+        console.warn('[CollaborativeModeRoom] Failed to refresh media devices:', err);
+      });
     };
-  }, [remoteStreams]);
+
+    if (navigator.mediaDevices?.addEventListener) {
+      navigator.mediaDevices.addEventListener('devicechange', handleDeviceChange);
+      return () => {
+        navigator.mediaDevices.removeEventListener('devicechange', handleDeviceChange);
+      };
+    }
+  }, [enumerateInputDevices, initialized, localStream]);
+
+  const handleAudioDeviceChange = useCallback(
+    async (nextAudioDeviceId: string) => {
+      if (!nextAudioDeviceId || nextAudioDeviceId === selectedAudioDeviceId) {
+        return;
+      }
+
+      try {
+        setSwitchingDevices(true);
+        await setMediaDevices(nextAudioDeviceId, selectedVideoDeviceId || undefined);
+        setSelectedAudioDeviceId(nextAudioDeviceId);
+      } catch (err) {
+        console.error('[CollaborativeModeRoom] Failed to switch audio device:', err);
+      } finally {
+        setSwitchingDevices(false);
+      }
+    },
+    [selectedAudioDeviceId, selectedVideoDeviceId, setMediaDevices]
+  );
+
+  const handleVideoDeviceChange = useCallback(
+    async (nextVideoDeviceId: string) => {
+      if (!nextVideoDeviceId || nextVideoDeviceId === selectedVideoDeviceId) {
+        return;
+      }
+
+      try {
+        setSwitchingDevices(true);
+        await setMediaDevices(selectedAudioDeviceId || undefined, nextVideoDeviceId);
+        setSelectedVideoDeviceId(nextVideoDeviceId);
+      } catch (err) {
+        console.error('[CollaborativeModeRoom] Failed to switch video device:', err);
+      } finally {
+        setSwitchingDevices(false);
+      }
+    },
+    [selectedAudioDeviceId, selectedVideoDeviceId, setMediaDevices]
+  );
 
   useEffect(() => {
-    const timer = setInterval(() => {
-      setElapsedTime(prev => prev + 1);
-    }, 1000);
+    if (!roomId || !userId) return;
 
-    return () => clearInterval(timer);
-  }, []);
+    let cancelled = false;
 
+    const ensureJoined = async () => {
+      try {
+        const participant = await roomAPI.joinRoom(roomId);
+        if (!cancelled && participant?.id) {
+          setParticipantId(participant.id);
+        }
+        if (!cancelled) {
+          setRoomJoinError('');
+          console.log('[CollaborativeModeRoom] Joined room roster for:', roomId);
+        }
+      } catch (err) {
+        if (hasErrorCode(err, 'ALREADY_IN_ANOTHER_ROOM')) {
+          if (!cancelled) {
+            setRoomJoinError('You are already active in another room. Leave it before joining this one.');
+          }
+          return;
+        }
 
+        if (hasErrorCode(err, 'ALREADY_JOINED_THIS_ROOM')) {
+          if (!cancelled) {
+            setRoomJoinError('You already joined this room from another tab/device. Leave that session first.');
+          }
+          return;
+        }
 
-  // Cleanup WebRTC on unmount
-  useEffect(() => {
-    return () => {
-      disconnect();
+        if (hasErrorCode(err, 'ROOM_FULL')) {
+          try {
+            const room = await roomAPI.getRoom(roomId);
+            const alreadyPresent = (room.participants ?? []).some(
+              (participant) => participant.user_id === userId && participant.disconnected_at == null
+            );
+
+            if (alreadyPresent) {
+              if (!cancelled) {
+                setRoomJoinError('This room is full. You already appear in the roster but new device join is blocked.');
+              }
+              return;
+            }
+          } catch {
+            // Ignore secondary lookup failures and fall through to the original error log.
+          }
+        }
+
+        if (!cancelled) {
+          setRoomJoinError('Unable to join this room right now. Try again in a few seconds.');
+          console.error('[CollaborativeModeRoom] Failed to join room roster:', err);
+        }
+      }
     };
-  }, [disconnect]);
 
-  // Watch for new reactions from other users
+    ensureJoined();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [roomId, userId]);
+
   useEffect(() => {
-    if (!reactions || reactions.length === 0) {
-      console.log('No reactions available');
+    if (!roomId || !userId || !initialized) return;
+
+    let active = true;
+
+    const loadNotes = async () => {
+      setLoadingRoomNotes(true);
+      try {
+        const notes = await roomAPI.listRoomNotes(roomId);
+        if (active) {
+          setRoomNotes(notes);
+          setSelectedRoomNoteId((current) => {
+            if (current && notes.some((note) => note.id === current)) {
+              return current;
+            }
+            return notes[0]?.id ?? null;
+          });
+          if (notes.length === 0) {
+            setNoteHeading('');
+            setNoteBody('');
+          }
+        }
+      } catch (err) {
+        if (active) {
+          console.warn('[CollaborativeModeRoom] Failed to load room notes:', err);
+        }
+      } finally {
+        if (active) {
+          setLoadingRoomNotes(false);
+        }
+      }
+    };
+
+    loadNotes();
+
+    return () => {
+      active = false;
+    };
+  }, [initialized, roomId, userId]);
+
+  useEffect(() => {
+    const selected = roomNotes.find((note) => note.id === selectedRoomNoteId) ?? null;
+    if (!selected) {
       return;
     }
+    setNoteHeading(selected.heading);
+    setNoteBody(selected.body);
+  }, [roomNotes, selectedRoomNoteId]);
 
-    console.log('All reactions:', reactions);
-    
-    // Show all other users' reactions (no time limit for existing reactions)
-    const recentOtherReactions = reactions.filter((r: any) => {
-      const isOtherUser = r.user_id !== userId;
-      console.log('Filtering reaction:', { emoji: r.emoji, userId: r.user_id, currentUserId: userId, isOtherUser });
-      return isOtherUser;
-    });
+  const createRoomNote = useCallback(async () => {
+    if (!roomId || !userId) return;
 
-    console.log('Recent other reactions:', recentOtherReactions);
-    
-    if (recentOtherReactions.length > 0) {
-      const newReactionsToShow = recentOtherReactions.map((r: any) => ({
-        id: r.id,
-        emoji: r.emoji,
-        timestamp: new Date(r.created_at).getTime()
-      }));
-      console.log('Setting reactions to show:', newReactionsToShow);
-      setOtherUsersReactionsToShow(newReactionsToShow);
-    } else {
-      console.log('No reactions from other users found');
-      setOtherUsersReactionsToShow([]);
-    }
-  }, [reactions, userId]);
-
-  const formatTime = (seconds: number) => {
-    const hrs = Math.floor(seconds / 3600);
-    const mins = Math.floor((seconds % 3600) / 60);
-    const secs = seconds % 60;
-    return `${hrs.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-  };
-
-  const handleLeaveRoom = async () => {
-    console.log('👋 [LEAVE] User initiated leave room');
-    // Explicitly disconnect WebRTC and untrack presence
-    await disconnect();
-    console.log('👋 [LEAVE] Disconnected successfully, calling onLeaveRoom');
-    onLeaveRoom();
-  };
-
-  const handlePinParticipant = (participantId: string) => {
-    setPinnedParticipantId(pinnedParticipantId === participantId ? null : participantId);
-  };
-
-  const handleTimerComplete = (label: string, duration: number) => {
-    const mins = Math.floor(duration / 60);
-    const secs = duration % 60;
-    const formattedDuration = secs === 0 ? `${mins.toString().padStart(2, '0')}:00 min` : `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')} min`;
-    
-    setTimerNotification({
-      id: Date.now().toString(),
-      timerName: label,
-      duration: formattedDuration
-    });
-
-    // Auto-dismiss after 10 seconds
-    setTimeout(() => {
-      setTimerNotification(null);
-    }, 10000);
-  };
-
-  const handleReactionSelect = (emoji: string) => {
-    // Create a unique ID for this burst
-    const burstId = Date.now().toString();
-    
-    console.log('Sending reaction:', { emoji, userId, roomId });
-    
-    // Send emoji reaction to real-time database
-    addReaction(emoji)
-      .then(() => {
-        console.log('Reaction sent successfully:', emoji);
-      })
-      .catch((err: any) => {
-        console.error('Failed to send reaction:', err);
-        console.error('Error details:', { message: err.message, code: err.code });
+    try {
+      setSavingRoomNote(true);
+      const created = await roomAPI.createRoomNote(roomId, {
+        heading: 'Untitled note',
+        body: '',
       });
-    
-    // Close the reaction picker
-    setShowReactionPicker(false);
-    
-    // Add a reaction burst for visual feedback
-    setReactionBursts(prev => [...prev, { id: burstId, emoji }]);
-    
-    // Remove the burst after 3.5 seconds (max animation duration)
-    setTimeout(() => {
-      setReactionBursts(prev => prev.filter(burst => burst.id !== burstId));
-    }, 3500);
+      setRoomNotes((prev) => [created, ...prev]);
+      setSelectedRoomNoteId(created.id);
+      setNoteHeading(created.heading);
+      setNoteBody(created.body);
+      setNoteSaveStatus('Saved');
+      window.setTimeout(() => setNoteSaveStatus(''), 1500);
+    } catch (err) {
+      console.error('[CollaborativeModeRoom] Failed to create room note:', err);
+      setNoteSaveStatus('Create failed');
+      window.setTimeout(() => setNoteSaveStatus(''), 1800);
+    } finally {
+      setSavingRoomNote(false);
+    }
+  }, [roomId, userId]);
+
+  const saveRoomNote = useCallback(async () => {
+    if (!roomId || !userId || !selectedRoomNoteId) return;
+
+    const headingToSave = noteHeading.trim() || 'Untitled note';
+    const bodyToSave = noteBody;
+
+    try {
+      setSavingRoomNote(true);
+      const updated = await roomAPI.updateRoomNote(roomId, selectedRoomNoteId, {
+        heading: headingToSave,
+        body: bodyToSave,
+      });
+      setRoomNotes((prev) =>
+        prev
+          .map((note) => (note.id === updated.id ? updated : note))
+          .sort((a, b) => Date.parse(b.updated_at) - Date.parse(a.updated_at))
+      );
+      setNoteHeading(updated.heading);
+      setNoteBody(updated.body);
+      setNoteSaveStatus('Saved');
+      window.setTimeout(() => setNoteSaveStatus(''), 1500);
+    } catch (err) {
+      console.error('[CollaborativeModeRoom] Failed to save room note:', err);
+      setNoteSaveStatus('Save failed');
+      window.setTimeout(() => setNoteSaveStatus(''), 1800);
+    } finally {
+      setSavingRoomNote(false);
+    }
+  }, [noteBody, noteHeading, roomId, selectedRoomNoteId, userId]);
+
+  const deleteRoomNote = useCallback(async () => {
+    if (!roomId || !userId || !selectedRoomNoteId) return;
+
+    try {
+      setDeletingRoomNote(true);
+      await roomAPI.deleteRoomNote(roomId, selectedRoomNoteId);
+      const refreshedNotes = await roomAPI.listRoomNotes(roomId);
+      setRoomNotes(refreshedNotes);
+      const nextSelected = refreshedNotes[0] ?? null;
+      setSelectedRoomNoteId(nextSelected?.id ?? null);
+      setNoteHeading(nextSelected?.heading ?? '');
+      setNoteBody(nextSelected?.body ?? '');
+      setNoteSaveStatus('Deleted');
+      window.setTimeout(() => setNoteSaveStatus(''), 1500);
+    } catch (err) {
+      console.error('[CollaborativeModeRoom] Failed to delete room note:', err);
+      setNoteSaveStatus('Delete failed');
+      window.setTimeout(() => setNoteSaveStatus(''), 1800);
+    } finally {
+      setDeletingRoomNote(false);
+    }
+  }, [roomId, selectedRoomNoteId, userId]);
+
+  useEffect(() => {
+    if (!roomId || !userId || !initialized) return;
+
+    let active = true;
+    let timer: NodeJS.Timeout | null = null;
+
+    const loadChat = async () => {
+      try {
+        const messages = await roomAPI.getRoomChatMessages(roomId, 100);
+        if (active) {
+          setChatMessages(messages);
+          setChatError('');
+        }
+      } catch (err) {
+        if (active) {
+          console.warn('[CollaborativeModeRoom] Failed to load room chat:', err);
+          setChatError('Unable to load chat right now');
+        }
+      }
+
+      if (active) {
+        timer = setTimeout(loadChat, 2000);
+      }
+    };
+
+    loadChat();
+
+    return () => {
+      active = false;
+      if (timer) clearTimeout(timer);
+    };
+  }, [initialized, roomId, userId]);
+
+  const sendChatMessage = useCallback(async () => {
+    if (!roomId || !userId) return;
+    const message = chatInput.trim();
+    if (!message) return;
+
+    try {
+      setSendingChat(true);
+      const sent = await roomAPI.sendRoomChatMessage(roomId, message);
+      setChatMessages((prev) => [...prev, sent]);
+      setChatInput('');
+      setChatError('');
+    } catch (err) {
+      console.error('[CollaborativeModeRoom] Failed to send room chat message:', err);
+      setChatError('Message failed to send');
+    } finally {
+      setSendingChat(false);
+    }
+  }, [chatInput, roomId, userId]);
+
+  useEffect(() => {
+    if (!participantId) return;
+
+    let active = true;
+    let timer: NodeJS.Timeout | null = null;
+
+    const sendHeartbeat = async () => {
+      try {
+        await roomAPI.updateParticipant(participantId, {
+          last_heartbeat: new Date().toISOString(),
+          connection_state: 'connecting',
+        });
+      } catch (err) {
+        if (active) {
+          console.warn('[CollaborativeModeRoom] Failed to send participant heartbeat:', err);
+        }
+      }
+
+      if (active) {
+        timer = setTimeout(sendHeartbeat, 10000);
+      }
+    };
+
+    sendHeartbeat();
+
+    return () => {
+      active = false;
+      if (timer) clearTimeout(timer);
+    };
+  }, [participantId]);
+
+  useEffect(() => {
+    if (!roomId || !userId) return;
+
+    let active = true;
+    let timer: NodeJS.Timeout | null = null;
+
+    const syncParticipantCount = async () => {
+      try {
+        const room = await roomAPI.getRoom(roomId);
+        const activeRoomParticipants =
+          room.participants?.filter((participant) => participant.disconnected_at == null) ?? [];
+        const activeParticipants = activeRoomParticipants.length;
+
+        if (active) {
+          setParticipantCount(Math.max(activeParticipants, 1));
+          const directory = activeRoomParticipants.reduce<Record<string, string>>(
+            (acc, participant) => {
+              if (participant.user_id) {
+                acc[participant.user_id] =
+                  participant.display_name || participant.user_id.slice(0, 8);
+              }
+              return acc;
+            },
+            {}
+          );
+          if (userId && !directory[userId]) {
+            directory[userId] = currentUserName;
+          }
+          setParticipantDirectory(directory);
+        }
+      } catch (err) {
+        console.warn('[CollaborativeModeRoom] Failed to sync participant count:', err);
+      }
+
+      if (active) {
+        timer = setTimeout(syncParticipantCount, 3000);
+      }
+    };
+
+    syncParticipantCount();
+
+    return () => {
+      active = false;
+      if (timer) clearTimeout(timer);
+    };
+  }, [currentUserName, roomId, userId]);
+
+  // Handle leave room
+  const handleLeaveRoom = async () => {
+    try {
+      if (localStream) {
+        localStream.getTracks().forEach(track => track.stop());
+      }
+      await roomAPI.leaveRoom(roomId);
+      onLeaveRoom();
+    } catch (err) {
+      console.error('[CollaborativeModeRoom] Error leaving room:', err);
+    }
   };
 
-
-  if (loading) {
+  if (!userId) {
     return (
-      <div className="bg-black h-screen w-full flex items-center justify-center">
+      <div className="flex min-h-screen items-center justify-center bg-[#202124] text-white">
         <div className="text-center">
-          <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-white text-lg">Loading study room...</p>
+          <div className="mx-auto mb-4 h-10 w-10 animate-spin rounded-full border-4 border-white/30 border-t-white" />
+          <p className="text-sm text-white/80">Preparing room...</p>
         </div>
       </div>
     );
   }
 
-  // Check for WebRTC errors first
-  if (webrtcError) {
-    return (
-      <div className="bg-black h-screen w-full flex items-center justify-center">
-        <div className="text-center text-white max-w-md">
-          <div className="text-6xl mb-4">📹</div>
-          <h3 className="text-2xl font-bold mb-2">Camera/Microphone Error</h3>
-          <p className="text-gray-300 mb-6 text-sm">{webrtcError}</p>
-          <p className="text-gray-400 text-xs mb-4">
-            Make sure your browser has permission to access camera and microphone
-          </p>
-          <button
-            onClick={onLeaveRoom}
-            className="px-6 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors"
-          >
-            Go Back
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  // Show error state
-  if (error || !room) {
-    const errorMessage = error 
-      ? (typeof error === 'string' ? error : error?.message || 'Unknown error occurred')
-      : 'Room not found or is inactive';
-    
-    // Check for specific WebRTC errors
-    const isWebRTCError = errorMessage.includes('media') || 
-                          errorMessage.includes('camera') || 
-                          errorMessage.includes('microphone') || 
-                          errorMessage.includes('Permission');
-    
-    return (
-      <div className="bg-black h-screen w-full flex items-center justify-center">
-        <div className="text-center text-white max-w-md">
-          <div className="text-6xl mb-4">{isWebRTCError ? '📹' : '⚠️'}</div>
-          <h3 className="text-2xl font-bold mb-2">
-            {isWebRTCError ? 'Camera/Microphone Error' : 'Failed to Load Room'}
-          </h3>
-          <p className="text-gray-300 mb-6 text-sm">{errorMessage}</p>
-          {isWebRTCError && (
-            <p className="text-gray-400 text-xs mb-4">
-              Make sure your browser has permission to access camera and microphone
-            </p>
-          )}
-          <button
-            onClick={onLeaveRoom}
-            className="px-6 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors"
-          >
-            Go Back
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  // Calculate grid columns based on participant count
-  const allParticipants = [
-    { 
-      id: 'local', 
-      user_id: userId, 
-      name: 'You', 
-      isLocal: true, 
-      ...(participants && participants[0] ? participants[0] : {}) 
-    },
-    ...(Array.isArray(remoteStreams) ? remoteStreams.map(rs => ({ id: rs.userId, user_id: rs.userId, name: rs.userName, isLocal: false })) : []),
-  ];
-  
-  // Calculate grid columns based on number of remote streams (1 local + remote streams)
-  const totalParticipants = 1 + remoteStreams.length;
-  const gridCols = totalParticipants === 1 ? 'grid-cols-1' : 
-                   totalParticipants <= 4 ? 'grid-cols-2' : 
-                   'grid-cols-3';
-  
-  console.log('📊 Grid Layout - Total participants:', totalParticipants, 'Remote streams:', remoteStreams.length, 'Grid:', gridCols);
+  const localVideoTrack = localStream?.getVideoTracks()[0] ?? null;
+  const localVideoVisible =
+    !!localVideoTrack && localVideoTrack.readyState === 'live' && videoEnabled;
+  const localParticipantLabel = participantDirectory[userId] || currentUserName || 'You';
 
   return (
-    <div className="bg-[#1a1a1a] h-screen w-full flex flex-col font-['Poppins'] overflow-hidden">
-      {/* Main Content Area - Responsive Video Grid */}
-      <div className={`flex-1 grid ${gridCols} gap-4 p-6 auto-rows-fr overflow-y-auto`}>
-        {/* LOCAL VIDEO - Always shown */}
-        <div className="relative bg-[#2a2a2a] rounded-[20px] overflow-hidden h-full">
-          {/* Video element always rendered for ref attachment */}
-          <video
-            ref={localVideoRef}
-            autoPlay
-            muted
-            playsInline
-            crossOrigin="anonymous"
-            className="w-full h-full object-cover local-video-flipped"
-            style={{ display: localStream && isVideoOn ? 'block' : 'none' }}
-          />
-          
-          {/* Placeholder when video is off */}
-          {!isVideoOn && (
-            <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-[#3a3a3a] to-[#1a1a1a]">
-              <span className="text-white text-center">
-                <div className="text-4xl mb-2">📷</div>
-                <div className="text-sm">Camera Off</div>
-              </span>
-            </div>
-          )}
-          {/* Name Badge */}
-          <div className="absolute bottom-3 left-3 bg-white/20 backdrop-blur-sm rounded-full px-3 py-1 border border-white/30">
-            <span className="text-[12px] text-white font-medium">You</span>
+    <div className="flex min-h-screen flex-col bg-[#202124] text-white">
+      <div className="border-b border-white/10 bg-[#1f1f20]/95 px-4 py-4 sm:px-6">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+          <div>
+            <h1 className="text-2xl font-semibold tracking-tight">{roomName}</h1>
+            <p className="mt-1 text-sm text-white/70">{subject}</p>
           </div>
-          {/* Status Icons */}
-          <div className="absolute top-3 right-3 flex gap-2">
-            {!isVideoOn && (
-              <div className="bg-red-600/80 backdrop-blur-sm rounded-full p-2">
-                <VideoOff className="w-3 h-3 text-white" />
+          <div className="flex flex-wrap items-center gap-3">
+            {roomShareUrl ? (
+              <div className="flex max-w-[420px] items-center gap-2 rounded-full border border-[#3c4043] bg-[#2b2c2f] px-3 py-2 text-sm text-white/80">
+                <span className="shrink-0 text-xs uppercase tracking-[0.14em] text-white/55">Room URL</span>
+                <span className="truncate">{roomShareUrl}</span>
+                <button
+                  onClick={handleCopyRoomLink}
+                  className="shrink-0 rounded-full border border-[#5f6368] px-2 py-0.5 text-xs text-white/80 transition hover:bg-[#3c4043]"
+                >
+                  {linkCopyFeedback || 'Copy'}
+                </button>
               </div>
-            )}
-            {!isAudioOn && (
-              <div className="bg-red-600/80 backdrop-blur-sm rounded-full p-2">
-                <MicOff className="w-3 h-3 text-white" />
-              </div>
-            )}
+            ) : null}
+            <div className="rounded-full border border-[#3c4043] bg-[#2b2c2f] px-4 py-2 text-sm text-[#8ab4f8]">
+              End-to-End encrypted
+            </div>
+            <div className="rounded-full border border-[#3c4043] bg-[#2b2c2f] px-4 py-2 text-sm text-white/80">
+              {participantCount}/{maxParticipants} participants
+            </div>
+            <button
+              onClick={handleLeaveRoom}
+              className="rounded-full bg-[#ea4335] px-5 py-2 text-sm font-medium text-white transition hover:bg-[#dc3527]"
+            >
+              Leave Room
+            </button>
           </div>
         </div>
+      </div>
 
-        {/* REMOTE VIDEOS */}
-        {Array.isArray(remoteStreams) && remoteStreams.length > 0 && (
-          <>
-            {remoteStreams.map(({ userId, userName, stream }) => {
-              // Use WebRTC userName directly - this is what was announced by the remote peer
-              // This is the source of truth for the remote participant's name
-              const participantName = userName || 'Unknown';
-              const audioTracks = stream?.getAudioTracks() || [];
-              const videoTracks = stream?.getVideoTracks() || [];
-              console.log(`🎥 Rendering remote video - userId: ${userId}, name: ${participantName}, audioTracks: ${audioTracks.length}, videoTracks: ${videoTracks.length}`);
-              if (audioTracks.length > 0) {
-                console.log(`🔊 Audio track found for ${userId}: enabled=${audioTracks[0].enabled}, state=${audioTracks[0].readyState}`);
-              } else {
-                console.warn(`🔇 NO audio track in stream for ${userId}!`);
-              }
-              return (
-              <div key={userId} className="relative bg-[#2a2a2a] rounded-[20px] overflow-hidden h-full">
-                {/* Audio playback element - CRITICAL for hearing remote audio */}
-                <audio
-                  autoPlay
-                  playsInline
-                  crossOrigin="anonymous"
-                  style={{ display: 'none' }}
-                  onLoadedMetadata={() => {
-                    console.log(`🔊 Audio metadata loaded for ${userId}`);
-                  }}
-                  onPlay={() => {
-                    console.log(`▶️ Audio playing for ${userId}`);
-                  }}
-                  onError={(e) => {
-                    console.error(`❌ Audio error for ${userId}:`, e);
-                  }}
-                  ref={(el) => {
-                    if (el && stream) {
-                      el.srcObject = stream;
-                      console.log(`🎧 Audio element connected to stream for ${userId}`);
-                    }
-                  }}
-                />
-                
-                {/* Video playback element */}
-                <video
-                  ref={(el) => {
-                    console.log(`📹 Ref callback for ${userId}:`, !!el);
-                    if (el && stream) {
-                      el.srcObject = stream;
-                    }
-                    setRemoteVideoRef(userId, el);
-                  }}
-                  autoPlay
-                  playsInline
-                  crossOrigin="anonymous"
-                  className="w-full h-full object-cover"
-                  style={{ display: 'block' }}
-                  onLoadedMetadata={() => {
-                    console.log(`📹 Video metadata loaded for ${userId}`);
-                  }}
-                  onPlay={() => {
-                    console.log(`▶️ Video playing for ${userId}`);
-                  }}
-                  onError={(e) => {
-                    console.error(`❌ Video error for ${userId}:`, e);
-                  }}
-                />
-                {/* Name Badge */}
-                <div className="absolute bottom-3 left-3 bg-white/20 backdrop-blur-sm rounded-full px-3 py-1 border border-white/30">
-                  <span className="text-[12px] text-white font-medium">{participantName}</span>
-                </div>
-              </div>
-            );
-            })}
-          </>
+      <div className="flex-1 overflow-hidden px-4 pb-4 pt-4 sm:px-6">
+        {webrtcError && (
+          <div className="mb-4 rounded-xl border border-[#5f2f2f] bg-[#3b1f1f]/90 p-4">
+            <p className="font-medium text-[#ffb8b8]">Error: {webrtcError.message}</p>
+            <p className="mt-2 text-sm text-[#ffdede]">
+              Signaling or media negotiation failed. Keep this room open on both devices and check the browser console for the first WebRTC error line.
+            </p>
+          </div>
         )}
+        {roomJoinError ? (
+          <div className="mb-4 rounded-xl border border-[#614b1f] bg-[#3e2f12]/90 p-4">
+            <p className="font-medium text-[#ffd27d]">{roomJoinError}</p>
+          </div>
+        ) : null}
 
-        {/* FALLBACK PARTICIPANT AVATARS (when no streams) */}
-        {Array.isArray(remoteStreams) && remoteStreams.length === 0 && Array.isArray(participants) && participants.slice(1, 10).map((participant) => (
-          <div key={participant.id} className="relative bg-[#2a2a2a] rounded-[20px] overflow-hidden">
-            <img
-              src={participant.image}
-              alt={participant.name}
-              className="w-full h-full object-cover"
-            />
-            {/* Name Badge */}
-            <div className="absolute bottom-3 left-3 bg-white/20 backdrop-blur-sm rounded-full px-3 py-1 border border-white/30">
-              <span className="text-[12px] text-white font-medium">{participant.name}</span>
+        {!initialized ? (
+          <div className="flex h-full items-center justify-center">
+            <div className="text-center">
+              <div className="mx-auto mb-4 h-12 w-12 animate-spin rounded-full border-4 border-white/20 border-t-[#8ab4f8]" />
+              <p className="text-lg text-white">Initializing your room...</p>
+              <p className="mt-2 text-sm text-white/70">Signed in as {localParticipantLabel}</p>
             </div>
-            {/* Status Icons */}
-            <div className="absolute top-3 right-3 flex gap-2">
-              {participant.isVideoOff && (
-                <div className="bg-red-600/80 backdrop-blur-sm rounded-full p-2">
-                  <VideoOff className="w-3 h-3 text-white" />
+          </div>
+        ) : (
+          <div className="flex h-full flex-col gap-4 lg:flex-row">
+            <div className="flex min-h-0 flex-1 flex-col gap-4">
+              <div className="grid flex-1 auto-rows-[minmax(220px,1fr)] grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                <div className="relative overflow-hidden rounded-2xl border border-[#3c4043] bg-[#2b2c2f]">
+                  {localStream && localVideoVisible ? (
+                    <video
+                      autoPlay
+                      muted
+                      playsInline
+                      className="h-full w-full object-cover"
+                      ref={(video) => {
+                        if (!video || !localStream) return;
+                        if (video.srcObject !== localStream) {
+                          video.srcObject = localStream;
+                        }
+                        void video.play().catch(() => {});
+                      }}
+                    />
+                  ) : (
+                    <div className="flex h-full min-h-[220px] items-center justify-center bg-[#303134] text-sm text-white/70">
+                      Camera is off
+                    </div>
+                  )}
+                  <div className="absolute bottom-3 left-3 rounded-full bg-black/55 px-3 py-1 text-sm text-white">
+                    {localParticipantLabel} (You)
+                    {isScreenSharing ? ' | Sharing screen' : ''}
+                    {!audioEnabled ? ' | Mic off' : ''}
+                  </div>
                 </div>
-              )}
-              {participant.isMuted && (
-                <div className="bg-red-600/80 backdrop-blur-sm rounded-full p-2">
-                  <MicOff className="w-3 h-3 text-white" />
+
+                {peers.map((peer) => {
+                  const peerLabel =
+                    participantDirectory[peer.peerId] || `Participant ${peer.peerId.slice(0, 8)}`;
+                  const peerVideoTrack = peer.stream?.getVideoTracks()[0] ?? null;
+                  const peerVideoVisible =
+                    !!peerVideoTrack &&
+                    peerVideoTrack.readyState === 'live' &&
+                    peerVideoTrack.enabled;
+
+                  return (
+                    <div
+                      key={peer.peerId}
+                      className="relative overflow-hidden rounded-2xl border border-[#3c4043] bg-[#2b2c2f]"
+                    >
+                      {peer.stream && peerVideoVisible ? (
+                        <video
+                          autoPlay
+                          playsInline
+                          className="h-full w-full object-cover"
+                          ref={(video) => {
+                            if (!video || !peer.stream) return;
+                            if (video.srcObject !== peer.stream) {
+                              video.srcObject = peer.stream;
+                            }
+                            void video.play().catch(() => {});
+                          }}
+                        />
+                      ) : (
+                        <div className="flex h-full min-h-[220px] items-center justify-center bg-[#303134] text-sm text-white/70">
+                          {peer.connectionState === 'connected'
+                            ? `${peerLabel} camera is off`
+                            : `Connecting to ${peerLabel}...`}
+                        </div>
+                      )}
+                      <div className="absolute bottom-3 left-3 rounded-full bg-black/55 px-3 py-1 text-sm text-white">
+                        {peerLabel}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              <div className="rounded-2xl border border-[#3c4043] bg-[#2b2c2f] p-3">
+                <div className="grid gap-3 lg:grid-cols-2">
+                  <div>
+                    <label className="mb-1 block text-xs uppercase tracking-[0.16em] text-white/60">Microphone</label>
+                    <select
+                      value={selectedAudioDeviceId}
+                      onChange={(event) => {
+                        void handleAudioDeviceChange(event.target.value);
+                      }}
+                      disabled={switchingDevices || audioDevices.length === 0}
+                      className="w-full rounded-xl border border-[#5f6368] bg-[#202124] px-3 py-2 text-sm text-white outline-none transition focus:border-[#8ab4f8]"
+                    >
+                      {audioDevices.length === 0 ? (
+                        <option value="">No microphone detected</option>
+                      ) : (
+                        audioDevices.map((device, index) => (
+                          <option key={device.deviceId} value={device.deviceId}>
+                            {device.label || `Microphone ${index + 1}`}
+                          </option>
+                        ))
+                      )}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="mb-1 block text-xs uppercase tracking-[0.16em] text-white/60">Camera</label>
+                    <select
+                      value={selectedVideoDeviceId}
+                      onChange={(event) => {
+                        void handleVideoDeviceChange(event.target.value);
+                      }}
+                      disabled={switchingDevices || videoDevices.length === 0}
+                      className="w-full rounded-xl border border-[#5f6368] bg-[#202124] px-3 py-2 text-sm text-white outline-none transition focus:border-[#8ab4f8]"
+                    >
+                      {videoDevices.length === 0 ? (
+                        <option value="">No camera detected</option>
+                      ) : (
+                        videoDevices.map((device, index) => (
+                          <option key={device.deviceId} value={device.deviceId}>
+                            {device.label || `Camera ${index + 1}`}
+                          </option>
+                        ))
+                      )}
+                    </select>
+                  </div>
                 </div>
-              )}
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {/* EMPTY STATE - Show only when no remote streams */} 
-      {remoteStreams.length === 0 && (
-        <div className="absolute inset-0 flex items-center justify-center bg-black/30 pointer-events-none">
-          <div className="text-center">
-            <div className="text-6xl mb-4">👥</div>
-            <div className="text-white text-xl">Waiting for other participants...</div>
-            <div className="text-white/60 text-sm mt-2">Room Code: {room?.code || roomId}</div>
-          </div>
-        </div>
-      )}
-
-      {/* Bottom Control Bar */}
-      <div className="bg-[#2a2a2a] px-8 py-4 flex items-center justify-between">
-        {/* Left Side - Timer and Room Info */}
-        <div className="flex items-center gap-6 text-white">
-          <div className="flex items-center gap-2">
-            <Timer className="w-5 h-5" />
-            <span className="text-[14px]">Time Elapsed: {formatTime(elapsedTime)}</span>
-          </div>
-          <div className="text-[14px]">
-            Room Code: {room?.code || roomId}
-          </div>
-        </div>
-
-        {/* Center - Controls */}
-        <div className="flex items-center gap-4">
-          {/* Timer Button */}
-          <button 
-            onClick={() => setShowFocusTimer(!showFocusTimer)}
-            className="bg-[#3a3a3a] hover:bg-[#4a4a4a] rounded-full p-3 transition-colors"
-          >
-            <Timer className="w-6 h-6 text-white" />
-          </button>
-
-          {/* Bell Button */}
-          <button 
-            onClick={() => setShowBlockNotifications(!showBlockNotifications)}
-            className="bg-[#3a3a3a] hover:bg-[#4a4a4a] rounded-full p-3 transition-colors"
-          >
-            {showBlockNotifications ? (
-              <BellOff className="w-6 h-6 text-white" />
-            ) : (
-              <Bell className="w-6 h-6 text-white" />
-            )}
-          </button>
-
-          {/* Notes Button */}
-          <button 
-            onClick={() => setShowNotes(!showNotes)}
-            className="bg-[#3a3a3a] hover:bg-[#4a4a4a] rounded-full p-3 transition-colors"
-          >
-            <StickyNote className="w-6 h-6 text-white" />
-          </button>
-
-          {/* Video Button */}
-          <button 
-            onClick={() => toggleVideo(!isVideoOn)}
-            className={`${
-              isVideoOn ? 'bg-[#3a3a3a] hover:bg-[#4a4a4a]' : 'bg-red-600 hover:bg-red-700'
-            } rounded-full p-3 transition-colors`}
-          >
-            {isVideoOn ? (
-              <Video className="w-6 h-6 text-white" />
-            ) : (
-              <VideoOff className="w-6 h-6 text-white" />
-            )}
-          </button>
-
-          {/* Mic Button */}
-          <button 
-            onClick={() => toggleAudio(!isAudioOn)}
-            className={`${
-              isAudioOn ? 'bg-[#3a3a3a] hover:bg-[#4a4a4a]' : 'bg-red-600 hover:bg-red-700'
-            } rounded-full p-3 transition-colors`}
-          >
-            {isAudioOn ? (
-              <Mic className="w-6 h-6 text-white" />
-            ) : (
-              <MicOff className="w-6 h-6 text-white" />
-            )}
-          </button>
-
-          {/* Screen Share Button */}
-          <ScreenShareMenu 
-            isSharing={isScreenSharing}
-            onScreenShareStart={() => setIsScreenSharing(true)}
-            onScreenShareStop={() => setIsScreenSharing(false)}
-          />
-
-          {/* People Button */}
-          <button 
-            onClick={() => setShowPeople(!showPeople)}
-            className="bg-[#3a3a3a] hover:bg-[#4a4a4a] rounded-full p-3 transition-colors"
-          >
-            <Users className="w-6 h-6 text-white" />
-          </button>
-
-          {/* Emoji Button */}
-          <button
-            onClick={() => setShowReactionPicker(!showReactionPicker)}
-            className="bg-[#3a3a3a] hover:bg-[#4a4a4a] rounded-full p-3 transition-colors"
-          >
-            <Smile className="w-6 h-6 text-white" />
-          </button>
-
-          {/* Chat Button */}
-          <button
-            onClick={() => setShowMessages(!showMessages)}
-            className="bg-[#3a3a3a] hover:bg-[#4a4a4a] rounded-full p-3 transition-colors"
-          >
-            <MessageSquare className="w-6 h-6 text-white" />
-          </button>
-
-          {/* Settings Button */}
-          <button
-            onClick={() => setShowDeviceSettings(!showDeviceSettings)}
-            className="bg-[#3a3a3a] hover:bg-[#4a4a4a] rounded-full p-3 transition-colors"
-          >
-            <Settings className="w-6 h-6 text-white" />
-          </button>
-        </div>
-
-        {/* Right Side - Leave Room */}
-        <button
-          onClick={handleLeaveRoom}
-          className="bg-[#ef4444] hover:bg-[#dc2626] text-white rounded-[20px] px-6 h-[42px] text-[14px] font-medium transition-colors"
-        >
-          Leave Room
-        </button>
-      </div>
-
-      {/* Focus Timer Panel */}
-      {showFocusTimer && (
-        <FocusTimerPanel
-          onClose={() => setShowFocusTimer(false)}
-          onTimerComplete={handleTimerComplete}
-        />
-      )}
-
-      {/* Focus Timer Notification */}
-      {timerNotification && (
-        <FocusTimerNotification
-          timerName={timerNotification.timerName}
-          duration={timerNotification.duration}
-          onDismiss={() => setTimerNotification(null)}
-        />
-      )}
-
-      {/* Block Notifications Panel */}
-      {showBlockNotifications && (
-        <BlockNotificationsPanel
-          onClose={() => setShowBlockNotifications(false)}
-          isBlocked={isNotificationsBlocked}
-          onToggle={() => setIsNotificationsBlocked(!isNotificationsBlocked)}
-        />
-      )}
-
-      {/* Notes Panel */}
-      {showNotes && (
-        <NotesPanel
-          onClose={() => setShowNotes(false)}
-          isOpen={showNotes}
-          roomId={roomId}
-          userId={userId}
-        />
-      )}
-
-      {/* People Panel */}
-      {showPeople && (
-        <PeoplePanel
-          onClose={() => setShowPeople(false)}
-          participants={participants as any}
-          onPinParticipant={handlePinParticipant as any}
-          pinnedParticipantId={pinnedParticipantId as any}
-          isAdmin={isAdmin}
-          currentUserId={currentUserId as any}
-        />
-      )}
-
-      {/* Reaction Picker */}
-      {showReactionPicker && (
-        <ReactionPicker
-          onClose={() => setShowReactionPicker(false)}
-          onReactionSelect={handleReactionSelect}
-        />
-      )}
-
-      {/* Reaction Bursts */}
-      {reactionBursts.map(burst => (
-        <ReactionBurst
-          key={burst.id}
-          emoji={burst.emoji}
-        />
-      ))}
-
-      {/* Other Users' Reactions */}
-      {otherUsersReactionsToShow.length > 0 && (
-        <div className="fixed inset-0 pointer-events-none z-[35] overflow-hidden">
-          {otherUsersReactionsToShow.map((reaction: { id: string; emoji: string; timestamp: number }, idx: number) => {
-            const positionClasses = [
-              'left-[20%] top-[30%]',
-              'left-[35%] top-[38%]',
-              'left-[50%] top-[30%]',
-              'left-[65%] top-[38%]',
-              'left-[40%] top-[50%]',
-            ];
-            const posClass = positionClasses[idx % positionClasses.length];
-            return (
-              <div
-                key={`${reaction.id}-${idx}`}
-                className={`absolute text-5xl drop-shadow-lg animate-float-up-fade ${posClass}`}
-              >
-                {reaction.emoji}
               </div>
-            );
-          })}
-        </div>
-      )}
 
-      {/* Messages Panel */}
-      {showMessages && (
-        <MessagesPanel
-          onClose={() => setShowMessages(false)}
-          currentUserId={currentUserId}
-          currentUserName={currentUser?.name || 'You'}
-          currentUserAvatar={participants.find(p => p.user_id === currentUserId)?.image || currentUser?.avatar_url || "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop"}
-          realtimeMessages={messages}
-          onSendMessage={sendMessage}
-        />
-      )}
-
-      {/* Device Settings Panel */}
-      {showDeviceSettings && (
-        <div className="fixed right-6 bottom-24 bg-[#2a2a2a] rounded-[16px] border border-[#3a3a3a] p-5 w-72 shadow-2xl z-40">
-          <div className="space-y-4">
-            {/* Header */}
-            <div className="flex items-center justify-between mb-4 pb-3 border-b border-[#3a3a3a]">
-              <h3 className="text-white font-semibold flex items-center gap-2">
-                <Settings className="w-4 h-4" />
-                Device Settings
-              </h3>
-              <button
-                onClick={() => setShowDeviceSettings(false)}
-                className="text-gray-400 hover:text-white text-xl font-light"
-              >
-                ×
-              </button>
-            </div>
-
-            {/* Microphone Selection */}
-            <div>
-              <label className="text-gray-300 text-sm font-medium block mb-2">Microphone</label>
-              <select
-                value={selectedAudioDeviceId}
-                onChange={(e) => handleAudioDeviceChange(e.target.value)}
-                className="w-full bg-[#3a3a3a] text-white rounded-lg px-3 py-2 text-sm border border-[#4a4a4a] hover:border-[#5a5a5a] focus:outline-none focus:border-blue-500"
-              >
-                <option value="default">Default Microphone</option>
-                {audioDevices.map((device) => (
-                  <option key={device.deviceId} value={device.deviceId}>
-                    {device.label || `Microphone ${device.deviceId.slice(0, 5)}...`}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* Camera Selection */}
-            <div>
-              <label className="text-gray-300 text-sm font-medium block mb-2">Camera</label>
-              <select
-                value={selectedVideoDeviceId}
-                onChange={(e) => handleVideoDeviceChange(e.target.value)}
-                className="w-full bg-[#3a3a3a] text-white rounded-lg px-3 py-2 text-sm border border-[#4a4a4a] hover:border-[#5a5a5a] focus:outline-none focus:border-blue-500"
-              >
-                <option value="default">Default Camera</option>
-                {videoDevices.map((device) => (
-                  <option key={device.deviceId} value={device.deviceId}>
-                    {device.label || `Camera ${device.deviceId.slice(0, 5)}...`}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* Device Info */}
-            {(audioDevices.length === 0 || videoDevices.length === 0) && (
-              <div className="bg-[#3a3a3a]/50 border border-[#4a4a4a] rounded-lg p-3 text-xs text-gray-400">
-                <p className="mb-1">💡 Tip: Grant camera/microphone permissions to see available devices</p>
+              <div className="flex flex-wrap justify-center gap-2">
+                <button
+                  onClick={() => {
+                    void handleToggleAudio();
+                  }}
+                  className={`rounded-full px-4 py-2 text-sm font-medium transition ${
+                    audioEnabled ? 'bg-[#3c4043] hover:bg-[#5f6368]' : 'bg-[#ea4335] hover:bg-[#dc3527]'
+                  }`}
+                >
+                  {audioEnabled ? 'Mute' : 'Unmute'}
+                </button>
+                <button
+                  onClick={() => {
+                    void handleToggleVideo();
+                  }}
+                  className={`rounded-full px-4 py-2 text-sm font-medium transition ${
+                    videoEnabled ? 'bg-[#3c4043] hover:bg-[#5f6368]' : 'bg-[#ea4335] hover:bg-[#dc3527]'
+                  }`}
+                >
+                  {videoEnabled ? 'Stop Video' : 'Start Video'}
+                </button>
+                <button
+                  onClick={() => {
+                    void handleToggleScreenShare();
+                  }}
+                  className={`rounded-full px-4 py-2 text-sm font-medium transition ${
+                    isScreenSharing ? 'bg-[#1a73e8] hover:bg-[#1767cc]' : 'bg-[#3c4043] hover:bg-[#5f6368]'
+                  }`}
+                >
+                  {isScreenSharing ? 'Stop Sharing' : 'Share Screen'}
+                </button>
               </div>
-            )}
+            </div>
+
+            <div className="w-full shrink-0 lg:w-[360px] xl:w-[420px]">
+              <div className="flex h-full flex-col gap-4">
+                <div className="rounded-2xl border border-[#3c4043] bg-[#2b2c2f] p-4">
+                  <p className="text-xs uppercase tracking-[0.16em] text-white/60">Room Code</p>
+                  <div className="mt-1 flex items-center justify-between gap-2">
+                    <p className="truncate text-lg font-semibold">{roomCode ?? 'Private room'}</p>
+                    {roomCode ? (
+                      <button
+                        onClick={handleCopyRoomCode}
+                        className="rounded-full border border-[#5f6368] px-3 py-1 text-xs text-white/80 transition hover:bg-[#3c4043]"
+                      >
+                        {codeCopyFeedback || 'Copy'}
+                      </button>
+                    ) : null}
+                  </div>
+                </div>
+
+                <div className="rounded-2xl border border-[#3c4043] bg-[#2b2c2f] p-4">
+                  <p className="mb-2 text-xs uppercase tracking-[0.16em] text-white/60">Participants</p>
+                  <div className="max-h-36 space-y-2 overflow-y-auto">
+                    {Object.entries(participantDirectory).length === 0 ? (
+                      <p className="text-sm text-white/70">No active participants yet.</p>
+                    ) : (
+                      Object.entries(participantDirectory).map(([id, name]) => (
+                        <div
+                          key={id}
+                          className="flex items-center justify-between rounded-xl border border-[#3c4043] bg-[#202124] px-3 py-2 text-sm"
+                        >
+                          <span className="truncate text-white/90">{name}</span>
+                          {id === userId ? (
+                            <span className="rounded-full bg-[#1a73e8]/20 px-2 py-0.5 text-xs text-[#8ab4f8]">You</span>
+                          ) : null}
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </div>
+
+                <div className="flex min-h-0 flex-1 flex-col rounded-2xl border border-[#3c4043] bg-[#2b2c2f] p-4">
+                  <div className="mb-3 flex gap-2">
+                    <button
+                      onClick={() => setActiveSideTab('chat')}
+                      className={`rounded-full px-3 py-1.5 text-sm transition ${
+                        activeSideTab === 'chat'
+                          ? 'bg-[#1a73e8] text-white'
+                          : 'bg-[#202124] text-white/70 hover:bg-[#3c4043]'
+                      }`}
+                    >
+                      Chat
+                    </button>
+                    <button
+                      onClick={() => setActiveSideTab('notes')}
+                      className={`rounded-full px-3 py-1.5 text-sm transition ${
+                        activeSideTab === 'notes'
+                          ? 'bg-[#1a73e8] text-white'
+                          : 'bg-[#202124] text-white/70 hover:bg-[#3c4043]'
+                      }`}
+                    >
+                      Notes
+                    </button>
+                  </div>
+
+                  {activeSideTab === 'notes' ? (
+                    <div className="flex min-h-0 flex-1 flex-col gap-2">
+                      <div className="flex items-center justify-between">
+                        <p className="text-sm text-white/70">Private notes for this room</p>
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => {
+                              void createRoomNote();
+                            }}
+                            disabled={savingRoomNote || loadingRoomNotes}
+                            className="rounded-full border border-[#5f6368] px-3 py-1 text-xs font-medium text-white/85 transition hover:bg-[#3c4043] disabled:opacity-60"
+                          >
+                            Add Note
+                          </button>
+                          <button
+                            onClick={() => {
+                              void saveRoomNote();
+                            }}
+                            disabled={savingRoomNote || loadingRoomNotes || !selectedRoomNoteId}
+                            className="rounded-full bg-[#1a73e8] px-3 py-1 text-xs font-medium text-white transition hover:bg-[#1767cc] disabled:opacity-60"
+                          >
+                            {savingRoomNote ? 'Saving...' : 'Save'}
+                          </button>
+                          <button
+                            onClick={() => {
+                              void deleteRoomNote();
+                            }}
+                            disabled={deletingRoomNote || !selectedRoomNoteId}
+                            className="rounded-full bg-[#ea4335] px-3 py-1 text-xs font-medium text-white transition hover:bg-[#dc3527] disabled:opacity-60"
+                          >
+                            {deletingRoomNote ? 'Deleting...' : 'Delete'}
+                          </button>
+                        </div>
+                      </div>
+
+                      <div className="grid min-h-0 flex-1 grid-cols-1 gap-2 xl:grid-cols-[150px_1fr]">
+                        <div className="max-h-[220px] space-y-1 overflow-y-auto rounded-xl border border-[#5f6368] bg-[#202124] p-2">
+                          {loadingRoomNotes ? (
+                            <p className="px-2 py-1 text-xs text-white/60">Loading notes...</p>
+                          ) : roomNotes.length === 0 ? (
+                            <p className="px-2 py-1 text-xs text-white/60">No notes yet</p>
+                          ) : (
+                            roomNotes.map((note) => (
+                              <button
+                                key={note.id}
+                                onClick={() => setSelectedRoomNoteId(note.id)}
+                                className={`w-full rounded-lg px-2 py-2 text-left text-xs transition ${
+                                  selectedRoomNoteId === note.id
+                                    ? 'bg-[#1a73e8]/25 text-white'
+                                    : 'bg-[#303134] text-white/80 hover:bg-[#3c4043]'
+                                }`}
+                              >
+                                <p className="truncate font-medium">{note.heading}</p>
+                                <p className="mt-0.5 truncate text-[10px] text-white/60">
+                                  {new Date(note.updated_at).toLocaleTimeString([], {
+                                    hour: '2-digit',
+                                    minute: '2-digit',
+                                  })}
+                                </p>
+                              </button>
+                            ))
+                          )}
+                        </div>
+
+                        <div className="flex min-h-[220px] flex-1 flex-col gap-2">
+                          <input
+                            value={noteHeading}
+                            onChange={(event) => setNoteHeading(event.target.value)}
+                            placeholder="Heading"
+                            disabled={!selectedRoomNoteId}
+                            className="rounded-xl border border-[#5f6368] bg-[#202124] px-3 py-2 text-sm text-white outline-none transition focus:border-[#8ab4f8] disabled:opacity-60"
+                          />
+                          <textarea
+                            value={noteBody}
+                            onChange={(event) => setNoteBody(event.target.value)}
+                            placeholder={
+                              selectedRoomNoteId
+                                ? 'Write your note body...'
+                                : 'Create a note to start writing'
+                            }
+                            disabled={!selectedRoomNoteId}
+                            className="min-h-0 flex-1 resize-none rounded-xl border border-[#5f6368] bg-[#202124] p-3 text-sm text-white outline-none transition focus:border-[#8ab4f8] disabled:opacity-60"
+                          />
+                        </div>
+                      </div>
+                      {noteSaveStatus ? <p className="text-xs text-white/70">{noteSaveStatus}</p> : null}
+                    </div>
+                  ) : (
+                    <div className="flex min-h-0 flex-1 flex-col">
+                      <div className="mb-2 text-sm text-white/70">{chatMessages.length} messages</div>
+                      <div className="min-h-[220px] flex-1 space-y-2 overflow-y-auto rounded-xl border border-[#5f6368] bg-[#202124] p-3">
+                        {chatMessages.length === 0 ? (
+                          <p className="text-sm text-white/70">No messages yet.</p>
+                        ) : (
+                          chatMessages.map((message) => {
+                            const isMe = message.sender_user_id === userId;
+                            return (
+                              <div
+                                key={message.id}
+                                className={`rounded-lg px-3 py-2 text-sm ${
+                                  isMe ? 'bg-[#1a73e8]/30 text-white' : 'bg-[#303134] text-white'
+                                }`}
+                              >
+                                <p className="text-xs font-semibold text-white/70">
+                                  {isMe ? localParticipantLabel : message.sender?.name || 'Participant'}
+                                </p>
+                                <p>{message.message}</p>
+                              </div>
+                            );
+                          })
+                        )}
+                      </div>
+                      <div className="mt-2 flex gap-2">
+                        <input
+                          value={chatInput}
+                          onChange={(event) => setChatInput(event.target.value)}
+                          onKeyDown={(event) => {
+                            if (event.key === 'Enter') {
+                              event.preventDefault();
+                              void sendChatMessage();
+                            }
+                          }}
+                          placeholder="Message everyone..."
+                          className="flex-1 rounded-xl border border-[#5f6368] bg-[#202124] px-3 py-2 text-sm text-white outline-none transition focus:border-[#8ab4f8]"
+                        />
+                        <button
+                          onClick={() => {
+                            void sendChatMessage();
+                          }}
+                          disabled={sendingChat || chatInput.trim().length === 0}
+                          className="rounded-xl bg-[#1a73e8] px-4 py-2 text-sm font-medium text-white transition hover:bg-[#1767cc] disabled:opacity-60"
+                        >
+                          {sendingChat ? '...' : 'Send'}
+                        </button>
+                      </div>
+                      {chatError ? <p className="mt-1 text-xs text-[#ffb8b8]">{chatError}</p> : null}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }
