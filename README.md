@@ -1,177 +1,48 @@
-# Supabase CLI
+# Lernova
 
-[![Coverage Status](https://coveralls.io/repos/github/supabase/cli/badge.svg?branch=develop)](https://coveralls.io/github/supabase/cli?branch=develop) [![Bitbucket Pipelines](https://img.shields.io/bitbucket/pipelines/supabase-cli/setup-cli/master?style=flat-square&label=Bitbucket%20Canary)](https://bitbucket.org/supabase-cli/setup-cli/pipelines) [![Gitlab Pipeline Status](https://img.shields.io/gitlab/pipeline-status/sweatybridge%2Fsetup-cli?label=Gitlab%20Canary)
-](https://gitlab.com/sweatybridge/setup-cli/-/pipelines)
+Lernova is a student and mentor learning platform built around focused study rooms, live collaboration, and guided support.
 
-[Supabase](https://supabase.io) is an open source Firebase alternative. We're building the features of Firebase using enterprise-grade open source tools.
+## What You Can Do
 
-This repository contains all the functionality for Supabase CLI.
+- Join a study room and choose a working style that fits your session
+- Use focus, silent, collaborative, or live modes while studying
+- Book mentor sessions and follow up with personalized guidance
+- Track your learning progress from your own dashboard
+- Access community and wellness tools to stay consistent
 
-- [x] Running Supabase locally
-- [x] Managing database migrations
-- [x] Creating and deploying Supabase Functions
-- [x] Generating types directly from your database schema
-- [x] Making authenticated HTTP requests to [Management API](https://supabase.com/docs/reference/api/introduction)
+## Getting Started
 
-## Getting started
+1. Open Lernova in your browser.
+2. Sign up as a student or mentor.
+3. Log in to continue to your dashboard.
+4. Start a study room or book a session depending on your role.
 
-### Install the CLI
+## Main Areas
 
-Available via [NPM](https://www.npmjs.com) as dev dependency. To install:
+### Landing Page
 
-```bash
-npm i supabase --save-dev
-```
+The landing page introduces Lernova, explains the study modes, and gives quick access to login and sign-up.
 
-When installing with yarn 4, you need to disable experimental fetch with the following nodejs config.
+### Login and Sign Up
 
-```
-NODE_OPTIONS=--no-experimental-fetch yarn add supabase
-```
+Use the login and sign-up screens to enter Lernova as a student or mentor.
 
-> **Note**
-For Bun versions below v1.0.17, you must add `supabase` as a [trusted dependency](https://bun.sh/guides/install/trusted) before running `bun add -D supabase`.
+### Student Dashboard
 
-<details>
-  <summary><b>macOS</b></summary>
+The student dashboard is where learners can manage study rooms, room links, reminders, notifications, profile settings, and support tools.
 
-  Available via [Homebrew](https://brew.sh). To install:
+### Mentor Dashboard
 
-  ```sh
-  brew install supabase/tap/supabase
-  ```
+The mentor dashboard is where mentors can manage sessions, availability, student requests, community activity, and profile settings.
 
-  To install the beta release channel:
-  
-  ```sh
-  brew install supabase/tap/supabase-beta
-  brew link --overwrite supabase-beta
-  ```
-  
-  To upgrade:
+### Room Access
 
-  ```sh
-  brew upgrade supabase
-  ```
-</details>
+If you join a shared room link, Lernova opens the room experience directly after you sign in.
 
-<details>
-  <summary><b>Windows</b></summary>
+## Support
 
-  Available via [Scoop](https://scoop.sh). To install:
+If something does not work as expected, check that you are signed in with the correct role and reload the page.
 
-  ```powershell
-  scoop bucket add supabase https://github.com/supabase/scoop-bucket.git
-  scoop install supabase
-  ```
+## Notes
 
-  To upgrade:
-
-  ```powershell
-  scoop update supabase
-  ```
-</details>
-
-<details>
-  <summary><b>Linux</b></summary>
-
-  Available via [Homebrew](https://brew.sh) and Linux packages.
-
-  #### via Homebrew
-
-  To install:
-
-  ```sh
-  brew install supabase/tap/supabase
-  ```
-
-  To upgrade:
-
-  ```sh
-  brew upgrade supabase
-  ```
-
-  #### via Linux packages
-
-  Linux packages are provided in [Releases](https://github.com/supabase/cli/releases). To install, download the `.apk`/`.deb`/`.rpm`/`.pkg.tar.zst` file depending on your package manager and run the respective commands.
-
-  ```sh
-  sudo apk add --allow-untrusted <...>.apk
-  ```
-
-  ```sh
-  sudo dpkg -i <...>.deb
-  ```
-
-  ```sh
-  sudo rpm -i <...>.rpm
-  ```
-
-  ```sh
-  sudo pacman -U <...>.pkg.tar.zst
-  ```
-</details>
-
-<details>
-  <summary><b>Other Platforms</b></summary>
-
-  You can also install the CLI via [go modules](https://go.dev/ref/mod#go-install) without the help of package managers.
-
-  ```sh
-  go install github.com/supabase/cli@latest
-  ```
-
-  Add a symlink to the binary in `$PATH` for easier access:
-
-  ```sh
-  ln -s "$(go env GOPATH)/bin/cli" /usr/bin/supabase
-  ```
-
-  This works on other non-standard Linux distros.
-</details>
-
-<details>
-  <summary><b>Community Maintained Packages</b></summary>
-
-  Available via [pkgx](https://pkgx.sh/). Package script [here](https://github.com/pkgxdev/pantry/blob/main/projects/supabase.com/cli/package.yml).
-  To install in your working directory:
-
-  ```bash
-  pkgx install supabase
-  ```
-
-  Available via [Nixpkgs](https://nixos.org/). Package script [here](https://github.com/NixOS/nixpkgs/blob/master/pkgs/development/tools/supabase-cli/default.nix).
-</details>
-
-### Run the CLI
-
-```bash
-supabase bootstrap
-```
-
-Or using npx:
-
-```bash
-npx supabase bootstrap
-```
-
-The bootstrap command will guide you through the process of setting up a Supabase project using one of the [starter](https://github.com/supabase-community/supabase-samples/blob/main/samples.json) templates.
-
-## Docs
-
-Command & config reference can be found [here](https://supabase.com/docs/reference/cli/about).
-
-## Breaking changes
-
-We follow semantic versioning for changes that directly impact CLI commands, flags, and configurations.
-
-However, due to dependencies on other service images, we cannot guarantee that schema migrations, seed.sql, and generated types will always work for the same CLI major version. If you need such guarantees, we encourage you to pin a specific version of CLI in package.json.
-
-## Developing
-
-To run from source:
-
-```sh
-# Go >= 1.22
-go run . help
-```
+This README is intended for users only. It does not include developer setup or contribution instructions.
