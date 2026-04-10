@@ -3,12 +3,14 @@
 /// <reference lib="deno.window" />
 import { serve } from "https://deno.land/std@0.208.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.8";
+import { sendEmail } from "../utils/email.ts";
 
 declare const Deno: any;
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
-const BREVO_API_KEY = Deno.env.get("BREVO_API_KEY") || "";
+const GMAIL_USER = Deno.env.get("GMAIL_USER") || "";
+const GMAIL_APP_PASSWORD = Deno.env.get("GMAIL_APP_PASSWORD") || "";
 
 interface RequestBody {
   email: string;
@@ -20,57 +22,41 @@ function generateOTP(): string {
   return Math.floor(100000 + Math.random() * 900000).toString();
 }
 
-async function sendOtpViaBrevo(email: string, otp: string, name: string): Promise<void> {
-  const response = await fetch("https://api.brevo.com/v3/smtp/email", {
-    method: "POST",
-    headers: {
-      "api-key": BREVO_API_KEY,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      sender: {
-        name: "Lernova",
-        email: "solaeraab@gmail.com",
-      },
-      to: [{ email, name }],
-      subject: "Verify Your Email - Lernova",
-      htmlContent: `
-        <div style="font-family: Arial, sans-serif; color: #333;">
-          <h2>Welcome to Lernova, ${name}!</h2>
-          <p>Use this code to verify your email:</p>
-          <div style="background: #f0f0f0; padding: 20px; border-radius: 8px; text-align: center;">
-            <h1 style="letter-spacing: 4px; color: #003566;">${otp}</h1>
-          </div>
-          <p>This code expires in <strong>10 minutes</strong>.</p>
-          <p>If you didn't sign up, ignore this email.</p>
-        </div>
-      `,
-    }),
-  });
+async function sendOtp(email: string, otp: string, name: string): Promise<void> {
+  const subject = "Verify Your Email - Lernova";
+  const htmlContent = `
+    <div style="font-family: Arial, sans-serif; color: #333;">
+      <h2>Welcome to Lernova, ${name}!</h2>
+      <p>Use this code to verify your email:</p>
+      <div style="background: #f0f0f0; padding: 20px; border-radius: 8px; text-align: center;">
+        <h1 style="letter-spacing: 4px; color: #003566;">${otp}</h1>
+      </div>
+      <p>This code expires in <strong>10 minutes</strong>.</p>
+      <p>If you didn't sign up, ignore this email.</p>
+    </div>
+  `;
 
-  if (!response.ok) {
-    const error = await response.text();
-    throw new Error(`Brevo API error: ${response.status} - ${error}`);
-  }
+  await sendEmail(email, subject, htmlContent, {
+    name: "Lernova",
+    email: "onboarding@resend.dev",
+  });
 }
 
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+};
+
 serve(async (req: Request) => {
-  // CORS
   if (req.method === "OPTIONS") {
-    return new Response("ok", {
-      headers: {
-        "Access-Control-Allow-Origin": "*",
-        "Access-Control-Allow-Methods": "POST",
-        "Access-Control-Allow-Headers": "Content-Type, Authorization",
-      },
-    });
+    return new Response("ok", { headers: corsHeaders });
   }
 
   try {
     if (req.method !== "POST") {
       return new Response(JSON.stringify({ error: "Method not allowed" }), {
         status: 405,
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...corsHeaders },
       });
     }
 
@@ -80,7 +66,7 @@ serve(async (req: Request) => {
     if (!email || !name || !role) {
       return new Response(
         JSON.stringify({ error: "Missing email, name, or role" }),
-        { status: 400, headers: { "Content-Type": "application/json" } }
+        { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
       );
     }
 
@@ -91,40 +77,45 @@ serve(async (req: Request) => {
     // Store OTP in database
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
-    // Check if email already exists
-    const { data: existing } = await supabase
-      .from("users")
-      .select("id")
-      .eq("email", email)
-      .maybeSingle();
+    const {
+      data: { users },
+      error: listError,
+    } = await supabase.auth.admin.listUsers({
+      email,
+    });
 
-    if (existing) {
+    if (listError) {
+      return new Response(JSON.stringify({ error: listError.message }), {
+        status: 500,
+        headers: { "Content-Type": "application/json", ...corsHeaders },
+      });
+    }
+
+    if (users && users.length > 0) {
       return new Response(JSON.stringify({ error: "Email already registered" }), {
         status: 400,
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...corsHeaders },
       });
     }
 
     // Store OTP token
-    const { error: insertError } = await supabase.from("otp_tokens").insert([
-      {
-        email,
-        otp_code: otp,
-        type: "signup",
-        user_data: { name, role },
-        expires_at: expiresAt.toISOString(),
-      },
-    ]);
+    const { error: insertError } = await supabase.from("otp_tokens").insert({
+      email,
+      otp_code: otp,
+      type: "signup",
+      user_data: { name, role },
+      expires_at: expiresAt.toISOString(),
+    });
 
     if (insertError) {
       return new Response(JSON.stringify({ error: insertError.message }), {
         status: 500,
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...corsHeaders },
       });
     }
 
-    // Send OTP via Brevo
-    await sendOtpViaBrevo(email, otp, name);
+    // Send OTP
+    await sendOtp(email, otp, name);
 
     return new Response(
       JSON.stringify({
@@ -132,13 +123,13 @@ serve(async (req: Request) => {
         message: "OTP sent to your email",
         email,
       }),
-      { status: 200, headers: { "Content-Type": "application/json" } }
+      { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
     );
   } catch (error) {
     console.error("Error:", error);
     return new Response(
       JSON.stringify({ error: error instanceof Error ? error.message : "Unknown error" }),
-      { status: 500, headers: { "Content-Type": "application/json" } }
+      { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
     );
   }
 });

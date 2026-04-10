@@ -12,13 +12,15 @@ const BREVO_API_KEY = Deno.env.get("BREVO_API_KEY") || "";
 
 interface RequestBody {
   email: string;
+  name: string;
+  role: "student" | "mentor";
 }
 
-function generateCode(): string {
+function generateOTP(): string {
   return Math.floor(100000 + Math.random() * 900000).toString();
 }
 
-async function sendCodeViaBrevo(email: string, code: string): Promise<void> {
+async function sendOtpViaBrevo(email: string, otp: string, name: string): Promise<void> {
   const response = await fetch("https://api.brevo.com/v3/smtp/email", {
     method: "POST",
     headers: {
@@ -30,17 +32,17 @@ async function sendCodeViaBrevo(email: string, code: string): Promise<void> {
         name: "Lernova",
         email: "solaeraab@gmail.com",
       },
-      to: [{ email }],
-      subject: "Reset Your Password - Lernova",
+      to: [{ email, name }],
+      subject: "Verify Your Email - Lernova",
       htmlContent: `
         <div style="font-family: Arial, sans-serif; color: #333;">
-          <h2>Password Reset Request</h2>
-          <p>Use this code to reset your password:</p>
+          <h2>Welcome to Lernova, ${name}!</h2>
+          <p>Use this code to verify your email:</p>
           <div style="background: #f0f0f0; padding: 20px; border-radius: 8px; text-align: center;">
-            <h1 style="letter-spacing: 4px; color: #003566;">${code}</h1>
+            <h1 style="letter-spacing: 4px; color: #003566;">${otp}</h1>
           </div>
-          <p>This code expires in <strong>15 minutes</strong>.</p>
-          <p>If you didn't request a password reset, ignore this email.</p>
+          <p>This code expires in <strong>10 minutes</strong>.</p>
+          <p>If you didn't sign up, ignore this email.</p>
         </div>
       `,
     }),
@@ -59,7 +61,7 @@ serve(async (req: Request) => {
       headers: {
         "Access-Control-Allow-Origin": "*",
         "Access-Control-Allow-Methods": "POST",
-        "Access-Control-Allow-Headers": "Content-Type, Authorization",
+        "Access-Control-Allow-Headers": "Content-Type, Authorization, apikey",
       },
     });
   }
@@ -73,46 +75,43 @@ serve(async (req: Request) => {
     }
 
     const body: RequestBody = await req.json();
-    const { email } = body;
+    const { email, name, role } = body;
 
-    if (!email) {
-      return new Response(JSON.stringify({ error: "Email is required" }), {
+    if (!email || !name || !role) {
+      return new Response(
+        JSON.stringify({ error: "Missing email, name, or role" }),
+        { status: 400, headers: { "Content-Type": "application/json" } }
+      );
+    }
+
+    // Generate OTP
+    const otp = generateOTP();
+    const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+
+    // Store OTP in database
+    const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+
+    // Check if email already exists
+    const { data: existing } = await supabase
+      .from("users")
+      .select("id")
+      .eq("email", email)
+      .maybeSingle();
+
+    if (existing) {
+      return new Response(JSON.stringify({ error: "Email already registered" }), {
         status: 400,
         headers: { "Content-Type": "application/json" },
       });
     }
 
-    // Generate reset code
-    const code = generateCode();
-    const expiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
-
-    // Store reset code in database
-    const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
-
-    // Check if email exists
-    const { data: user } = await supabase
-      .from("users")
-      .select("id, name")
-      .eq("email", email)
-      .maybeSingle();
-
-    if (!user) {
-      // Don't reveal if email exists
-      return new Response(
-        JSON.stringify({
-          success: true,
-          message: "If this email exists, a reset code will be sent",
-        }),
-        { status: 200, headers: { "Content-Type": "application/json" } }
-      );
-    }
-
-    // Store reset code token
+    // Store OTP token
     const { error: insertError } = await supabase.from("otp_tokens").insert([
       {
         email,
-        otp_code: code,
-        type: "password_reset",
+        otp_code: otp,
+        type: "signup",
+        user_data: { name, role },
         expires_at: expiresAt.toISOString(),
       },
     ]);
@@ -124,13 +123,14 @@ serve(async (req: Request) => {
       });
     }
 
-    // Send code via Brevo
-    await sendCodeViaBrevo(email, code);
+    // Send OTP via Brevo
+    await sendOtpViaBrevo(email, otp, name);
 
     return new Response(
       JSON.stringify({
         success: true,
-        message: "Reset code sent to your email",
+        message: "OTP sent to your email",
+        email,
       }),
       { status: 200, headers: { "Content-Type": "application/json" } }
     );

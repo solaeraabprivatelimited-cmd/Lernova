@@ -5,6 +5,8 @@ import {
   Tooltip, ResponsiveContainer,
 } from "recharts";
 import { profile as profileApi, studySessions, moodCheckins, sessionRequests, sessions as sessionsApi, notifications as notificationsApi, getCurrentUser } from "@/app/lib/api";
+import { enable2FA, disable2FA, get2FASettings, sendOTP, verifyOTP } from "@/utils/supabase/twoFA";
+import { toast } from "sonner";
 import {
   ArrowLeft, User, Calendar, GraduationCap, Smile, Shield, Bell,
   Camera, X, Plus, Check, Lock, Eye, EyeOff, Trash2, ChevronDown,
@@ -598,14 +600,7 @@ function SecurityPage() {
         {/* Account Info */}
         <div className="bg-white rounded-[20px] border border-[#edf0f4] p-6 shadow-sm">
           <h3 className="text-[16px] font-bold text-[#003566] mb-4">Account Info</h3>
-          <div className="flex items-center justify-between py-4 border-b border-[#edf0f4]">
-            <div>
-              <p className="text-[13px] font-semibold text-[#1e293b]">Two-Factor Authentication</p>
-              <p className="text-[11px] text-[#94a3b8] mt-0.5">Add extra security to your account</p>
-            </div>
-            <span className="text-[10px] font-bold text-[#f77f00] px-2.5 py-1 rounded-full"
-              style={{ background: 'rgba(247,127,0,0.08)', border: '1px solid rgba(247,127,0,0.12)' }}>Coming Soon</span>
-          </div>
+          <TwoFASettings />
           <div className="flex items-center justify-between py-4">
             <div>
               <p className="text-[13px] font-semibold text-[#1e293b]">Delete Account</p>
@@ -683,6 +678,177 @@ const navConfig: { key: UserSubNav; label: string; icon: React.ReactNode }[] = [
   { key: "security", label: "Account & Security", icon: <Shield className="w-[18px] h-[18px]" /> },
   { key: "notifications", label: "Notifications", icon: <Bell className="w-[18px] h-[18px]" /> },
 ];
+
+function TwoFASettings() {
+  const [isEnabled, setIsEnabled] = useState(false);
+  const [email, setEmail] = useState("");
+  const [showOTPVerify, setShowOTPVerify] = useState(false);
+  const [otpInput, setOtpInput] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [timeLeft, setTimeLeft] = useState(0);
+
+  useEffect(() => {
+    const loadSettings = async () => {
+      const settings = await get2FASettings();
+      if (settings) {
+        setIsEnabled(settings.isEnabled);
+        setEmail(settings.email);
+      }
+    };
+    loadSettings();
+  }, []);
+
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    if (timeLeft > 0) {
+      interval = setInterval(() => setTimeLeft((t) => t - 1), 1000);
+    }
+    return () => clearInterval(interval);
+  }, [timeLeft]);
+
+  const handleEnable = async () => {
+    setIsLoading(true);
+    try {
+      const currentUser = getCurrentUser();
+      if (!currentUser) {
+        toast.error("Not authenticated");
+        return;
+      }
+
+      const result = await sendOTP(email || currentUser.email, currentUser.id);
+      if (result.success) {
+        setShowOTPVerify(true);
+        setTimeLeft(result.expiresInSeconds);
+        toast.success("OTP sent to your email");
+      } else {
+        toast.error(result.error || "Failed to send OTP");
+      }
+    } catch (err) {
+      console.error("[2FA] Enable error:", err);
+      toast.error("Error enabling 2FA");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleVerifyOTP = async () => {
+    if (otpInput.length !== 6) {
+      toast.error("OTP must be 6 digits");
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const currentUser = getCurrentUser();
+      if (!currentUser) {
+        toast.error("Not authenticated");
+        return;
+      }
+
+      const result = await verifyOTP(currentUser.id, otpInput);
+      if (result.success) {
+        const enableResult = await enable2FA(email || currentUser.email);
+        if (enableResult.success) {
+          setIsEnabled(true);
+          setShowOTPVerify(false);
+          setOtpInput("");
+          setTimeLeft(0);
+          toast.success("Two-Factor Authentication enabled!");
+        } else {
+          toast.error(enableResult.error || "Failed to enable 2FA");
+        }
+      } else {
+        toast.error(result.error || "Invalid OTP");
+      }
+    } catch (err) {
+      console.error("[2FA] Verify error:", err);
+      toast.error("Error verifying OTP");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleDisable = async () => {
+    setIsLoading(true);
+    try {
+      const result = await disable2FA();
+      if (result.success) {
+        setIsEnabled(false);
+        toast.success("Two-Factor Authentication disabled");
+      } else {
+        toast.error(result.error || "Failed to disable 2FA");
+      }
+    } catch (err) {
+      console.error("[2FA] Disable error:", err);
+      toast.error("Error disabling 2FA");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  if (showOTPVerify) {
+    return (
+      <div className="py-4 border-b border-[#edf0f4]">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="w-8 h-8 rounded-[10px] flex items-center justify-center" style={{ background: 'rgba(158,51,226,0.06)' }}>
+            <Check className="w-4 h-4 text-[#9e33e2]" />
+          </div>
+          <h4 className="text-[14px] font-bold text-[#1e293b]">Verify Your Email</h4>
+        </div>
+        <p className="text-[12px] text-[#5a7089] mb-4">Enter the 6-digit code sent to your email</p>
+        <input
+          type="text"
+          maxLength={6}
+          value={otpInput}
+          onChange={(e) => setOtpInput(e.target.value.replace(/\D/g, ''))}
+          placeholder="000000"
+          className={inputClass}
+        />
+        <p className="text-[11px] text-[#94a3b8] mt-2">Expires in {timeLeft}s</p>
+        <div className="flex gap-2 mt-4">
+          <button
+            onClick={handleVerifyOTP}
+            disabled={isLoading || otpInput.length !== 6}
+            className="flex-1 h-[44px] rounded-[12px] text-[13px] font-bold text-white transition-all disabled:opacity-60 cursor-pointer hover:shadow-lg"
+            style={{ background: 'linear-gradient(135deg, #003566, #0967bd)' }}
+          >
+            {isLoading ? "Verifying..." : "Verify & Enable"}
+          </button>
+          <button
+            onClick={() => { setShowOTPVerify(false); setOtpInput(""); setTimeLeft(0); }}
+            className="h-[44px] px-6 rounded-[12px] text-[13px] font-bold text-[#5a7089] border border-[#e2e8f0] cursor-pointer hover:bg-[#f8f9fc]"
+          >
+            Cancel
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex items-center justify-between py-4 border-b border-[#edf0f4]">
+      <div>
+        <p className="text-[13px] font-semibold text-[#1e293b]">Two-Factor Authentication</p>
+        <p className="text-[11px] text-[#94a3b8] mt-0.5">
+          {isEnabled ? "Protect your account with email OTP" : "Add extra security to your account"}
+        </p>
+      </div>
+      <div className="flex items-center gap-3">
+        {isEnabled && <span className="text-[10px] font-bold text-[#16a34a] px-2.5 py-1 rounded-full" style={{ background: 'rgba(34,197,94,0.08)', border: '1px solid rgba(34,197,94,0.12)' }}>Enabled</span>}
+        <Toggle
+          on={isEnabled}
+          onClick={() => {
+            if (isEnabled) {
+              handleDisable();
+            } else {
+              handleEnable();
+            }
+          }}
+        />
+      </div>
+    </div>
+  );
+}
 
 export function UserProfileSettings({ onBack }: UserProfileSettingsProps) {
   const [activeNav, setActiveNav] = useState<UserSubNav>("basic");

@@ -86,9 +86,17 @@ export default function App() {
       <Route
         path="/"
         element={
-          <div className="min-h-screen bg-white w-full overflow-x-hidden">
-            <LandingPage onLogin={() => navigate('/login')} onSignUp={() => navigate('/signup')} />
-          </div>
+          isRestoringSession ? (
+            <div className="min-h-screen bg-white w-full flex items-center justify-center">
+              <p>Loading...</p>
+            </div>
+          ) : currentUser ? (
+            <Navigate to={resolveHomeRoute(currentUser)} replace />
+          ) : (
+            <div className="min-h-screen bg-white w-full overflow-x-hidden">
+              <LandingPage onLogin={() => navigate('/login')} onSignUp={() => navigate('/signup')} />
+            </div>
+          )
         }
       />
 

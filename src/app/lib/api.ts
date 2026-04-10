@@ -9,6 +9,14 @@ import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
 export const BASE_URL = `https://${projectId}.supabase.co/functions/v1/server`;
 
+function createPublicFunctionHeaders(): Record<string, string> {
+  return {
+    'Content-Type': 'application/json',
+    apikey: publicAnonKey,
+    Authorization: `Bearer ${publicAnonKey}`,
+  };
+}
+
 // ─── Supabase Auth client (true singleton) ──────────────────────────────────────
 //
 // Strategy: Create the client EXACTLY ONCE per JavaScript runtime, regardless of
@@ -329,9 +337,7 @@ export const auth = {
   async requestSignupOtp(name: string, email: string, role: 'student' | 'mentor') {
     const response = await fetch('https://evtvzmherkrahjsxdddi.supabase.co/functions/v1/send-signup-otp', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers: createPublicFunctionHeaders(),
       body: JSON.stringify({ email, name, role }),
     });
     
@@ -347,9 +353,7 @@ export const auth = {
   async verifySignupOtp(email: string, otp: string, password: string) {
     const response = await fetch('https://evtvzmherkrahjsxdddi.supabase.co/functions/v1/verify-auth-otp', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers: createPublicFunctionHeaders(),
       body: JSON.stringify({ email, otp, password, type: 'signup' }),
     });
     
@@ -360,10 +364,22 @@ export const auth = {
     
     const data = await response.json();
     
-    // Set session from response
-    if (data.session) {
-      setAccessToken(data.session.access_token);
-      setCurrentUser(mapSessionUser(data.session));
+    // After user is created, sign them in to get a session
+    if (data.user) {
+      const supabase = getSupabaseClient();
+      const { data: loginData, error: loginError } = await supabase.auth.signInWithPassword({
+        email: data.user.email,
+        password,
+      });
+
+      if (loginError) {
+        throw new Error(loginError.message);
+      }
+
+      if (loginData.session) {
+        setAccessToken(loginData.session.access_token);
+        setCurrentUser(mapSessionUser(loginData.session));
+      }
     }
     
     return data;
@@ -384,9 +400,7 @@ export const auth = {
   async requestPasswordResetCode(email: string) {
     const response = await fetch('https://evtvzmherkrahjsxdddi.supabase.co/functions/v1/send-password-reset-code', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers: createPublicFunctionHeaders(),
       body: JSON.stringify({ email }),
     });
     
@@ -402,9 +416,7 @@ export const auth = {
   async verifyPasswordResetCode(email: string, code: string, newPassword: string) {
     const response = await fetch('https://evtvzmherkrahjsxdddi.supabase.co/functions/v1/verify-auth-otp', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers: createPublicFunctionHeaders(),
       body: JSON.stringify({ email, otp: code, newPassword, type: 'password_reset' }),
     });
     
@@ -560,7 +572,7 @@ export const notes = {
     const { data, error } = await supabase
       .from('notes')
       .select('id, title, content, updated_at, created_at')
-      .eq('user_id', user.id)
+      .eq('profile_id', user.id)
       .order('updated_at', { ascending: false });
 
     if (error) throw new Error(error.message);
@@ -581,7 +593,7 @@ export const notes = {
     const { data, error } = await supabase
       .from('notes')
       .insert({
-        user_id: user.id,
+        profile_id: user.id,
         title,
         content,
       })
@@ -613,7 +625,7 @@ export const notes = {
       .from('notes')
       .update(updates)
       .eq('id', id)
-      .eq('user_id', user.id)
+      .eq('profile_id', user.id)
       .select('id, title, content, updated_at, created_at')
       .single();
 
@@ -636,7 +648,7 @@ export const notes = {
       .from('notes')
       .delete()
       .eq('id', id)
-      .eq('user_id', user.id);
+      .eq('profile_id', user.id);
 
     if (error) throw new Error(error.message);
   },
@@ -652,42 +664,51 @@ export const tasks = {
 
     const { data, error } = await supabase
       .from('planner_tasks')
-      .select('id, title, status, created_at')
-      .eq('user_id', user.id)
+      .select('id, title, description, due_date, priority, status, created_at')
+      .eq('profile_id', user.id)
       .order('created_at', { ascending: false });
 
     if (error) throw new Error(error.message);
 
     return (data ?? []).map((row: any) => ({
       id: row.id,
-      title: row.title ?? 'Untitled task',
+      title: row.title ?? 'Task',
+      description: row.description ?? '',
+      dueDate: row.due_date ?? '',
+      priority: row.priority ?? 'low',
       completed: row.status === 'completed',
     }));
   },
-  create: async (title: string) => {
+  create: async (data: { title: string; description?: string; dueDate?: string; priority?: 'high' | 'medium' | 'low' }) => {
     const supabase = getSupabaseClient();
     const user = await getCurrentSessionUser();
     if (!user) throw new Error('Authentication expired. Please log in again.');
 
-    const { data, error } = await supabase
+    const { data: created, error } = await supabase
       .from('planner_tasks')
       .insert({
-        user_id: user.id,
-        title,
-        status: 'todo',
+        profile_id: user.id,
+        title: data.title,
+        description: data.description || null,
+        due_date: data.dueDate || null,
+        priority: data.priority || 'low',
+        status: 'incomplete',
       })
-      .select('id, title, status')
+      .select('id, title, description, due_date, priority, status')
       .single();
 
     if (error) throw new Error(error.message);
 
     return {
-      id: data.id,
-      title: data.title,
-      completed: data.status === 'completed',
+      id: created.id,
+      title: created.title,
+      description: created.description ?? '',
+      dueDate: created.due_date ?? '',
+      priority: created.priority ?? 'low',
+      completed: created.status === 'completed',
     };
   },
-  update: async (id: string, data: { title?: string; completed?: boolean }) => {
+  update: async (id: string, data: Record<string, any>) => {
     const supabase = getSupabaseClient();
     const user = await getCurrentSessionUser();
     if (!user) throw new Error('Authentication expired. Please log in again.');
@@ -697,8 +718,11 @@ export const tasks = {
     };
 
     if (typeof data.title === 'string') updates.title = data.title;
+    if (typeof data.description === 'string') updates.description = data.description;
+    if (typeof data.dueDate === 'string') updates.due_date = data.dueDate || null;
+    if (typeof data.priority === 'string') updates.priority = data.priority;
     if (typeof data.completed === 'boolean') {
-      updates.status = data.completed ? 'completed' : 'todo';
+      updates.status = data.completed ? 'completed' : 'incomplete';
       updates.completed_at = data.completed ? new Date().toISOString() : null;
     }
 
@@ -706,8 +730,8 @@ export const tasks = {
       .from('planner_tasks')
       .update(updates)
       .eq('id', id)
-      .eq('user_id', user.id)
-      .select('id, title, status')
+      .eq('profile_id', user.id)
+      .select('id, title, description, due_date, priority, status')
       .single();
 
     if (error) throw new Error(error.message);
@@ -715,6 +739,9 @@ export const tasks = {
     return {
       id: updated.id,
       title: updated.title,
+      description: updated.description ?? '',
+      dueDate: updated.due_date ?? '',
+      priority: updated.priority ?? 'low',
       completed: updated.status === 'completed',
     };
   },
@@ -727,7 +754,7 @@ export const tasks = {
       .from('planner_tasks')
       .delete()
       .eq('id', id)
-      .eq('user_id', user.id);
+      .eq('profile_id', user.id);
 
     if (error) throw new Error(error.message);
   },
@@ -744,7 +771,7 @@ export const reminders = {
     const { data, error } = await supabase
       .from('planner_reminders')
       .select('id, title, frequency, reminder_date, reminder_time, status, created_at')
-      .eq('user_id', user.id)
+      .eq('profile_id', user.id)
       .order('created_at', { ascending: false });
 
     if (error) throw new Error(error.message);
@@ -766,7 +793,7 @@ export const reminders = {
     const { data: created, error } = await supabase
       .from('planner_reminders')
       .insert({
-        user_id: user.id,
+        profile_id: user.id,
         title: data.title,
         frequency: data.frequency || 'Daily',
         reminder_date: data.reminderDate || null,
@@ -809,7 +836,7 @@ export const reminders = {
       .from('planner_reminders')
       .update(updates)
       .eq('id', id)
-      .eq('user_id', user.id)
+      .eq('profile_id', user.id)
       .select('id, title, frequency, reminder_date, reminder_time, status')
       .single();
 
@@ -833,7 +860,7 @@ export const reminders = {
       .from('planner_reminders')
       .delete()
       .eq('id', id)
-      .eq('user_id', user.id);
+      .eq('profile_id', user.id);
 
     if (error) throw new Error(error.message);
   },
@@ -850,7 +877,7 @@ export const studyPlans = {
     const { data, error } = await supabase
       .from('study_plans')
       .select('id, title, description, subjects, start_date, end_date, start_time, end_time, reminder, priority, progress_percent, status, created_at')
-      .eq('user_id', user.id)
+      .eq('profile_id', user.id)
       .order('created_at', { ascending: false });
 
     if (error) throw new Error(error.message);
@@ -881,7 +908,7 @@ export const studyPlans = {
     const { data: created, error } = await supabase
       .from('study_plans')
       .insert({
-        user_id: user.id,
+        profile_id: user.id,
         title: data.subject,
         description: data.goal || null,
         goals: data.goal ? [data.goal] : [],
@@ -948,7 +975,7 @@ export const studyPlans = {
       .from('study_plans')
       .update(updates)
       .eq('id', id)
-      .eq('user_id', user.id)
+      .eq('profile_id', user.id)
       .select('id, title, description, start_date, end_date, start_time, end_time, reminder, priority, progress_percent, status')
       .single();
 
@@ -964,7 +991,7 @@ export const studyPlans = {
       .from('study_plans')
       .delete()
       .eq('id', id)
-      .eq('user_id', user.id);
+      .eq('profile_id', user.id);
 
     if (error) throw new Error(error.message);
   },
@@ -981,41 +1008,29 @@ export const moodCheckins = {
     const { data, error } = await supabase
       .from('mood_checkins')
       .select('id, mood, note, created_at')
-      .eq('user_id', user.id)
+      .eq('profile_id', user.id)
       .order('created_at', { ascending: false });
 
     if (error) throw new Error(error.message);
-
-    const emojiMap: Record<string, string> = {
-      excellent: '😄',
-      good: '😊',
-      okay: '😐',
-      stressed: '😰',
-      overwhelmed: '😔',
-      tired: '😴',
-    };
 
     return (data ?? []).map((row: any) => ({
       id: row.id,
       mood: row.mood,
       note: row.note ?? '',
-      emoji: emojiMap[row.mood] ?? '🙂',
-      timestamp: row.created_at,
+      createdAt: row.created_at,
     }));
   },
-  create: async (mood: string, emoji: string, note?: string) => {
+  create: async (data: { mood: string; note?: string }) => {
     const supabase = getSupabaseClient();
     const user = await getCurrentSessionUser();
     if (!user) throw new Error('Authentication expired. Please log in again.');
 
-    const normalizedMood = String(mood || '').toLowerCase();
-
-    const { data, error } = await supabase
+    const { data: created, error } = await supabase
       .from('mood_checkins')
       .insert({
-        user_id: user.id,
-        mood: normalizedMood,
-        note: note || null,
+        profile_id: user.id,
+        mood: data.mood,
+        note: data.note || null,
       })
       .select('id, mood, note, created_at')
       .single();
@@ -1023,11 +1038,10 @@ export const moodCheckins = {
     if (error) throw new Error(error.message);
 
     return {
-      id: data.id,
-      mood: data.mood,
-      note: data.note ?? '',
-      emoji,
-      timestamp: data.created_at,
+      id: created.id,
+      mood: created.mood,
+      note: created.note ?? '',
+      createdAt: created.created_at,
     };
   },
 };

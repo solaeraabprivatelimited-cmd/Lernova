@@ -29,7 +29,7 @@ function EyeIcon({ open }: { open: boolean }) {
 }
 
 export function SignUpPage({ onSignUp, onLogin, onBack }: SignUpPageProps) {
-  const [stage, setStage] = useState<'form' | 'otp'>('form');
+  const [stage, setStage] = useState<'form' | 'otp' | 'success'>('form');
   const [activeTab, setActiveTab] = useState<'student' | 'mentor'>('student');
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
@@ -73,7 +73,11 @@ export function SignUpPage({ onSignUp, onLogin, onBack }: SignUpPageProps) {
       await auth.verifySignupOtp(email, otpCode, password);
       try { await seed.demo(); } catch {}
       markOnboardingPending(activeTab);
-      onSignUp();
+      if (onSignUp) {
+        onSignUp();
+      } else {
+        setStage('success');
+      }
     } catch (e: any) {
       setError(e.message || 'Invalid OTP. Please try again.');
     } finally {
@@ -82,12 +86,11 @@ export function SignUpPage({ onSignUp, onLogin, onBack }: SignUpPageProps) {
   };
 
   const handleOtpChange = (index: number, value: string) => {
-    if (!/^\d*$/.test(value)) return;
+    if (isNaN(Number(value))) return;
     const newOtp = [...otp];
-    newOtp[index] = value.slice(-1);
+    newOtp[index] = value;
     setOtp(newOtp);
-    
-    // Auto-focus next field
+
     if (value && index < 5) {
       const nextInput = document.getElementById(`otp-${index + 1}`) as HTMLInputElement;
       nextInput?.focus();
@@ -404,7 +407,7 @@ export function SignUpPage({ onSignUp, onLogin, onBack }: SignUpPageProps) {
                   </button>
                 </p>
               </>
-            ) : (
+            ) : stage === 'otp' ? (
               <>
                 {/* OTP Verification Stage */}
                 <div>
@@ -490,6 +493,42 @@ export function SignUpPage({ onSignUp, onLogin, onBack }: SignUpPageProps) {
                 >
                   ← Back to form
                 </button>
+              </>
+            ) : (
+              <>
+                {/* Success Stage */}
+                <div className="text-center flex flex-col items-center gap-4">
+                  <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center">
+                    <svg viewBox="0 0 24 24" className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+                      <polyline points="22 4 12 14.01 9 11.01" />
+                    </svg>
+                  </div>
+                  <h1
+                    className="mb-2"
+                    style={{
+                      fontFamily: "'DM Serif Display', serif",
+                      fontSize: 'clamp(30px, 3.5vw, 40px)',
+                      lineHeight: 1.1,
+                      color: '#003566',
+                    }}
+                  >
+                    Account Created!
+                  </h1>
+                  <p className="text-[15px] text-[#5a7089] leading-relaxed">
+                    Your account has been successfully created. You can now log in.
+                  </p>
+                  <button
+                    onClick={onLogin}
+                    className="w-full h-[52px] rounded-full flex items-center justify-center gap-2 text-[15px] font-bold text-white transition-all duration-200 shadow-lg"
+                    style={{
+                      background: 'linear-gradient(135deg, #003566, #0967bd)',
+                      boxShadow: '0 4px 20px rgba(0,53,102,0.3)',
+                    }}
+                  >
+                    Go to Login
+                  </button>
+                </div>
               </>
             )}
           </div>

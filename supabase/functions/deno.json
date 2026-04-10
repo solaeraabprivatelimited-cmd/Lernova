@@ -1,4 +1,5 @@
 {
+  "importMap": "../import_map.json",
   "imports": {
     "std/": "https://deno.land/std@0.208.0/",
     "npm:hono": "https://esm.sh/hono@4.4.0",

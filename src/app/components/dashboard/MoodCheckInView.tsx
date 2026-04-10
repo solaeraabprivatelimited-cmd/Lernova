@@ -122,7 +122,7 @@ export function MoodCheckInView({ onBack }: MoodCheckInViewProps) {
     const detected = forcedMood ?? inferMoodFromText(message);
     if (!detected) return;
     try {
-      const saved = await moodCheckins.create(detected.mood, detected.emoji, message);
+            const saved = await moodCheckins.create({ mood: detected.mood, note: message });
       setSavedCheckins((prev) => [saved, ...prev].slice(0, 20));
     } catch (error) {
       console.log("Mood check-in save error:", error);

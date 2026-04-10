@@ -2863,6 +2863,8 @@ export function MentorDashboard({ onLogout }: MentorDashboardProps) {
   const [activeNav, setActiveNav] = useState<NavItem>('create-session');
   const [showProfile, setShowProfile] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
+  const [notifications, setNotifications] = useState<any[]>([]);
+  const [unreadCount, setUnreadCount] = useState(0);
   const [showOnboarding, setShowOnboarding] = useState(() => shouldShowPendingOnboarding(cachedUser?.id, 'mentor'));
   const [mentorStats, setMentorStats] = useState<MentorStats>({
     totalSessions: 0,
@@ -2879,6 +2881,30 @@ export function MentorDashboard({ onLogout }: MentorDashboardProps) {
       avatar: cached?.avatar || cached?.avatar_url || null,
     };
   });
+
+  useEffect(() => {
+    const fetchNotifications = async () => {
+      try {
+        const items = await notificationsApi.list();
+        setNotifications(items);
+        setUnreadCount(items.filter(item => !item.read).length);
+      } catch (error) {
+        console.error('Failed to fetch notifications:', error);
+      }
+    };
+
+    fetchNotifications();
+
+    const unsubscribe = notificationsApi.subscribe((items) => {
+      setNotifications(items);
+      setUnreadCount(items.filter(item => !item.read).length);
+    });
+
+    return () => {
+      // This is not a function, so we can't call it.
+      // supabase.removeChannel(channel);
+    };
+  }, []);
 
   useEffect(() => {
     let mounted = true;
@@ -2948,6 +2974,21 @@ export function MentorDashboard({ onLogout }: MentorDashboardProps) {
     setActiveNav('profile');
   }, []);
 
+  const handleToggleNotifications = async () => {
+    if (!showNotifications) {
+      try {
+        await notificationsApi.markAllRead();
+        const items = await notificationsApi.list();
+        setNotifications(items);
+        setUnreadCount(0);
+      } catch (error) {
+        console.error('Failed to mark notifications as read:', error);
+      }
+    }
+    setShowNotifications(!showNotifications);
+    setShowProfile(false);
+  };
+
   const renderContent = () => {
     switch (activeNav) {
       case 'create-session': return <CreateSessionView stats={mentorStats} loadingStats={mentorStatsLoading} mentorName={displayName} />;
@@ -2989,9 +3030,14 @@ export function MentorDashboard({ onLogout }: MentorDashboardProps) {
           {/* Bell */}
           <button
             className="relative p-1 hover:opacity-70 transition-opacity"
-            onClick={() => { setShowNotifications(!showNotifications); setShowProfile(false); }}
+            onClick={handleToggleNotifications}
           >
             <BellIcon />
+            {unreadCount > 0 && (
+              <div className="absolute top-0 right-0 size-4 bg-red-500 rounded-full flex items-center justify-center text-white text-xs">
+                {unreadCount}
+              </div>
+            )}
             {showNotifications && (
               <div
                 className="absolute top-[44px] right-0 z-30 bg-white rounded-[20px] shadow-[0px_4px_50px_5px_rgba(0,0,0,0.1)] w-[380px] p-[32px] flex flex-col gap-[24px]"
@@ -3005,146 +3051,22 @@ export function MentorDashboard({ onLogout }: MentorDashboardProps) {
 
                 {/* Scrollable body */}
                 <div className="flex flex-col gap-[16px] max-h-[520px] overflow-y-auto pr-1">
-
-                  {/* ── Session Updates ── */}
-                  <p className="font-['Poppins'] text-[12px] text-[rgba(0,0,0,0.7)]">Session Updates</p>
-
-                  {/* Session Feedback */}
-                  <div className="flex gap-[10px] items-start">
-                    <div className="bg-[#2295ff] flex items-center justify-center rounded-[5px] shrink-0 size-[44px]">
-                      <svg className="size-[24px]" fill="none" viewBox="0 0 24 24">
-                        <path d="M12 15C12.2833 15 12.521 14.904 12.713 14.712C12.905 14.52 13.0007 14.2827 13 14C12.9993 13.7173 12.9033 13.48 12.712 13.288C12.5207 13.096 12.2833 13 12 13C11.7167 13 11.4793 13.096 11.288 13.288C11.0967 13.48 11.0007 13.7173 11 14C10.9993 14.2827 11.0953 14.5203 11.288 14.713C11.4807 14.9057 11.718 15.0013 12 15ZM11 11H13V5H11V11ZM2 22V4C2 3.45 2.196 2.97933 2.588 2.588C2.98 2.19667 3.45067 2.00067 4 2H20C20.55 2 21.021 2.196 21.413 2.588C21.805 2.98 22.0007 3.45067 22 4V16C22 16.55 21.8043 17.021 21.413 17.413C21.0217 17.805 20.5507 18.0007 20 18H6L2 22ZM5.15 16H20V4H4V17.125L5.15 16Z" fill="white" />
-                      </svg>
-                    </div>
-                    <div className="flex flex-col font-['Poppins'] text-[12px]">
-                      <p className="text-[14px] text-black leading-normal">Session Feedback</p>
-                      <p className="text-[rgba(0,0,0,0.7)] leading-normal"><span className="text-black">Student Name:</span> Ravi Kumar</p>
-                      <p className="text-[rgba(0,0,0,0.7)] leading-normal">18-10-2025 &nbsp;|&nbsp; 9:00PM - 10:00PM</p>
-                      <div className="flex items-center gap-[2px]">
-                        <p className="text-[rgba(0,0,0,0.7)] leading-normal"><span className="text-black">Rating:</span> {mentorStatsLoading ? '--' : formatRating(mentorStats.averageRating)}</p>
-                        <svg className="size-[14px]" fill="none" viewBox="0 0 20 20">
-                          <path d="M10 14.3958L6.54167 16.4792C6.38889 16.5764 6.22917 16.6181 6.0625 16.6042C5.89583 16.5903 5.75 16.5347 5.625 16.4375C5.5 16.3403 5.40278 16.2189 5.33333 16.0733C5.26389 15.9278 5.25 15.7644 5.29167 15.5833L6.20833 11.6458L3.14583 9C3.00694 8.875 2.92028 8.7325 2.88583 8.5725C2.85139 8.4125 2.86167 8.25639 2.91667 8.10417C2.97167 7.95195 3.055 7.82694 3.16667 7.72917C3.27833 7.63139 3.43111 7.56889 3.625 7.54167L7.66667 7.1875L9.22917 3.47917C9.29861 3.3125 9.40639 3.1875 9.5525 3.10417C9.69861 3.02083 9.84778 2.97917 10 2.97917C10.1522 2.97917 10.3014 3.02083 10.4475 3.10417C10.5936 3.1875 10.7014 3.3125 10.7708 3.47917L12.3333 7.1875L16.375 7.54167C16.5694 7.56945 16.7222 7.63194 16.8333 7.72917C16.9444 7.82639 17.0278 7.95139 17.0833 8.10417C17.1389 8.25695 17.1494 8.41333 17.115 8.57333C17.0806 8.73333 16.9936 8.87556 16.8542 9L13.7917 11.6458L14.7083 15.5833C14.75 15.7639 14.7361 15.9272 14.6667 16.0733C14.5972 16.2194 14.5 16.3408 14.375 16.4375C14.25 16.5342 14.1042 16.5897 13.9375 16.6042C13.7708 16.6186 13.6111 16.5769 13.4583 16.4792L10 14.3958Z" fill="#F77F00" />
-                        </svg>
+                  {notifications.length === 0 ? (
+                    <p className="text-center text-gray-500">No notifications</p>
+                  ) : (
+                    notifications.map(notification => (
+                      <div key={notification.id} className="flex gap-[10px] items-start">
+                        <div className="bg-[#2295ff] flex items-center justify-center rounded-[5px] shrink-0 size-[44px]">
+                          {/* You can add icons based on notification type */}
+                        </div>
+                        <div className="flex flex-col font-['Poppins'] text-[12px]">
+                          <p className="text-[14px] text-black leading-normal">{notification.title}</p>
+                          <p className="text-[rgba(0,0,0,0.7)] leading-normal">{notification.message}</p>
+                          <p className="text-[rgba(0,0,0,0.5)] text-xs mt-1">{new Date(notification.createdAt).toLocaleString()}</p>
+                        </div>
                       </div>
-                      <p className="text-[rgba(0,0,0,0.7)] leading-normal"><span className="text-black">Feedback:</span> Good</p>
-                    </div>
-                  </div>
-
-                  {/* Session Reminder */}
-                  <div className="flex gap-[10px] items-start">
-                    <div className="bg-[#8A38F5] flex items-center justify-center rounded-[5px] shrink-0 size-[44px]">
-                      <svg className="size-[24px]" fill="none" viewBox="0 0 44 44">
-                        <path d="M26.5002 14.2059C27.8576 14.9897 28.9868 16.1144 29.776 17.4687C30.5652 18.823 30.987 20.3599 30.9997 21.9273C31.0124 23.4947 30.6154 25.0383 29.8482 26.4051C29.081 27.772 27.9701 28.9148 26.6255 29.7204C25.2809 30.526 23.7492 30.9664 22.182 30.9982C20.6148 31.0299 19.0666 30.6518 17.6905 29.9012C16.3143 29.1507 15.1581 28.0538 14.3362 26.7191C13.5143 25.3844 13.0553 23.8581 13.0045 22.2915L13 21.9999L13.0045 21.7083C13.0549 20.154 13.5072 18.6393 14.3173 17.3118C15.1274 15.9843 16.2676 14.8894 17.6269 14.1338C18.9861 13.3782 20.5179 12.9877 22.073 13.0003C23.6281 13.0129 25.1534 13.4283 26.5002 14.2059ZM22.0001 16.5999C21.7797 16.5999 21.5669 16.6809 21.4022 16.8273C21.2374 16.9738 21.1322 17.1757 21.1064 17.3946L21.1001 17.4999V21.9999L21.1082 22.1178C21.1287 22.2739 21.1899 22.422 21.2855 22.5471L21.3638 22.6371L24.0638 25.3371L24.1484 25.4109C24.3063 25.5334 24.5004 25.5998 24.7001 25.5998C24.8999 25.5998 25.094 25.5334 25.2519 25.4109L25.3365 25.3362L25.4112 25.2516C25.5336 25.0938 25.6001 24.8997 25.6001 24.6999C25.6001 24.5001 25.5336 24.306 25.4112 24.1482L25.3365 24.0636L22.9001 21.6264V17.4999L22.8938 17.3946C22.868 17.1757 22.7628 16.9738 22.5981 16.8273C22.4333 16.6809 22.2206 16.5999 22.0001 16.5999Z" fill="white" />
-                      </svg>
-                    </div>
-                    <div className="flex flex-col gap-[10px] flex-1">
-                      <div className="flex flex-col font-['Poppins'] text-[12px]">
-                        <p className="text-[14px] text-black leading-normal">Session Reminder</p>
-                        <p className="text-[rgba(0,0,0,0.7)] leading-normal">Your Session Starts in 10 Minutes</p>
-                        <p className="text-[rgba(0,0,0,0.7)] leading-normal"><span className="text-black">Student Name:</span> Ravi Kumar</p>
-                        <p className="text-[rgba(0,0,0,0.7)] leading-normal"><span className="text-black">Time:</span> 5:00PM - 6:00PM</p>
-                      </div>
-                      <div className="bg-[#8a38f5] flex h-[30px] items-center justify-center rounded-[20px] w-full cursor-pointer hover:bg-[#7a28e5] transition-colors">
-                        <p className="font-['Poppins'] text-[12px] text-white">Join Session</p>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Session Rescheduled */}
-                  <div className="flex gap-[10px] items-center">
-                    <div className="bg-[#dc2626] flex items-center justify-center rounded-[5px] shrink-0 size-[44px]">
-                      <svg className="size-[24px]" fill="none" viewBox="0 0 24 24">
-                        <path d="M19 3H18V1H16V3H8V1H6V3H5C3.89 3 3 3.89 3 5V19C3 19.5304 3.21071 20.0391 3.58579 20.4142C3.96086 20.7893 4.46957 21 5 21H19C20.1 21 21 20.1 21 19V5C21 4.46957 20.7893 3.96086 20.4142 3.58579C20.0391 3.21071 19.5304 3 19 3ZM19 19H5V8H19V19ZM12 10V12H16V15H12V17L8 13.5L12 10Z" fill="white" />
-                      </svg>
-                    </div>
-                    <div className="flex flex-col font-['Poppins'] text-[12px]">
-                      <p className="text-[14px] text-black leading-normal">Session Rescheduled</p>
-                      <p className="text-[rgba(0,0,0,0.7)] leading-normal"><span className="text-black">Student Name:</span> Ravi Kumar</p>
-                      <p className="text-[rgba(0,0,0,0.7)] leading-normal">New Date and Time:</p>
-                      <p className="text-[rgba(0,0,0,0.7)] leading-normal">18-10-2025 &nbsp;|&nbsp; 9:00PM - 10:00PM</p>
-                    </div>
-                  </div>
-
-                  {/* Session Booked */}
-                  <div className="flex gap-[10px] items-center">
-                    <div className="bg-[#34b161] flex items-center justify-center rounded-[5px] shrink-0 size-[44px]">
-                      <svg className="size-[24px]" fill="none" viewBox="0 0 24 24">
-                        <path clipRule="evenodd" d="M20.55 6.285C21.015 6.696 21.0585 7.407 20.6475 7.875L12.0225 17.625C11.9229 17.7376 11.8017 17.8291 11.6661 17.8941C11.5306 17.9591 11.3833 17.9963 11.2332 18.0034C11.083 18.0106 10.9329 17.9875 10.7918 17.9357C10.6506 17.8838 10.5213 17.8042 10.4115 17.7015L4.7865 12.4515C4.57011 12.2476 4.44325 11.9663 4.43365 11.6691C4.42406 11.3719 4.53252 11.083 4.73531 10.8655C4.9381 10.6481 5.21874 10.5197 5.51587 10.5086C5.81301 10.4974 6.10248 10.6044 6.321 10.806L11.106 15.261L18.966 6.381C19.064 6.27014 19.1829 6.1797 19.3159 6.11486C19.4489 6.05002 19.5934 6.01206 19.7411 6.00314C19.8888 5.99422 20.0368 6.01453 20.1766 6.0629C20.3165 6.11126 20.4454 6.18674 20.556 6.285H20.55Z" fill="white" fillRule="evenodd" />
-                      </svg>
-                    </div>
-                    <div className="flex flex-col font-['Poppins'] text-[12px]">
-                      <p className="text-[14px] text-black leading-normal">Session Booked</p>
-                      <p className="text-[rgba(0,0,0,0.7)] leading-normal"><span className="text-black">Student Name:</span> Ravi Kumar</p>
-                      <p className="text-[rgba(0,0,0,0.7)] leading-normal">18-10-2025 &nbsp;|&nbsp; 9:00PM - 10:00PM</p>
-                    </div>
-                  </div>
-
-                  <div className="border-t border-[rgba(0,0,0,0.08)]" />
-
-                  {/* ── System and Platform Alerts ── */}
-                  <p className="font-['Poppins'] text-[12px] text-[rgba(0,0,0,0.7)]">System and Platform Alerts</p>
-
-                  {/* Server Maintenance */}
-                  <div className="flex gap-[10px] items-center">
-                    <div className="bg-[#f77f00] flex items-center justify-center rounded-[5px] shrink-0 size-[44px]">
-                      <svg className="size-[24px]" fill="none" viewBox="0 0 24 24">
-                        <path clipRule="evenodd" d="M8.062 7.938L9 5.127L6.158 2.287C6.738 2.102 7.358 2 8 2C8.93717 1.99973 9.86138 2.21899 10.6985 2.64022C11.5357 3.06144 12.2626 3.67292 12.8209 4.42564C13.3792 5.17837 13.7534 6.05141 13.9135 6.9748C14.0736 7.89818 14.0152 8.84625 13.743 9.743L20 16C20.2626 16.2626 20.471 16.5744 20.6131 16.9176C20.7553 17.2608 20.8284 17.6286 20.8284 18C20.8284 18.3714 20.7553 18.7392 20.6131 19.0824C20.471 19.4256 20.2626 19.7374 20 20C19.7374 20.2626 19.4256 20.471 19.0824 20.6131C18.7392 20.7553 18.3714 20.8284 18 20.8284C17.6286 20.8284 17.2608 20.7553 16.9176 20.6131C16.5744 20.471 16.2626 20.2626 16 20L9.743 13.743C8.69515 14.0617 7.58007 14.0874 6.51863 13.8175C5.45718 13.5476 4.48986 12.9923 3.72152 12.2118C2.95318 11.4313 2.41313 10.4554 2.1599 9.38981C1.90668 8.32426 1.94994 7.20972 2.285 6.167L5.124 9L7.937 8.063L8.062 7.938Z" fill="white" fillRule="evenodd" />
-                      </svg>
-                    </div>
-                    <div className="flex flex-col font-['Poppins'] text-[12px] flex-1">
-                      <p className="text-[14px] text-black leading-normal">Server Maintenance</p>
-                      <p className="text-[rgba(0,0,0,0.7)] leading-normal">Scheduled server maintenance is ongoing. Some features may be temporarily unavailable.</p>
-                    </div>
-                  </div>
-
-                  {/* New Feature Release */}
-                  <div className="flex gap-[10px] items-center">
-                    <div className="bg-[#3451b1] flex items-center justify-center rounded-[5px] shrink-0 size-[44px]">
-                      <svg className="size-[24px]" fill="none" viewBox="0 0 24 24">
-                        <path d="M6 19.05L7.975 18.25C7.80833 17.7667 7.65433 17.275 7.513 16.775C7.37167 16.275 7.259 15.775 7.175 15.275L6 16.075V19.05ZM10 18H14C14.3 17.3333 14.5417 16.521 14.725 15.563C14.9083 14.605 15 13.6257 15 12.625C15 10.975 14.725 9.41267 14.175 7.938C13.625 6.46333 12.9 5.32567 12 4.525C11.1 5.325 10.375 6.46267 9.825 7.938C9.275 9.41333 9 10.9757 9 12.625C9 13.625 9.09167 14.6043 9.275 15.563C9.45833 16.5217 9.7 17.334 10 18ZM12 13C11.45 13 10.9793 12.8043 10.588 12.413C10.1967 12.0217 10.0007 11.5507 10 11C9.99933 10.4493 10.1953 9.97867 10.588 9.588C10.9807 9.19733 11.4513 9.00133 12 9C12.5487 8.99867 13.0197 9.19467 13.413 9.588C13.8063 9.98133 14.002 10.452 14 11C13.998 11.548 13.8023 12.019 13.413 12.413C13.0237 12.807 12.5527 13.0027 12 13ZM18 19.05V16.075L16.825 15.275C16.7417 15.775 16.6293 16.275 16.488 16.775C16.3467 17.275 16.1923 17.7667 16.025 18.25L18 19.05ZM12 1.975C13.65 3.175 14.896 4.7 15.738 6.55C16.58 8.4 17.0007 10.55 17 13L19.1 14.4C19.3833 14.5833 19.6043 14.825 19.763 15.125C19.9217 15.425 20.0007 15.7417 20 16.075V22L15.025 20H8.975L4 22V16.075C4 15.7417 4.07933 15.425 4.238 15.125C4.39667 14.825 4.61733 14.5833 4.9 14.4L7 13C7 10.55 7.421 8.4 8.263 6.55C9.105 4.7 10.3507 3.175 12 1.975Z" fill="white" />
-                      </svg>
-                    </div>
-                    <div className="flex flex-col font-['Poppins'] text-[12px] flex-1">
-                      <p className="text-[14px] text-black leading-normal">New Feature Release</p>
-                      <p className="text-[rgba(0,0,0,0.7)] leading-normal">A new update is available! Check out the latest features and improvements.</p>
-                    </div>
-                  </div>
-
-                  <div className="border-t border-[rgba(0,0,0,0.08)]" />
-
-                  {/* ── Withdraw Notifications ── */}
-                  <p className="font-['Poppins'] text-[12px] text-[rgba(0,0,0,0.7)]">Withdraw Notification</p>
-
-                  {/* Withdraw Successful */}
-                  <div className="flex gap-[10px] items-start">
-                    <div className="bg-[#34b161] flex items-center justify-center rounded-[5px] shrink-0 size-[44px]">
-                      <svg className="size-[24px]" fill="none" viewBox="0 0 24 24">
-                        <path clipRule="evenodd" d="M20.55 6.285C21.015 6.696 21.0585 7.407 20.6475 7.875L12.0225 17.625C11.9229 17.7376 11.8017 17.8291 11.6661 17.8941C11.5306 17.9591 11.3833 17.9963 11.2332 18.0034C11.083 18.0106 10.9329 17.9875 10.7918 17.9357C10.6506 17.8838 10.5213 17.8042 10.4115 17.7015L4.7865 12.4515C4.57011 12.2476 4.44325 11.9663 4.43365 11.6691C4.42406 11.3719 4.53252 11.083 4.73531 10.8655C4.9381 10.6481 5.21874 10.5197 5.51587 10.5086C5.81301 10.4974 6.10248 10.6044 6.321 10.806L11.106 15.261L18.966 6.381C19.064 6.27014 19.1829 6.1797 19.3159 6.11486C19.4489 6.05002 19.5934 6.01206 19.7411 6.00314C19.8888 5.99422 20.0368 6.01453 20.1766 6.0629C20.3165 6.11126 20.4454 6.18674 20.556 6.285H20.55Z" fill="white" fillRule="evenodd" />
-                      </svg>
-                    </div>
-                    <div className="flex flex-col font-['Poppins'] text-[12px] flex-1">
-                      <p className="text-[14px] text-black leading-normal">Withdraw Successful</p>
-                      <p className="text-[rgba(0,0,0,0.7)] leading-normal"><span className="text-black">Amount:</span> {mentorStatsLoading ? '--' : formatInr(mentorStats.totalEarnings)}</p>
-                      <p className="text-[rgba(0,0,0,0.7)] leading-normal"><span className="text-black">Mode:</span> UPI</p>
-                      <p className="text-[rgba(0,0,0,0.7)] leading-normal">30-10-2025 &nbsp;|&nbsp; 8:00PM</p>
-                    </div>
-                  </div>
-
-                  {/* Withdraw Failed */}
-                  <div className="flex gap-[10px] items-start">
-                    <div className="bg-[#dc2626] flex items-center justify-center rounded-[5px] shrink-0 size-[44px]">
-                      <svg className="size-[24px]" fill="none" viewBox="0 0 24 24" stroke="white" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5">
-                        <path d="M16.875 7.125L7.125 16.875M7.125 7.125L16.875 16.875" />
-                      </svg>
-                    </div>
-                    <div className="flex flex-col font-['Poppins'] text-[12px] flex-1">
-                      <p className="text-[14px] text-black leading-normal">Withdraw Failed</p>
-                      <p className="text-[rgba(0,0,0,0.7)] leading-normal"><span className="text-black">Amount:</span> {mentorStatsLoading ? '--' : formatInr(mentorStats.totalEarnings)}</p>
-                      <p className="text-[rgba(0,0,0,0.7)] leading-normal"><span className="text-black">Mode:</span> UPI</p>
-                      <p className="text-[rgba(0,0,0,0.7)] leading-normal">28-10-2025 &nbsp;|&nbsp; 8:00PM</p>
-                    </div>
-                  </div>
-
+                    ))
+                  )}
                 </div>
               </div>
             )}

@@ -79,6 +79,18 @@ export function OnboardingWalkthrough({
     }
   }, [open]);
 
+  const handleNext = () => {
+    setActiveIndex((current) => Math.min(steps.length - 1, current + 1));
+  };
+
+  const handleBack = () => {
+    setActiveIndex((current) => Math.max(0, current - 1));
+  };
+
+  const handleStepAction = () => {
+    onStepAction(activeIndex);
+  };
+
   const isLastStep = activeIndex === steps.length - 1;
   const safeName = userName?.trim() || (role === 'mentor' ? 'Mentor' : 'Learner');
 
@@ -151,7 +163,7 @@ export function OnboardingWalkthrough({
                 </div>
                 <button
                   type="button"
-                  onClick={() => onStepAction(activeIndex)}
+                  onClick={handleStepAction}
                   className="w-full rounded-full bg-[#003566] px-5 py-3 text-[14px] font-semibold text-white transition hover:bg-[#00284c]"
                 >
                   {activeStep.ctaLabel}
@@ -171,7 +183,7 @@ export function OnboardingWalkthrough({
               <div className="flex w-full flex-col-reverse gap-3 sm:w-auto sm:flex-row">
                 <button
                   type="button"
-                  onClick={() => setActiveIndex((current) => Math.max(0, current - 1))}
+                  onClick={handleBack}
                   disabled={activeIndex === 0}
                   className="rounded-full border border-[#d5e3f0] px-5 py-3 text-[14px] font-semibold text-[#003566] transition hover:border-[#0967bd] disabled:cursor-not-allowed disabled:opacity-40"
                 >
@@ -188,7 +200,7 @@ export function OnboardingWalkthrough({
                 ) : (
                   <button
                     type="button"
-                    onClick={() => setActiveIndex((current) => Math.min(steps.length - 1, current + 1))}
+                    onClick={handleNext}
                     className="rounded-full bg-[#0967bd] px-5 py-3 text-[14px] font-semibold text-white transition hover:bg-[#07579f]"
                   >
                     Next step

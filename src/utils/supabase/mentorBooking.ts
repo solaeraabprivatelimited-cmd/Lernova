@@ -92,18 +92,6 @@ export async function saveMentorBooking(
       .select()
       .single();
 
-    // Temporary compatibility fallback while mentor_id migration rolls out.
-    if (insertError && /mentor_id/i.test(insertError.message)) {
-      const { mentor_id: _ignored, ...legacyPayload } = payload;
-      const retry = await supabase
-        .from('mentor_bookings')
-        .insert(legacyPayload)
-        .select()
-        .single();
-      data = retry.data;
-      insertError = retry.error;
-    }
-
     if (insertError) {
       console.error('[mentorBooking] Insert error:', insertError);
       return { success: false, error: insertError.message };

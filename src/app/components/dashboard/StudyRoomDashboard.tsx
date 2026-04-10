@@ -29,6 +29,7 @@ import { ImageWithFallback } from "@/app/components/figma/ImageWithFallback";
 import { Sheet, SheetContent, SheetTrigger, SheetTitle, SheetDescription } from "@/app/components/ui/sheet";
 import { Menu, LogOut } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
+import { matchSorter } from 'match-sorter';
 
 // --- Icons Components based on Figma Import ---
 
@@ -491,47 +492,38 @@ export function StudyRoomDashboard({ onLogout }: { onLogout?: () => void }) {
   const [showNotifications, setShowNotifications] = React.useState(false);
   const [showProfile, setShowProfile] = React.useState(false);
   const [unreadNotificationCount, setUnreadNotificationCount] = React.useState(0);
+  const [searchQuery, setSearchQuery] = React.useState("");
+  const [userProfile, setUserProfile] = React.useState<any>(null);
   const unreadNotificationCountRef = React.useRef(0);
-  const [showOnboarding, setShowOnboarding] = React.useState(() => shouldShowPendingOnboarding(cachedUser?.id, 'student'));
-  const [userProfile, setUserProfile] = React.useState<{ name: string; role: string; avatar?: string | null }>(() => {
-    const cached = cachedUser;
-    return {
-      name: cached?.name || 'User',
-      role: cached?.role || 'student',
-      avatar: cached?.avatar || cached?.avatar_url || null,
-    };
-  });
+  const [isSidebarOpen, setSidebarOpen] = React.useState(false);
 
   React.useEffect(() => {
     if (!isAuthenticated()) {
+      onLogout?.();
       return;
     }
+    if (!isKnownDashboardSubPath(dashboardSubPath)) {
+      navigate("/dashboard", { replace: true });
+    }
+  }, [dashboardSubPath, onLogout, navigate]);
 
+  React.useEffect(() => {
     let mounted = true;
-    (async () => {
+    const fetchProfile = async () => {
       try {
-        const prof = await profileApi.get();
-        if (!mounted || !prof) return;
-        setUserProfile({
-          name: prof.name || 'User',
-          role: prof.role || 'student',
-          avatar: prof.avatar || prof.avatar_url || null,
-        });
-        setCurrentUser(prof);
-      } catch {
-        // Keep cached profile if fetch fails.
+        const profile = await profileApi.get();
+        if (mounted) {
+          setUserProfile(profile);
+        }
+      } catch (error) {
+        console.error("Failed to fetch profile:", error);
       }
-    })();
+    };
+    fetchProfile();
     return () => {
       mounted = false;
     };
   }, []);
-
-  React.useEffect(() => {
-    if (!isKnownDashboardSubPath(dashboardSubPath)) {
-      navigate('/dashboard', { replace: true });
-    }
-  }, [dashboardSubPath, navigate]);
 
   React.useEffect(() => {
     let mounted = true;
@@ -789,6 +781,13 @@ export function StudyRoomDashboard({ onLogout }: { onLogout?: () => void }) {
     }
   ];
 
+  const filteredModes = React.useMemo(() => {
+    if (!searchQuery) {
+      return modes;
+    }
+    return matchSorter(modes, searchQuery, { keys: ['title', 'description', 'tag'] });
+  }, [searchQuery, modes]);
+
   if (activeMode === "Focus Mode") {
     return <FocusMode onLeave={() => navigate('/dashboard')} />;
   }
@@ -1001,21 +1000,31 @@ export function StudyRoomDashboard({ onLogout }: { onLogout?: () => void }) {
                 </h2>
               </div>
 
-              {/* Right: Search, Notifications, Profile */}
-              <div className="flex items-center gap-2 md:gap-3 ml-auto">
-                {/* Search */}
-                <div className="hidden md:flex items-center gap-2.5 px-4 py-2.5 rounded-[14px] bg-[#f5f7fa] border border-transparent hover:border-[#e2e8f0] transition-all w-[240px] group">
-                  <svg viewBox="0 0 24 24" className="w-4 h-4 shrink-0 text-[#94a3b8] group-focus-within:text-[#0967bd] transition-colors" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-                    <circle cx="11" cy="11" r="8" /><path d="M21 21l-4.35-4.35" />
+              {/* Right: Search & Profile */}
+              <div className="flex items-center gap-3 md:gap-4">
+                {/* Search Bar */}
+                <div className="relative hidden md:block">
+                  <svg
+                    viewBox="0 0 24 24"
+                    className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-black/30"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2.5"
+                    strokeLinecap="round"
+                  >
+                    <circle cx="11" cy="11" r="8" />
+                    <path d="M21 21l-4.35-4.35" />
                   </svg>
                   <input
                     type="text"
-                    placeholder="Search rooms, tools..."
-                    className="bg-transparent text-[13px] text-[#334155] placeholder:text-[#94a3b8] outline-none w-full"
+                    placeholder="Search modes..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full max-w-xs h-11 pl-11 pr-4 bg-gray-50 border border-transparent rounded-[14px] text-[13px] text-[#0d1b2a] placeholder:text-black/30 outline-none focus:bg-white focus:border-gray-200 focus:ring-2 focus:ring-gray-200/50 transition-all"
                   />
                 </div>
 
-                {/* Notification Bell */}
+                {/* Notifications */}
                 <div className="relative">
                   <button
                     onClick={() => {

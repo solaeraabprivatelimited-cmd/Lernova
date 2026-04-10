@@ -163,7 +163,7 @@ async function ensureRelationalUserRow() {
   const user = await getAuthSessionUser();
 
   const { error } = await supabase
-    .from('users')
+    .from('profiles')
     .upsert({
       id: user.id,
       email: user.email,
@@ -297,7 +297,7 @@ async function directGetRoom(roomId: string): Promise<Room> {
   let userMap = new Map<string, { name: string; avatar_url: string | null }>();
   if (userIds.length > 0) {
     const { data: users } = await supabase
-      .from('users')
+      .from('profiles')
       .select('id, name, avatar_url')
       .in('id', userIds);
 

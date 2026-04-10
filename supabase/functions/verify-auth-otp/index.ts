@@ -8,197 +8,133 @@ declare const Deno: any;
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
+const BREVO_API_KEY = Deno.env.get("BREVO_API_KEY") || "";
 
-interface SignupVerifyBody {
+interface RequestBody {
   email: string;
-  otp: string;
-  password: string;
-  type: "signup" | "password_reset";
-  newPassword?: string;
+  name: string;
+  role: "student" | "mentor";
 }
 
-serve(async (req: Request) => {
-  // CORS
-  if (req.method === "OPTIONS") {
-    return new Response("ok", {
-      headers: {
-        "Access-Control-Allow-Origin": "*",
-        "Access-Control-Allow-Methods": "POST",
-        "Access-Control-Allow-Headers": "Content-Type, Authorization",
+function generateOTP(): string {
+  return Math.floor(100000 + Math.random() * 900000).toString();
+}
+
+async function sendOtpViaBrevo(email: string, otp: string, name: string): Promise<void> {
+  const response = await fetch("https://api.brevo.com/v3/smtp/email", {
+    method: "POST",
+    headers: {
+      "api-key": BREVO_API_KEY,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      sender: {
+        name: "Lernova",
+        email: "solaeraab@gmail.com",
       },
-    });
+      to: [{ email, name }],
+      subject: "Verify Your Email - Lernova",
+      htmlContent: `
+        <div style="font-family: Arial, sans-serif; color: #333;">
+          <h2>Welcome to Lernova, ${name}!</h2>
+          <p>Use this code to verify your email:</p>
+          <div style="background: #f0f0f0; padding: 20px; border-radius: 8px; text-align: center;">
+            <h1 style="letter-spacing: 4px; color: #003566;">${otp}</h1>
+          </div>
+          <p>This code expires in <strong>10 minutes</strong>.</p>
+          <p>If you didn't sign up, ignore this email.</p>
+        </div>
+      `,
+    }),
+  });
+
+  if (!response.ok) {
+    const error = await response.text();
+    throw new Error(`Brevo API error: ${response.status} - ${error}`);
+  }
+}
+
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+};
+
+serve(async (req: Request) => {
+  if (req.method === "OPTIONS") {
+    return new Response("ok", { headers: corsHeaders });
   }
 
   try {
     if (req.method !== "POST") {
       return new Response(JSON.stringify({ error: "Method not allowed" }), {
         status: 405,
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...corsHeaders },
       });
     }
 
-    const body: SignupVerifyBody = await req.json();
-    const { email, otp, password, type, newPassword } = body;
+    const { email, otp, password } = await req.json();
 
-    if (!email || !otp || !type) {
-      return new Response(
-        JSON.stringify({ error: "Missing email, otp, or type" }),
-        { status: 400, headers: { "Content-Type": "application/json" } }
-      );
+    if (!email || !otp || !password) {
+      return new Response(JSON.stringify({ error: "Email, OTP, and password are required" }), {
+        status: 400,
+        headers: { "Content-Type": "application/json", ...corsHeaders },
+      });
     }
 
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
-    // Find and verify OTP
-    const { data: otpRecord, error: otpError } = await supabase
+    const { data, error } = await supabase
       .from("otp_tokens")
       .select("*")
       .eq("email", email)
       .eq("otp_code", otp)
-      .eq("type", type)
+      .order("created_at", { ascending: false })
       .maybeSingle();
 
-    if (otpError || !otpRecord) {
+    if (error || !data) {
       return new Response(JSON.stringify({ error: "Invalid or expired OTP" }), {
-        status: 400,
-        headers: { "Content-Type": "application/json" },
+        status: 401,
+        headers: { "Content-Type": "application/json", ...corsHeaders },
       });
     }
 
-    // Check if OTP is expired
-    if (new Date(otpRecord.expires_at) < new Date()) {
+    const now = new Date();
+    const expiresAt = new Date(data.expires_at);
+
+    if (now > expiresAt) {
       return new Response(JSON.stringify({ error: "OTP has expired" }), {
-        status: 400,
-        headers: { "Content-Type": "application/json" },
+        status: 401,
+        headers: { "Content-Type": "application/json", ...corsHeaders },
       });
     }
 
-    // Mark OTP as verified
-    await supabase
-      .from("otp_tokens")
-      .update({ verified_at: new Date().toISOString() })
-      .eq("id", otpRecord.id);
+    // OTP is valid, delete it
+    await supabase.from("otp_tokens").delete().eq("id", data.id);
 
-    if (type === "signup") {
-      if (!password) {
-        return new Response(JSON.stringify({ error: "Password is required for signup" }), {
-          status: 400,
-          headers: { "Content-Type": "application/json" },
-        });
-      }
-
-      const userData = otpRecord.user_data || {};
-      const name = userData.name || "User";
-      const role = userData.role || "student";
-
-      // Create user in Supabase Auth
-      const { data: authUser, error: authError } = await supabase.auth.admin.createUser({
-        email,
-        password,
-        user_metadata: { name, role },
-        email_confirm: true,
-      });
-
-      if (authError) {
-        return new Response(
-          JSON.stringify({ error: authError.message || "Failed to create account" }),
-          { status: 400, headers: { "Content-Type": "application/json" } }
-        );
-      }
-
-      // Create user profile in database
-      const avatarUrl = `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(name)}`;
-
-      const { error: profileError } = await supabase.from("users").insert([
-        {
-          id: authUser.user!.id,
-          email,
-          name,
-          role,
-          avatar_url: avatarUrl,
-        },
-      ]);
-
-      if (profileError) {
-        return new Response(
-          JSON.stringify({ error: profileError.message || "Failed to create profile" }),
-          { status: 500, headers: { "Content-Type": "application/json" } }
-        );
-      }
-
-      // Create session
-      const { data: session, error: sessionError } = await supabase.auth.admin.createSession(
-        authUser.user!.id
-      );
-
-      if (sessionError) {
-        return new Response(
-          JSON.stringify({ error: "Failed to create session" }),
-          { status: 500, headers: { "Content-Type": "application/json" } }
-        );
-      }
-
-      return new Response(
-        JSON.stringify({
-          success: true,
-          message: "Account created successfully",
-          user: authUser.user,
-          session: session.session,
-        }),
-        { status: 200, headers: { "Content-Type": "application/json" } }
-      );
-    } else if (type === "password_reset") {
-      if (!newPassword) {
-        return new Response(JSON.stringify({ error: "New password is required" }), {
-          status: 400,
-          headers: { "Content-Type": "application/json" },
-        });
-      }
-
-      // Get user by email
-      const { data: user, error: userError } = await supabase
-        .from("users")
-        .select("id")
-        .eq("email", email)
-        .maybeSingle();
-
-      if (userError || !user) {
-        return new Response(JSON.stringify({ error: "User not found" }), {
-          status: 400,
-          headers: { "Content-Type": "application/json" },
-        });
-      }
-
-      // Update password in Supabase Auth
-      const { error: updateError } = await supabase.auth.admin.updateUserById(user.id, {
-        password: newPassword,
-      });
-
-      if (updateError) {
-        return new Response(
-          JSON.stringify({ error: updateError.message || "Failed to update password" }),
-          { status: 400, headers: { "Content-Type": "application/json" } }
-        );
-      }
-
-      return new Response(
-        JSON.stringify({
-          success: true,
-          message: "Password reset successfully",
-        }),
-        { status: 200, headers: { "Content-Type": "application/json" } }
-      );
-    }
-
-    return new Response(JSON.stringify({ error: "Invalid type" }), {
-      status: 400,
-      headers: { "Content-Type": "application/json" },
+    // Create user
+    const { name, role } = data.user_data;
+    const { data: authData, error: authError } = await supabase.auth.admin.createUser({
+      email,
+      password,
+      email_confirm: true,
+      user_metadata: { name, role },
     });
-  } catch (error) {
-    console.error("Error:", error);
-    return new Response(
-      JSON.stringify({ error: error instanceof Error ? error.message : "Unknown error" }),
-      { status: 500, headers: { "Content-Type": "application/json" } }
-    );
+
+    if (authError) {
+      return new Response(JSON.stringify({ error: authError.message }), {
+        status: 500,
+        headers: { "Content-Type": "application/json", ...corsHeaders },
+      });
+    }
+
+    return new Response(JSON.stringify(authData), {
+      status: 200,
+      headers: { "Content-Type": "application/json", ...corsHeaders },
+    });
+  } catch (e) {
+    return new Response(JSON.stringify({ error: e.message }), {
+      status: 500,
+      headers: { "Content-Type": "application/json", ...corsHeaders },
+    });
   }
 });
