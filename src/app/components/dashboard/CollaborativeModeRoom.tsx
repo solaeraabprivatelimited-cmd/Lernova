@@ -60,6 +60,7 @@ export function CollaborativeModeRoom({
   const [participantDirectory, setParticipantDirectory] = useState<Record<string, string>>({});
   const [activeSideTab, setActiveSideTab] = useState<'notes' | 'chat'>('chat');
   const [isParticipantsPanelCollapsed, setIsParticipantsPanelCollapsed] = useState(false);
+  const [inactivityTimeoutId, setInactivityTimeoutId] = useState<NodeJS.Timeout | null>(null);
 
   // Get current user ID and verify authentication
   useEffect(() => {
@@ -107,6 +108,55 @@ export function CollaborativeModeRoom({
 
     window.addEventListener('beforeunload', handleBeforeUnload);
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [participantId, roomId, onLeaveRoom]);
+
+  // Inactivity timeout: remove user after 5 minutes of no activity
+  useEffect(() => {
+    if (!participantId || !roomId) return;
+
+    const INACTIVITY_TIMEOUT_MS = 5 * 60 * 1000; // 5 minutes
+
+    let timeoutId: NodeJS.Timeout | null = null;
+
+    const resetInactivityTimer = async () => {
+      // Clear existing timer
+      if (timeoutId) clearTimeout(timeoutId);
+
+      // Set new timer
+      timeoutId = setTimeout(async () => {
+        console.log('[CollaborativeModeRoom] User inactive for 5 minutes - auto-leaving room');
+        try {
+          await roomAPI.leaveRoom(roomId);
+        } catch (err) {
+          console.error('[CollaborativeModeRoom] Error auto-leaving room on inactivity:', err);
+        }
+        onLeaveRoom?.();
+      }, INACTIVITY_TIMEOUT_MS);
+
+      setInactivityTimeoutId(timeoutId);
+    };
+
+    // Activity event listeners
+    const activityEvents = ['mousedown', 'mousemove', 'keydown', 'click', 'touchstart', 'scroll'];
+    const activityHandler = () => {
+      resetInactivityTimer();
+    };
+
+    // Initial timer setup
+    resetInactivityTimer();
+
+    // Add event listeners
+    activityEvents.forEach((event) => {
+      window.addEventListener(event, activityHandler, { passive: true });
+    });
+
+    return () => {
+      // Cleanup
+      if (timeoutId) clearTimeout(timeoutId);
+      activityEvents.forEach((event) => {
+        window.removeEventListener(event, activityHandler);
+      });
+    };
   }, [participantId, roomId, onLeaveRoom]);
 
   // Memoize error handler
