@@ -4,6 +4,7 @@
  */
 
 import { useState, useEffect, useCallback } from 'react';
+import { MessageSquare, BookOpen, Users, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useWebRTC } from '@/utils/webrtc/useWebRTC';
 import { getSupabaseClient } from '../../lib/api';
 import { roomAPI, RoomChatMessage, RoomNoteEntry } from '@/utils/api/roomAPI';
@@ -58,6 +59,7 @@ export function CollaborativeModeRoom({
   const [chatError, setChatError] = useState('');
   const [participantDirectory, setParticipantDirectory] = useState<Record<string, string>>({});
   const [activeSideTab, setActiveSideTab] = useState<'notes' | 'chat'>('chat');
+  const [isParticipantsPanelCollapsed, setIsParticipantsPanelCollapsed] = useState(false);
 
   // Get current user ID and verify authentication
   useEffect(() => {
@@ -88,6 +90,24 @@ export function CollaborativeModeRoom({
     };
     getCurrentUser();
   }, []);
+
+  // Cleanup on tab close
+  useEffect(() => {
+    const handleBeforeUnload = async (e: BeforeUnloadEvent) => {
+      // Leave room when tab is closed
+      if (participantId && roomId) {
+        try {
+          await roomAPI.leaveRoom(roomId);
+        } catch (err) {
+          console.error('[CollaborativeModeRoom] Error leaving room on unload:', err);
+        }
+      }
+      onLeaveRoom?.();
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [participantId, roomId, onLeaveRoom]);
 
   // Memoize error handler
   const handleWebRTCError = useCallback((err: Error) => {
@@ -865,46 +885,63 @@ export function CollaborativeModeRoom({
                 </div>
 
                 <div className="rounded-2xl border border-[#3c4043] bg-[#2b2c2f] p-4">
-                  <p className="mb-2 text-xs uppercase tracking-[0.16em] text-white/60">Participants</p>
-                  <div className="max-h-36 space-y-2 overflow-y-auto">
-                    {Object.entries(participantDirectory).length === 0 ? (
-                      <p className="text-sm text-white/70">No active participants yet.</p>
-                    ) : (
-                      Object.entries(participantDirectory).map(([id, name]) => (
-                        <div
-                          key={id}
-                          className="flex items-center justify-between rounded-xl border border-[#3c4043] bg-[#202124] px-3 py-2 text-sm"
-                        >
-                          <span className="truncate text-white/90">{name}</span>
-                          {id === userId ? (
-                            <span className="rounded-full bg-[#1a73e8]/20 px-2 py-0.5 text-xs text-[#8ab4f8]">You</span>
-                          ) : null}
-                        </div>
-                      ))
-                    )}
+                  <div className="mb-3 flex items-center justify-between">
+                    <p className="text-xs uppercase tracking-[0.16em] text-white/60">Participants</p>
+                    <button
+                      onClick={() => setIsParticipantsPanelCollapsed(!isParticipantsPanelCollapsed)}
+                      className="rounded-full p-1 transition hover:bg-[#3c4043]"
+                      title={isParticipantsPanelCollapsed ? 'Expand' : 'Collapse'}
+                    >
+                      {isParticipantsPanelCollapsed ? (
+                        <ChevronRight className="size-4 text-white/60" />
+                      ) : (
+                        <ChevronLeft className="size-4 text-white/60" />
+                      )}
+                    </button>
                   </div>
+                  {!isParticipantsPanelCollapsed && (
+                    <div className="max-h-36 space-y-2 overflow-y-auto">
+                      {Object.entries(participantDirectory).length === 0 ? (
+                        <p className="text-sm text-white/70">No active participants yet.</p>
+                      ) : (
+                        Object.entries(participantDirectory).map(([id, name]) => (
+                          <div
+                            key={id}
+                            className="flex items-center justify-between rounded-xl border border-[#3c4043] bg-[#202124] px-3 py-2 text-sm"
+                          >
+                            <span className="truncate text-white/90">{name}</span>
+                            {id === userId ? (
+                              <span className="rounded-full bg-[#1a73e8]/20 px-2 py-0.5 text-xs text-[#8ab4f8]">You</span>
+                            ) : null}
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  )}
                 </div>
 
                 <div className="flex min-h-0 flex-1 flex-col rounded-2xl border border-[#3c4043] bg-[#2b2c2f] p-4">
                   <div className="mb-3 flex gap-2">
                     <button
                       onClick={() => setActiveSideTab('chat')}
-                      className={`rounded-full px-3 py-1.5 text-sm transition ${
+                      className={`flex items-center gap-2 rounded-full px-3 py-1.5 text-sm transition ${
                         activeSideTab === 'chat'
                           ? 'bg-[#1a73e8] text-white'
                           : 'bg-[#202124] text-white/70 hover:bg-[#3c4043]'
                       }`}
                     >
+                      <MessageSquare className="size-4" />
                       Chat
                     </button>
                     <button
                       onClick={() => setActiveSideTab('notes')}
-                      className={`rounded-full px-3 py-1.5 text-sm transition ${
+                      className={`flex items-center gap-2 rounded-full px-3 py-1.5 text-sm transition ${
                         activeSideTab === 'notes'
                           ? 'bg-[#1a73e8] text-white'
                           : 'bg-[#202124] text-white/70 hover:bg-[#3c4043]'
                       }`}
                     >
+                      <BookOpen className="size-4" />
                       Notes
                     </button>
                   </div>
