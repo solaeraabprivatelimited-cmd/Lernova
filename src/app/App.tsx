@@ -38,6 +38,11 @@ const RoomLinkEntry = React.lazy(async () => {
   return { default: module.RoomLinkEntry };
 });
 
+const GoogleOnboardingPage = React.lazy(async () => {
+  const module = await import('@/app/components/GoogleOnboardingPage');
+  return { default: module.GoogleOnboardingPage };
+});
+
 function resolveHomeRoute(user: AppUser | null): string {
   if (user?.role === 'mentor') {
     return '/mentor-dashboard';
@@ -171,6 +176,30 @@ export default function App() {
           <Route
             path="/forgot-password"
             element={renderAppShell(<ForgotPasswordPage onBack={() => navigate('/login')} />)}
+          />
+
+          <Route
+            path="/onboarding/google"
+            element={renderAppShell(
+              <GoogleOnboardingPage
+                onComplete={() => {
+                  const prof = async () => {
+                    try {
+                      const p = await profileApi.get();
+                      if (p) {
+                        setCurrentUser(p);
+                        setCurrentAppUser(p);
+                        navigate(resolveHomeRoute(p), { replace: true });
+                      }
+                    } catch {
+                      navigate(resolveHomeRoute(currentUser), { replace: true });
+                    }
+                  };
+                  void prof();
+                }}
+                onCancel={() => navigate('/login', { replace: true })}
+              />,
+            )}
           />
 
           <Route

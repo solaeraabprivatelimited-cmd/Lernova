@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import {
   ArrowRight,
+  BookOpenText,
   Eye,
   EyeOff,
   LockKeyhole,
@@ -46,6 +47,7 @@ export function SignUpPage({ onSignUp, onLogin, onBack }: SignUpPageProps) {
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
 
   const isStudent = activeTab === 'student';
 
@@ -136,6 +138,17 @@ export function SignUpPage({ onSignUp, onLogin, onBack }: SignUpPageProps) {
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
       void handleSendOtp();
+    }
+  };
+
+  const handleGoogleSignUp = async () => {
+    setError('');
+    setIsGoogleLoading(true);
+    try {
+      await auth.signInWithGoogle();
+    } catch (e: any) {
+      setError(e.message || 'Google sign-up failed.');
+      setIsGoogleLoading(false);
     }
   };
 
@@ -292,6 +305,22 @@ export function SignUpPage({ onSignUp, onLogin, onBack }: SignUpPageProps) {
                 <ArrowRight className="size-4" />
               </span>
             </AuthSubmitButton>
+
+            <div className="flex items-center gap-3">
+              <div className="h-px flex-1 text-muted-foreground" />
+              <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">or</span>
+              <div className="h-px flex-1 text-muted-foreground" />
+            </div>
+
+            <Button
+              type="button"
+              disabled={isGoogleLoading}
+              onClick={() => void handleGoogleSignUp()}
+              className="h-11 w-full rounded-lg !bg-blue-600 !text-white hover:!bg-blue-700 text-base font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <BookOpenText className="size-4" />
+              {isGoogleLoading ? 'Signing up...' : 'Continue with Google'}
+            </Button>
 
             <p className="text-center text-sm text-muted-foreground">
               Already have an account?{' '}

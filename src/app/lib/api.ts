@@ -422,6 +422,58 @@ export const auth = {
     return data;
   },
 
+  /** OAuth sign-in with Google */
+  async signInWithGoogle() {
+    const supabase = getSupabaseClient();
+    const { data, error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: `${window.location.origin}/onboarding/google`,
+      },
+    });
+    if (error) throw new Error(error.message);
+    return data;
+  },
+
+  /** Complete Google sign-up with role and display name */
+  async completeGoogleSignup(displayName: string, role: 'student' | 'mentor') {
+    const supabase = getSupabaseClient();
+    const { data: user } = await supabase.auth.getUser();
+    
+    if (!user.user) {
+      throw new Error('No authenticated user found.');
+    }
+
+    // Update user metadata with role and display name
+    const { error } = await supabase.auth.updateUser({
+      data: {
+        name: displayName,
+        full_name: displayName,
+        role,
+      },
+    });
+
+    if (error) throw new Error(error.message);
+
+    // Update profile in database
+    try {
+      await profileApi.updateProfile({
+        name: displayName,
+        role,
+      });
+    } catch (err) {
+      console.warn('Failed to update profile in database (non-fatal):', err);
+    }
+
+    // Refresh current user
+    const session = await supabase.auth.getSession();
+    if (session.data.session) {
+      setCurrentUser(mapSessionUser(session.data.session));
+    }
+
+    return { user: user.user };
+  },
+
   /** Step 1: Request password reset (send code) */
   async requestPasswordResetCode(email: string) {
     const response = await fetch('https://evtvzmherkrahjsxdddi.supabase.co/functions/v1/send-password-reset-code', {
