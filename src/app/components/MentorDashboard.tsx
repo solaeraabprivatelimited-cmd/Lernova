@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { getCurrentUser, mentorDashboard, profile as profileApi, setCurrentUser } from '../lib/api';
+import { getCurrentUser, mentorDashboard, profile as profileApi, notifications as notificationsApi, setCurrentUser } from '../lib/api';
 import { completePendingOnboarding, shouldShowPendingOnboarding } from '../lib/onboarding';
 import svgPaths from '../../imports/svg-awezib197y';
 import svgWellness from '../../imports/svg-fui5khiao7';

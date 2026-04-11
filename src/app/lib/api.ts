@@ -455,12 +455,16 @@ export const auth = {
 
     if (error) throw new Error(error.message);
 
-    // Update profile in database
+    // Update profile in database (after profile export is available)
     try {
-      await profileApi.updateProfile({
-        name: displayName,
-        role,
-      });
+      // We'll update via direct API call instead of circular reference
+      const token = (await getSupabaseClient().auth.getSession()).data.session?.access_token;
+      if (token) {
+        await apiFetch('/profile', {
+          method: 'PATCH',
+          body: JSON.stringify({ name: displayName, role }),
+        });
+      }
     } catch (err) {
       console.warn('Failed to update profile in database (non-fatal):', err);
     }
