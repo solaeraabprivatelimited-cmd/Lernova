@@ -226,15 +226,15 @@ export function SilentModeView({ onLeave, onBackToFocus, onReportSubmitted }: Si
     duration: ""
   });
 
-  // Participant images and names
-  const participants = [
-    { id: 0, image: imgFrame427318269, name: "John", isMuted: false, isVideoOff: false },
-    { id: 1, image: imgFrame427318272, name: "Elizabeth", isMuted: true, isVideoOff: false },
-    { id: 2, image: imgFrame427318270, name: "Florelein", isMuted: false, isVideoOff: true },
-    { id: 3, image: imgFrame427318273, name: "Zendaya", isMuted: false, isVideoOff: false },
-    { id: 4, image: imgFrame427318271, name: "Naomi", isMuted: true, isVideoOff: false },
-    { id: 5, image: imgFrame427318274, name: "Rahul", isMuted: false, isVideoOff: false }
-  ];
+  // Participant images and names (populated from room data)
+  const participants: Array<{
+    id: number;
+    image: string;
+    name: string;
+    isMuted: boolean;
+    isVideoOff: boolean;
+  }> = [];
+  // TODO: Fetch actual participants from room data via context/props
 
   // Timer for elapsed time
   useEffect(() => {
@@ -377,7 +377,7 @@ export function SilentModeView({ onLeave, onBackToFocus, onReportSubmitted }: Si
         <div className="absolute bottom-0 left-0 right-0 z-30 flex items-center justify-between px-6 md:px-12 pb-6 pt-4">
           
           {/* Left: Time Elapsed & Mode */}
-          <div className="flex items-center gap-4 bg-black/20 backdrop-blur-md px-6 py-3 rounded-full border border-white/5">
+          <div className="flex items-center gap-4 bg-black/30 backdrop-blur-lg px-6 py-3 rounded-full border border-white/10">
             <p className="text-[16px] text-[rgba(255,255,255,0.7)]">
               <span className="font-medium text-white">Time Elapsed: </span>
               {formatElapsedTime(timeElapsed)}

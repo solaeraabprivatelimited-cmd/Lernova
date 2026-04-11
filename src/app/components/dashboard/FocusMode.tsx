@@ -113,8 +113,8 @@ function TimerPanel({ onClose }: { onClose: () => void }) {
 
       {/* Panel */}
       <div
-        className="relative pointer-events-auto w-[380px] md:w-[420px] mb-24 mr-4 md:mr-10 rounded-[24px] border border-white/[0.12] shadow-2xl overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-300"
-        style={{ background: 'rgba(0,20,50,0.94)', backdropFilter: 'blur(40px)', WebkitBackdropFilter: 'blur(40px)' }}
+        className="relative pointer-events-auto w-[380px] md:w-[420px] mb-24 mr-4 md:mr-10 rounded-[24px] border border-white/[0.12] shadow-2xl overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-300 backdrop-blur-lg"
+        style={{ background: 'rgba(0,20,50,0.7)' }}
       >
         {/* Header */}
         <div className="flex items-center justify-between px-7 pt-6 pb-2">
@@ -263,9 +263,7 @@ function NotesPanel({ onClose }: { onClose: () => void }) {
   const filteredNotes = notesList.filter((n) => n.title.toLowerCase().includes(search.toLowerCase()) || n.content.toLowerCase().includes(search.toLowerCase()));
 
   const panelBg: React.CSSProperties = {
-    background: 'rgba(0,20,50,0.94)',
-    backdropFilter: 'blur(40px)',
-    WebkitBackdropFilter: 'blur(40px)',
+    background: 'rgba(0,20,50,0.7)',
   };
 
   // ── Edit / Create view ──
@@ -420,8 +418,8 @@ function BackgroundSelector({
 
       {/* Selector */}
       <div
-        className="relative pointer-events-auto mb-24 rounded-[20px] border border-white/[0.12] shadow-2xl p-4 flex gap-3 overflow-x-auto animate-in fade-in slide-in-from-bottom-4 duration-300"
-        style={{ background: 'rgba(0,20,50,0.94)', backdropFilter: 'blur(40px)', WebkitBackdropFilter: 'blur(40px)' }}
+        className="relative pointer-events-auto mb-24 rounded-[20px] border border-white/[0.12] shadow-2xl p-4 flex gap-3 overflow-x-auto animate-in fade-in slide-in-from-bottom-4 duration-300 backdrop-blur-lg"
+        style={{ background: 'rgba(0,20,50,0.7)' }}
       >
         {backgrounds.map((bg) => (
           <button

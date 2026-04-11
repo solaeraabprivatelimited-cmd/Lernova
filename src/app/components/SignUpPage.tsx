@@ -1,5 +1,28 @@
 import React, { useState } from 'react';
-import { auth, seed } from '../lib/api';
+import {
+  ArrowRight,
+  Eye,
+  EyeOff,
+  LockKeyhole,
+  Mail,
+  ShieldCheck,
+  Sparkles,
+  UserRound,
+  Users,
+} from 'lucide-react';
+
+import {
+  AuthAlert,
+  AuthCard,
+  AuthField,
+  AuthHeading,
+  AuthOtpInput,
+  AuthSegmentedControl,
+  AuthSubmitButton,
+} from '@/app/components/auth/AuthPrimitives';
+import { AuthShell } from '@/app/components/auth/AuthShell';
+import { Button } from '@/app/components/ui/button';
+import { auth } from '../lib/api';
 import { markOnboardingPending } from '../lib/onboarding';
 
 interface SignUpPageProps {
@@ -8,25 +31,8 @@ interface SignUpPageProps {
   onBack: () => void;
 }
 
-const SIGNUP_IMG = 'https://images.unsplash.com/photo-1760473749293-c921e8ca6a4b?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxjcmVhdGl2ZSUyMHdvcmtzcGFjZSUyMGRlc2slMjBlZHVjYXRpb258ZW58MXx8fHwxNzcyMTE2ODc1fDA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral';
-
-function EyeIcon({ open }: { open: boolean }) {
-  if (open) {
-    return (
-      <svg viewBox="0 0 24 24" className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-        <circle cx="12" cy="12" r="3" />
-      </svg>
-    );
-  }
-  return (
-    <svg viewBox="0 0 24 24" className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94" />
-      <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19" />
-      <line x1="1" y1="1" x2="23" y2="23" />
-    </svg>
-  );
-}
+const SIGNUP_IMG =
+  'https://images.unsplash.com/photo-1760473749293-c921e8ca6a4b?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxjcmVhdGl2ZSUyMHdvcmtzcGFjZSUyMGRlc2slMjBlZHVjYXRpb258ZW58MXx8fHwxNzcyMTE2ODc1fDA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral';
 
 export function SignUpPage({ onSignUp, onLogin, onBack }: SignUpPageProps) {
   const [stage, setStage] = useState<'form' | 'otp' | 'success'>('form');
@@ -41,15 +47,30 @@ export function SignUpPage({ onSignUp, onLogin, onBack }: SignUpPageProps) {
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  const isUser = activeTab === 'student';
+  const isStudent = activeTab === 'student';
 
   const handleSendOtp = async () => {
     setError('');
-    if (!fullName.trim()) { setError('Please enter your full name.'); return; }
-    if (!email.trim()) { setError('Please enter your email address.'); return; }
-    if (!password.trim()) { setError('Please enter a password.'); return; }
-    if (password.length < 6) { setError('Password must be at least 6 characters.'); return; }
-    if (password !== confirmPassword) { setError('Passwords do not match.'); return; }
+    if (!fullName.trim()) {
+      setError('Please enter your full name.');
+      return;
+    }
+    if (!email.trim()) {
+      setError('Please enter your email address.');
+      return;
+    }
+    if (!password.trim()) {
+      setError('Please enter a password.');
+      return;
+    }
+    if (password.length < 6) {
+      setError('Password must be at least 6 characters.');
+      return;
+    }
+    if (password !== confirmPassword) {
+      setError('Passwords do not match.');
+      return;
+    }
 
     setIsLoading(true);
     try {
@@ -66,12 +87,14 @@ export function SignUpPage({ onSignUp, onLogin, onBack }: SignUpPageProps) {
   const handleVerifyOtp = async () => {
     setError('');
     const otpCode = otp.join('');
-    if (otpCode.length !== 6) { setError('Please enter all 6 digits.'); return; }
+    if (otpCode.length !== 6) {
+      setError('Please enter all 6 digits.');
+      return;
+    }
 
     setIsLoading(true);
     try {
       await auth.verifySignupOtp(email, otpCode, password);
-      try { await seed.demo(); } catch {}
       markOnboardingPending(activeTab);
       if (onSignUp) {
         onSignUp();
@@ -86,454 +109,267 @@ export function SignUpPage({ onSignUp, onLogin, onBack }: SignUpPageProps) {
   };
 
   const handleOtpChange = (index: number, value: string) => {
-    if (isNaN(Number(value))) return;
-    const newOtp = [...otp];
-    newOtp[index] = value;
-    setOtp(newOtp);
+    if (value && Number.isNaN(Number(value))) {
+      return;
+    }
+
+    const next = [...otp];
+    next[index] = value;
+    setOtp(next);
 
     if (value && index < 5) {
-      const nextInput = document.getElementById(`otp-${index + 1}`) as HTMLInputElement;
-      nextInput?.focus();
+      document.getElementById(`signup-otp-${index + 1}`)?.focus();
     }
   };
 
   const handleOtpKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Backspace' && !otp[index] && index > 0) {
-      const prevInput = document.getElementById(`otp-${index - 1}`) as HTMLInputElement;
-      prevInput?.focus();
-    } else if (e.key === 'Enter') {
-      handleVerifyOtp();
+      document.getElementById(`signup-otp-${index - 1}`)?.focus();
+      return;
+    }
+
+    if (e.key === 'Enter') {
+      void handleVerifyOtp();
     }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') handleSendOtp();
+    if (e.key === 'Enter') {
+      void handleSendOtp();
+    }
   };
 
   const features = [
-    { icon: '&#9201;', title: 'Focus Rooms', desc: '4 study modes to match your style' },
-    { icon: '&#9733;', title: 'Expert Mentors', desc: '200+ verified professionals' },
-    { icon: '&#9889;', title: 'AI Assistance', desc: '24/7 instant guidance & support' },
+    {
+      icon: Sparkles,
+      title: 'AI mentor support',
+      description: 'Get instant study help whenever you’re stuck.',
+    },
+    {
+      icon: Users,
+      title: 'Shared focus rooms',
+      description: 'Study alone or with peers in guided room modes.',
+    },
+    {
+      icon: ShieldCheck,
+      title: 'Verified mentor access',
+      description: 'Book experienced mentors as your goals evolve.',
+    },
   ];
 
   return (
-    <div
-      className="min-h-screen flex"
-      style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}
-    >
-      {/* ── Left Visual Panel ── */}
-      <div
-        className="hidden lg:flex w-[52%] relative overflow-hidden flex-col justify-between p-10"
-        style={{ background: '#003566' }}
-      >
-        {/* Grid pattern */}
-        <div
-          className="absolute inset-0 pointer-events-none"
-          style={{
-            backgroundImage:
-              'linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px)',
-            backgroundSize: '60px 60px',
-          }}
-        />
-        <div
-          className="absolute -top-32 -left-32 w-[500px] h-[500px] rounded-full pointer-events-none"
-          style={{ background: 'radial-gradient(circle, rgba(247,127,0,0.2) 0%, transparent 70%)' }}
-        />
-        <div
-          className="absolute -bottom-20 -right-20 w-[400px] h-[400px] rounded-full pointer-events-none"
-          style={{ background: 'radial-gradient(circle, rgba(9,103,189,0.35) 0%, transparent 70%)' }}
-        />
-
-        {/* Logo */}
-        <div className="relative z-10 flex items-center gap-2.5 cursor-pointer" onClick={onBack}>
-          <div className="w-9 h-9 rounded-[10px] bg-white/15 flex items-center justify-center">
-            <svg viewBox="0 0 24 24" className="w-5 h-5" fill="white">
-              <path d="M12 3L1 9l11 6 9-4.91V17h2V9L12 3zm0 12.54L4.38 11 12 6.46 19.62 11 12 15.54zM1 17v2l11 6 11-6v-2l-11 6L1 17z" />
-            </svg>
-          </div>
-          <span style={{ fontFamily: "'Righteous', cursive", fontSize: 20, color: 'white' }}>Lernova</span>
-        </div>
-
-        {/* Centre content */}
-        <div className="relative z-10 flex-1 flex flex-col items-center justify-center gap-8 px-6">
-          {/* Image */}
-          <div className="w-full max-w-[400px] aspect-[4/3] rounded-[24px] overflow-hidden shadow-2xl border border-white/10">
-            <img src={SIGNUP_IMG} alt="Creative workspace" className="w-full h-full object-cover" />
+    <AuthShell
+      onBack={onBack}
+      visual={
+        <div className="space-y-8">
+          <div className="space-y-3">
+            <span className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-white/70">
+              <ShieldCheck className="size-3.5" />
+              Thoughtful onboarding
+            </span>
+            <h2 className="max-w-md font-['DM_Serif_Display'] text-5xl leading-none text-white">
+              Build a calmer, smarter study setup from day one.
+            </h2>
+            <p className="max-w-md text-sm leading-7 text-white/65">
+              Choose the role that fits you, verify once, and we’ll tailor the product around how you learn or mentor.
+            </p>
           </div>
 
-          {/* Feature cards */}
-          <div className="flex flex-col gap-3 w-full max-w-[400px]">
-            {features.map((f, i) => (
-              <div
-                key={i}
-                className="flex items-center gap-4 bg-white/8 backdrop-blur-sm border border-white/10 rounded-[16px] p-4 transition-all hover:bg-white/12"
-              >
-                <div className="w-10 h-10 rounded-[12px] bg-white/12 flex items-center justify-center text-[20px]" dangerouslySetInnerHTML={{ __html: f.icon }} />
-                <div>
-                  <div className="text-[14px] font-bold text-white">{f.title}</div>
-                  <div className="text-[12px] text-white/50">{f.desc}</div>
-                </div>
+          <div className="overflow-hidden rounded-[32px] border border-white/10 bg-white/5 shadow-2xl backdrop-blur">
+            <img
+              src={SIGNUP_IMG}
+              alt="Creative learning workspace"
+              className="h-[260px] w-full object-cover"
+              loading="eager"
+              decoding="async"
+            />
+          </div>
+
+          <div className="space-y-3">
+            {features.map((feature) => (
+              <div key={feature.title} className="rounded-[22px] border border-white/10 bg-white/8 px-4 py-4 backdrop-blur">
+                <feature.icon className="mb-3 size-4 text-[#9fd0ff]" />
+                <p className="text-sm font-semibold text-white">{feature.title}</p>
+                <p className="mt-1 text-sm leading-6 text-white/55">{feature.description}</p>
               </div>
             ))}
           </div>
         </div>
+      }
+    >
+      <AuthCard className="space-y-6">
+        {stage === 'form' ? (
+          <>
+            <AuthSegmentedControl
+              value={activeTab}
+              onChange={(value) => {
+                setActiveTab(value);
+                setError('');
+              }}
+              options={[
+                { value: 'student', label: 'Student' },
+                { value: 'mentor', label: 'Mentor' },
+              ]}
+            />
 
-        {/* Bottom */}
-        <div className="relative z-10 text-[12px] text-white/30">&copy; 2026 Lernova. All rights reserved.</div>
-      </div>
+            <AuthHeading
+              title="Create your account"
+              description={
+                isStudent
+                  ? 'Set up your learning workspace and unlock focused study tools.'
+                  : 'Register your mentor profile and start building trust with learners.'
+              }
+            />
 
-      {/* ── Right Form Panel ── */}
-      <div className="flex-1 flex flex-col bg-[#f8fafd] min-h-screen">
-        {/* Top bar */}
-        <div className="flex items-center justify-between px-8 pt-8 lg:px-12">
-          <div className="lg:hidden flex items-center gap-2 cursor-pointer" onClick={onBack}>
-            <div className="w-8 h-8 rounded-[8px] bg-[#003566] flex items-center justify-center">
-              <svg viewBox="0 0 24 24" className="w-4 h-4" fill="white">
-                <path d="M12 3L1 9l11 6 9-4.91V17h2V9L12 3zm0 12.54L4.38 11 12 6.46 19.62 11 12 15.54zM1 17v2l11 6 11-6v-2l-11 6L1 17z" />
-              </svg>
+            <div className="space-y-4">
+              <AuthField
+                label="Full name"
+                type="text"
+                value={fullName}
+                onChange={(e) => setFullName(e.target.value)}
+                onKeyDown={handleKeyDown}
+                placeholder="John Doe"
+                autoComplete="name"
+                icon={<UserRound className="size-4" />}
+              />
+              <AuthField
+                label="Email address"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                onKeyDown={handleKeyDown}
+                placeholder="you@example.com"
+                autoComplete="email"
+                icon={<Mail className="size-4" />}
+              />
+              <AuthField
+                label="Password"
+                type={showPassword ? 'text' : 'password'}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                onKeyDown={handleKeyDown}
+                placeholder="At least 6 characters"
+                autoComplete="new-password"
+                icon={<LockKeyhole className="size-4" />}
+                endAdornment={
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((value) => !value)}
+                    className="rounded-full p-1 text-muted-foreground transition-colors hover:text-foreground"
+                    aria-label={showPassword ? 'Hide password' : 'Show password'}
+                  >
+                    {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+                  </button>
+                }
+              />
+              <AuthField
+                label="Confirm password"
+                type={showConfirm ? 'text' : 'password'}
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                onKeyDown={handleKeyDown}
+                placeholder="Re-enter your password"
+                autoComplete="new-password"
+                icon={<LockKeyhole className="size-4" />}
+                endAdornment={
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirm((value) => !value)}
+                    className="rounded-full p-1 text-muted-foreground transition-colors hover:text-foreground"
+                    aria-label={showConfirm ? 'Hide password confirmation' : 'Show password confirmation'}
+                  >
+                    {showConfirm ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+                  </button>
+                }
+              />
             </div>
-            <span style={{ fontFamily: "'Righteous', cursive", fontSize: 18, color: '#003566' }}>Lernova</span>
-          </div>
-          <div className="lg:ml-auto" />
-          <button
-            onClick={onBack}
-            className="flex items-center gap-1.5 text-[#5a7089] hover:text-[#003566] transition-colors text-[14px] font-medium group"
-          >
-            <svg className="w-4 h-4 transition-transform group-hover:-translate-x-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M19 12H5M12 5l-7 7 7 7" />
-            </svg>
-            Back to Home
-          </button>
-        </div>
 
-        {/* Form */}
-        <div className="flex-1 flex items-center justify-center px-6 py-8">
-          <div className="w-full max-w-[440px] flex flex-col gap-6">
+            {error ? <AuthAlert>{error}</AuthAlert> : null}
 
-            {stage === 'form' ? (
-              <>
-                {/* Tab switcher */}
-                <div className="flex rounded-full p-1 bg-white border border-[rgba(0,53,102,0.08)] shadow-sm">
-                  <button
-                    onClick={() => { setActiveTab('student'); setError(''); }}
-                    className="flex-1 h-[44px] rounded-full flex items-center justify-center transition-all duration-200 text-[14px] font-semibold"
-                    style={{
-                      background: isUser ? '#003566' : 'transparent',
-                      color: isUser ? 'white' : '#5a7089',
-                    }}
-                  >
-                    Student
-                  </button>
-                  <button
-                    onClick={() => { setActiveTab('mentor'); setError(''); }}
-                    className="flex-1 h-[44px] rounded-full flex items-center justify-center transition-all duration-200 text-[14px] font-semibold"
-                    style={{
-                      background: !isUser ? '#003566' : 'transparent',
-                      color: !isUser ? 'white' : '#5a7089',
-                    }}
-                  >
-                    Mentor
-                  </button>
-                </div>
+            <AuthSubmitButton type="button" loading={isLoading} onClick={() => void handleSendOtp()}>
+              <span className="inline-flex items-center gap-2">
+                Continue
+                <ArrowRight className="size-4" />
+              </span>
+            </AuthSubmitButton>
 
-                {/* Heading */}
-                <div>
-                  <h1
-                    className="mb-2"
-                    style={{
-                      fontFamily: "'DM Serif Display', serif",
-                      fontSize: 'clamp(30px, 3.5vw, 40px)',
-                      lineHeight: 1.1,
-                      color: '#003566',
-                    }}
-                  >
-                    Create your account
-                  </h1>
-                  <p className="text-[15px] text-[#5a7089] leading-relaxed">
-                    {isUser
-                      ? 'Join Lernova and start your learning journey today.'
-                      : 'Register as a mentor and inspire learners worldwide.'}
-                  </p>
-                </div>
+            <p className="text-center text-sm text-muted-foreground">
+              Already have an account?{' '}
+              <button
+                type="button"
+                onClick={onLogin}
+                className="font-semibold text-primary transition-colors hover:text-primary/80"
+              >
+                Sign in
+              </button>
+            </p>
+          </>
+        ) : null}
 
-                {/* Full Name */}
-                <div className="flex flex-col gap-2">
-                  <label className="text-[14px] font-semibold text-[#0d1b2a]">Full Name</label>
-                  <div className="relative">
-                    <div className="absolute left-4 top-1/2 -translate-y-1/2 text-[#5a7089]">
-                      <svg viewBox="0 0 24 24" className="w-[18px] h-[18px]" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-                        <circle cx="12" cy="7" r="4" />
-                      </svg>
-                    </div>
-                    <input
-                      type="text"
-                      value={fullName}
-                      onChange={(e) => setFullName(e.target.value)}
-                      onKeyDown={handleKeyDown}
-                      placeholder="John Doe"
-                      className="w-full h-[50px] pl-11 pr-4 bg-white border border-[rgba(0,53,102,0.12)] rounded-[14px] text-[14px] text-[#0d1b2a] placeholder:text-[#5a7089]/50 outline-none focus:border-[#0967bd] focus:ring-2 focus:ring-[#0967bd]/10 transition-all"
-                    />
-                  </div>
-                </div>
+        {stage === 'otp' ? (
+          <>
+            <AuthHeading
+              title="Verify your email"
+              description={
+                <>
+                  We sent a 6-digit confirmation code to{' '}
+                  <strong className="text-foreground">{email}</strong>.
+                </>
+              }
+            />
 
-                {/* Email */}
-                <div className="flex flex-col gap-2">
-                  <label className="text-[14px] font-semibold text-[#0d1b2a]">Email Address</label>
-                  <div className="relative">
-                    <div className="absolute left-4 top-1/2 -translate-y-1/2 text-[#5a7089]">
-                      <svg viewBox="0 0 24 24" className="w-[18px] h-[18px]" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                        <rect x="2" y="4" width="20" height="16" rx="2" />
-                        <path d="M22 7l-10 6L2 7" />
-                      </svg>
-                    </div>
-                    <input
-                      type="email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      onKeyDown={handleKeyDown}
-                      placeholder="you@example.com"
-                      className="w-full h-[50px] pl-11 pr-4 bg-white border border-[rgba(0,53,102,0.12)] rounded-[14px] text-[14px] text-[#0d1b2a] placeholder:text-[#5a7089]/50 outline-none focus:border-[#0967bd] focus:ring-2 focus:ring-[#0967bd]/10 transition-all"
-                    />
-                  </div>
-                </div>
+            <div className="flex justify-center gap-2 sm:gap-3">
+              {otp.map((digit, index) => (
+                <AuthOtpInput
+                  key={index}
+                  id={`signup-otp-${index}`}
+                  value={digit}
+                  onChange={(value) => handleOtpChange(index, value)}
+                  onKeyDown={(e) => handleOtpKeyDown(index, e)}
+                />
+              ))}
+            </div>
 
-                {/* Password */}
-                <div className="flex flex-col gap-2">
-                  <label className="text-[14px] font-semibold text-[#0d1b2a]">Password</label>
-                  <div className="relative">
-                    <div className="absolute left-4 top-1/2 -translate-y-1/2 text-[#5a7089]">
-                      <svg viewBox="0 0 24 24" className="w-[18px] h-[18px]" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                        <rect x="3" y="11" width="18" height="11" rx="2" />
-                        <path d="M7 11V7a5 5 0 0110 0v4" />
-                      </svg>
-                    </div>
-                    <input
-                      type={showPassword ? 'text' : 'password'}
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      onKeyDown={handleKeyDown}
-                      placeholder="Min. 6 characters"
-                      className="w-full h-[50px] pl-11 pr-12 bg-white border border-[rgba(0,53,102,0.12)] rounded-[14px] text-[14px] text-[#0d1b2a] placeholder:text-[#5a7089]/50 outline-none focus:border-[#0967bd] focus:ring-2 focus:ring-[#0967bd]/10 transition-all"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword((v) => !v)}
-                      className="absolute right-4 top-1/2 -translate-y-1/2 text-[#5a7089] hover:text-[#003566] transition-colors"
-                    >
-                      <EyeIcon open={showPassword} />
-                    </button>
-                  </div>
-                </div>
+            {error ? <AuthAlert>{error}</AuthAlert> : null}
 
-                {/* Confirm Password */}
-                <div className="flex flex-col gap-2">
-                  <label className="text-[14px] font-semibold text-[#0d1b2a]">Confirm Password</label>
-                  <div className="relative">
-                    <div className="absolute left-4 top-1/2 -translate-y-1/2 text-[#5a7089]">
-                      <svg viewBox="0 0 24 24" className="w-[18px] h-[18px]" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                        <rect x="3" y="11" width="18" height="11" rx="2" />
-                        <path d="M7 11V7a5 5 0 0110 0v4" />
-                      </svg>
-                    </div>
-                    <input
-                      type={showConfirm ? 'text' : 'password'}
-                      value={confirmPassword}
-                      onChange={(e) => setConfirmPassword(e.target.value)}
-                      onKeyDown={handleKeyDown}
-                      placeholder="Re-enter your password"
-                      className="w-full h-[50px] pl-11 pr-12 bg-white border border-[rgba(0,53,102,0.12)] rounded-[14px] text-[14px] text-[#0d1b2a] placeholder:text-[#5a7089]/50 outline-none focus:border-[#0967bd] focus:ring-2 focus:ring-[#0967bd]/10 transition-all"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowConfirm((v) => !v)}
-                      className="absolute right-4 top-1/2 -translate-y-1/2 text-[#5a7089] hover:text-[#003566] transition-colors"
-                    >
-                      <EyeIcon open={showConfirm} />
-                    </button>
-                  </div>
-                </div>
+            <AuthSubmitButton
+              type="button"
+              loading={isLoading}
+              disabled={isLoading || otp.join('').length !== 6}
+              onClick={() => void handleVerifyOtp()}
+            >
+              <span className="inline-flex items-center gap-2">
+                Verify and continue
+                <ArrowRight className="size-4" />
+              </span>
+            </AuthSubmitButton>
 
-                {/* Error */}
-                {error && (
-                  <div className="flex items-start gap-2 px-4 py-3 bg-[#cc3636]/8 border border-[#cc3636]/20 rounded-[12px]">
-                    <svg viewBox="0 0 24 24" className="w-5 h-5 shrink-0 text-[#cc3636] mt-0.5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <circle cx="12" cy="12" r="10" />
-                      <line x1="15" y1="9" x2="9" y2="15" />
-                      <line x1="9" y1="9" x2="15" y2="15" />
-                    </svg>
-                    <p className="text-[13px] text-[#cc3636] leading-snug">{error}</p>
-                  </div>
-                )}
+            <Button
+              type="button"
+              variant="ghost"
+              className="w-full rounded-full text-sm text-muted-foreground hover:text-foreground"
+              onClick={() => setStage('form')}
+            >
+              Back to details
+            </Button>
+          </>
+        ) : null}
 
-                {/* Send OTP button */}
-                <button
-                  onClick={handleSendOtp}
-                  disabled={isLoading}
-                  className="w-full h-[52px] rounded-full flex items-center justify-center gap-2 text-[15px] font-bold text-white transition-all duration-200 shadow-lg disabled:opacity-60"
-                  style={{
-                    background: 'linear-gradient(135deg, #003566, #0967bd)',
-                    boxShadow: '0 4px 20px rgba(0,53,102,0.3)',
-                  }}
-                  onMouseEnter={(e) => {
-                    if (!isLoading) (e.currentTarget.style.boxShadow = '0 8px 28px rgba(9,103,189,0.4)');
-                    if (!isLoading) (e.currentTarget.style.transform = 'translateY(-1px)');
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.boxShadow = '0 4px 20px rgba(0,53,102,0.3)';
-                    e.currentTarget.style.transform = 'translateY(0)';
-                  }}
-                >
-                  {isLoading ? (
-                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                  ) : (
-                    <>
-                      Continue
-                      <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M5 12h14M12 5l7 7-7 7" />
-                      </svg>
-                    </>
-                  )}
-                </button>
-
-                {/* Login link */}
-                <p className="text-center text-[14px] text-[#5a7089]">
-                  Already have an account?{' '}
-                  <button
-                    onClick={onLogin}
-                    className="font-bold text-[#003566] hover:text-[#0967bd] transition-colors"
-                  >
-                    Sign in
-                  </button>
-                </p>
-              </>
-            ) : stage === 'otp' ? (
-              <>
-                {/* OTP Verification Stage */}
-                <div>
-                  <h1
-                    className="mb-2"
-                    style={{
-                      fontFamily: "'DM Serif Display', serif",
-                      fontSize: 'clamp(30px, 3.5vw, 40px)',
-                      lineHeight: 1.1,
-                      color: '#003566',
-                    }}
-                  >
-                    Verify your email
-                  </h1>
-                  <p className="text-[15px] text-[#5a7089] leading-relaxed">
-                    We've sent a 6-digit code to <strong>{email}</strong>
-                  </p>
-                </div>
-
-                {/* OTP Input Fields */}
-                <div className="flex gap-2 justify-center">
-                  {otp.map((digit, idx) => (
-                    <input
-                      key={idx}
-                      id={`otp-${idx}`}
-                      type="text"
-                      value={digit}
-                      onChange={(e) => handleOtpChange(idx, e.target.value)}
-                      onKeyDown={(e) => handleOtpKeyDown(idx, e)}
-                      maxLength={1}
-                      inputMode="numeric"
-                      className="w-12 h-14 bg-white border-2 border-[rgba(0,53,102,0.12)] rounded-[12px] text-center text-[20px] font-bold text-[#003566] outline-none focus:border-[#0967bd] focus:ring-2 focus:ring-[#0967bd]/10 transition-all"
-                    />
-                  ))}
-                </div>
-
-                {/* Error */}
-                {error && (
-                  <div className="flex items-start gap-2 px-4 py-3 bg-[#cc3636]/8 border border-[#cc3636]/20 rounded-[12px]">
-                    <svg viewBox="0 0 24 24" className="w-5 h-5 shrink-0 text-[#cc3636] mt-0.5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <circle cx="12" cy="12" r="10" />
-                      <line x1="15" y1="9" x2="9" y2="15" />
-                      <line x1="9" y1="9" x2="15" y2="15" />
-                    </svg>
-                    <p className="text-[13px] text-[#cc3636] leading-snug">{error}</p>
-                  </div>
-                )}
-
-                {/* Verify button */}
-                <button
-                  onClick={handleVerifyOtp}
-                  disabled={isLoading || otp.join('').length !== 6}
-                  className="w-full h-[52px] rounded-full flex items-center justify-center gap-2 text-[15px] font-bold text-white transition-all duration-200 shadow-lg disabled:opacity-60"
-                  style={{
-                    background: 'linear-gradient(135deg, #003566, #0967bd)',
-                    boxShadow: '0 4px 20px rgba(0,53,102,0.3)',
-                  }}
-                  onMouseEnter={(e) => {
-                    if (!isLoading) (e.currentTarget.style.boxShadow = '0 8px 28px rgba(9,103,189,0.4)');
-                    if (!isLoading) (e.currentTarget.style.transform = 'translateY(-1px)');
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.boxShadow = '0 4px 20px rgba(0,53,102,0.3)';
-                    e.currentTarget.style.transform = 'translateY(0)';
-                  }}
-                >
-                  {isLoading ? (
-                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                  ) : (
-                    <>
-                      Verify & Create Account
-                      <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M5 12h14M12 5l7 7-7 7" />
-                      </svg>
-                    </>
-                  )}
-                </button>
-
-                {/* Back button */}
-                <button
-                  onClick={() => setStage('form')}
-                  className="text-center text-[14px] text-[#5a7089] hover:text-[#003566] transition-colors"
-                >
-                  ← Back to form
-                </button>
-              </>
-            ) : (
-              <>
-                {/* Success Stage */}
-                <div className="text-center flex flex-col items-center gap-4">
-                  <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center">
-                    <svg viewBox="0 0 24 24" className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
-                      <polyline points="22 4 12 14.01 9 11.01" />
-                    </svg>
-                  </div>
-                  <h1
-                    className="mb-2"
-                    style={{
-                      fontFamily: "'DM Serif Display', serif",
-                      fontSize: 'clamp(30px, 3.5vw, 40px)',
-                      lineHeight: 1.1,
-                      color: '#003566',
-                    }}
-                  >
-                    Account Created!
-                  </h1>
-                  <p className="text-[15px] text-[#5a7089] leading-relaxed">
-                    Your account has been successfully created. You can now log in.
-                  </p>
-                  <button
-                    onClick={onLogin}
-                    className="w-full h-[52px] rounded-full flex items-center justify-center gap-2 text-[15px] font-bold text-white transition-all duration-200 shadow-lg"
-                    style={{
-                      background: 'linear-gradient(135deg, #003566, #0967bd)',
-                      boxShadow: '0 4px 20px rgba(0,53,102,0.3)',
-                    }}
-                  >
-                    Go to Login
-                  </button>
-                </div>
-              </>
-            )}
-          </div>
-        </div>
-      </div>
-    </div>
+        {stage === 'success' ? (
+          <>
+            <AuthHeading
+              title="You’re all set"
+              description="Your account is ready. Head to login and start using Learnova."
+            />
+            <AuthSubmitButton type="button" onClick={onLogin}>
+              <span className="inline-flex items-center gap-2">
+                Go to login
+                <ArrowRight className="size-4" />
+              </span>
+            </AuthSubmitButton>
+          </>
+        ) : null}
+      </AuthCard>
+    </AuthShell>
   );
 }

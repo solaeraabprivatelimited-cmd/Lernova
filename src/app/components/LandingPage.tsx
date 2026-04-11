@@ -1,4 +1,7 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
+import { Menu, X } from 'lucide-react';
+
+import { ThemeToggle } from '@/app/components/ThemeToggle';
 import '/src/styles/landing.css';
 
 const HERO_IMG = 'https://images.unsplash.com/photo-1758611971329-94fa9d6aa8a5?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxzdHVkZW50JTIwc3R1ZHlpbmclMjBsYXB0b3AlMjBmb2N1c2VkfGVufDF8fHx8MTc3MjAzNDMyM3ww&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral';
@@ -11,6 +14,7 @@ interface LandingPageProps {
 
 export function LandingPage({ onLogin, onSignUp }: LandingPageProps) {
   const navRef = useRef<HTMLElement>(null);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -36,8 +40,16 @@ export function LandingPage({ onLogin, onSignUp }: LandingPageProps) {
   }, []);
 
   const scrollTo = (id: string) => {
+    setMobileMenuOpen(false);
     document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
   };
+
+  const navItems = [
+    { id: 'lp-study-rooms', label: 'Study Rooms' },
+    { id: 'lp-mentor', label: 'Mentor Support' },
+    { id: 'lp-testimonials', label: 'Testimonials' },
+    { id: 'lp-community', label: 'Community' },
+  ];
 
   const tickerItems = [
     'Focus Mode', 'Silent Mode', 'Collaborative Mode', 'Live Mode',
@@ -48,21 +60,59 @@ export function LandingPage({ onLogin, onSignUp }: LandingPageProps) {
     <div className="landing-page">
       {/* ── NAVBAR ── */}
       <nav className="lp-nav" ref={navRef}>
-        <div className="lp-nav-logo" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
+        <button
+          type="button"
+          className="lp-nav-logo"
+          onClick={() => {
+            setMobileMenuOpen(false);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+          }}
+        >
           <div className="lp-nav-logo-icon">
             <svg viewBox="0 0 24 24"><path d="M12 3L1 9l11 6 9-4.91V17h2V9L12 3zm0 12.54L4.38 11 12 6.46 19.62 11 12 15.54zM1 17v2l11 6 11-6v-2l-11 6L1 17z" /></svg>
           </div>
           <span className="lp-nav-logo-text">Lernova</span>
-        </div>
+        </button>
         <ul className="lp-nav-links">
-          <li><a onClick={() => scrollTo('lp-study-rooms')}>Study Rooms</a></li>
-          <li><a onClick={() => scrollTo('lp-mentor')}>Mentor Support</a></li>
-          <li><a onClick={() => scrollTo('lp-testimonials')}>Testimonials</a></li>
-          <li><a onClick={() => scrollTo('lp-community')}>Community</a></li>
+          {navItems.map((item) => (
+            <li key={item.id}>
+              <button type="button" className="lp-nav-link" onClick={() => scrollTo(item.id)}>
+                {item.label}
+              </button>
+            </li>
+          ))}
         </ul>
         <div className="lp-nav-cta">
-          <button className="lp-btn-ghost" onClick={onLogin}>Log in</button>
-          <button className="lp-btn-primary" onClick={onSignUp}>Get Started &rarr;</button>
+          <ThemeToggle className="lp-theme-toggle" />
+          <button className="lp-btn-ghost" type="button" onClick={onLogin}>Log in</button>
+          <button className="lp-btn-primary" type="button" onClick={onSignUp}>Get Started &rarr;</button>
+          <button
+            type="button"
+            className="lp-mobile-menu-btn"
+            onClick={() => setMobileMenuOpen((value) => !value)}
+            aria-expanded={mobileMenuOpen}
+            aria-label={mobileMenuOpen ? 'Close navigation menu' : 'Open navigation menu'}
+          >
+            {mobileMenuOpen ? <X size={18} /> : <Menu size={18} />}
+          </button>
+        </div>
+
+        <div className={`lp-mobile-menu${mobileMenuOpen ? ' open' : ''}`}>
+          <div className="lp-mobile-menu-links">
+            {navItems.map((item) => (
+              <button key={item.id} type="button" className="lp-mobile-link" onClick={() => scrollTo(item.id)}>
+                {item.label}
+              </button>
+            ))}
+          </div>
+          <div className="lp-mobile-menu-actions">
+            <button className="lp-btn-ghost" type="button" onClick={() => { setMobileMenuOpen(false); onLogin(); }}>
+              Log in
+            </button>
+            <button className="lp-btn-primary" type="button" onClick={() => { setMobileMenuOpen(false); onSignUp(); }}>
+              Get Started &rarr;
+            </button>
+          </div>
         </div>
       </nav>
 
@@ -72,7 +122,7 @@ export function LandingPage({ onLogin, onSignUp }: LandingPageProps) {
         <div className="lp-hero-content">
           <div className="lp-hero-badge">
             <span className="lp-dot" />
-            Now live &mdash; 5,000+ active learners
+            Now live &mdash; Studying together
           </div>
           <h1 className="lp-hero-headline">
             Where <em>Focus</em><br />
@@ -116,7 +166,7 @@ export function LandingPage({ onLogin, onSignUp }: LandingPageProps) {
         {/* Hero Visual */}
         <div className="lp-hero-visual">
           <div className="lp-floating-card lp-card-main">
-            <img src={HERO_IMG} alt="Study session" />
+            <img src={HERO_IMG} alt="Study session" loading="eager" decoding="async" />
           </div>
           <div className="lp-floating-card lp-card-timer">
             <div className="lp-timer-label">&#9201; Focus Session</div>
@@ -154,7 +204,7 @@ export function LandingPage({ onLogin, onSignUp }: LandingPageProps) {
               <span className="lp-stars">&#9733;&#9733;&#9733;&#9733;&#9733;</span>
               <span>4.9</span>
             </div>
-            <button className="lp-btn-book" onClick={onSignUp}>Book Session &rarr;</button>
+            <button className="lp-btn-book" type="button" onClick={onSignUp}>Book Session &rarr;</button>
           </div>
         </div>
       </section>
@@ -189,7 +239,7 @@ export function LandingPage({ onLogin, onSignUp }: LandingPageProps) {
             <p className="lp-section-sub" style={{ color: 'rgba(255,255,255,0.6)' }}>
               Four distinct room modes tailored to every learning style &mdash; whether you need silence, collaboration, or live instruction.
             </p>
-            <button className="lp-study-cta" onClick={onSignUp}>
+              <button className="lp-study-cta" type="button" onClick={onSignUp}>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
                 <path d="M15 3h4a2 2 0 012 2v14a2 2 0 01-2 2h-4M10 17l5-5-5-5M15 12H3" />
               </svg>
@@ -248,7 +298,7 @@ export function LandingPage({ onLogin, onSignUp }: LandingPageProps) {
           <div className="lp-mentor-visual lp-reveal">
             <div className="lp-mentor-ring" />
             <div className="lp-mentor-img-placeholder">
-              <img src={MENTOR_IMG} alt="Mentor" />
+              <img src={MENTOR_IMG} alt="Mentor" loading="lazy" decoding="async" />
             </div>
             <div className="lp-mentor-stat-card card-sessions">
               <div className="lp-stat-big">10K<span>+</span></div>
@@ -304,7 +354,7 @@ export function LandingPage({ onLogin, onSignUp }: LandingPageProps) {
               </div>
             </div>
 
-            <button className="lp-mentor-cta" onClick={onSignUp}>
+            <button className="lp-mentor-cta" type="button" onClick={onSignUp}>
               Find Your Mentor
               <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" width="16" height="16">
                 <path d="M5 12h14M12 5l7 7-7 7" />
@@ -403,12 +453,12 @@ export function LandingPage({ onLogin, onSignUp }: LandingPageProps) {
       {/* ── CTA STRIP ── */}
       <section className="lp-cta-strip" id="lp-community">
         <h2>New learners welcome!<br />Start your journey today.</h2>
-        <p>Join 5,000+ students who are already learning smarter with Lernova.</p>
+        <p>Join our community of dedicated learners using Lernova to study smarter.</p>
         <div className="lp-cta-strip-actions">
-          <button className="lp-btn-cta-white" onClick={onSignUp}>
+          <button className="lp-btn-cta-white" type="button" onClick={onSignUp}>
             &#128077; Get Started Free
           </button>
-          <button className="lp-btn-cta-outline" onClick={() => scrollTo('lp-study-rooms')}>
+          <button className="lp-btn-cta-outline" type="button" onClick={() => scrollTo('lp-study-rooms')}>
             Explore Study Rooms &rarr;
           </button>
         </div>
@@ -418,33 +468,37 @@ export function LandingPage({ onLogin, onSignUp }: LandingPageProps) {
       <footer className="lp-footer">
         <div className="lp-footer-grid">
           <div className="lp-footer-brand">
-            <div className="lp-nav-logo" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
+            <button
+              type="button"
+              className="lp-nav-logo"
+              onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+            >
               <div className="lp-nav-logo-icon">
                 <svg viewBox="0 0 24 24"><path d="M12 3L1 9l11 6 9-4.91V17h2V9L12 3zm0 12.54L4.38 11 12 6.46 19.62 11 12 15.54zM1 17v2l11 6 11-6v-2l-11 6L1 17z" /></svg>
               </div>
               <span className="lp-nav-logo-text">Lernova</span>
-            </div>
+            </button>
             <p>Empowering learners worldwide with expert-led, interactive, and goal-driven education.</p>
           </div>
 
           <div className="lp-footer-col">
             <h4>Platform</h4>
             <ul>
-              <li><a onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>Home</a></li>
-              <li><a onClick={() => scrollTo('lp-study-rooms')}>Study Rooms</a></li>
-              <li><a onClick={() => scrollTo('lp-mentor')}>Mentor Support</a></li>
-              <li><a onClick={() => scrollTo('lp-community')}>Community</a></li>
-              <li><a>Wellness</a></li>
+              <li><button type="button" className="lp-footer-link" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>Home</button></li>
+              <li><button type="button" className="lp-footer-link" onClick={() => scrollTo('lp-study-rooms')}>Study Rooms</button></li>
+              <li><button type="button" className="lp-footer-link" onClick={() => scrollTo('lp-mentor')}>Mentor Support</button></li>
+              <li><button type="button" className="lp-footer-link" onClick={() => scrollTo('lp-community')}>Community</button></li>
+              <li><button type="button" className="lp-footer-link">Wellness</button></li>
             </ul>
           </div>
 
           <div className="lp-footer-col">
             <h4>Need Help?</h4>
             <ul>
-              <li><a>+1 234 567 8910</a></li>
-              <li><a>support@lernova.com</a></li>
-              <li><a>Help Center</a></li>
-              <li><a>Report Issue</a></li>
+              <li><button type="button" className="lp-footer-link">+1 234 567 8910</button></li>
+              <li><button type="button" className="lp-footer-link">support@lernova.com</button></li>
+              <li><button type="button" className="lp-footer-link">Help Center</button></li>
+              <li><button type="button" className="lp-footer-link">Report Issue</button></li>
             </ul>
           </div>
 
@@ -461,9 +515,9 @@ export function LandingPage({ onLogin, onSignUp }: LandingPageProps) {
         <div className="lp-footer-bottom">
           <p>&copy; 2026 Lernova. All rights reserved.</p>
           <div className="lp-footer-legal">
-            <a>Disclaimer</a>
-            <a>Privacy Policy</a>
-            <a>Terms of Service</a>
+            <button type="button" className="lp-footer-link">Disclaimer</button>
+            <button type="button" className="lp-footer-link">Privacy Policy</button>
+            <button type="button" className="lp-footer-link">Terms of Service</button>
           </div>
         </div>
       </footer>

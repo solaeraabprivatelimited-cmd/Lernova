@@ -1,14 +1,42 @@
-import React, { useEffect, useState } from 'react';
-import { Navigate, Route, Routes, useNavigate } from 'react-router-dom';
-import { StudyRoomDashboard } from '@/app/components/dashboard/StudyRoomDashboard';
-import { MentorDashboard } from '@/app/components/MentorDashboard';
-import { LoginPage } from '@/app/components/LoginPage';
-import { SignUpPage } from '@/app/components/SignUpPage';
-import { ForgotPasswordPage } from '@/app/components/ForgotPasswordPage';
+import React, { Suspense, useEffect, useState } from 'react';
+import { Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
+
 import { LandingPage } from '@/app/components/LandingPage';
 import { ProtectedRoute, AppUser } from '@/app/components/ProtectedRoute';
-import { auth, getCurrentUser, setCurrentUser, profile as profileApi, seed } from '@/app/lib/api';
-import { RoomLinkEntry } from '@/app/components/dashboard/RoomLinkEntry';
+import { RouteLoader } from '@/app/components/RouteLoader';
+import { ThemeToggle } from '@/app/components/ThemeToggle';
+import { Toaster } from '@/app/components/ui/sonner';
+import { auth, getCurrentUser, setCurrentUser, profile as profileApi } from '@/app/lib/api';
+
+const StudyRoomDashboard = React.lazy(async () => {
+  const module = await import('@/app/components/dashboard/StudyRoomDashboard');
+  return { default: module.StudyRoomDashboard };
+});
+
+const MentorDashboard = React.lazy(async () => {
+  const module = await import('@/app/components/MentorDashboard');
+  return { default: module.MentorDashboard };
+});
+
+const LoginPage = React.lazy(async () => {
+  const module = await import('@/app/components/LoginPage');
+  return { default: module.LoginPage };
+});
+
+const SignUpPage = React.lazy(async () => {
+  const module = await import('@/app/components/SignUpPage');
+  return { default: module.SignUpPage };
+});
+
+const ForgotPasswordPage = React.lazy(async () => {
+  const module = await import('@/app/components/ForgotPasswordPage');
+  return { default: module.ForgotPasswordPage };
+});
+
+const RoomLinkEntry = React.lazy(async () => {
+  const module = await import('@/app/components/dashboard/RoomLinkEntry');
+  return { default: module.RoomLinkEntry };
+});
 
 function resolveHomeRoute(user: AppUser | null): string {
   if (user?.role === 'mentor') {
@@ -19,6 +47,7 @@ function resolveHomeRoute(user: AppUser | null): string {
 
 export default function App() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [currentUser, setCurrentAppUser] = useState<AppUser | null>(getCurrentUser());
   const [isRestoringSession, setIsRestoringSession] = useState(true);
 
@@ -41,10 +70,6 @@ export default function App() {
         } else {
           setCurrentUser(null);
           setCurrentAppUser(null);
-        }
-        // Seed demo data only when authenticated (endpoint requires auth).
-        if (getCurrentUser()) {
-          try { await seed.demo(); } catch {}
         }
       } catch (e) {
         // No active session, stay on landing
@@ -81,100 +106,105 @@ export default function App() {
     navigate('/login', { replace: true });
   };
 
+  const renderAppShell = (children: React.ReactNode, className = '') => (
+    <div className={`min-h-screen w-full overflow-x-hidden bg-background text-foreground ${className}`}>
+      {children}
+    </div>
+  );
+
+  const showFloatingThemeToggle = /^(\/dashboard|\/mentor-dashboard|\/room\/)/.test(location.pathname);
+
   return (
-    <Routes>
-      <Route
-        path="/"
-        element={
-          isRestoringSession ? (
-            <div className="min-h-screen bg-white w-full flex items-center justify-center">
-              <p>Loading...</p>
-            </div>
-          ) : currentUser ? (
-            <Navigate to={resolveHomeRoute(currentUser)} replace />
-          ) : (
-            <div className="min-h-screen bg-white w-full overflow-x-hidden">
-              <LandingPage onLogin={() => navigate('/login')} onSignUp={() => navigate('/signup')} />
-            </div>
-          )
-        }
-      />
+    <>
+      {showFloatingThemeToggle ? (
+        <ThemeToggle className="fixed right-4 top-4 z-[70] rounded-full" />
+      ) : null}
+      <Toaster closeButton position="top-right" richColors />
 
-      <Route
-        path="/login"
-        element={
-          <div className="min-h-screen bg-white w-full overflow-x-hidden">
-            <LoginPage
-              onLogin={() => {
-                void handleAuthSuccess();
-              }}
-              onMentorLogin={() => {
-                void handleAuthSuccess();
-              }}
-              onSignUp={() => navigate('/signup')}
-              onForgotPassword={() => navigate('/forgot-password')}
-              onBack={() => navigate('/')}
-            />
-          </div>
-        }
-      />
+      <Suspense fallback={<RouteLoader />}>
+        <Routes>
+          <Route
+            path="/"
+            element={
+              isRestoringSession ? (
+                <RouteLoader />
+              ) : currentUser ? (
+                <Navigate to={resolveHomeRoute(currentUser)} replace />
+              ) : (
+                renderAppShell(
+                  <LandingPage onLogin={() => navigate('/login')} onSignUp={() => navigate('/signup')} />,
+                )
+              )
+            }
+          />
 
-      <Route
-        path="/signup"
-        element={
-          <div className="min-h-screen bg-white w-full overflow-x-hidden">
-            <SignUpPage
-              onSignUp={() => {
-                void handleAuthSuccess();
-              }}
-              onLogin={() => navigate('/login')}
-              onBack={() => navigate('/')}
-            />
-          </div>
-        }
-      />
+          <Route
+            path="/login"
+            element={renderAppShell(
+              <LoginPage
+                onLogin={() => {
+                  void handleAuthSuccess();
+                }}
+                onMentorLogin={() => {
+                  void handleAuthSuccess();
+                }}
+                onSignUp={() => navigate('/signup')}
+                onForgotPassword={() => navigate('/forgot-password')}
+                onBack={() => navigate('/')}
+              />,
+            )}
+          />
 
-      <Route
-        path="/forgot-password"
-        element={
-          <div className="min-h-screen bg-white w-full overflow-x-hidden">
-            <ForgotPasswordPage onBack={() => navigate('/login')} />
-          </div>
-        }
-      />
+          <Route
+            path="/signup"
+            element={renderAppShell(
+              <SignUpPage
+                onSignUp={() => {
+                  void handleAuthSuccess();
+                }}
+                onLogin={() => navigate('/login')}
+                onBack={() => navigate('/')}
+              />,
+            )}
+          />
 
-      <Route
-        path="/dashboard/*"
-        element={
-          <ProtectedRoute isRestoringSession={isRestoringSession} user={currentUser} requiredRole="student">
-            <div className="min-h-screen bg-white w-full overflow-x-hidden">
-              <StudyRoomDashboard onLogout={handleLogout} />
-            </div>
-          </ProtectedRoute>
-        }
-      />
+          <Route
+            path="/forgot-password"
+            element={renderAppShell(<ForgotPasswordPage onBack={() => navigate('/login')} />)}
+          />
 
-      <Route
-        path="/mentor-dashboard/*"
-        element={
-          <ProtectedRoute isRestoringSession={isRestoringSession} user={currentUser} requiredRole="mentor">
-            <div className="min-h-screen bg-white w-full overflow-x-hidden">
-              <MentorDashboard onLogout={handleLogout} />
-            </div>
-          </ProtectedRoute>
-        }
-      />
+          <Route
+            path="/dashboard/*"
+            element={
+              <ProtectedRoute isRestoringSession={isRestoringSession} user={currentUser} requiredRole="student">
+                {renderAppShell(<StudyRoomDashboard onLogout={handleLogout} />)}
+              </ProtectedRoute>
+            }
+          />
 
-      <Route
-        path="/room/:roomCode"
-        element={
-          <ProtectedRoute isRestoringSession={isRestoringSession} user={currentUser}>
-            <RoomLinkEntry onExit={() => navigate(resolveHomeRoute(currentUser), { replace: true })} />
-          </ProtectedRoute>
-        }
-      />
+          <Route
+            path="/mentor-dashboard/*"
+            element={
+              <ProtectedRoute isRestoringSession={isRestoringSession} user={currentUser} requiredRole="mentor">
+                {renderAppShell(<MentorDashboard onLogout={handleLogout} />)}
+              </ProtectedRoute>
+            }
+          />
 
-      <Route path="*" element={<Navigate to="/" replace />} />
-    </Routes>
+          <Route
+            path="/room/:roomCode"
+            element={
+              <ProtectedRoute isRestoringSession={isRestoringSession} user={currentUser}>
+                {renderAppShell(
+                  <RoomLinkEntry onExit={() => navigate(resolveHomeRoute(currentUser), { replace: true })} />,
+                )}
+              </ProtectedRoute>
+            }
+          />
+
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </Suspense>
+    </>
   );
 }

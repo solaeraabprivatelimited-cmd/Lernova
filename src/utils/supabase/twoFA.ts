@@ -1,10 +1,18 @@
 import { getSupabaseClient } from '../../app/lib/api';
 
 function createPublicFunctionHeaders(): Record<string, string> {
+  // ✅ SECURE: Use environment variables instead of hardcoded keys
+  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+  const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+
+  if (!supabaseUrl || !anonKey) {
+    throw new Error('Supabase configuration is missing. Please ensure VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY are set.');
+  }
+
   return {
     'Content-Type': 'application/json',
-    apikey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV2dHZ6bWhlcmtyYWhqc3hkZGRpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM0NzE4ODgsImV4cCI6MjA4OTA0Nzg4OH0.2e07Wn2wOOEfzNVfP2INrEpRyMXIuHz2ygTiEsKKZVI',
-    Authorization: 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV2dHZ6bWhlcmtyYWhqc3hkZGRpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM0NzE4ODgsImV4cCI6MjA4OTA0Nzg4OH0.2e07Wn2wOOEfzNVfP2INrEpRyMXIuHz2ygTiEsKKZVI',
+    apikey: anonKey,
+    Authorization: `Bearer ${anonKey}`,
   };
 }
 
@@ -13,10 +21,22 @@ export interface TwoFAConfig {
   email: string;
 }
 
-export function generateOTP(): string {
-  return Math.random().toString().substring(2, 8);
+/**
+ * ✅ SECURE: Generate cryptographically strong OTP
+ * Uses Web Crypto API for random number generation
+ * New length: 8 digits instead of 6 (more secure)
+ * @param length Number of digits in OTP (default: 8)
+ * @returns Cryptographically secure OTP digit string
+ */
+export function generateOTP(length: number = 8): string {
+  const array = new Uint8Array(length);
+  crypto.getRandomValues(array);
+  let otp = '';
+  for (let i = 0; i < length; i++) {
+    otp += String(array[i] % 10);
+  }
+  return otp;
 }
-
 export interface SendOTPResult {
   success: boolean;
   expiresInSeconds: number;
@@ -29,7 +49,13 @@ export async function sendOTP(email: string, userID: string): Promise<SendOTPRes
     const otp = generateOTP();
     const expirationMinutes = 10;
 
-    const response = await fetch('https://evtvzmherkrahjsxdddi.supabase.co/functions/v1/send-2fa-otp', {
+    // ✅ SECURE: Use environment variable for base URL
+    const serverUrl = import.meta.env.VITE_SUPABASE_URL || '';
+    if (!serverUrl) {
+      throw new Error('Supabase URL is not configured');
+    }
+    
+    const response = await fetch(`${serverUrl}/functions/v1/send-2fa-otp`, {
       method: 'POST',
       headers: createPublicFunctionHeaders(),
       body: JSON.stringify({
@@ -41,8 +67,10 @@ export async function sendOTP(email: string, userID: string): Promise<SendOTPRes
     });
 
     if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.error || `Failed to send OTP: ${response.statusText}`);
+      // ✅ SECURE: Don't expose internal error details in user-facing messages
+      const errorBody = await response.json().catch(() => ({}));
+      console.error('[2FA] OTP send failed with status:', response.status);
+      throw new Error('Unable to send OTP. Please try again.');
     }
 
     const data = await response.json();

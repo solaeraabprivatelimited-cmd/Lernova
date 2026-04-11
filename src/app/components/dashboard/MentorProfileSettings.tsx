@@ -609,20 +609,20 @@ function SessionHistoryView() {
 /* ── Performance Stats ── */
 
 const WEEKLY_DATA = [
-  { day: "MON", hours: 1.5 },
-  { day: "TUE", hours: 1.0 },
-  { day: "WED", hours: 2.8 },
-  { day: "THU", hours: 3.0 },
-  { day: "FRI", hours: 1.0 },
-  { day: "SAT", hours: 1.5 },
-  { day: "SUN", hours: 4.0 },
+  { day: "MON", hours: 0 },
+  { day: "TUE", hours: 0 },
+  { day: "WED", hours: 0 },
+  { day: "THU", hours: 0 },
+  { day: "FRI", hours: 0 },
+  { day: "SAT", hours: 0 },
+  { day: "SUN", hours: 0 },
 ];
 
 const MONTHLY_DATA = [
-  { day: "W1", hours: 8 },
-  { day: "W2", hours: 12 },
-  { day: "W3", hours: 9 },
-  { day: "W4", hours: 15 },
+  { day: "W1", hours: 0 },
+  { day: "W2", hours: 0 },
+  { day: "W3", hours: 0 },
+  { day: "W4", hours: 0 },
 ];
 
 function PerformanceStatsView() {
@@ -800,20 +800,20 @@ function PerformanceStatsView() {
 /* ── Earning Stats ── */
 
 const EARN_WEEKLY_DATA = [
-  { day: "MON", amount: 1500 },
-  { day: "TUE", amount: 800  },
-  { day: "WED", amount: 2500 },
-  { day: "THU", amount: 3000 },
-  { day: "FRI", amount: 900  },
-  { day: "SAT", amount: 1300 },
-  { day: "SUN", amount: 2500 },
+  { day: "MON", amount: 0 },
+  { day: "TUE", amount: 0  },
+  { day: "WED", amount: 0 },
+  { day: "THU", amount: 0 },
+  { day: "FRI", amount: 0  },
+  { day: "SAT", amount: 0 },
+  { day: "SUN", amount: 0 },
 ];
 
 const EARN_MONTHLY_DATA = [
-  { day: "W1", amount: 8000  },
-  { day: "W2", amount: 12000 },
-  { day: "W3", amount: 9500  },
-  { day: "W4", amount: 14000 },
+  { day: "W1", amount: 0  },
+  { day: "W2", amount: 0 },
+  { day: "W3", amount: 0  },
+  { day: "W4", amount: 0 },
 ];
 
 type PayStatus = "Paid" | "Pending";

@@ -1,13 +1,10 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { getCurrentUser, mentorDashboard, profile as profileApi, setCurrentUser } from '../lib/api';
-import { OnboardingWalkthrough } from './OnboardingWalkthrough';
 import { completePendingOnboarding, shouldShowPendingOnboarding } from '../lib/onboarding';
 import svgPaths from '../../imports/svg-awezib197y';
 import svgWellness from '../../imports/svg-fui5khiao7';
-import { CommunityView as MentorCommunityView } from './dashboard/CommunityView';
-import { MentorProfileSettings } from './dashboard/MentorProfileSettings';
-import { WorldChatView as SharedWorldChatView } from './dashboard/WorldChatView';
 import { ImageWithFallback } from './figma/ImageWithFallback';
+import { RouteLoader } from './RouteLoader';
 import { Building2, AlignLeft, Lock, Globe, Hash, Link2 } from 'lucide-react';
 import { toast } from 'sonner';
 import imgUserAvatar from 'figma:asset/1d3b37310d86db33d00fb05038f712cfa0e01556.png';
@@ -19,6 +16,26 @@ import imgResAuthor from 'figma:asset/d0b5e8618139abd2e6c665600d3134442c6ea4a3.p
 import imgResAttach from 'figma:asset/605a593a8aec5bcd93a6caef17da90dbf55364dc.png';
 import svgWellRes from '../../imports/svg-spu5c0og85';
 import svgWellResFill from '../../imports/svg-ux77gu3q65';
+
+const OnboardingWalkthrough = React.lazy(async () => {
+  const module = await import('./OnboardingWalkthrough');
+  return { default: module.OnboardingWalkthrough };
+});
+
+const MentorCommunityView = React.lazy(async () => {
+  const module = await import('./dashboard/CommunityView');
+  return { default: module.CommunityView };
+});
+
+const MentorProfileSettings = React.lazy(async () => {
+  const module = await import('./dashboard/MentorProfileSettings');
+  return { default: module.MentorProfileSettings };
+});
+
+const SharedWorldChatView = React.lazy(async () => {
+  const module = await import('./dashboard/WorldChatView');
+  return { default: module.WorldChatView };
+});
 
 interface MentorDashboardProps {
   onLogout: () => void;
@@ -300,7 +317,7 @@ function SessionModal({ mode, initial, onSave, onClose }: SessionModalProps) {
               className="flex-1 font-['Poppins'] text-[14px] outline-none"
               value={form.mentorName}
               onChange={e => setForm(f => ({ ...f, mentorName: e.target.value }))}
-              placeholder="e.g. Jack Sparrow"
+              placeholder="e.g. Your Name or Preferred Title"
             />
           </div>
         </div>
@@ -314,7 +331,7 @@ function SessionModal({ mode, initial, onSave, onClose }: SessionModalProps) {
               className="flex-1 font-['Poppins'] text-[14px] outline-none"
               value={rateInput}
               onChange={e => setRateInput(e.target.value)}
-              placeholder="500"
+              placeholder="Enter hourly rate"
               type="number"
               min="0"
             />
@@ -1924,8 +1941,8 @@ interface MoodMessage { id: number; role: 'ai' | 'user'; text: string; }
 const INITIAL_MOOD_MESSAGES: MoodMessage[] = [
   { id: 1, role: 'ai',   text: 'Hello there! How may I assist you today?' },
   { id: 2, role: 'user', text: 'Hello there' },
-  { id: 3, role: 'ai',   text: 'Lorem ipsum dolor sit amet consectetur. Adipiscing porttitor vel varius ut sed neque ut. Aliquet molestie dignissim eu elementum sollicitudin.' },
-  { id: 4, role: 'user', text: 'Lorem Ipsum?' },
+  { id: 3, role: 'ai',   text: 'I\'m here to support your wellness journey. How are you feeling today?' },
+  { id: 4, role: 'user', text: 'I\'m feeling a bit stressed about upcoming exams.' },
 ];
 
 const AI_RESPONSES = [
@@ -1947,7 +1964,7 @@ function EmotionalWellnessView() {
   const [mcMotivLikes,     setMcMotivLikes]     = useState<Record<number, 'like' | 'dislike' | null>>({});
   const [mcPosts, setMcPosts] = useState([
     { id: 0, type: 'quote' as const, title: 'Motivational Quote', body: '' },
-    { id: 1, type: 'story' as const, title: 'Motivational Story', body: 'Lorem ipsum dolor sit amet consectetur. Adipiscing porttitor vel varius ut sed neque ut. Aliquet molestie dignissim eu elementum sollicitudin.' },
+    { id: 1, type: 'story' as const, title: 'Success Through Persistence', body: 'Every expert was once a beginner who never gave up. Your effort today is building your success tomorrow.' },
   ]);
 
   const mcResetModal = () => {
@@ -1969,8 +1986,8 @@ function EmotionalWellnessView() {
   const [postAttached, setPostAttached]     = useState(false);
   const [resLikes, setResLikes]             = useState<Record<number, 'like' | 'dislike' | null>>({});
   const [resArticles, setResArticles]       = useState([
-    { id: 0, type: 'article' as const, title: 'Title', body: 'Lorem ipsum dolor sit amet consectetur. Adipiscing porttitor vel varius ut sed neque ut. Aliquet molestie dignissim eu elementum sollicitudin.' },
-    { id: 1, type: 'video'   as const, title: 'Title', body: 'Lorem ipsum dolor sit amet consectetur. Adipiscing porttitor vel varius ut sed neque ut. Aliquet molestie dignissim eu elementum sollicitudin.' },
+    { id: 0, type: 'article' as const, title: 'Study Techniques', body: 'Learn effective study methods that enhance retention and reduce exam anxiety.' },
+    { id: 1, type: 'video'   as const, title: 'Mindfulness Guide', body: 'A 5-minute guided breathing exercise to calm your mind before studying.' },
   ]);
 
   const handlePostArticle = () => {
@@ -2464,7 +2481,11 @@ function EmotionalWellnessView() {
 
   /* ─── World Chat sub-view ─── */
   if (activeCard === 'chat') {
-    return <SharedWorldChatView onBack={() => setActiveCard(null)} />;
+    return (
+      <React.Suspense fallback={<RouteLoader fullscreen={false} label="Loading world chat..." />}>
+        <SharedWorldChatView onBack={() => setActiveCard(null)} />
+      </React.Suspense>
+    );
   }
 
   /* ─── Motivation Corner sub-view ─── */
@@ -2775,7 +2796,7 @@ const NAV_ITEMS: { id: NavItem; label: string; icon: React.ReactNode }[] = [
 
 function Sidebar({ active, onNav }: SidebarProps) {
   return (
-    <div className="bg-white shadow-[0px_4px_18px_-1px_rgba(0,0,0,0.1)] h-full flex flex-col pt-[32px] pb-6">
+    <div className="flex h-full flex-col border-r border-border/70 bg-card pt-[32px] pb-6 shadow-[0px_4px_18px_-1px_rgba(0,0,0,0.08)]">
       {/* Logo */}
       <div className="px-[32px] mb-[36px]">
         <LearnovaLogo />
@@ -2793,13 +2814,13 @@ function Sidebar({ active, onNav }: SidebarProps) {
               key={item.id}
               onClick={() => onNav(item.id)}
               className={`flex items-center gap-[6px] h-[42px] px-[16px] rounded-[10px] w-full text-left transition-colors ${
-                isActive ? 'bg-[#c9e5ff]' : 'hover:bg-[#f0f4f8]'
+                isActive ? 'bg-primary/12' : 'hover:bg-muted'
               }`}
             >
               <span className={isActive ? '[&_path]:fill-[#003566] [&_path]:stroke-[#003566]' : ''}>
                 {item.icon}
               </span>
-              <span className={`font-['Poppins'] text-[14px] ${isActive ? 'text-[#003566]' : 'text-[rgba(0,0,0,0.6)]'}`}>
+              <span className={`font-['Poppins'] text-[14px] ${isActive ? 'text-primary' : 'text-muted-foreground'}`}>
                 {item.label}
               </span>
             </button>
@@ -2835,14 +2856,14 @@ function ProfileDropdown({ onLogout, onClose, onNavigate }: ProfileDropdownProps
   return (
     <>
       <div className="fixed inset-0 z-10" onClick={onClose} />
-      <div className="absolute top-[52px] right-0 z-20 bg-white rounded-[12px] shadow-[0px_4px_20px_rgba(0,0,0,0.15)] w-[180px] py-2 overflow-hidden">
+      <div className="absolute top-[52px] right-0 z-20 w-[180px] overflow-hidden rounded-[12px] border border-border/70 bg-card py-2 shadow-[0px_4px_20px_rgba(0,0,0,0.15)]">
         <button
-          className="w-full px-4 py-2.5 text-left font-['Poppins'] text-[14px] text-black hover:bg-gray-50 transition-colors"
+          className="w-full px-4 py-2.5 text-left font-['Poppins'] text-[14px] text-foreground transition-colors hover:bg-muted"
           onClick={() => { onNavigate('profile'); onClose(); }}
         >
           Profile Settings
         </button>
-        <div className="border-t border-[rgba(0,0,0,0.08)] my-1" />
+        <div className="my-1 border-t border-border/70" />
         <button
           className="w-full px-4 py-2.5 text-left font-['Poppins'] text-[14px] text-[#cc3636] hover:bg-[#fde8e8] transition-colors"
           onClick={onLogout}
@@ -2873,6 +2894,7 @@ export function MentorDashboard({ onLogout }: MentorDashboardProps) {
     averageRating: null,
   });
   const [mentorStatsLoading, setMentorStatsLoading] = useState(true);
+  const sectionLoader = <RouteLoader fullscreen={false} label="Loading mentor workspace..." />;
   const [userProfile, setUserProfileState] = useState<{ name: string; role: string; avatar?: string | null }>(() => {
     const cached = cachedUser;
     return {
@@ -2995,27 +3017,39 @@ export function MentorDashboard({ onLogout }: MentorDashboardProps) {
       case 'session-requests': return <SessionRequestsView />;
       case 'study-room': return <CreateStudyRoomView />;
       case 'wellness': return <EmotionalWellnessView />;
-      case 'community': return <MentorCommunityView />;
-      case 'profile':   return <MentorProfileSettings onBack={() => setActiveNav('create-session')} />;
+      case 'community':
+        return (
+          <React.Suspense fallback={sectionLoader}>
+            <MentorCommunityView />
+          </React.Suspense>
+        );
+      case 'profile':
+        return (
+          <React.Suspense fallback={sectionLoader}>
+            <MentorProfileSettings onBack={() => setActiveNav('create-session')} />
+          </React.Suspense>
+        );
     }
   };
 
   return (
-    <div className="flex h-screen bg-[#f8fafc] overflow-hidden">
-      <OnboardingWalkthrough
-        open={showOnboarding}
-        role="mentor"
-        userName={displayName}
-        onOpenChange={(open) => {
-          if (!open) {
-            closeOnboarding();
-            return;
-          }
-          setShowOnboarding(true);
-        }}
-        onFinish={closeOnboarding}
-        onStepAction={handleOnboardingAction}
-      />
+    <div className="flex h-screen overflow-hidden bg-background text-foreground">
+      <React.Suspense fallback={null}>
+        <OnboardingWalkthrough
+          open={showOnboarding}
+          role="mentor"
+          userName={displayName}
+          onOpenChange={(open) => {
+            if (!open) {
+              closeOnboarding();
+              return;
+            }
+            setShowOnboarding(true);
+          }}
+          onFinish={closeOnboarding}
+          onStepAction={handleOnboardingAction}
+        />
+      </React.Suspense>
       {/* Sidebar — hidden when profile settings is open (it has its own sidebar) */}
       {activeNav !== 'profile' && (
         <div className="w-[278px] shrink-0 h-full overflow-y-auto">
@@ -3026,7 +3060,7 @@ export function MentorDashboard({ onLogout }: MentorDashboardProps) {
       {/* Main area */}
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Top bar — hidden in profile view which has its own */}
-        <div className={`bg-white border-b border-[rgba(0,0,0,0.06)] px-10 py-[22px] flex items-center justify-end gap-6 shrink-0 ${activeNav === 'profile' ? 'hidden' : ''}`}>
+        <div className={`flex shrink-0 items-center justify-end gap-6 border-b border-border/70 bg-background/80 px-10 py-[22px] backdrop-blur-xl ${activeNav === 'profile' ? 'hidden' : ''}`}>
           {/* Bell */}
           <button
             className="relative p-1 hover:opacity-70 transition-opacity"
@@ -3040,7 +3074,7 @@ export function MentorDashboard({ onLogout }: MentorDashboardProps) {
             )}
             {showNotifications && (
               <div
-                className="absolute top-[44px] right-0 z-30 bg-white rounded-[20px] shadow-[0px_4px_50px_5px_rgba(0,0,0,0.1)] w-[380px] p-[32px] flex flex-col gap-[24px]"
+                className="absolute top-[44px] right-0 z-30 flex w-[380px] flex-col gap-[24px] rounded-[20px] border border-border/70 bg-card p-[32px] shadow-[0px_4px_50px_5px_rgba(0,0,0,0.1)]"
                 onClick={(e) => e.stopPropagation()}
               >
                 {/* Header */}

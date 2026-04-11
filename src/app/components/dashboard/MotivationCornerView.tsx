@@ -2,7 +2,7 @@ import React, { useState, useRef } from "react";
 import imgFrame1171275609 from "figma:asset/d0b5e8618139abd2e6c665600d3134442c6ea4a3.png";
 import imgImage27 from "figma:asset/f0a250ad1361e9247b086e20f69a2980c11fcc14.png";
 import { ImageWithFallback } from "../figma/ImageWithFallback";
-import { motivationPosts as motivationPostsApi } from "@/app/lib/api";
+import { motivationPosts as motivationPostsApi, getCurrentUser } from "@/app/lib/api";
 import {
   ArrowLeft, Plus, ThumbsUp, ThumbsDown, Sparkles, Quote, BookOpen,
   ChevronDown, X, Image as ImageIcon, Paperclip
@@ -26,8 +26,8 @@ interface MotivationPost {
 
 /* ── Mock Data ── */
 const initialPosts: MotivationPost[] = [
-  { id: "1", type: "quote", title: "Motivational Quote", quoteText: "\"The only way to do great work is to love what you do. If you haven't found it yet, keep looking. Don't settle.\" — Steve Jobs", author: "Jack Sparrow", authorAvatar: imgFrame1171275609, date: "July 15, 2024", likes: 34, dislikes: 2, userReaction: null },
-  { id: "2", type: "story", title: "Motivational Story", description: "A student who struggled with math for years discovered a love for problem-solving through a supportive study group. Their journey shows how community and persistence can transform your relationship with any subject.", thumbnail: imgImage27, author: "Jack Sparrow", authorAvatar: imgFrame1171275609, date: "July 15, 2024", likes: 28, dislikes: 1, userReaction: null },
+  { id: "1", type: "quote", title: "Motivational Quote", quoteText: "\"The only way to do great work is to love what you do. If you haven't found it yet, keep looking. Don't settle.\" — Steve Jobs", author: "Community Member", authorAvatar: imgFrame1171275609, date: "April 8, 2026", likes: 34, dislikes: 2, userReaction: null },
+  { id: "2", type: "story", title: "Motivational Story", description: "A student who struggled with math for years discovered a love for problem-solving through a supportive study group. Their journey shows how community and persistence can transform your relationship with any subject.", thumbnail: imgImage27, author: "Community Member", authorAvatar: imgFrame1171275609, date: "April 7, 2026", likes: 28, dislikes: 1, userReaction: null },
   { id: "3", type: "quote", title: "Motivational Quote", quoteText: "\"Education is the most powerful weapon which you can use to change the world.\" — Nelson Mandela", author: "Sarah Johnson", authorAvatar: imgFrame1171275609, date: "August 3, 2024", likes: 56, dislikes: 0, userReaction: null },
   { id: "4", type: "story", title: "Motivational Story", description: "A student who failed three times before finally passing their medical boards shares how perseverance and self-belief led to ultimate success.", thumbnail: "https://images.unsplash.com/photo-1764377725269-a26ada9b551a?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxtb3VudGFpbiUyMHBlYWslMjBhY2hpZXZlbWVudCUyMHN1Y2Nlc3N8ZW58MXx8fHwxNzcxMTQ2OTIwfDA&ixlib=rb-4.1.0&q=80&w=1080", author: "Dr. Emily Chen", authorAvatar: imgFrame1171275609, date: "September 12, 2024", likes: 42, dislikes: 3, userReaction: null },
   { id: "5", type: "quote", title: "Motivational Quote", quoteText: "\"Success is not final, failure is not fatal: it is the courage to continue that counts.\" — Winston Churchill", author: "Alex Rivera", authorAvatar: imgFrame1171275609, date: "October 8, 2024", likes: 71, dislikes: 1, userReaction: null },
@@ -37,7 +37,7 @@ const initialPosts: MotivationPost[] = [
 function ModalBackdrop({ children, onClose }: { children: React.ReactNode; onClose: () => void }) {
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-[#001d3d]/40 backdrop-blur-sm" onClick={onClose} />
+      <div className="absolute inset-0 bg-black/50 backdrop-blur-md" onClick={onClose} />
       {children}
     </div>
   );
@@ -61,11 +61,12 @@ function PostModal({ onClose, onPost }: {
     if (!canSubmit) return;
     const now = new Date().toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
     if (postType === "quote") {
-      await onPost({ type: "quote", title: "Motivational Quote", quoteText: quoteText.trim(), author: "Jack Sparrow", authorAvatar: imgFrame1171275609, date: now });
+      const currentUser = getCurrentUser();
+      await onPost({ type: "quote", title: "Motivational Quote", quoteText: quoteText.trim(), author: currentUser?.name ?? "You", authorAvatar: imgFrame1171275609, date: now });
     } else {
       await onPost({ type: "story", title: "Motivational Story", description: storyText.trim(),
         thumbnail: attachedImages.length > 0 ? attachedImages[0].url : "https://images.unsplash.com/photo-1563208183-17ce26d6e360?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxzdW5zZXQlMjBvY2VhbiUyMGluc3BpcmF0aW9uYWwlMjBsYW5kc2NhcGV8ZW58MXx8fHwxNzcxMTczMzMyfDA&ixlib=rb-4.1.0&q=80&w=1080",
-        author: "Jack Sparrow", authorAvatar: imgFrame1171275609, date: now });
+        author: currentUser?.name ?? "You", authorAvatar: imgFrame1171275609, date: now });
     }
   };
 

@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Lernova">
+  <defs>
+    <linearGradient id="lernova-favicon-bg" x1="8" x2="56" y1="6" y2="58" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#003566" />
+      <stop offset="1" stop-color="#001d3d" />
+    </linearGradient>
+  </defs>
+  <rect width="64" height="64" rx="18" fill="url(#lernova-favicon-bg)" />
+  <path fill="#f8fbff" d="M32 13 14 22.5 32 32l14.727-7.774V35h3.273V22.5L32 13Zm0 23.273L20.182 30 32 23.727 43.818 30 32 36.273ZM14 36.545v3.273L32 49.273l18-9.455v-3.273L32 46Z" />
+  <circle cx="49.5" cy="17.5" r="5.5" fill="#f77f00" />
+</svg>

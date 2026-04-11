@@ -3,16 +3,57 @@ import { cors } from "npm:hono/cors";
 import { logger } from "npm:hono/logger";
 import * as kv from "./kv_store.tsx";
 import { createClient } from "jsr:@supabase/supabase-js@2.49.8";
+import { getSecurityHeaders } from "./security-headers.ts";
 
 const app = new Hono();
+
+// ✅ SECURE: Logging middleware
 app.use("*", logger(console.log));
-app.use("/*", cors({
-  origin: "*",
-  allowHeaders: ["Content-Type", "Authorization"],
-  allowMethods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-  exposeHeaders: ["Content-Length"],
-  maxAge: 600,
-}));
+
+// ✅ SECURE: Restrict CORS to allowed origins only (not "*")
+const allowedOrigins = [
+  "https://lernova.com",
+  "https://www.lernova.com",
+  "https://app.lernova.com",
+  // Add localhost for development if needed
+  ...(Deno.env.get("ALLOWED_ORIGINS")?.split(",") || []),
+];
+
+app.use(
+  "/*",
+  cors({
+    origin: (origin: string | undefined) => {
+      // Allow requests without origin (same-origin, Postman, mobile apps, etc)
+      if (!origin) {
+        return true;
+      }
+      
+      // Only allow whitelisted origins
+      if (allowedOrigins.includes(origin)) {
+        return origin;
+      }
+      
+      // Reject all other origins
+      return undefined;
+    },
+    allowHeaders: ["Content-Type", "Authorization", "X-CSRF-Token"],
+    allowMethods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    exposeHeaders: ["Content-Length"],
+    credentials: true,
+    maxAge: 600,
+  })
+);
+
+// ✅ SECURE: Add security headers to all responses
+app.use("/*", async (c, next) => {
+  await next();
+  
+  // Apply production-grade security headers
+  const headers = getSecurityHeaders();
+  for (const [key, value] of Object.entries(headers)) {
+    c.header(key, value);
+  }
+});
 
 // ─────────────────────────────────────────────────────────────
 // Helpers

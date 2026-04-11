@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { getCurrentUser } from "@/app/lib/api";
 import imgImage28 from "figma:asset/605a593a8aec5bcd93a6caef17da90dbf55364dc.png";
 import imgFrame1171275609 from "figma:asset/d0b5e8618139abd2e6c665600d3134442c6ea4a3.png";
 import { ImageWithFallback } from "../figma/ImageWithFallback";
@@ -32,7 +32,7 @@ const initialArticles: WellnessArticle[] = [
 function ModalBackdrop({ children, onClose }: { children: React.ReactNode; onClose: () => void }) {
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-[#001d3d]/40 backdrop-blur-sm" onClick={onClose} />
+      <div className="absolute inset-0 bg-black/50 backdrop-blur-md" onClick={onClose} />
       {children}
     </div>
   );
@@ -49,7 +49,7 @@ function PostArticleModal({ onClose, onPost }: { onClose: () => void; onPost: (a
     onPost({
       type: "article", title: title.trim(), description: content.trim(),
       thumbnail: attachedImages[0] || "https://images.unsplash.com/photo-1578264141195-263ee8c797a0?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxzdW5zZXQlMjBtZWRpdGF0aW9uJTIwd2VsbG5lc3N8ZW58MXx8fHwxNzcxMTcyMjkyfDA&ixlib=rb-4.1.0&q=80&w=1080",
-      author: "Jack Sparrow", date: new Date().toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" }),
+      author: getCurrentUser()?.name ?? "You", date: new Date().toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" }),
     });
   };
 

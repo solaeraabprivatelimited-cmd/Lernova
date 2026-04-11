@@ -1,6 +1,8 @@
 import React from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 
+import { RouteLoader } from '@/app/components/RouteLoader';
+
 export type UserRole = 'student' | 'mentor';
 
 export interface AppUser {
@@ -17,14 +19,7 @@ interface ProtectedRouteProps {
 }
 
 function LoadingScreen() {
-  return (
-    <div className="min-h-screen bg-white flex items-center justify-center">
-      <div className="flex flex-col items-center gap-4">
-        <div className="w-10 h-10 border-[3px] border-[#003566] border-t-transparent rounded-full animate-spin" />
-        <p className="font-['Poppins'] text-[14px] text-black/50">Loading Learnova...</p>
-      </div>
-    </div>
-  );
+  return <RouteLoader label="Restoring your Learnova session..." />;
 }
 
 function resolveHomeRoute(user: AppUser | null): string {

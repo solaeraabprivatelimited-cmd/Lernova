@@ -2,80 +2,84 @@
 
 :root {
   --font-size: 16px;
-  --background: #ffffff;
-  --foreground: oklch(0.145 0 0);
+  color-scheme: light;
+  --background: #fafbfc;
+  --foreground: #0a0e27;
   --card: #ffffff;
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: #030213;
-  --primary-foreground: oklch(1 0 0);
-  --secondary: oklch(0.95 0.0058 264.53);
-  --secondary-foreground: #030213;
-  --muted: #ececf0;
-  --muted-foreground: #717182;
-  --accent: #e9ebef;
-  --accent-foreground: #030213;
-  --destructive: #d4183d;
+  --card-foreground: #0a0e27;
+  --popover: #ffffff;
+  --popover-foreground: #0a0e27;
+  --primary: #0f1419;
+  --primary-foreground: #f0f4ff;
+  --secondary: #e8ecf8;
+  --secondary-foreground: #0a0e27;
+  --muted: #d1d5e0;
+  --muted-foreground: #5f6d8a;
+  --accent: #e8ecf8;
+  --accent-foreground: #0a0e27;
+  --destructive: #ef4444;
   --destructive-foreground: #ffffff;
-  --border: rgba(0, 0, 0, 0.1);
-  --input: transparent;
-  --input-background: #f3f3f5;
-  --switch-background: #cbced4;
+  --border: #d1d5e0;
+  --input: #ffffff;
+  --input-background: #f5f7fb;
+  --switch-background: #d1d5e0;
   --font-weight-medium: 500;
   --font-weight-normal: 400;
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.646 0.222 41.116);
-  --chart-2: oklch(0.6 0.118 184.704);
-  --chart-3: oklch(0.398 0.07 227.392);
-  --chart-4: oklch(0.828 0.189 84.429);
-  --chart-5: oklch(0.769 0.188 70.08);
+  --ring: #5f6d8a;
+  --chart-1: #3b82f6;
+  --chart-2: #10b981;
+  --chart-3: #f59e0b;
+  --chart-4: #8b5cf6;
+  --chart-5: #ef4444;
   --radius: 0.625rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: #030213;
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  --sidebar: #fafbfc;
+  --sidebar-foreground: #0a0e27;
+  --sidebar-primary: #0f1419;
+  --sidebar-primary-foreground: #f0f4ff;
+  --sidebar-accent: #f5f7fb;
+  --sidebar-accent-foreground: #0a0e27;
+  --sidebar-border: #d1d5e0;
+  --sidebar-ring: #5f6d8a;
 }
 
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.145 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.145 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.985 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.396 0.141 25.723);
-  --destructive-foreground: oklch(0.637 0.237 25.331);
-  --border: oklch(0.269 0 0);
-  --input: oklch(0.269 0 0);
-  --ring: oklch(0.439 0 0);
+  color-scheme: dark;
+  --background: #0a0e27;
+  --foreground: #f0f4ff;
+  --card: #1a1f3a;
+  --card-foreground: #f0f4ff;
+  --popover: #161a2e;
+  --popover-foreground: #f0f4ff;
+  --primary: #e8eeff;
+  --primary-foreground: #0f1419;
+  --secondary: #252d4a;
+  --secondary-foreground: #e8eeff;
+  --muted: #2d3652;
+  --muted-foreground: #9aa4bb;
+  --accent: #3d4a66;
+  --accent-foreground: #f0f4ff;
+  --destructive: #ef4444;
+  --destructive-foreground: #0a0e27;
+  --border: #2d3652;
+  --input: #161a2e;
+  --input-background: #0f1419;
+  --ring: #4f5f7f;
   --font-weight-medium: 500;
   --font-weight-normal: 400;
-  --chart-1: oklch(0.488 0.243 264.376);
-  --chart-2: oklch(0.696 0.17 162.48);
-  --chart-3: oklch(0.769 0.188 70.08);
-  --chart-4: oklch(0.627 0.265 303.9);
-  --chart-5: oklch(0.645 0.246 16.439);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(0.269 0 0);
-  --sidebar-ring: oklch(0.439 0 0);
+  --chart-1: #60a5fa;
+  --chart-2: #34d399;
+  --chart-3: #fbbf24;
+  --chart-4: #a78bfa;
+  --chart-5: #f87171;
+  --sidebar: #0f1419;
+  --sidebar-foreground: #e8eeff;
+  --sidebar-primary: #60a5fa;
+  --sidebar-primary-foreground: #0a0e27;
+  --sidebar-accent: #2d3652;
+  --sidebar-accent-foreground: #e8eeff;
+  --sidebar-border: #2d3652;
+  --sidebar-ring: #4f5f7f;
+  --switch-background: #2d3652;
 }
 
 @theme inline {
@@ -120,23 +124,38 @@
 }
 
 @layer base {
+  html,
+  body,
+  #root {
+    min-height: 100%;
+  }
+
   * {
     @apply border-border outline-ring/50;
   }
 
+  html {
+    font-size: var(--font-size);
+    scroll-behavior: smooth;
+  }
+
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground antialiased;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    background-image:
+      radial-gradient(circle at top, color-mix(in oklab, var(--primary) 10%, transparent) 0%, transparent 24%),
+      linear-gradient(to bottom, color-mix(in oklab, var(--background) 94%, #0967bd 6%), var(--background));
+    transition:
+      background-color 0.2s ease,
+      color 0.2s ease,
+      border-color 0.2s ease,
+      box-shadow 0.2s ease;
   }
 
   /**
   * Default typography styles for HTML elements (h1-h4, p, label, button, input).
   * These are in @layer base, so Tailwind utility classes (like text-sm, text-lg) automatically override them.
   */
-
-  html {
-    font-size: var(--font-size);
-  }
-
   h1 {
     font-size: var(--text-2xl);
     font-weight: var(--font-weight-medium);
@@ -177,6 +196,24 @@
     font-size: var(--text-base);
     font-weight: var(--font-weight-normal);
     line-height: 1.5;
+  }
+
+  ::selection {
+    background: color-mix(in oklab, var(--primary) 22%, transparent);
+    color: var(--foreground);
+  }
+
+  button,
+  a,
+  input,
+  textarea,
+  select {
+    transition:
+      background-color 0.2s ease,
+      border-color 0.2s ease,
+      color 0.2s ease,
+      box-shadow 0.2s ease,
+      transform 0.2s ease;
   }
 
   /* Custom scrollbar for notes and other overlays */
@@ -297,4 +334,214 @@
   -webkit-line-clamp: 5;
   -webkit-box-orient: vertical;
   overflow: hidden;
+}
+
+.app-surface {
+  @apply min-h-screen bg-background text-foreground;
+}
+
+/* Dark mode enhancements */
+.dark {
+  /* Enhanced text contrast in dark mode */
+  .text-muted-foreground {
+    @apply text-muted-foreground/90;
+  }
+
+  /* Form inputs dark mode */
+  input,
+  textarea,
+  select {
+    @apply bg-input border-muted text-foreground;
+  }
+
+  input::placeholder,
+  textarea::placeholder {
+    @apply text-muted-foreground/60;
+  }
+
+  input:focus,
+  textarea:focus,
+  select:focus {
+    @apply border-primary/50 ring-primary/30;
+  }
+
+  /* Card elevation in dark mode */
+  .card {
+    @apply bg-card border-muted shadow-lg;
+  }
+
+  /* Better button contrast */
+  button:not([class*="btn-ghost"]):not([class*="btn-outline"]) {
+    @apply bg-primary text-primary-foreground;
+  }
+
+  /* Enhanced hover states */
+  a:hover,
+  button:hover {
+    @apply transition-all duration-200;
+  }
+
+  /* Better disabled state visibility */
+  button:disabled,
+  input:disabled {
+    @apply opacity-50 cursor-not-allowed;
+  }
+
+  /* Selection highlight */
+  ::selection {
+    @apply bg-primary/30 text-foreground;
+  }
+}
+
+/* Light mode form enhancements */
+input,
+textarea,
+select {
+  @apply bg-input border border-border text-foreground placeholder:text-muted-foreground/70;
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+  @apply border-primary/70 ring-2 ring-primary/20 outline-hidden transition-all;
+}
+
+/* Better focus visibility */
+:focus-visible {
+  @apply outline outline-2 outline-primary/50 outline-offset-2;
+}
+
+/* Enhanced scrollbar styling for dark mode */
+.dark .custom-scrollbar::-webkit-scrollbar-track {
+  background: rgba(45, 54, 82, 0.3);
+}
+
+.dark .custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(144, 165, 187, 0.6);
+}
+
+.dark .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(144, 165, 187, 0.8);
+}
+
+/* Smooth transitions for theme switching */
+* {
+  @apply transition-colors duration-300 ease-in-out;
+}
+
+/* Skip transition for specific elements */
+.no-theme-transition {
+  @apply transition-none;
+}
+
+/* Enhanced dark mode layers and components */
+@layer components {
+  /* Backdrop glass effect - dark mode optimized */
+  .dark .backdrop-glass {
+    @apply bg-black/20 backdrop-blur-xl border border-white/10;
+  }
+
+  .light .backdrop-glass {
+    @apply bg-white/50 backdrop-blur-md border border-white/20;
+  }
+
+  /* Panel backgrounds */
+  .dark .panel-bg {
+    @apply bg-black/30 backdrop-blur-md border border-white/10;
+  }
+
+  .light .panel-bg {
+    @apply bg-white/90 backdrop-blur-sm border border-gray-200/50;
+  }
+
+  /* Text enhancements */
+  .dark .text-heading {
+    @apply text-white font-semibold;
+  }
+
+  .light .text-heading {
+    @apply text-gray-900 font-semibold;
+  }
+
+  /* Button groups dark mode */
+  .dark .btn-group {
+    @apply bg-black/40 border border-white/10 rounded-full;
+  }
+
+  /* Input group styling */
+  .dark .input-group {
+    @apply divide-white/10;
+  }
+
+  /* Scrollable dark mode */
+  .dark .scrollable {
+    @apply overflow-y-auto;
+  }
+
+  .dark .scrollable::-webkit-scrollbar {
+    @apply w-2;
+  }
+
+  .dark .scrollable::-webkit-scrollbar-track {
+    @apply bg-transparent;
+  }
+
+  .dark .scrollable::-webkit-scrollbar-thumb {
+    @apply bg-white/20 rounded-full hover:bg-white/30;
+  }
+
+  /* Sections with better contrast */
+  .dark .section-bg {
+    @apply bg-gradient-to-b from-white/5 to-transparent;
+  }
+
+  /* Empty states */
+  .dark .empty-state {
+    @apply text-muted-foreground/70;
+  }
+
+  .light .empty-state {
+    @apply text-muted-foreground;
+  }
+}
+
+/* Additional dark mode text improvements */
+.dark h1, .dark h2, .dark h3, .dark h4, .dark h5, .dark h6 {
+  @apply text-white/95;
+}
+
+.dark p, .dark span, .dark a {
+  @apply text-white/85;
+}
+
+.dark small, .dark .text-sm {
+  @apply text-white/70;
+}
+
+/* Focus improvements for dark mode */
+.dark :focus-visible {
+  @apply outline outline-2 outline-primary/60 outline-offset-2;
+}
+
+/* Hover states for dark mode */
+.dark a:hover {
+  @apply text-primary/90;
+}
+
+/* Badge improvements */
+.dark .badge {
+  @apply bg-primary/20 text-primary border-primary/30;
+}
+
+.light .badge {
+  @apply bg-primary/10 text-primary border-primary/30;
+}
+
+/* Floating elements */
+.dark .floating-element {
+  @apply shadow-lg shadow-black/40;
+}
+
+.light .floating-element {
+  @apply shadow-md shadow-black/10;
 }

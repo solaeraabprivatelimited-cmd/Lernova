@@ -38,23 +38,16 @@ interface TimerNotification {
   duration: string;
 }
 
-// Participants data - In Live Mode, the host is the main participant
-const participants = [
-  { id: 0, name: "Elizabeth (Host)", image: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop", isMuted: false, isVideoOff: false, hasNotificationsMuted: false },
-  { id: 1, name: "John", image: "https://images.unsplash.com/photo-1599566150163-29194dcaad36?w=100&h=100&fit=crop", isMuted: true, isVideoOff: false, hasNotificationsMuted: true },
-  { id: 2, name: "Franklin", image: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&h=100&fit=crop", isMuted: false, isVideoOff: false, hasNotificationsMuted: false },
-  { id: 3, name: "Naomi", image: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&h=100&fit=crop", isMuted: false, isVideoOff: true, hasNotificationsMuted: true },
-  { id: 4, name: "Zendaya", image: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=100&h=100&fit=crop", isMuted: false, isVideoOff: false, hasNotificationsMuted: false },
-  { id: 5, name: "Steve", image: "https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?w=100&h=100&fit=crop", isMuted: false, isVideoOff: false, hasNotificationsMuted: true },
-  { id: 6, name: "Harry", image: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&h=100&fit=crop", isMuted: false, isVideoOff: false, hasNotificationsMuted: false },
-];
+// Participants data - populated from room API (currently empty for placeholder)
+const participants: Participant[] = [];
+// TODO: Fetch actual participants from livMode room data
 
-const isHost = true; // Current user is the host
-const currentUserId = 0; // Elizabeth's ID
+const isHost = false; // TODO: Get from room context
+const currentUserId: number | null = null; // TODO: Get from current user context
 
 export function LiveModeRoom({ 
-  roomName = 'Study Room', 
-  roomId = '2458', 
+  roomName = '', 
+  roomId,
   subject = 'General',
   onLeaveRoom 
 }: LiveModeRoomProps) {

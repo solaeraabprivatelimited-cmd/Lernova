@@ -9,7 +9,7 @@ interface BlockNotificationsPanelProps {
 
 export function BlockNotificationsPanel({ onClose, isBlocked, onToggle }: BlockNotificationsPanelProps) {
   return (
-    <div className="absolute right-8 top-[62px] bg-white/[0.2] backdrop-blur-md rounded-[20px] w-[462px] h-[722px] p-8 flex flex-col gap-6 font-['Poppins'] overflow-y-auto z-40">
+    <div className="absolute right-8 top-[62px] bg-black/40 backdrop-blur-lg rounded-[20px] w-[462px] h-[722px] p-8 flex flex-col gap-6 font-['Poppins'] overflow-y-auto z-[75]" onClick={(e) => e.stopPropagation()}>
       {/* Header */}
       <div className="flex items-center justify-between w-full">
         <h2 className="text-[24px] font-medium text-white">Block Notifications</h2>

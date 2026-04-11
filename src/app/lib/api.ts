@@ -76,7 +76,15 @@ export function getSupabaseClient(): SupabaseClient {
   return _supabase;
 }
 
-// ─── Auth token storage ─────────────────────────────────────────────────────────
+// ─── Auth token storage (✅ SECURE: Using sessionStorage instead of localStorage) ───
+import {
+  setAccessTokenSecurely,
+  getAccessTokenSecurely,
+  clearSecureSession as clearSecureSessionUtil,
+  setUserDataSecurely,
+  getUserDataSecurely,
+} from './secure-token-storage';
+
 let _accessToken: string | null = null;
 
 const EXPECTED_JWT_ISS_PREFIX = `https://${projectId}.supabase.co/auth/v1`;
@@ -104,30 +112,38 @@ function isProjectJwt(token: string | null | undefined, minValidityMs = 0): bool
   return expMs > Date.now() + minValidityMs;
 }
 
+/**
+ * ✅ SECURE: Set access token in sessionStorage
+ * sessionStorage is cleared when browser tab closes (safer than localStorage)
+ */
 export function setAccessToken(token: string | null) {
   const normalizedToken = isProjectJwt(token) ? token! : null;
   _accessToken = normalizedToken;
   if (normalizedToken) {
-    localStorage.setItem('learnova_token', normalizedToken);
+    setAccessTokenSecurely(normalizedToken);
   } else {
-    localStorage.removeItem('learnova_token');
-    localStorage.removeItem('learnova_user');
+    setAccessTokenSecurely(null);
+    setUserDataSecurely(null);
   }
 }
 
+/**
+ * ✅ SECURE: Get access token from sessionStorage
+ * Returns null if token is expired or invalid
+ */
 export function getAccessToken(): string | null {
   if (_accessToken) {
     if (!isProjectJwt(_accessToken)) {
       _accessToken = null;
-      localStorage.removeItem('learnova_token');
+      setAccessTokenSecurely(null);
       return null;
     }
     return _accessToken;
   }
-  _accessToken = localStorage.getItem('learnova_token');
+  _accessToken = getAccessTokenSecurely();
   if (_accessToken && !isProjectJwt(_accessToken)) {
     _accessToken = null;
-    localStorage.removeItem('learnova_token');
+    setAccessTokenSecurely(null);
   }
   return _accessToken;
 }
@@ -147,18 +163,28 @@ _supabase.auth.onAuthStateChange((_event, session) => {
   }
 });
 
+/**
+ * ✅ SECURE: Set current user data in sessionStorage
+ * Only stores non-sensitive metadata (id, email, name, role)
+ */
 export function setCurrentUser(user: any) {
   if (user) {
-    localStorage.setItem('learnova_user', JSON.stringify(user));
+    setUserDataSecurely({
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      role: user.role,
+    });
   } else {
-    localStorage.removeItem('learnova_user');
+    setUserDataSecurely(null);
   }
 }
 
+/**
+ * ✅ SECURE: Get current user data from sessionStorage
+ */
 export function getCurrentUser(): any | null {
-  const raw = localStorage.getItem('learnova_user');
-  if (!raw) return null;
-  try { return JSON.parse(raw); } catch { return null; }
+  return getUserDataSecurely();
 }
 
 function mapSessionUser(session: any) {

@@ -1,22 +1,9 @@
 /* stylelint-disable no-descending-specificity */
 /* CSS inline styles should not be used - suppressed for Tailwind CSS utility classes */
-import { FocusMode } from "./FocusMode";
-import { SilentModeView } from "./SilentModeView";
-import { CollaborativeModeView } from "./CollaborativeModeView";
-import { LiveModeView } from "./LiveModeView";
-import { MentorSupport } from "@/app/components/MentorSupport";
-import { AiMentorHome } from "@/app/components/AiMentorHome";
-import { AiMentorVoiceChat } from "@/app/components/AiMentorVoiceChat";
-import { AiMentorChat } from "@/app/components/AiMentorChat";
-import { HumanMentorHome } from "@/app/components/HumanMentorHome";
-import { ProductivityToolsView } from "./ProductivityToolsView";
-import { EmotionalWellnessView } from "./EmotionalWellnessView";
-import { CommunityView } from "./CommunityView";
 import { NotificationsPopup } from "./NotificationsPopup";
 import { ProfilePopup } from "./ProfilePopup";
-import { UserProfileSettings } from "./UserProfileSettings";
-import { OnboardingWalkthrough } from "@/app/components/OnboardingWalkthrough";
 import React from 'react';
+import { RouteLoader } from "@/app/components/RouteLoader";
 import { getCurrentUser, isAuthenticated, notifications as notificationsApi, profile as profileApi, reminders as remindersApi, setCurrentUser } from '@/app/lib/api';
 import { completePendingOnboarding, shouldShowPendingOnboarding } from '@/app/lib/onboarding';
 import svgPaths from '@/imports/svg-87v94e0bse';
@@ -30,6 +17,76 @@ import { Sheet, SheetContent, SheetTrigger, SheetTitle, SheetDescription } from 
 import { Menu, LogOut } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { matchSorter } from 'match-sorter';
+
+const FocusMode = React.lazy(async () => {
+  const module = await import("./FocusMode");
+  return { default: module.FocusMode };
+});
+
+const SilentModeView = React.lazy(async () => {
+  const module = await import("./SilentModeView");
+  return { default: module.SilentModeView };
+});
+
+const CollaborativeModeView = React.lazy(async () => {
+  const module = await import("./CollaborativeModeView");
+  return { default: module.CollaborativeModeView };
+});
+
+const LiveModeView = React.lazy(async () => {
+  const module = await import("./LiveModeView");
+  return { default: module.LiveModeView };
+});
+
+const MentorSupport = React.lazy(async () => {
+  const module = await import("@/app/components/MentorSupport");
+  return { default: module.MentorSupport };
+});
+
+const AiMentorHome = React.lazy(async () => {
+  const module = await import("@/app/components/AiMentorHome");
+  return { default: module.AiMentorHome };
+});
+
+const AiMentorVoiceChat = React.lazy(async () => {
+  const module = await import("@/app/components/AiMentorVoiceChat");
+  return { default: module.AiMentorVoiceChat };
+});
+
+const AiMentorChat = React.lazy(async () => {
+  const module = await import("@/app/components/AiMentorChat");
+  return { default: module.AiMentorChat };
+});
+
+const HumanMentorHome = React.lazy(async () => {
+  const module = await import("@/app/components/HumanMentorHome");
+  return { default: module.HumanMentorHome };
+});
+
+const ProductivityToolsView = React.lazy(async () => {
+  const module = await import("./ProductivityToolsView");
+  return { default: module.ProductivityToolsView };
+});
+
+const EmotionalWellnessView = React.lazy(async () => {
+  const module = await import("./EmotionalWellnessView");
+  return { default: module.EmotionalWellnessView };
+});
+
+const CommunityView = React.lazy(async () => {
+  const module = await import("./CommunityView");
+  return { default: module.CommunityView };
+});
+
+const UserProfileSettings = React.lazy(async () => {
+  const module = await import("./UserProfileSettings");
+  return { default: module.UserProfileSettings };
+});
+
+const OnboardingWalkthrough = React.lazy(async () => {
+  const module = await import("@/app/components/OnboardingWalkthrough");
+  return { default: module.OnboardingWalkthrough };
+});
 
 // --- Icons Components based on Figma Import ---
 
@@ -175,9 +232,9 @@ function IconCommunity({ active, light }: { active?: boolean; light?: boolean })
 
 function IconBell() {
   return (
-    <div className="size-[26px] shrink-0 flex items-center justify-center">
+    <div className="size-[26px] shrink-0 flex items-center justify-center text-black dark:text-white">
        <svg className="block w-[19px] h-[21px]" fill="none" viewBox="0 0 19.3505 21.5167">
-          <path d={svgPaths.p13baf700} stroke="black" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.01667" />
+          <path d={svgPaths.p13baf700} stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.01667" />
         </svg>
     </div>
   );
@@ -491,11 +548,24 @@ export function StudyRoomDashboard({ onLogout }: { onLogout?: () => void }) {
   const activeSection = getSectionFromSubPath(dashboardSubPath);
   const [showNotifications, setShowNotifications] = React.useState(false);
   const [showProfile, setShowProfile] = React.useState(false);
+  const [showOnboarding, setShowOnboarding] = React.useState(() =>
+    shouldShowPendingOnboarding(cachedUser?.id, 'student'),
+  );
   const [unreadNotificationCount, setUnreadNotificationCount] = React.useState(0);
   const [searchQuery, setSearchQuery] = React.useState("");
-  const [userProfile, setUserProfile] = React.useState<any>(null);
+  const [userProfile, setUserProfile] = React.useState<any>(() => cachedUser ?? null);
+  const [isDarkMode, setIsDarkMode] = React.useState(() => document.documentElement.classList.contains('dark'));
   const unreadNotificationCountRef = React.useRef(0);
   const [isSidebarOpen, setSidebarOpen] = React.useState(false);
+  const sectionLoader = <RouteLoader fullscreen={false} label="Loading workspace section..." />;
+
+  React.useEffect(() => {
+    const observer = new MutationObserver(() => {
+      setIsDarkMode(document.documentElement.classList.contains('dark'));
+    });
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+    return () => observer.disconnect();
+  }, []);
 
   React.useEffect(() => {
     if (!isAuthenticated()) {
@@ -699,9 +769,9 @@ export function StudyRoomDashboard({ onLogout }: { onLogout?: () => void }) {
     navigate(`/dashboard/${subPath}`);
   }, [navigate]);
 
-  const displayName = userProfile.name || 'User';
-  const displayRole = userProfile.role === 'mentor' ? 'Mentor' : 'Student';
-  const displayAvatar = userProfile.avatar || imgEllipse1;
+  const displayName = userProfile?.name || cachedUser?.name || 'User';
+  const displayRole = (userProfile?.role || cachedUser?.role) === 'mentor' ? 'Mentor' : 'Student';
+  const displayAvatar = userProfile?.avatar || userProfile?.avatar_url || cachedUser?.avatar || cachedUser?.avatar_url || imgEllipse1;
   const currentUserId = cachedUser?.id;
 
   const closeOnboarding = React.useCallback(() => {
@@ -789,55 +859,101 @@ export function StudyRoomDashboard({ onLogout }: { onLogout?: () => void }) {
   }, [searchQuery, modes]);
 
   if (activeMode === "Focus Mode") {
-    return <FocusMode onLeave={() => navigate('/dashboard')} />;
+    return (
+      <React.Suspense fallback={sectionLoader}>
+        <FocusMode onLeave={() => navigate('/dashboard')} />
+      </React.Suspense>
+    );
   }
 
   if (activeMode === "Silent Mode") {
-    return <SilentModeView onLeave={() => navigate('/dashboard')} />;
+    return (
+      <React.Suspense fallback={sectionLoader}>
+        <SilentModeView onLeave={() => navigate('/dashboard')} />
+      </React.Suspense>
+    );
   }
 
   if (activeMode === "Collaborative Mode") {
-    return <CollaborativeModeView onLeave={() => navigate('/dashboard')} />;
+    return (
+      <React.Suspense fallback={sectionLoader}>
+        <CollaborativeModeView onLeave={() => navigate('/dashboard')} />
+      </React.Suspense>
+    );
   }
 
   if (activeMode === "Live Mode") {
-    return <LiveModeView onLeave={() => navigate('/dashboard')} />;
+    return (
+      <React.Suspense fallback={sectionLoader}>
+        <LiveModeView onLeave={() => navigate('/dashboard')} />
+      </React.Suspense>
+    );
   }
 
   // --- Router Logic for AI Mentor ---
   
   if (activeSection === "AI Mentor") {
     return (
-      <AiMentorHome 
-        onBack={() => navigateToSection("Mentor Support")} 
-        onVoiceMode={() => navigateToSection("AI Mentor Voice")}
-        onChatMode={() => navigateToSection("AI Mentor Chat")}
-      />
+      <React.Suspense fallback={sectionLoader}>
+        <AiMentorHome 
+          onBack={() => navigateToSection("Mentor Support")} 
+          onVoiceMode={() => navigateToSection("AI Mentor Voice")}
+          onChatMode={() => navigateToSection("AI Mentor Chat")}
+        />
+      </React.Suspense>
     );
   }
 
   if (activeSection === "AI Mentor Voice") {
     return (
-      <AiMentorVoiceChat 
-        onBack={() => navigateToSection("Mentor Support")}
-        onTextMode={() => navigateToSection("AI Mentor Chat")}
-      />
+      <React.Suspense fallback={sectionLoader}>
+        <AiMentorVoiceChat 
+          onBack={() => navigateToSection("Mentor Support")}
+          onTextMode={() => navigateToSection("AI Mentor Chat")}
+        />
+      </React.Suspense>
     );
   }
 
   if (activeSection === "AI Mentor Chat") {
     return (
-      <AiMentorChat
-        onBack={() => navigateToSection("Mentor Support")}
-        onVoiceMode={() => navigateToSection("AI Mentor Voice")}
-      />
+      <React.Suspense fallback={sectionLoader}>
+        <AiMentorChat
+          onBack={() => navigateToSection("Mentor Support")}
+          onVoiceMode={() => navigateToSection("AI Mentor Voice")}
+        />
+      </React.Suspense>
     );
   }
 
   // Profile Settings full-screen
   if (activeSection === "Profile Settings") {
     return (
-      <div className="flex w-full min-h-screen bg-white font-['Poppins']">
+      <div className="flex w-full min-h-screen bg-background text-foreground font-['Poppins']">
+        <React.Suspense fallback={sectionLoader}>
+          <OnboardingWalkthrough
+            open={showOnboarding}
+            role="student"
+            userName={displayName}
+            onOpenChange={(open) => {
+              if (!open) {
+                closeOnboarding();
+                return;
+              }
+              setShowOnboarding(true);
+            }}
+            onFinish={closeOnboarding}
+            onStepAction={handleOnboardingAction}
+          />
+          <UserProfileSettings onBack={() => navigateToSection("Study Rooms")} />
+        </React.Suspense>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex w-full min-h-screen bg-background text-foreground font-['Poppins']">
+      <React.Suspense fallback={null}>
         <OnboardingWalkthrough
           open={showOnboarding}
           role="student"
@@ -852,27 +968,7 @@ export function StudyRoomDashboard({ onLogout }: { onLogout?: () => void }) {
           onFinish={closeOnboarding}
           onStepAction={handleOnboardingAction}
         />
-        <UserProfileSettings onBack={() => navigateToSection("Study Rooms")} />
-      </div>
-    );
-  }
-
-  return (
-    <div className="flex w-full min-h-screen bg-white font-['Poppins']">
-      <OnboardingWalkthrough
-        open={showOnboarding}
-        role="student"
-        userName={displayName}
-        onOpenChange={(open) => {
-          if (!open) {
-            closeOnboarding();
-            return;
-          }
-          setShowOnboarding(true);
-        }}
-        onFinish={closeOnboarding}
-        onStepAction={handleOnboardingAction}
-      />
+      </React.Suspense>
       {/* Desktop Sidebar */}
       <aside
         className="w-[280px] shrink-0 flex-col sticky top-0 h-screen z-20 hidden lg:flex overflow-hidden"
@@ -972,17 +1068,17 @@ export function StudyRoomDashboard({ onLogout }: { onLogout?: () => void }) {
         {/* Dashboard Content Area */}
         <div className="flex-1 overflow-y-auto" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
           {/* ── Integrated Top Bar ── */}
-          <div className="sticky top-0 z-10 px-6 md:px-10 lg:px-12 py-4 bg-white/80 backdrop-blur-xl border-b border-gray-100/80">
+          <div className="sticky top-0 z-10 border-b border-border/70 dark:border-white/10 bg-white dark:bg-[#0d1117] px-6 py-4 backdrop-blur-xl md:px-10 lg:px-12">
             <div className="flex items-center justify-between max-w-[1200px] mx-auto">
               {/* Left: Greeting */}
               <div className="flex items-center gap-4 lg:hidden">
                 <Sheet>
                   <SheetTrigger asChild>
-                    <button className="p-2 -ml-2 hover:bg-gray-100 rounded-[12px] transition-colors cursor-pointer">
-                      <Menu className="size-5 text-[#003566]" />
+                    <button className="-ml-2 cursor-pointer rounded-[12px] p-2 transition-colors hover:bg-muted dark:hover:bg-white/10">
+                      <Menu className="size-5 text-primary dark:text-[#00d4ff]" />
                     </button>
                   </SheetTrigger>
-                  <SheetContent side="left" className="w-[280px] p-8 bg-white">
+                  <SheetContent side="left" className="w-[280px] border-r border-border bg-card p-8">
                     <SheetTitle className="sr-only">Menu</SheetTitle>
                     <SheetDescription className="sr-only">Mobile navigation menu</SheetDescription>
                     <SidebarContent
@@ -995,7 +1091,7 @@ export function StudyRoomDashboard({ onLogout }: { onLogout?: () => void }) {
               </div>
 
               <div className="hidden lg:block">
-                <h2 className="text-[18px] font-bold text-[#003566]">
+                <h2 className="text-[18px] font-bold text-[#003566] dark:text-white">
                   {activeSection === "Study Rooms" ? "Dashboard" : activeSection}
                 </h2>
               </div>
@@ -1006,7 +1102,7 @@ export function StudyRoomDashboard({ onLogout }: { onLogout?: () => void }) {
                 <div className="relative hidden md:block">
                   <svg
                     viewBox="0 0 24 24"
-                    className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-black/30"
+                    className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-black/30 dark:text-white/30"
                     fill="none"
                     stroke="currentColor"
                     strokeWidth="2.5"
@@ -1020,7 +1116,7 @@ export function StudyRoomDashboard({ onLogout }: { onLogout?: () => void }) {
                     placeholder="Search modes..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full max-w-xs h-11 pl-11 pr-4 bg-gray-50 border border-transparent rounded-[14px] text-[13px] text-[#0d1b2a] placeholder:text-black/30 outline-none focus:bg-white focus:border-gray-200 focus:ring-2 focus:ring-gray-200/50 transition-all"
+                    className="h-11 w-full max-w-xs rounded-[14px] border border-border/70 bg-muted/60 pl-11 pr-4 text-[13px] text-foreground outline-none transition-all placeholder:text-muted-foreground focus:border-primary/25 focus:bg-background focus:ring-2 focus:ring-primary/10"
                   />
                 </div>
 
@@ -1031,23 +1127,32 @@ export function StudyRoomDashboard({ onLogout }: { onLogout?: () => void }) {
                       setShowNotifications((prev) => !prev);
                       setShowProfile(false);
                     }}
-                    className="relative w-10 h-10 rounded-[12px] bg-[#f5f7fa] hover:bg-[#edf2f7] flex items-center justify-center transition-all cursor-pointer"
+                    style={{ backgroundColor: isDarkMode ? '#000000' : '#f3f4f6' }}
+                    className="flex items-center gap-2 px-4 py-2 rounded-full border border-black/5 dark:border-white/20 transition-all hover:bg-[#e5e7eb] dark:hover:bg-[#1a1a1a]"
                   >
                     <IconBell />
                     {unreadNotificationCount > 0 && (
-                      <span className="absolute top-1.5 right-1.5 min-w-[18px] h-[18px] px-1 bg-[#e63946] rounded-full border-[1.5px] border-white text-white text-[10px] font-bold flex items-center justify-center">
+                      <span className="inline-flex items-center justify-center w-5 h-5 text-[10px] font-bold text-white bg-red-500 rounded-full">
                         {unreadNotificationCount > 9 ? '9+' : unreadNotificationCount}
                       </span>
                     )}
+                    <span className="text-sm font-medium text-black dark:text-white">Notifications</span>
                   </button>
                   <NotificationsPopup
                     isOpen={showNotifications}
                     onClose={() => setShowNotifications(false)}
+                    onReadAll={async () => {
+                      try {
+                        const items = await notificationsApi.list();
+                        const nextUnreadCount = items.filter((item: any) => !item.read).length;
+                        setUnreadNotificationCount(nextUnreadCount);
+                      } catch {}
+                    }}
                   />
                 </div>
 
                 {/* Divider */}
-                <div className="w-px h-8 bg-[#e2e8f0] hidden sm:block" />
+                  <div className="hidden h-6 w-px bg-black/10 dark:bg-white/10 sm:block" />
 
                 {/* Profile */}
                 <div className="relative">
@@ -1056,18 +1161,14 @@ export function StudyRoomDashboard({ onLogout }: { onLogout?: () => void }) {
                       setShowProfile((prev) => !prev);
                       setShowNotifications(false);
                     }}
-                    className="flex items-center gap-2.5 cursor-pointer hover:opacity-90 transition-opacity pl-1"
+                    style={{ backgroundColor: isDarkMode ? '#000000' : '#f3f4f6' }}
+                    className="flex items-center gap-3 px-3 py-2 rounded-full border border-black/5 dark:border-white/20 transition-all hover:bg-[#e5e7eb] dark:hover:bg-[#1a1a1a]"
                   >
-                    <div className="size-[36px] rounded-[12px] overflow-hidden border-2 border-[#e2e8f0] hover:border-[#0967bd] transition-colors">
-                      <ImageWithFallback src={displayAvatar} alt={displayName} className="size-full object-cover" />
+                    <img src={displayAvatar} alt={displayName} className="w-7 h-7 rounded-full" />
+                    <div className="hidden sm:flex flex-col items-start min-w-0">
+                      <span className="text-[12px] font-semibold text-black dark:text-white truncate">{displayName}</span>
+                      <span className="text-[10px] text-black/60 dark:text-white/50 truncate">{displayRole}</span>
                     </div>
-                    <div className="hidden sm:flex flex-col items-start">
-                      <span className="text-[13px] font-semibold text-[#1e293b] leading-tight">{displayName}</span>
-                      <span className="text-[11px] text-[#94a3b8] leading-tight">{displayRole}</span>
-                    </div>
-                    <svg viewBox="0 0 24 24" className="w-4 h-4 text-[#94a3b8] hidden sm:block" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-                      <path d="M6 9l6 6 6-6" />
-                    </svg>
                   </button>
                   <ProfilePopup
                     isOpen={showProfile}
@@ -1093,8 +1194,8 @@ export function StudyRoomDashboard({ onLogout }: { onLogout?: () => void }) {
                   <div className="absolute -bottom-10 -left-10 w-[200px] h-[200px] rounded-full opacity-[0.04]"
                     style={{ background: 'radial-gradient(circle, white, transparent 70%)' }} />
 
-                  <div className="relative z-10 px-6 md:px-10 py-8 md:py-10 flex flex-col md:flex-row md:items-center md:justify-between gap-6">
-                    {/* Left content */}
+                  <div className="relative px-6 md:px-10 py-8 md:py-10 flex flex-col gap-6">
+                    {/* Top: Left content */}
                     <div className="flex-1">
                       <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full mb-4"
                         style={{ background: 'rgba(247,127,0,0.15)', border: '1px solid rgba(247,127,0,0.25)' }}>
@@ -1110,21 +1211,21 @@ export function StudyRoomDashboard({ onLogout }: { onLogout?: () => void }) {
                       </p>
                     </div>
 
-                    {/* Right: Quick stats */}
-                    <div className="flex gap-3 shrink-0">
+                    {/* Bottom: Quick stats — responsive grid */}
+                    <div className="grid grid-cols-3 gap-2 md:gap-3 w-full md:w-auto">
                       {[
                         { value: "4", label: "Modes", icon: "◆" },
                         { value: "100+", label: "Rooms", icon: "◈" },
                         { value: "5K+", label: "Users", icon: "◉" },
                       ].map((stat) => (
                         <div key={stat.label}
-                          className="flex flex-col items-center px-5 py-4 rounded-[18px] min-w-[80px]"
+                          className="flex flex-col items-center px-3 md:px-5 py-3 md:py-4 rounded-[14px] md:rounded-[18px]"
                           style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.08)', backdropFilter: 'blur(10px)' }}>
-                          <span className="text-[24px] font-bold text-white leading-none mb-1"
+                          <span className="text-[20px] md:text-[24px] font-bold text-white leading-none mb-1"
                             style={{ fontFamily: "'DM Serif Display', serif" }}>
                             {stat.value}
                           </span>
-                          <span className="text-[10px] font-semibold text-white/35 uppercase tracking-[0.12em]">{stat.label}</span>
+                          <span className="text-[8px] md:text-[10px] font-semibold text-white/35 uppercase tracking-[0.12em]">{stat.label}</span>
                         </div>
                       ))}
                     </div>
@@ -1296,26 +1397,36 @@ export function StudyRoomDashboard({ onLogout }: { onLogout?: () => void }) {
             )}
 
             {activeSection === "Mentor Support" && (
-              <MentorSupport
-                onStartAiMentor={() => navigateToSection("AI Mentor")}
-                onStartHumanMentor={() => navigateToSection("Human Mentor")}
-              />
+              <React.Suspense fallback={sectionLoader}>
+                <MentorSupport
+                  onStartAiMentor={() => navigateToSection("AI Mentor")}
+                  onStartHumanMentor={() => navigateToSection("Human Mentor")}
+                />
+              </React.Suspense>
             )}
 
             {activeSection === "Human Mentor" && (
-              <HumanMentorHome onBack={() => navigateToSection("Mentor Support")} />
+              <React.Suspense fallback={sectionLoader}>
+                <HumanMentorHome onBack={() => navigateToSection("Mentor Support")} />
+              </React.Suspense>
             )}
 
             {activeSection === "Productivity Tools" && (
-              <ProductivityToolsView />
+              <React.Suspense fallback={sectionLoader}>
+                <ProductivityToolsView />
+              </React.Suspense>
             )}
 
             {activeSection === "Emotional Wellness" && (
-              <EmotionalWellnessView />
+              <React.Suspense fallback={sectionLoader}>
+                <EmotionalWellnessView />
+              </React.Suspense>
             )}
 
             {activeSection === "Community" && (
-              <CommunityView />
+              <React.Suspense fallback={sectionLoader}>
+                <CommunityView />
+              </React.Suspense>
             )}
 
             {/* Coming soon fallback */}

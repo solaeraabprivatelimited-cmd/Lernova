@@ -302,7 +302,7 @@ export function NotesPanel({ onClose, isOpen, roomId, userId }: NotesPanelProps)
 
   // ── List view ──
   return (
-    <div className="absolute right-8 top-[62px] bg-[rgba(247,247,247,0.2)] backdrop-blur-md rounded-[20px] w-[462px] h-[722px] font-['Poppins'] z-40 overflow-hidden">
+    <div className="absolute right-8 top-[62px] bg-black/40 backdrop-blur-lg rounded-[20px] w-[462px] h-[722px] font-['Poppins'] z-[75] overflow-hidden" onClick={(e) => e.stopPropagation()}>
       <div className="flex flex-col gap-5 pl-8 pr-4 pt-4 pb-8 h-full">
         {/* Header */}
         <div className="flex items-center justify-end gap-2.5 w-full">
