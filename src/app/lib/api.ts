@@ -148,20 +148,29 @@ export function getAccessToken(): string | null {
   return _accessToken;
 }
 
-// Auto-sync _accessToken whenever Supabase silently refreshes the JWT.
-// This replaces the per-request getSession() call in apiFetch, which was slow
-// (an async round-trip on every API call) and unnecessary.
-_supabase.auth.onAuthStateChange((_event, session) => {
-  if (session?.access_token && session.access_token !== _accessToken) {
-    setAccessToken(session.access_token);
-  }
-  if (session?.user) {
-    setCurrentUser(mapSessionUser(session));
-  } else {
-    setAccessToken(null);
-    setCurrentUser(null);
-  }
-});
+// ─── Auth state listener setup ───
+// Register listener lazily on first access to prevent duplicate listeners from HMR/StrictMode
+let _authListenerAttached = false;
+
+function ensureAuthListenerAttached() {
+  if (_authListenerAttached) return;
+  _authListenerAttached = true;
+  
+  // Auto-sync _accessToken whenever Supabase silently refreshes the JWT.
+  // This replaces the per-request getSession() call in apiFetch, which was slow
+  // (an async round-trip on every API call) and unnecessary.
+  _supabase.auth.onAuthStateChange((_event, session) => {
+    if (session?.access_token && session.access_token !== _accessToken) {
+      setAccessToken(session.access_token);
+    }
+    if (session?.user) {
+      setCurrentUser(mapSessionUser(session));
+    } else {
+      setAccessToken(null);
+      setCurrentUser(null);
+    }
+  });
+}
 
 /**
  * ✅ SECURE: Set current user data in sessionStorage
@@ -422,6 +431,81 @@ export const auth = {
     return data;
   },
 
+  /** OAuth sign-in with Google */
+  async signInWithGoogle() {
+    const supabase = getSupabaseClient();
+    const { data, error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: `${window.location.origin}/onboarding/google`,
+      },
+    });
+    if (error) throw new Error(error.message);
+    return data;
+  },
+
+  /** Complete Google sign-up with role and display name */
+  async completeGoogleSignup(displayName: string, role: 'student' | 'mentor') {
+    const supabase = getSupabaseClient();
+    const { data: user } = await supabase.auth.getUser();
+    
+    if (!user.user) {
+      throw new Error('No authenticated user found.');
+    }
+
+    // Update user metadata with role and display name
+    const { error } = await supabase.auth.updateUser({
+      data: {
+        name: displayName,
+        full_name: displayName,
+        role,
+      },
+    });
+
+    if (error) throw new Error(error.message);
+
+    // Update profile in database (after profile export is available)
+    try {
+      // We'll update via direct API call instead of circular reference
+      const token = (await getSupabaseClient().auth.getSession()).data.session?.access_token;
+      if (token) {
+        await apiFetch('/profile', {
+          method: 'PATCH',
+          body: JSON.stringify({ name: displayName, role }),
+        });
+      }
+    } catch (err) {
+      console.warn('Failed to update profile in database (non-fatal):', err);
+    }
+
+    // Refresh current user
+    const session = await supabase.auth.getSession();
+    if (session.data.session) {
+      setCurrentUser(mapSessionUser(session.data.session));
+    }
+
+    return { user: user.user };
+  },
+
+  /** Check if an email already exists in the system */
+  async checkEmailExists(email: string): Promise<boolean> {
+    const supabase = getSupabaseClient();
+    const { data: users, error } = await supabase.auth.admin.listUsers();
+    
+    if (error) {
+      // Fallback: If admin API fails, check profiles table
+      const { data: profiles } = await supabase
+        .from('profiles')
+        .select('user_id')
+        .eq('email', email)
+        .limit(1);
+      return (profiles?.length ?? 0) > 0;
+    }
+    
+    // Check if email exists in auth users
+    return users.some(u => u.email?.toLowerCase() === email.toLowerCase());
+  },
+
   /** Step 1: Request password reset (send code) */
   async requestPasswordResetCode(email: string) {
     const response = await fetch('https://evtvzmherkrahjsxdddi.supabase.co/functions/v1/send-password-reset-code', {
@@ -464,6 +548,9 @@ export const auth = {
 
   /** Restore session from Supabase (on page reload) */
   async restoreSession() {
+    // Ensure auth listener is only registered once (fixes React Strict Mode double-mounting issue)
+    ensureAuthListenerAttached();
+    
     const supabase = getSupabaseClient();
     const { data: current } = await supabase.auth.getSession();
     let session = current.session;
@@ -517,39 +604,60 @@ async function getProfileDirect() {
     avatar_url: user.user_metadata?.avatar_url ?? user.user_metadata?.avatar ?? null,
   };
 
-  const { data: profileRow } = await supabase
-    .from('profiles')
-    .select('id, name, avatar_url, role, bio')
-    .eq('id', user.id)
-    .maybeSingle();
+  try {
+    const { data: profileRow, error: profileError } = await supabase
+      .from('profiles')
+      .select('id, name, avatar_url, role, bio')
+      .eq('id', user.id)
+      .maybeSingle();
 
-  const { data: subjectRows } = await supabase
-    .from('subjects')
-    .select('subject')
-    .eq('profile_id', user.id);
+    if (profileError) {
+      console.warn('[Profile API] Error fetching profile:', profileError.message);
+    }
 
-  const merged = {
-    ...base,
-    ...(profileRow ? {
-      id: profileRow.id,
-      name: profileRow.name ?? base.name,
-      role: profileRow.role ?? base.role,
-      avatar: profileRow.avatar_url ?? base.avatar,
-      avatar_url: profileRow.avatar_url ?? base.avatar_url,
-      bio: profileRow.bio ?? '',
-    } : {}),
-    subjects: (subjectRows ?? []).map((row: any) => row.subject).filter(Boolean),
-  };
+    const { data: subjectRows, error: subjectError } = await supabase
+      .from('subjects')
+      .select('subject')
+      .eq('profile_id', user.id);
 
-  setCurrentUser(merged);
-  return merged;
+    if (subjectError) {
+      console.warn('[Profile API] Error fetching subjects:', subjectError.message);
+    }
+
+    const merged = {
+      ...base,
+      ...(profileRow ? {
+        id: profileRow.id,
+        name: profileRow.name ?? base.name,
+        role: profileRow.role ?? base.role,
+        avatar: profileRow.avatar_url ?? base.avatar,
+        avatar_url: profileRow.avatar_url ?? base.avatar_url,
+        bio: profileRow.bio ?? '',
+      } : {}),
+      subjects: (subjectRows ?? []).map((row: any) => row.subject).filter(Boolean),
+    };
+
+    setCurrentUser(merged);
+    return merged;
+  } catch (err: any) {
+    console.error('[Profile API] Fatal error in getProfileDirect:', err?.message);
+    setCurrentUser(base);
+    return base;
+  }
 }
 
 export const profile = {
   get: async () => {
     try {
       return await getProfileDirect();
-    } catch {
+    } catch (err: any) {
+      console.error('[Profile API] Fatal error fetching profile:', {
+        message: err?.message,
+        status: err?.status,
+        statusCode: err?.statusCode,
+        code: err?.code,
+      });
+      // Fall back to current user from auth state
       return getCurrentUser();
     }
   },

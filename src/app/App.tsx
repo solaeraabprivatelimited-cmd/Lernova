@@ -38,6 +38,11 @@ const RoomLinkEntry = React.lazy(async () => {
   return { default: module.RoomLinkEntry };
 });
 
+const GoogleOnboardingPage = React.lazy(async () => {
+  const module = await import('@/app/components/GoogleOnboardingPage');
+  return { default: module.GoogleOnboardingPage };
+});
+
 function resolveHomeRoute(user: AppUser | null): string {
   if (user?.role === 'mentor') {
     return '/mentor-dashboard';
@@ -53,34 +58,55 @@ export default function App() {
 
   // On mount: try to restore a previous session
   useEffect(() => {
+    let isMounted = true; // Track if component is still mounted
+    let hasRun = false;   // Prevent double-run in Strict Mode
+
     const restore = async () => {
+      if (hasRun) return; // Guard against React Strict Mode double-call
+      hasRun = true;
+
       try {
         const session = await auth.restoreSession();
+        if (!isMounted) return; // Abort if component unmounted
+
         if (session) {
           try {
             const prof = await profileApi.get();
+            if (!isMounted) return;
             if (prof) {
               setCurrentUser(prof);
               setCurrentAppUser(prof);
             }
           } catch {
             // Keep the session-backed local user if profile endpoint fails.
-            setCurrentAppUser(getCurrentUser());
+            if (isMounted) setCurrentAppUser(getCurrentUser());
           }
         } else {
-          setCurrentUser(null);
-          setCurrentAppUser(null);
+          if (isMounted) {
+            setCurrentUser(null);
+            setCurrentAppUser(null);
+          }
         }
       } catch (e) {
         // No active session, stay on landing
-        setCurrentUser(null);
-        setCurrentAppUser(null);
+        if (isMounted) {
+          setCurrentUser(null);
+          setCurrentAppUser(null);
+        }
       } finally {
-        setIsRestoringSession(false);
+        if (isMounted) {
+          setIsRestoringSession(false);
+        }
       }
     };
+
     restore();
-  }, []);
+
+    // Cleanup: mark component as unmounted to prevent state updates after unmount
+    return () => {
+      isMounted = false;
+    };
+  }, []); // Empty dependency array - runs once on mount
 
   const handleAuthSuccess = async () => {
     try {
@@ -117,7 +143,7 @@ export default function App() {
   return (
     <>
       {showFloatingThemeToggle ? (
-        <ThemeToggle className="fixed right-4 top-4 z-[70] rounded-full" />
+        <ThemeToggle className="fixed right-4 bottom-4 z-[70] rounded-full" />
       ) : null}
       <Toaster closeButton position="top-right" richColors />
 
@@ -171,6 +197,30 @@ export default function App() {
           <Route
             path="/forgot-password"
             element={renderAppShell(<ForgotPasswordPage onBack={() => navigate('/login')} />)}
+          />
+
+          <Route
+            path="/onboarding/google"
+            element={renderAppShell(
+              <GoogleOnboardingPage
+                onComplete={() => {
+                  const prof = async () => {
+                    try {
+                      const p = await profileApi.get();
+                      if (p) {
+                        setCurrentUser(p);
+                        setCurrentAppUser(p);
+                        navigate(resolveHomeRoute(p), { replace: true });
+                      }
+                    } catch {
+                      navigate(resolveHomeRoute(currentUser), { replace: true });
+                    }
+                  };
+                  void prof();
+                }}
+                onCancel={() => navigate('/login', { replace: true })}
+              />,
+            )}
           />
 
           <Route

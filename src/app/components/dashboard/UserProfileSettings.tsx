@@ -4,7 +4,7 @@ import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid,
   Tooltip, ResponsiveContainer,
 } from "recharts";
-import { profile as profileApi, studySessions, moodCheckins, sessionRequests, sessions as sessionsApi, notifications as notificationsApi, getCurrentUser } from "@/app/lib/api";
+import { profile as profileApi, studySessions, moodCheckins, sessionRequests, sessions as sessionsApi, notifications as notificationsApi, getCurrentUser, getSupabaseClient } from "@/app/lib/api";
 import { enable2FA, disable2FA, get2FASettings, sendOTP, verifyOTP } from "@/utils/supabase/twoFA";
 import { toast } from "sonner";
 import {
@@ -48,14 +48,14 @@ function Spinner() {
 
 function StatCard({ label, value, color, icon }: { label: string; value: string | number; color: string; icon: React.ReactNode }) {
   return (
-    <div className="bg-white rounded-[18px] border border-[#edf0f4] p-5 flex flex-col gap-2 shadow-sm hover:shadow-md transition-shadow">
+    <div className="bg-white dark:bg-[#22272f] rounded-[18px] border border-[#edf0f4] dark:border-[#3a3f47] p-5 flex flex-col gap-2 shadow-sm hover:shadow-md transition-shadow">
       <div className="flex items-center justify-between">
-        <p className="text-[26px] font-bold" style={{ color, ...HEADING }}>{value}</p>
+        <p className="text-[26px] font-bold dark:text-white" style={{ color, ...HEADING }}>{value}</p>
         <div className="w-9 h-9 rounded-[12px] flex items-center justify-center" style={{ background: `${color}10` }}>
           {icon}
         </div>
       </div>
-      <p className="text-[12px] text-[#94a3b8] font-medium">{label}</p>
+      <p className="text-[12px] text-[#94a3b8] dark:text-slate-400 font-medium">{label}</p>
     </div>
   );
 }
@@ -63,8 +63,8 @@ function StatCard({ label, value, color, icon }: { label: string; value: string 
 function SectionHeader({ title, desc }: { title: string; desc: string }) {
   return (
     <div className="mb-6">
-      <h2 className="text-[28px] md:text-[32px] text-[#003566] mb-1" style={HEADING}>{title}</h2>
-      <p className="text-[13px] text-[#94a3b8]">{desc}</p>
+      <h2 className="text-[28px] md:text-[32px] text-[#003566] dark:text-blue-400 mb-1" style={HEADING}>{title}</h2>
+      <p className="text-[13px] text-[#94a3b8] dark:text-slate-400">{desc}</p>
     </div>
   );
 }
@@ -78,7 +78,7 @@ function Toggle({ on, onClick }: { on: boolean; onClick: () => void }) {
   );
 }
 
-const inputClass = "w-full h-[44px] border border-[#e2e8f0] rounded-[12px] px-4 text-[13px] outline-none focus:border-[#0967bd] focus:ring-1 focus:ring-[#0967bd]/20 transition-all text-[#1e293b] placeholder:text-[#94a3b8] bg-white";
+const inputClass = "w-full h-[44px] border border-[#e2e8f0] dark:border-[#3a3f47] rounded-[12px] px-4 text-[13px] outline-none focus:border-[#0967bd] focus:ring-1 focus:ring-[#0967bd]/20 transition-all text-[#1e293b] dark:text-white placeholder:text-[#94a3b8] dark:placeholder:text-slate-500 bg-white dark:bg-[#2b3139]";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Basic Information
@@ -86,32 +86,114 @@ const inputClass = "w-full h-[44px] border border-[#e2e8f0] rounded-[12px] px-4 
 
 function BasicInfoPage() {
   const currentUser = getCurrentUser();
-  const [name, setName] = useState(currentUser?.name || "");
-  const [email, setEmail] = useState(currentUser?.email || "");
-  const [bio, setBio] = useState(currentUser?.bio || "");
-  const [gradeLevel, setGradeLevel] = useState(currentUser?.gradeLevel || "");
-  const [subjects, setSubjects] = useState<string[]>(currentUser?.subjects || []);
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [bio, setBio] = useState("");
+  const [gradeLevel, setGradeLevel] = useState("");
+  const [subjects, setSubjects] = useState<string[]>([]);
   const [newSubject, setNewSubject] = useState("");
-  const [avatarSrc, setAvatarSrc] = useState(currentUser?.avatar || imgEllipse1);
+  const [avatarSrc, setAvatarSrc] = useState(imgEllipse1);
   const [isSaving, setIsSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(true);
   const avatarRef = useRef<HTMLInputElement>(null);
 
   const GRADE_OPTIONS = ["Grade 6", "Grade 7", "Grade 8", "Grade 9", "Grade 10", "Grade 11", "Grade 12", "Undergraduate", "Postgraduate", "Other"];
 
+  // Load profile data on mount
+  useEffect(() => {
+    const loadProfile = async () => {
+      try {
+        setIsLoading(true);
+        const profile = await profileApi.get();
+        if (profile) {
+          setName(profile.name || "");
+          setEmail(profile.email || "");
+          setBio(profile.bio || "");
+          setGradeLevel(profile.gradeLevel || "");
+          setSubjects(profile.subjects || []);
+          const avatarUrl = profile.avatar || profile.avatar_url;
+          if (avatarUrl) setAvatarSrc(avatarUrl);
+        }
+      } catch (err: any) {
+        console.log("Failed to load profile:", err);
+        toast.error("Failed to load profile data");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    loadProfile();
+  }, []);
+
   function handleAvatarChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0]; if (!file) return;
-    setAvatarSrc(URL.createObjectURL(file)); e.target.value = "";
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith("image/")) {
+      toast.error("Please upload a valid image file");
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      if (event.target?.result) {
+        setAvatarSrc(event.target.result as string);
+      }
+    };
+    reader.readAsDataURL(file);
+    e.target.value = "";
   }
+
+  async function handleSave() {
+    setError("");
+    if (!name.trim()) {
+      setError("Full name is required");
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      // Update profile in database
+      const result = await profileApi.update({
+        name: name.trim(),
+        bio: bio.trim(),
+        gradeLevel: gradeLevel || "",
+        subjects,
+      });
+
+      setSaved(true);
+      toast.success("Profile updated successfully!");
+      setTimeout(() => setSaved(false), 2500);
+    } catch (err: any) {
+      const errorMsg = err.message || "Failed to save profile";
+      setError(errorMsg);
+      toast.error(errorMsg);
+      console.error("Save profile error:", err);
+    } finally {
+      setIsSaving(false);
+    }
+  }
+
   function handleAddSubject() {
     const s = newSubject.trim();
-    if (s && !subjects.includes(s)) setSubjects((prev) => [...prev, s]);
-    setNewSubject("");
+    if (s && !subjects.includes(s)) {
+      if (subjects.length >= 10) {
+        toast.error("Maximum 10 subjects allowed");
+        return;
+      }
+      setSubjects((prev) => [...prev, s]);
+      setNewSubject("");
+    }
   }
-  async function handleSave() {
-    setIsSaving(true);
-    try { await profileApi.update({ name, bio, gradeLevel, subjects }); setSaved(true); setTimeout(() => setSaved(false), 2500); }
-    catch (e) { console.log("Save profile error:", e); } finally { setIsSaving(false); }
+
+  if (isLoading) {
+    return (
+      <div className="p-6 md:p-8 lg:p-10 flex items-center justify-center min-h-[400px]">
+        <Spinner />
+      </div>
+    );
   }
 
   return (
@@ -122,9 +204,9 @@ function BasicInfoPage() {
         {/* LEFT - Avatar + Subjects */}
         <div className="lg:w-[280px] shrink-0 flex flex-col gap-5">
           {/* Avatar Card */}
-          <div className="bg-white rounded-[20px] border border-[#edf0f4] p-6 flex flex-col items-center gap-4 shadow-sm">
+          <div className="bg-white dark:bg-[#22272f] rounded-[20px] border border-[#edf0f4] dark:border-[#3a3f47] p-6 flex flex-col items-center gap-4 shadow-sm">
             <div className="relative group">
-              <div className="w-[140px] h-[140px] rounded-full overflow-hidden border-4 border-white shadow-lg">
+              <div className="w-[140px] h-[140px] rounded-full overflow-hidden border-4 border-white dark:border-[#2b3139] shadow-lg">
                 <img src={avatarSrc} alt="Profile" className="w-full h-full object-cover" />
               </div>
               <button onClick={() => avatarRef.current?.click()}
@@ -135,33 +217,34 @@ function BasicInfoPage() {
             </div>
             <input ref={avatarRef} type="file" accept="image/*" className="hidden" onChange={handleAvatarChange} />
             <button onClick={() => setAvatarSrc(imgEllipse1)}
-              className="text-[12px] font-semibold text-[#94a3b8] hover:text-[#5a7089] transition-colors cursor-pointer">
+              className="text-[12px] font-semibold text-[#94a3b8] dark:text-slate-400 hover:text-[#5a7089] dark:hover:text-slate-300 transition-colors cursor-pointer">
               Reset to Default
             </button>
           </div>
 
           {/* Subjects Card */}
-          <div className="bg-white rounded-[20px] border border-[#edf0f4] p-5 shadow-sm">
-            <h3 className="text-[14px] font-bold text-[#003566] mb-3">Subjects</h3>
+          <div className="bg-white dark:bg-[#22272f] rounded-[20px] border border-[#edf0f4] dark:border-[#3a3f47] p-5 shadow-sm">
+            <h3 className="text-[14px] font-bold text-[#003566] dark:text-blue-400 mb-3">Subjects</h3>
             <div className="flex flex-wrap gap-2 mb-3">
               {subjects.map((s) => (
-                <span key={s} className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-semibold text-[#003566]"
+                <span key={s} className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-semibold text-[#003566] dark:text-blue-400"
                   style={{ background: 'rgba(9,103,189,0.08)', border: '1px solid rgba(9,103,189,0.1)' }}>
                   {s}
                   <button onClick={() => setSubjects((prev) => prev.filter((x) => x !== s))}
                     className="hover:text-[#cc3636] transition-colors cursor-pointer"><X className="w-3 h-3" /></button>
                 </span>
               ))}
-              {subjects.length === 0 && <p className="text-[12px] text-[#c1c7ce]">No subjects added</p>}
+              {subjects.length === 0 && <p className="text-[12px] text-[#c1c7ce] dark:text-slate-600">No subjects added</p>}
             </div>
             <div className="flex gap-2">
               <input type="text" placeholder="Add subject…" value={newSubject}
                 onChange={(e) => setNewSubject(e.target.value)}
                 onKeyDown={(e) => { if (e.key === "Enter") handleAddSubject(); }}
-                className="flex-1 h-[36px] border border-[#e2e8f0] rounded-[10px] px-3 text-[12px] outline-none focus:border-[#0967bd] transition-colors" />
+                className="flex-1 h-[36px] border border-[#e2e8f0] dark:border-[#3a3f47] rounded-[10px] px-3 text-[12px] outline-none focus:border-[#0967bd] transition-colors dark:bg-[#2b3139] dark:text-white" />
               <button onClick={handleAddSubject}
-                className="h-[36px] px-3 rounded-[10px] text-[12px] font-bold text-white cursor-pointer hover:shadow-md transition-all"
-                style={{ background: 'linear-gradient(135deg, #003566, #0967bd)' }}>
+                className="h-[36px] px-3 rounded-[10px] text-[12px] font-bold text-white cursor-pointer hover:shadow-md transition-all disabled:opacity-60"
+                style={{ background: 'linear-gradient(135deg, #003566, #0967bd)' }}
+                disabled={isSaving}>
                 <Plus className="w-3.5 h-3.5" />
               </button>
             </div>
@@ -170,31 +253,40 @@ function BasicInfoPage() {
 
         {/* RIGHT - Form */}
         <div className="flex-1 flex flex-col gap-5">
-          <div className="bg-white rounded-[20px] border border-[#edf0f4] p-6 shadow-sm flex flex-col gap-5">
+          <div className="bg-white dark:bg-[#22272f] rounded-[20px] border border-[#edf0f4] dark:border-[#3a3f47] p-6 shadow-sm flex flex-col gap-5">
             <div className="flex flex-col gap-2">
-              <label className="text-[13px] font-bold text-[#003566]">Full Name</label>
-              <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="Your full name" className={inputClass} />
+              <label className="text-[13px] font-bold text-[#003566] dark:text-blue-400">Full Name</label>
+              <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="Your full name" className={inputClass} disabled={isSaving} />
             </div>
             <div className="flex flex-col gap-2">
-              <label className="text-[13px] font-bold text-[#003566]">Email Address</label>
-              <input type="text" value={email} readOnly className={`${inputClass} bg-[#f8f9fc] cursor-not-allowed text-[#94a3b8]`} />
+              <label className="text-[13px] font-bold text-[#003566] dark:text-blue-400">Email Address</label>
+              <input type="text" value={email} readOnly className={`${inputClass} bg-[#f8f9fc] dark:bg-[#1a1f2e] cursor-not-allowed text-[#94a3b8] dark:text-slate-500`} />
             </div>
             <div className="flex flex-col gap-2">
-              <label className="text-[13px] font-bold text-[#003566]">Bio</label>
+              <label className="text-[13px] font-bold text-[#003566] dark:text-blue-400">Bio</label>
               <textarea value={bio} onChange={(e) => setBio(e.target.value)} placeholder="Tell us about yourself…" rows={4}
-                className="w-full border border-[#e2e8f0] rounded-[12px] px-4 py-3 text-[13px] outline-none focus:border-[#0967bd] focus:ring-1 focus:ring-[#0967bd]/20 transition-all text-[#1e293b] placeholder:text-[#94a3b8] bg-white resize-none" />
+                className="w-full border border-[#e2e8f0] dark:border-[#3a3f47] rounded-[12px] px-4 py-3 text-[13px] outline-none focus:border-[#0967bd] focus:ring-1 focus:ring-[#0967bd]/20 transition-all text-[#1e293b] dark:text-white placeholder:text-[#94a3b8] dark:placeholder:text-slate-500 bg-white dark:bg-[#2b3139] resize-none disabled:opacity-60"
+                disabled={isSaving} />
             </div>
             <div className="flex flex-col gap-2">
-              <label className="text-[13px] font-bold text-[#003566]">Grade / Level</label>
+              <label className="text-[13px] font-bold text-[#003566] dark:text-blue-400">Grade / Level</label>
               <div className="relative">
                 <select value={gradeLevel} onChange={(e) => setGradeLevel(e.target.value)}
-                  className={`${inputClass} appearance-none cursor-pointer pr-10`}>
+                  className={`${inputClass} appearance-none cursor-pointer pr-10 disabled:opacity-60`}
+                  disabled={isSaving}>
                   <option value="">Select grade…</option>
                   {GRADE_OPTIONS.map((g) => <option key={g} value={g}>{g}</option>)}
                 </select>
-                <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#94a3b8] pointer-events-none" />
+                <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#94a3b8] dark:text-slate-500 pointer-events-none" />
               </div>
             </div>
+
+            {error && (
+              <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-[12px] px-4 py-3 flex items-center gap-2">
+                <AlertTriangle className="w-4 h-4 text-red-600 dark:text-red-400 shrink-0" />
+                <p className="text-[12px] text-red-600 dark:text-red-400">{error}</p>
+              </div>
+            )}
           </div>
 
           <div className="flex justify-end">
@@ -221,12 +313,68 @@ function MySessionsPage() {
   const [tab, setTab] = useState<"sessions" | "requests">("sessions");
   const [filter, setFilter] = useState("All");
   const [isLoading, setIsLoading] = useState(true);
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [notes, setNotes] = useState<Record<string, string>>({});
+  const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
-    Promise.all([sessionsApi.list(), sessionRequests.list()])
-      .then(([s, r]) => { setAllSessions(s); setAllRequests(r); })
-      .catch(console.log).finally(() => setIsLoading(false));
+    const loadData = async () => {
+      try {
+        const [s, r] = await Promise.all([sessionsApi.list(), sessionRequests.list()]);
+        setAllSessions(s);
+        setAllRequests(r);
+        
+        // Load saved notes from database
+        const supabase = getSupabaseClient();
+        const user = getCurrentUser();
+        if (user) {
+          const { data } = await supabase
+            .from('profiles')
+            .select('session_notes')
+            .eq('id', user.id)
+            .single();
+          if (data?.session_notes) {
+            setNotes(data.session_notes);
+          }
+        }
+      } catch (err) {
+        console.log("Failed to load sessions:", err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    loadData();
   }, []);
+
+  async function saveNotes(sessionId: string) {
+    setIsSaving(true);
+    try {
+      const supabase = getSupabaseClient();
+      const user = getCurrentUser();
+      if (!user) {
+        toast.error("Not authenticated");
+        return;
+      }
+
+      // Save notes to database
+      const { error } = await supabase
+        .from('profiles')
+        .update({ session_notes: notes })
+        .eq('id', user.id);
+
+      if (error) {
+        toast.error("Failed to save notes");
+        return;
+      }
+
+      toast.success("Session notes saved!");
+      setExpandedId(null);
+    } catch (err: any) {
+      toast.error(err.message || "Failed to save notes");
+    } finally {
+      setIsSaving(false);
+    }
+  }
 
   const statusFilters = ["All", "booked", "completed", "cancelled"];
   const filteredSessions = allSessions.filter((s) => filter === "All" || s.status === filter);
@@ -267,43 +415,89 @@ function MySessionsPage() {
       </div>
 
       {isLoading ? <Spinner /> : (
-        <div className="bg-white rounded-[20px] overflow-hidden border border-[#edf0f4] shadow-sm">
+        <div className="bg-white dark:bg-[#22272f] rounded-[20px] overflow-hidden border border-[#edf0f4] dark:border-[#3a3f47] shadow-sm">
           {tab === "sessions" ? (
             <>
-              <div className="grid grid-cols-[2fr_1.5fr_1.5fr_0.8fr_1fr] px-6 py-3.5"
+              <div className="grid grid-cols-[2fr_1.5fr_1.5fr_0.8fr_0.8fr_1fr] px-6 py-3.5"
                 style={{ background: 'linear-gradient(135deg, #001d3d, #003566)' }}>
-                {["Mentor", "Subject", "Date & Time", "Duration", "Status"].map((col) => (
+                {["Mentor", "Subject", "Date & Time", "Duration", "Notes", "Status"].map((col) => (
                   <p key={col} className="text-[11px] font-bold text-white/70 uppercase tracking-[0.05em]">{col}</p>
                 ))}
               </div>
               {filteredSessions.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-16"><p className="text-[13px] text-[#94a3b8]">No sessions found</p></div>
+                <div className="flex flex-col items-center justify-center py-16"><p className="text-[13px] text-[#94a3b8] dark:text-slate-400">No sessions found</p></div>
               ) : filteredSessions.map((s, idx) => (
-                <div key={s.id} className={`grid grid-cols-[2fr_1.5fr_1.5fr_0.8fr_1fr] px-6 py-4 items-center border-b border-[#edf0f4] last:border-0 hover:bg-[#f8f9fc] transition-colors ${idx % 2 === 0 ? "" : "bg-[#fafbfc]"}`}>
-                  <span className="text-[13px] font-semibold text-[#1e293b]">{s.mentorName || "—"}</span>
-                  <span className="text-[12px] text-[#5a7089]">{s.subject || "—"}</span>
-                  <div><span className="text-[12px] font-medium text-[#1e293b]">{s.date || "—"}</span><br/><span className="text-[11px] text-[#94a3b8]">{s.time || ""}</span></div>
-                  <span className="text-[12px] text-[#5a7089]">{s.duration ? `${s.duration} min` : "—"}</span>
-                  <StatusBadge status={s.status || "booked"} />
+                <div key={s.id} className="border-b border-[#edf0f4] dark:border-[#3a3f47] last:border-0">
+                  <div className={`grid grid-cols-[2fr_1.5fr_1.5fr_0.8fr_0.8fr_1fr] px-6 py-4 items-center hover:bg-[#f8f9fc] dark:hover:bg-[#2b3139] transition-colors ${idx % 2 === 0 ? "" : "bg-[#fafbfc] dark:bg-[#1a1f2e]"}`}>
+                    <span className="text-[13px] font-semibold text-[#1e293b] dark:text-white">{s.mentorName || "—"}</span>
+                    <span className="text-[12px] text-[#5a7089] dark:text-slate-400">{s.subject || "—"}</span>
+                    <div><span className="text-[12px] font-medium text-[#1e293b] dark:text-white">{s.date || "—"}</span><br/><span className="text-[11px] text-[#94a3b8] dark:text-slate-400">{s.time || ""}</span></div>
+                    <span className="text-[12px] text-[#5a7089] dark:text-slate-400">{s.duration ? `${s.duration} min` : "—"}</span>
+                    <button onClick={() => setExpandedId(expandedId === s.id ? null : s.id)} className="text-[12px] font-bold text-[#0967bd] hover:text-[#003566] dark:hover:text-blue-300 cursor-pointer">
+                      {notes[s.id] ? "Edit" : "Add"}
+                    </button>
+                    <StatusBadge status={s.status || "booked"} />
+                  </div>
+                  {expandedId === s.id && (
+                    <div className="px-6 py-4 bg-[#f8f9fc] dark:bg-[#1a1f2e] border-t border-[#edf0f4] dark:border-[#3a3f47] flex flex-col gap-3">
+                      <textarea value={notes[s.id] || ""} onChange={(e) => setNotes((prev) => ({ ...prev, [s.id]: e.target.value }))}
+                        placeholder="Add notes about this session…" rows={3}
+                        className="w-full border border-[#e2e8f0] dark:border-[#3a3f47] rounded-[10px] px-3 py-2 text-[12px] outline-none focus:border-[#0967bd] focus:ring-1 focus:ring-[#0967bd]/20 transition-all text-[#1e293b] dark:text-white placeholder:text-[#94a3b8] dark:placeholder:text-slate-500 bg-white dark:bg-[#2b3139]" />
+                      <div className="flex gap-2 justify-end">
+                        <button onClick={() => setExpandedId(null)} className="px-3 py-2 rounded-[8px] text-[12px] font-bold text-[#5a7089] dark:text-slate-400 hover:bg-[#edf0f4] dark:hover:bg-[#3a3f47] transition-colors cursor-pointer">
+                          Cancel
+                        </button>
+                        <button onClick={() => saveNotes(s.id)} disabled={isSaving}
+                          className="px-4 py-2 rounded-[8px] text-[12px] font-bold text-white transition-all cursor-pointer disabled:opacity-60 hover:shadow-md flex items-center gap-1.5"
+                          style={{ background: 'linear-gradient(135deg, #003566, #0967bd)' }}>
+                          {isSaving ? <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" /> : <Save className="w-3 h-3" />}
+                          Save
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </div>
               ))}
             </>
           ) : (
             <>
-              <div className="grid grid-cols-[2fr_1.5fr_1.5fr_1fr] px-6 py-3.5"
+              <div className="grid grid-cols-[2fr_1.5fr_1.5fr_0.8fr_1fr] px-6 py-3.5"
                 style={{ background: 'linear-gradient(135deg, #001d3d, #003566)' }}>
-                {["Mentor", "Subject", "Preferred Date", "Status"].map((col) => (
+                {["Mentor", "Subject", "Preferred Date", "Notes", "Status"].map((col) => (
                   <p key={col} className="text-[11px] font-bold text-white/70 uppercase tracking-[0.05em]">{col}</p>
                 ))}
               </div>
               {filteredRequests.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-16"><p className="text-[13px] text-[#94a3b8]">No requests found</p></div>
+                <div className="flex flex-col items-center justify-center py-16"><p className="text-[13px] text-[#94a3b8] dark:text-slate-400">No requests found</p></div>
               ) : filteredRequests.map((r, idx) => (
-                <div key={r.id} className={`grid grid-cols-[2fr_1.5fr_1.5fr_1fr] px-6 py-4 items-center border-b border-[#edf0f4] last:border-0 hover:bg-[#f8f9fc] transition-colors ${idx % 2 === 0 ? "" : "bg-[#fafbfc]"}`}>
-                  <span className="text-[13px] font-semibold text-[#1e293b]">{r.mentorName || "—"}</span>
-                  <span className="text-[12px] text-[#5a7089]">{r.subject || "—"}</span>
-                  <span className="text-[12px] font-medium text-[#1e293b]">{r.preferredDate || "—"}</span>
-                  <StatusBadge status={r.status || "pending"} />
+                <div key={r.id} className="border-b border-[#edf0f4] dark:border-[#3a3f47] last:border-0">
+                  <div className={`grid grid-cols-[2fr_1.5fr_1.5fr_0.8fr_1fr] px-6 py-4 items-center hover:bg-[#f8f9fc] dark:hover:bg-[#2b3139] transition-colors ${idx % 2 === 0 ? "" : "bg-[#fafbfc] dark:bg-[#1a1f2e]"}`}>
+                    <span className="text-[13px] font-semibold text-[#1e293b] dark:text-white">{r.mentorName || "—"}</span>
+                    <span className="text-[12px] text-[#5a7089] dark:text-slate-400">{r.subject || "—"}</span>
+                    <span className="text-[12px] font-medium text-[#1e293b] dark:text-white">{r.preferredDate || "—"}</span>
+                    <button onClick={() => setExpandedId(expandedId === r.id ? null : r.id)} className="text-[12px] font-bold text-[#0967bd] hover:text-[#003566] dark:hover:text-blue-300 cursor-pointer">
+                      {notes[r.id] ? "Edit" : "Add"}
+                    </button>
+                    <StatusBadge status={r.status || "pending"} />
+                  </div>
+                  {expandedId === r.id && (
+                    <div className="px-6 py-4 bg-[#f8f9fc] dark:bg-[#1a1f2e] border-t border-[#edf0f4] dark:border-[#3a3f47] flex flex-col gap-3">
+                      <textarea value={notes[r.id] || ""} onChange={(e) => setNotes((prev) => ({ ...prev, [r.id]: e.target.value }))}
+                        placeholder="Add notes about this request…" rows={3}
+                        className="w-full border border-[#e2e8f0] dark:border-[#3a3f47] rounded-[10px] px-3 py-2 text-[12px] outline-none focus:border-[#0967bd] focus:ring-1 focus:ring-[#0967bd]/20 transition-all text-[#1e293b] dark:text-white placeholder:text-[#94a3b8] dark:placeholder:text-slate-500 bg-white dark:bg-[#2b3139]" />
+                      <div className="flex gap-2 justify-end">
+                        <button onClick={() => setExpandedId(null)} className="px-3 py-2 rounded-[8px] text-[12px] font-bold text-[#5a7089] dark:text-slate-400 hover:bg-[#edf0f4] dark:hover:bg-[#3a3f47] transition-colors cursor-pointer">
+                          Cancel
+                        </button>
+                        <button onClick={() => saveNotes(r.id)} disabled={isSaving}
+                          className="px-4 py-2 rounded-[8px] text-[12px] font-bold text-white transition-all cursor-pointer disabled:opacity-60 hover:shadow-md flex items-center gap-1.5"
+                          style={{ background: 'linear-gradient(135deg, #003566, #0967bd)' }}>
+                          {isSaving ? <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" /> : <Save className="w-3 h-3" />}
+                          Save
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </div>
               ))}
             </>
@@ -352,8 +546,8 @@ function StudyHistoryPage() {
       </div>
 
       {/* Chart */}
-      <div className="bg-white rounded-[20px] border border-[#edf0f4] p-6 mb-5 shadow-sm">
-        <h3 className="text-[16px] font-bold text-[#003566] mb-4">Weekly Study Hours</h3>
+      <div className="bg-white dark:bg-[#22272f] rounded-[20px] border border-[#edf0f4] dark:border-[#3a3f47] p-6 mb-5 shadow-sm">
+        <h3 className="text-[16px] font-bold text-[#003566] dark:text-blue-400 mb-4">Weekly Study Hours</h3>
         <div className="h-[180px]">
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart data={WEEKLY_FALLBACK} margin={{ top: 8, right: 8, left: -20, bottom: 0 }}>
@@ -375,14 +569,14 @@ function StudyHistoryPage() {
 
       {/* Mode breakdown */}
       {Object.keys(modeCounts).length > 0 && (
-        <div className="bg-white rounded-[20px] border border-[#edf0f4] p-6 mb-5 shadow-sm">
-          <h3 className="text-[16px] font-bold text-[#003566] mb-4">Sessions by Mode</h3>
+        <div className="bg-white dark:bg-[#22272f] rounded-[20px] border border-[#edf0f4] dark:border-[#3a3f47] p-6 mb-5 shadow-sm">
+          <h3 className="text-[16px] font-bold text-[#003566] dark:text-blue-400 mb-4">Sessions by Mode</h3>
           <div className="flex flex-wrap gap-2.5">
             {Object.entries(modeCounts).map(([mode, count]) => (
               <div key={mode} className="flex items-center gap-2.5 rounded-[12px] px-4 py-2.5"
                 style={{ background: `${MODE_COLORS[mode] || '#003566'}08`, border: `1px solid ${MODE_COLORS[mode] || '#003566'}15` }}>
                 <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: MODE_COLORS[mode] || "#003566" }} />
-                <span className="text-[12px] font-medium text-[#1e293b]">{mode}</span>
+                <span className="text-[12px] font-medium text-[#1e293b] dark:text-white">{mode}</span>
                 <span className="text-[12px] font-bold" style={{ color: MODE_COLORS[mode] || "#003566" }}>{count}</span>
               </div>
             ))}
@@ -392,7 +586,7 @@ function StudyHistoryPage() {
 
       {/* Recent sessions table */}
       {isLoading ? <Spinner /> : history.length > 0 ? (
-        <div className="bg-white rounded-[20px] overflow-hidden border border-[#edf0f4] shadow-sm">
+        <div className="bg-white dark:bg-[#22272f] rounded-[20px] overflow-hidden border border-[#edf0f4] dark:border-[#3a3f47] shadow-sm">
           <div className="grid grid-cols-[2fr_1fr_1fr_1fr] px-6 py-3.5"
             style={{ background: 'linear-gradient(135deg, #001d3d, #003566)' }}>
             {["Mode", "Duration", "Pomodoros", "Date"].map((col) => (
@@ -400,21 +594,21 @@ function StudyHistoryPage() {
             ))}
           </div>
           {history.slice(0, 20).map((s, idx) => (
-            <div key={s.id} className={`grid grid-cols-[2fr_1fr_1fr_1fr] px-6 py-3.5 items-center border-b border-[#edf0f4] last:border-0 hover:bg-[#f8f9fc] transition-colors ${idx % 2 ? "bg-[#fafbfc]" : ""}`}>
+            <div key={s.id} className={`grid grid-cols-[2fr_1fr_1fr_1fr] px-6 py-3.5 items-center border-b border-[#edf0f4] dark:border-[#3a3f47] last:border-0 hover:bg-[#f8f9fc] dark:hover:bg-[#2b3139] transition-colors ${idx % 2 ? "bg-[#fafbfc] dark:bg-[#1a1f2e]" : ""}`}>
               <div className="flex items-center gap-2.5">
                 <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: MODE_COLORS[s.mode] || "#003566" }} />
-                <span className="text-[13px] font-medium text-[#1e293b]">{s.mode}</span>
+                <span className="text-[13px] font-medium text-[#1e293b] dark:text-white">{s.mode}</span>
               </div>
-              <span className="text-[12px] text-[#5a7089]">{Math.round(s.durationMinutes || 0)} min</span>
-              <span className="text-[12px] text-[#5a7089]">{s.completedPomodoros || 0}</span>
-              <span className="text-[11px] text-[#94a3b8]">{s.timestamp ? new Date(s.timestamp).toLocaleDateString("en-US", { month: "short", day: "numeric" }) : "—"}</span>
+              <span className="text-[12px] text-[#5a7089] dark:text-slate-400">{Math.round(s.durationMinutes || 0)} min</span>
+              <span className="text-[12px] text-[#5a7089] dark:text-slate-400">{s.completedPomodoros || 0}</span>
+              <span className="text-[11px] text-[#94a3b8] dark:text-slate-500">{s.timestamp ? new Date(s.timestamp).toLocaleDateString("en-US", { month: "short", day: "numeric" }) : "—"}</span>
             </div>
           ))}
         </div>
       ) : (
-        <div className="flex flex-col items-center justify-center py-16 bg-white rounded-[20px] border border-[#edf0f4]">
-          <BookOpen className="w-8 h-8 text-[#c1c7ce] mb-3" />
-          <p className="text-[13px] text-[#94a3b8]">No study sessions recorded yet</p>
+        <div className="flex flex-col items-center justify-center py-16 bg-white dark:bg-[#22272f] rounded-[20px] border border-[#edf0f4] dark:border-[#3a3f47]">
+          <BookOpen className="w-8 h-8 text-[#c1c7ce] dark:text-slate-700 mb-3" />
+          <p className="text-[13px] text-[#94a3b8] dark:text-slate-400">No study sessions recorded yet</p>
         </div>
       )}
     </div>
@@ -460,8 +654,8 @@ function MoodHistoryPage() {
 
       {/* Mood frequency */}
       {Object.keys(moodCounts).length > 0 && (
-        <div className="bg-white rounded-[20px] border border-[#edf0f4] p-6 mb-5 shadow-sm">
-          <h3 className="text-[16px] font-bold text-[#003566] mb-4">Mood Frequency</h3>
+        <div className="bg-white dark:bg-[#22272f] rounded-[20px] border border-[#edf0f4] dark:border-[#3a3f47] p-6 mb-5 shadow-sm">
+          <h3 className="text-[16px] font-bold text-[#003566] dark:text-blue-400 mb-4">Mood Frequency</h3>
           <div className="flex flex-wrap gap-2.5">
             {Object.entries(moodCounts).sort((a, b) => b[1] - a[1]).map(([mood, count]) => {
               const meta = MOOD_META[mood] || { emoji: "🙂", color: "#003566", bg: "rgba(0,53,102,0.08)" };
@@ -484,15 +678,15 @@ function MoodHistoryPage() {
           {checkins.slice(0, 30).map((c) => {
             const meta = MOOD_META[c.mood] || { emoji: "🙂", color: "#003566", bg: "rgba(0,53,102,0.08)" };
             return (
-              <div key={c.id} className="bg-white rounded-[16px] border border-[#edf0f4] px-5 py-4 flex items-center gap-4 hover:shadow-md transition-shadow">
+              <div key={c.id} className="bg-white dark:bg-[#22272f] rounded-[16px] border border-[#edf0f4] dark:border-[#3a3f47] px-5 py-4 flex items-center gap-4 hover:shadow-md transition-shadow">
                 <div className="w-11 h-11 rounded-[14px] flex items-center justify-center shrink-0 text-[22px]" style={{ background: meta.bg }}>
                   {c.emoji || meta.emoji}
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-[14px] font-bold" style={{ color: meta.color }}>{c.mood}</p>
-                  {c.note && <p className="text-[12px] text-[#5a7089] mt-0.5 truncate">{c.note}</p>}
+                  {c.note && <p className="text-[12px] text-[#5a7089] dark:text-slate-400 mt-0.5 truncate">{c.note}</p>}
                 </div>
-                <p className="text-[11px] text-[#c1c7ce] whitespace-nowrap shrink-0">
+                <p className="text-[11px] text-[#c1c7ce] dark:text-slate-600 whitespace-nowrap shrink-0">
                   {c.timestamp ? new Date(c.timestamp).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : ""}
                 </p>
               </div>
@@ -528,12 +722,51 @@ function SecurityPage() {
     if (!currentPw || !newPw || !confirmPw) { setErrorMsg("All fields are required."); return; }
     if (newPw.length < 6) { setErrorMsg("New password must be at least 6 characters."); return; }
     if (newPw !== confirmPw) { setErrorMsg("Passwords do not match."); return; }
+    
     setStatus("saving");
     try {
-      await new Promise((r) => setTimeout(r, 800));
-      setStatus("saved"); setCurrentPw(""); setNewPw(""); setConfirmPw("");
+      const supabase = getSupabaseClient();
+      const currentUser = getCurrentUser();
+      
+      if (!currentUser?.email) {
+        setStatus("error");
+        setErrorMsg("Unable to verify your identity.");
+        return;
+      }
+
+      // Verify current password by attempting to sign in
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email: currentUser.email,
+        password: currentPw,
+      });
+
+      if (signInError) {
+        setStatus("error");
+        setErrorMsg("Current password is incorrect.");
+        return;
+      }
+
+      // Update to new password
+      const { error: updateError } = await supabase.auth.updateUser({
+        password: newPw,
+      });
+
+      if (updateError) {
+        setStatus("error");
+        setErrorMsg(updateError.message || "Failed to update password.");
+        return;
+      }
+
+      setStatus("saved");
+      setCurrentPw("");
+      setNewPw("");
+      setConfirmPw("");
+      toast.success("Password updated successfully!");
       setTimeout(() => setStatus(""), 3000);
-    } catch { setStatus("error"); setErrorMsg("Failed to update password."); }
+    } catch (err: any) {
+      setStatus("error");
+      setErrorMsg(err.message || "Failed to update password.");
+    }
   }
 
   function PwField({ label, value, show, onToggle, onChange }: {
@@ -541,13 +774,13 @@ function SecurityPage() {
   }) {
     return (
       <div className="flex flex-col gap-2">
-        <label className="text-[13px] font-bold text-[#003566]">{label}</label>
+        <label className="text-[13px] font-bold text-[#003566] dark:text-blue-400">{label}</label>
         <div className="relative">
-          <div className="absolute left-3 top-1/2 -translate-y-1/2 text-[#94a3b8]"><Lock className="w-4 h-4" /></div>
+          <div className="absolute left-3 top-1/2 -translate-y-1/2 text-[#94a3b8] dark:text-slate-500"><Lock className="w-4 h-4" /></div>
           <input type={show ? "text" : "password"} value={value} onChange={(e) => onChange(e.target.value)}
             placeholder="••••••••" className={`${inputClass} pl-10 pr-10`} />
           <button type="button" onClick={onToggle}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-[#94a3b8] hover:text-[#5a7089] cursor-pointer transition-colors">
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-[#94a3b8] dark:text-slate-500 hover:text-[#5a7089] dark:hover:text-slate-400 cursor-pointer transition-colors">
             {show ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
           </button>
         </div>
@@ -560,12 +793,12 @@ function SecurityPage() {
       <SectionHeader title="Account & Security" desc="Keep your account safe and up to date" />
 
       <div className="max-w-[500px] space-y-5">
-        <div className="bg-white rounded-[20px] border border-[#edf0f4] p-6 shadow-sm">
+        <div className="bg-white dark:bg-[#22272f] rounded-[20px] border border-[#edf0f4] dark:border-[#3a3f47] p-6 shadow-sm">
           <div className="flex items-center gap-2.5 mb-5">
             <div className="w-8 h-8 rounded-[10px] flex items-center justify-center" style={{ background: 'rgba(0,53,102,0.06)' }}>
               <Lock className="w-4 h-4 text-[#003566]" />
             </div>
-            <h3 className="text-[16px] font-bold text-[#003566]">Change Password</h3>
+            <h3 className="text-[16px] font-bold text-[#003566] dark:text-blue-400">Change Password</h3>
           </div>
 
           <div className="space-y-4">
@@ -575,13 +808,13 @@ function SecurityPage() {
           </div>
 
           {errorMsg && (
-            <div className="mt-4 bg-[#cc3636]/5 border border-[#cc3636]/10 rounded-[12px] px-4 py-3 flex items-center gap-2">
+            <div className="mt-4 bg-[#cc3636]/5 dark:bg-[#cc3636]/10 border border-[#cc3636]/10 dark:border-[#cc3636]/20 rounded-[12px] px-4 py-3 flex items-center gap-2">
               <AlertTriangle className="w-4 h-4 text-[#cc3636] shrink-0" />
               <p className="text-[12px] text-[#cc3636] font-medium">{errorMsg}</p>
             </div>
           )}
           {status === "saved" && (
-            <div className="mt-4 bg-[#16a34a]/5 border border-[#16a34a]/10 rounded-[12px] px-4 py-3 flex items-center gap-2">
+            <div className="mt-4 bg-[#16a34a]/5 dark:bg-[#16a34a]/10 border border-[#16a34a]/10 dark:border-[#16a34a]/20 rounded-[12px] px-4 py-3 flex items-center gap-2">
               <Check className="w-4 h-4 text-[#16a34a] shrink-0" />
               <p className="text-[12px] text-[#16a34a] font-medium">Password updated successfully!</p>
             </div>
@@ -598,15 +831,15 @@ function SecurityPage() {
         </div>
 
         {/* Account Info */}
-        <div className="bg-white rounded-[20px] border border-[#edf0f4] p-6 shadow-sm">
-          <h3 className="text-[16px] font-bold text-[#003566] mb-4">Account Info</h3>
+        <div className="bg-white dark:bg-[#22272f] rounded-[20px] border border-[#edf0f4] dark:border-[#3a3f47] p-6 shadow-sm">
+          <h3 className="text-[16px] font-bold text-[#003566] dark:text-blue-400 mb-4">Account Info</h3>
           <TwoFASettings />
-          <div className="flex items-center justify-between py-4">
+          <div className="flex items-center justify-between py-4 border-t border-[#edf0f4] dark:border-[#3a3f47]">
             <div>
-              <p className="text-[13px] font-semibold text-[#1e293b]">Delete Account</p>
-              <p className="text-[11px] text-[#94a3b8] mt-0.5">Permanently remove your account and data</p>
+              <p className="text-[13px] font-semibold text-[#1e293b] dark:text-white">Delete Account</p>
+              <p className="text-[11px] text-[#94a3b8] dark:text-slate-400 mt-0.5">Permanently remove your account and data</p>
             </div>
-            <button className="text-[11px] font-bold text-[#cc3636] border border-[#cc3636] px-3 py-1.5 rounded-[10px] hover:bg-red-50 transition-colors cursor-pointer flex items-center gap-1.5">
+            <button className="text-[11px] font-bold text-[#cc3636] border border-[#cc3636] px-3 py-1.5 rounded-[10px] hover:bg-red-50 dark:hover:bg-[#2b3139] transition-colors cursor-pointer flex items-center gap-1.5">
               <Trash2 className="w-3 h-3" /> Delete
             </button>
           </div>
@@ -636,29 +869,97 @@ function NotificationsPage() {
     return init;
   });
   const [saved, setSaved] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+
+  // Load saved preferences on mount
+  useEffect(() => {
+    const loadPreferences = async () => {
+      try {
+        const supabase = getSupabaseClient();
+        const user = getCurrentUser();
+        if (!user) return;
+
+        const { data } = await supabase
+          .from('profiles')
+          .select('notification_preferences')
+          .eq('id', user.id)
+          .single();
+
+        if (data?.notification_preferences) {
+          setEnabled((prev) => ({
+            ...prev,
+            ...data.notification_preferences,
+          }));
+        }
+      } catch (err) {
+        console.log('Failed to load notification preferences:', err);
+      }
+    };
+    loadPreferences();
+  }, []);
+
+  async function handleSave() {
+    setIsSaving(true);
+    try {
+      const supabase = getSupabaseClient();
+      const user = getCurrentUser();
+      if (!user) {
+        toast.error("Authentication expired. Please log in again.");
+        return;
+      }
+
+      // Save to database
+      const { error } = await supabase
+        .from('profiles')
+        .update({ notification_preferences: enabled })
+        .eq('id', user.id);
+
+      if (error) {
+        toast.error("Failed to save preferences");
+        return;
+      }
+
+      setSaved(true);
+      toast.success("Notification preferences saved!");
+      setTimeout(() => setSaved(false), 2000);
+    } catch (err: any) {
+      toast.error(err.message || "Failed to save preferences");
+    } finally {
+      setIsSaving(false);
+    }
+  }
 
   return (
     <div className="p-6 md:p-8 lg:p-10" style={FONT}>
       <SectionHeader title="Notifications" desc="Choose which notifications you'd like to receive" />
 
-      <div className="max-w-[640px] bg-white rounded-[20px] border border-[#edf0f4] shadow-sm overflow-hidden">
+      <div className="max-w-[640px] bg-white dark:bg-[#22272f] rounded-[20px] border border-[#edf0f4] dark:border-[#3a3f47] shadow-sm overflow-hidden">
         <div className="p-6 flex flex-col gap-0">
           {NOTIF_SETTINGS.map((item, i) => (
-            <div key={item.key} className={`flex items-start justify-between gap-6 py-5 ${i < NOTIF_SETTINGS.length - 1 ? "border-b border-[#edf0f4]" : ""}`}>
+            <div key={item.key} className={`flex items-start justify-between gap-6 py-5 ${i < NOTIF_SETTINGS.length - 1 ? "border-b border-[#edf0f4] dark:border-[#3a3f47]" : ""}`}>
               <div className="flex-1 min-w-0">
-                <p className="text-[14px] font-bold text-[#1e293b] mb-0.5">{item.label}</p>
-                <p className="text-[12px] text-[#94a3b8] leading-relaxed">{item.desc}</p>
+                <p className="text-[14px] font-bold text-[#1e293b] dark:text-white mb-0.5">{item.label}</p>
+                <p className="text-[12px] text-[#94a3b8] dark:text-slate-400 leading-relaxed">{item.desc}</p>
               </div>
               <Toggle on={enabled[item.key]} onClick={() => setEnabled((prev) => ({ ...prev, [item.key]: !prev[item.key] }))} />
             </div>
           ))}
         </div>
 
-        <div className="flex justify-end px-6 py-4 border-t border-[#edf0f4]">
-          <button onClick={() => { setSaved(true); setTimeout(() => setSaved(false), 2000); }}
-            className="h-[44px] px-8 rounded-[14px] text-[13px] font-bold text-white transition-all cursor-pointer hover:shadow-lg flex items-center gap-2"
+        <div className="flex justify-end px-6 py-4 border-t border-[#edf0f4] dark:border-[#3a3f47]">
+          <button onClick={handleSave} disabled={isSaving}
+            className="h-[44px] px-8 rounded-[14px] text-[13px] font-bold text-white transition-all cursor-pointer hover:shadow-lg disabled:opacity-60 flex items-center gap-2"
             style={{ background: 'linear-gradient(135deg, #003566, #0967bd)' }}>
-            {saved ? <><Check className="w-4 h-4" /> Saved!</> : <><Save className="w-4 h-4" /> Save Preferences</>}
+            {isSaving ? (
+              <>
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                Saving...
+              </>
+            ) : saved ? (
+              <><Check className="w-4 h-4" /> Saved!</>
+            ) : (
+              <><Save className="w-4 h-4" /> Save Preferences</>
+            )}
           </button>
         </div>
       </div>
@@ -788,14 +1089,14 @@ function TwoFASettings() {
 
   if (showOTPVerify) {
     return (
-      <div className="py-4 border-b border-[#edf0f4]">
+      <div className="py-4 border-b border-[#edf0f4] dark:border-[#3a3f47]">
         <div className="flex items-center gap-3 mb-4">
           <div className="w-8 h-8 rounded-[10px] flex items-center justify-center" style={{ background: 'rgba(158,51,226,0.06)' }}>
             <Check className="w-4 h-4 text-[#9e33e2]" />
           </div>
-          <h4 className="text-[14px] font-bold text-[#1e293b]">Verify Your Email</h4>
+          <h4 className="text-[14px] font-bold text-[#1e293b] dark:text-white">Verify Your Email</h4>
         </div>
-        <p className="text-[12px] text-[#5a7089] mb-4">Enter the 6-digit code sent to your email</p>
+        <p className="text-[12px] text-[#5a7089] dark:text-slate-400 mb-4">Enter the 6-digit code sent to your email</p>
         <input
           type="text"
           maxLength={6}
@@ -804,7 +1105,7 @@ function TwoFASettings() {
           placeholder="000000"
           className={inputClass}
         />
-        <p className="text-[11px] text-[#94a3b8] mt-2">Expires in {timeLeft}s</p>
+        <p className="text-[11px] text-[#94a3b8] dark:text-slate-500 mt-2">Expires in {timeLeft}s</p>
         <div className="flex gap-2 mt-4">
           <button
             onClick={handleVerifyOTP}
@@ -816,7 +1117,7 @@ function TwoFASettings() {
           </button>
           <button
             onClick={() => { setShowOTPVerify(false); setOtpInput(""); setTimeLeft(0); }}
-            className="h-[44px] px-6 rounded-[12px] text-[13px] font-bold text-[#5a7089] border border-[#e2e8f0] cursor-pointer hover:bg-[#f8f9fc]"
+            className="h-[44px] px-6 rounded-[12px] text-[13px] font-bold text-[#5a7089] dark:text-slate-400 border border-[#e2e8f0] dark:border-[#3a3f47] cursor-pointer hover:bg-[#f8f9fc] dark:hover:bg-[#2b3139]"
           >
             Cancel
           </button>
@@ -826,10 +1127,10 @@ function TwoFASettings() {
   }
 
   return (
-    <div className="flex items-center justify-between py-4 border-b border-[#edf0f4]">
+    <div className="flex items-center justify-between py-4 border-b border-[#edf0f4] dark:border-[#3a3f47]">
       <div>
-        <p className="text-[13px] font-semibold text-[#1e293b]">Two-Factor Authentication</p>
-        <p className="text-[11px] text-[#94a3b8] mt-0.5">
+        <p className="text-[13px] font-semibold text-[#1e293b] dark:text-white">Two-Factor Authentication</p>
+        <p className="text-[11px] text-[#94a3b8] dark:text-slate-400 mt-0.5">
           {isEnabled ? "Protect your account with email OTP" : "Add extra security to your account"}
         </p>
       </div>
@@ -857,25 +1158,24 @@ export function UserProfileSettings({ onBack }: UserProfileSettingsProps) {
   return (
     <div className="flex h-full w-full overflow-hidden" style={FONT}>
       {/* ── Left sub-nav sidebar ── */}
-      <div className="w-[260px] shrink-0 flex flex-col overflow-y-auto border-r border-[#edf0f4]"
-        style={{ background: 'linear-gradient(180deg, #ffffff 0%, #f8f9fc 100%)' }}>
+      <div className="w-[260px] shrink-0 flex flex-col overflow-y-auto border-r border-[#edf0f4] dark:border-[#3a3f47] bg-gradient-to-b from-white to-[#f8f9fc] dark:from-[#1a1f2e] dark:to-[#22272f]">
         {/* Back + Title */}
         <div className="px-6 pt-8 pb-5">
-          <button onClick={onBack} className="flex items-center gap-2 text-[#5a7089] hover:text-[#003566] mb-3 transition-colors group cursor-pointer">
+          <button onClick={onBack} className="flex items-center gap-2 text-[#5a7089] dark:text-slate-400 hover:text-[#003566] dark:hover:text-blue-400 mb-3 transition-colors group cursor-pointer">
             <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
             <span className="text-[12px] font-medium">Dashboard</span>
           </button>
-          <h1 className="text-[28px] text-[#003566]" style={HEADING}>Profile</h1>
+          <h1 className="text-[28px] text-[#003566] dark:text-blue-400" style={HEADING}>Profile</h1>
         </div>
 
         {/* Avatar preview */}
-        <div className="flex flex-col items-center gap-2.5 px-6 pb-5 border-b border-[#edf0f4]">
-          <div className="w-[72px] h-[72px] rounded-full overflow-hidden border-3 border-white shadow-lg">
+        <div className="flex flex-col items-center gap-2.5 px-6 pb-5 border-b border-[#edf0f4] dark:border-[#3a3f47]">
+          <div className="w-[72px] h-[72px] rounded-full overflow-hidden border-3 border-white dark:border-[#2b3139] shadow-lg">
             <img src={currentUser?.avatar || imgEllipse1} alt="Profile" className="w-full h-full object-cover" />
           </div>
           <div className="text-center">
-            <p className="text-[13px] font-bold text-[#003566]">{currentUser?.name || "Student"}</p>
-            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-semibold text-[#0967bd] mt-1"
+            <p className="text-[13px] font-bold text-[#003566] dark:text-blue-400">{currentUser?.name || "Student"}</p>
+            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-semibold text-[#0967bd] dark:text-blue-300 mt-1"
               style={{ background: 'rgba(9,103,189,0.06)', border: '1px solid rgba(9,103,189,0.1)' }}>
               {currentUser?.gradeLevel || "Lernova Student"}
             </span>
@@ -890,11 +1190,11 @@ export function UserProfileSettings({ onBack }: UserProfileSettingsProps) {
               <button key={item.key} onClick={() => setActiveNav(item.key)}
                 className={`flex items-center gap-3 px-4 py-2.5 rounded-[12px] w-full text-left transition-all cursor-pointer ${
                   isActive
-                    ? "text-[#003566] font-bold"
-                    : "text-[#94a3b8] hover:text-[#5a7089] hover:bg-[#f5f7fa]"
+                    ? "text-[#003566] dark:text-blue-400 font-bold"
+                    : "text-[#94a3b8] dark:text-slate-500 hover:text-[#5a7089] dark:hover:text-slate-400 hover:bg-[#f5f7fa] dark:hover:bg-[#2b3139]"
                 }`}
                 style={isActive ? { background: 'rgba(9,103,189,0.06)', border: '1px solid rgba(9,103,189,0.08)' } : undefined}>
-                <span className={isActive ? "text-[#0967bd]" : ""}>{item.icon}</span>
+                <span className={isActive ? "text-[#0967bd] dark:text-blue-300" : ""}>{item.icon}</span>
                 <span className="text-[13px]">{item.label}</span>
                 {isActive && <div className="ml-auto w-1.5 h-1.5 rounded-full bg-[#f77f00]" />}
               </button>
@@ -904,7 +1204,7 @@ export function UserProfileSettings({ onBack }: UserProfileSettingsProps) {
       </div>
 
       {/* ── Main scrollable content ── */}
-      <div className="flex-1 overflow-y-auto bg-[#f8f9fc]">
+      <div className="flex-1 overflow-y-auto bg-[#f8f9fc] dark:bg-[#1a1f2e]">
         {activeNav === "basic" && <BasicInfoPage />}
         {activeNav === "my-sessions" && <MySessionsPage />}
         {activeNav === "study-history" && <StudyHistoryPage />}
