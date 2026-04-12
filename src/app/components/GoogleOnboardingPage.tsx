@@ -9,7 +9,7 @@ import {
   AuthSubmitButton,
 } from '@/app/components/auth/AuthPrimitives';
 import { AuthShell } from '@/app/components/auth/AuthShell';
-import { auth, profile as profileApi, setCurrentUser } from '../lib/api';
+import { auth, profile as profileApi, setCurrentUser, getSupabaseClient } from '../lib/api';
 
 interface GoogleOnboardingPageProps {
   onComplete: () => void;
@@ -27,8 +27,31 @@ export function GoogleOnboardingPage({
   const [displayName, setDisplayName] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isChecking, setIsChecking] = useState(true);
 
   const isStudent = role === 'student';
+
+  // Check if user already has a profile (returning user)
+  useEffect(() => {
+    const checkExistingProfile = async () => {
+      try {
+        const prof = await profileApi.get();
+        if (prof) {
+          // User already has a profile, redirect to dashboard
+          setCurrentUser(prof);
+          if (onComplete) {
+            onComplete();
+          }
+          return;
+        }
+      } catch (_err) {
+        // No existing profile, show form
+      }
+      // Only show form if no profile found
+      setIsChecking(false);
+    };
+    checkExistingProfile();
+  }, [onComplete]);
 
   const handleComplete = async () => {
     setError('');
@@ -39,6 +62,29 @@ export function GoogleOnboardingPage({
 
     setIsLoading(true);
     try {
+      // Get current Google authenticated user
+      const supabase = getSupabaseClient();
+      const { data: { user: googleUser } } = await supabase.auth.getUser();
+      
+      if (!googleUser?.email) {
+        setError('Unable to retrieve your email from Google account.');
+        setIsLoading(false);
+        return;
+      }
+
+      // Check if email already exists in profiles table (from email-based signup)
+      const { data: existingProfiles } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('email', googleUser.email)
+        .limit(1);
+
+      if (existingProfiles && existingProfiles.length > 0) {
+        setError(`This email is already registered. Please sign in with your password instead.`);
+        setIsLoading(false);
+        return;
+      }
+
       await auth.completeGoogleSignup(displayName.trim(), role);
       
       // Fetch updated profile
@@ -84,6 +130,11 @@ export function GoogleOnboardingPage({
       description: 'Book experienced mentors as your goals evolve.',
     },
   ];
+
+  // Hide component while checking for existing profile (prevent form flash)
+  if (isChecking) {
+    return null;
+  }
 
   return (
     <AuthShell

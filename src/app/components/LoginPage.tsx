@@ -101,7 +101,7 @@ export function LoginPage({
     try {
       await auth.signInWithGoogle();
     } catch (e: any) {
-      setError(e.message || 'Google sign-in failed.');
+      setError(e.message || 'Google sign-in failed. Please try again.');
       setIsGoogleLoading(false);
     }
   };

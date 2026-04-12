@@ -1,5 +1,6 @@
-import React, { useState, useRef } from "react";
-import { getCurrentUser } from '@/app/lib/api';
+import React, { useState, useRef, useEffect } from "react";
+import { toast } from "sonner";
+import { getCurrentUser, getSupabaseClient } from '@/app/lib/api';
 import svgPaths from "../../../imports/svg-xt2w7tivwg";
 import svgPathsHistory from "../../../imports/svg-w70tgomgpc";
 import svgPathsPerf from "../../../imports/svg-nif9w3w5t2";
@@ -1734,18 +1735,17 @@ function NotifToggle({ on, onClick }: { on: boolean; onClick: () => void }) {
   );
 }
 
-function NotificationsView() {
-  const [enabled, setEnabled] = useState<Record<NotifKey, boolean>>(
-    () =>
-      Object.fromEntries(
-        NOTIF_SETTINGS.map((s) => [s.key, s.defaultOn])
-      ) as Record<NotifKey, boolean>
-  );
-
-  function toggle(key: NotifKey) {
-    setEnabled((prev) => ({ ...prev, [key]: !prev[key] }));
-  }
-
+function NotificationsView({ 
+  enabled, 
+  onToggle, 
+  onSave, 
+  isSaving 
+}: { 
+  enabled: Record<NotifKey, boolean>; 
+  onToggle: (key: NotifKey) => void; 
+  onSave: () => Promise<void>; 
+  isSaving: boolean;
+}) {
   return (
     <div className="p-10">
       {/* Header */}
@@ -1765,19 +1765,19 @@ function NotificationsView() {
           </p>
         </div>
         <p className="font-['Poppins'] text-[14px] text-[rgba(0,0,0,0.6)] ml-[32px]">
-          Lets users manage what alerts they want to receive.
+          Manage which alerts you want to receive
         </p>
       </div>
 
       {/* Toggle rows */}
-      <div className="flex flex-col gap-[16px]">
+      <div className="flex flex-col gap-[16px] mb-6">
         {NOTIF_SETTINGS.map((item) => (
           <div key={item.key} className="flex flex-col gap-[4px]">
             <div className="flex items-center justify-between">
               <p className="font-['Poppins'] text-[18px] text-black leading-[20px]">
                 {item.label}
               </p>
-              <NotifToggle on={enabled[item.key]} onClick={() => toggle(item.key)} />
+              <NotifToggle on={enabled[item.key]} onClick={() => onToggle(item.key)} />
             </div>
             <p className="font-['Poppins'] text-[16px] text-[rgba(0,0,0,0.6)] leading-[20px]">
               {item.desc}
@@ -1785,6 +1785,21 @@ function NotificationsView() {
           </div>
         ))}
       </div>
+
+      {/* Save button */}
+      <button 
+        onClick={onSave}
+        disabled={isSaving}
+        className="bg-[#003566] h-[42px] px-[24px] rounded-[20px] font-['Poppins'] text-[14px] text-white hover:bg-[#002a52] transition-colors disabled:opacity-60 flex items-center gap-2">
+        {isSaving ? (
+          <>
+            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+            Saving...
+          </>
+        ) : (
+          "Save Preferences"
+        )}
+      </button>
     </div>
   );
 }
@@ -1793,35 +1808,161 @@ function NotificationsView() {
 
 export function MentorProfileSettings({ onBack }: MentorProfileSettingsProps) {
   const currentUser = getCurrentUser();
-  const initialName = currentUser?.name || "Jack Sparrow";
   const [activeNav, setActiveNav] = useState<ProfileSubNav>("basic");
 
   /* ── Form state ── */
-  const [fullName,   setFullName]   = useState(initialName);
-  const [email,      setEmail]      = useState("jacksparrow@mail.com");
+  const [fullName,   setFullName]   = useState("");
+  const [email,      setEmail]      = useState("");
   const [grade,      setGrade]      = useState("5-10 years");
-  const [expertise,  setExpertise]  = useState("Maths");
-  const [languages,  setLanguages]  = useState(["English", "Hindi"]);
+  const [expertise,  setExpertise]  = useState("");
+  const [languages,  setLanguages]  = useState<string[]>([]);
   const [newLang,    setNewLang]    = useState("");
-  const [bio,        setBio]        = useState("Dedicated mentor specializing in personalized learning and student growth through interactive sessions.");
+  const [bio,        setBio]        = useState("");
+  const [isSaving,   setIsSaving]   = useState(false);
+  const [isLoading,  setIsLoading]  = useState(true);
+  const [error,      setError]      = useState("");
+  const [saved,      setSaved]      = useState(false);
 
   /* ── Password state ── */
-  const [currentPw,  setCurrentPw]  = useState("password123");
-  const [newPw,      setNewPw]      = useState("newpassword");
-  const [confirmPw,  setConfirmPw]  = useState("newpassword");
+  const [currentPw,  setCurrentPw]  = useState("");
+  const [newPw,      setNewPw]      = useState("");
+  const [confirmPw,  setConfirmPw]  = useState("");
   const [pwSaved,    setPwSaved]    = useState(false);
 
   /* ── Documents ── */
-  const [docs, setDocs] = useState([
-    { id: "d1", name: "Degree Certificate.pdf", size: "24MB" },
-    { id: "d2", name: "Experience Certificate.pdf", size: "24MB" },
-  ]);
+  const [docs, setDocs] = useState<{ id: string; name: string; size: string }[]>([]);
   const maxDocs = 3;
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   /* ── Avatar ── */
   const [avatarSrc, setAvatarSrc] = useState(imgEllipse2);
   const avatarInputRef = useRef<HTMLInputElement>(null);
+
+  /* ── Notifications ── */
+  const [notifEnabled, setNotifEnabled] = useState<Record<NotifKey, boolean>>(
+    () => Object.fromEntries(NOTIF_SETTINGS.map((s) => [s.key, s.defaultOn])) as Record<NotifKey, boolean>
+  );
+  const [notifSaving, setNotifSaving] = useState(false);
+
+  // Load mentor profile from database
+  useEffect(() => {
+    const loadProfile = async () => {
+      try {
+        setIsLoading(true);
+        if (!currentUser) {
+          setEmail("");
+          return;
+        }
+
+        const supabase = getSupabaseClient();
+        const { data } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', currentUser.id)
+          .single();
+
+        if (data) {
+          setFullName(data.name || "");
+          setEmail(data.email || currentUser.email || "");
+          setBio(data.bio || "");
+          setGrade(data.mentor_grade || "5-10 years");
+          setExpertise(data.expertise || "");
+          setLanguages(data.languages || []);
+          
+          // Load mentor-specific fields
+          if (data.mentor_documents) setDocs(data.mentor_documents);
+          if (data.avatar_url) setAvatarSrc(data.avatar_url);
+          
+          // Load notification preferences
+          if (data.notification_preferences) {
+            setNotifEnabled((prev) => ({
+              ...prev,
+              ...data.notification_preferences,
+            }));
+          }
+        }
+      } catch (err: any) {
+        console.log("Failed to load mentor profile:", err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadProfile();
+  }, [currentUser]);
+
+  // Save basic information
+  async function handleSaveBasicInfo() {
+    setError("");
+    if (!fullName.trim()) {
+      setError("Full name is required");
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      const supabase = getSupabaseClient();
+      if (!currentUser) {
+        toast.error("Not authenticated");
+        return;
+      }
+
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({
+          name: fullName.trim(),
+          bio: bio.trim(),
+          mentor_grade: grade,
+          expertise: expertise.trim(),
+          languages,
+          mentor_documents: docs,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', currentUser.id);
+
+      if (updateError) {
+        throw updateError;
+      }
+
+      setSaved(true);
+      toast.success("Profile saved successfully!");
+      setTimeout(() => setSaved(false), 2500);
+    } catch (err: any) {
+      const msg = err.message || "Failed to save profile";
+      setError(msg);
+      toast.error(msg);
+    } finally {
+      setIsSaving(false);
+    }
+  }
+
+  // Save notification preferences
+  async function handleSaveNotifications() {
+    setNotifSaving(true);
+    try {
+      const supabase = getSupabaseClient();
+      if (!currentUser) {
+        toast.error("Not authenticated");
+        return;
+      }
+
+      const { error } = await supabase
+        .from('profiles')
+        .update({ notification_preferences: notifEnabled })
+        .eq('id', currentUser.id);
+
+      if (error) {
+        toast.error("Failed to save preferences");
+        return;
+      }
+
+      toast.success("Notification preferences saved!");
+    } catch (err: any) {
+      toast.error(err.message || "Failed to save preferences");
+    } finally {
+      setNotifSaving(false);
+    }
+  }
 
   function handleDeleteLanguage(lang: string) {
     setLanguages((prev) => prev.filter((l) => l !== lang));
@@ -2125,18 +2266,43 @@ export function MentorProfileSettings({ onBack }: MentorProfileSettingsProps) {
                         <textarea
                           value={bio}
                           onChange={(e) => setBio(e.target.value)}
-                          className="flex-1 h-full bg-transparent font-['Poppins'] text-[14px] text-[rgba(0,0,0,0.8)] outline-none resize-none leading-normal"
+                          disabled={isSaving}
+                          className="flex-1 h-full bg-transparent font-['Poppins'] text-[14px] text-[rgba(0,0,0,0.8)] outline-none resize-none leading-normal disabled:opacity-60"
                         />
                       </div>
                     </div>
 
+                    {/* Error message */}
+                    {error && (
+                      <div className="bg-[#fde8e8] border border-[#cc3636] rounded-[10px] px-4 py-3 flex items-center gap-2">
+                        <svg className="w-4 h-4 text-[#cc3636]" fill="none" viewBox="0 0 24 24">
+                          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z" fill="currentColor" />
+                        </svg>
+                        <p className="font-['Poppins'] text-[12px] text-[#cc3636]">{error}</p>
+                      </div>
+                    )}
+
                     {/* Save button */}
-                    <div className="flex justify-end pt-2">
+                    <div className="flex justify-end pt-2 gap-2">
+                      {saved && (
+                        <span className="font-['Poppins'] text-[12px] text-[#16a34a] flex items-center gap-1">
+                          ✓ Saved
+                        </span>
+                      )}
                       <button
                         type="button"
-                        className="bg-[#003566] h-[42px] rounded-[20px] px-[32px] font-['Poppins'] text-[12px] text-white hover:bg-[#002a52] transition-colors"
+                        onClick={handleSaveBasicInfo}
+                        disabled={isSaving}
+                        className="bg-[#003566] h-[42px] rounded-[20px] px-[32px] font-['Poppins'] text-[12px] text-white hover:bg-[#002a52] transition-colors disabled:opacity-60 flex items-center gap-2"
                       >
-                        Save Changes
+                        {isSaving ? (
+                          <>
+                            <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                            Saving...
+                          </>
+                        ) : (
+                          "Save Changes"
+                        )}
                       </button>
                     </div>
                   </div>
@@ -2183,7 +2349,12 @@ export function MentorProfileSettings({ onBack }: MentorProfileSettingsProps) {
         ) : activeNav === "withdrawal" ? (
           <WithdrawalView />
         ) : activeNav === "notifications" ? (
-          <NotificationsView />
+          <NotificationsView 
+            enabled={notifEnabled}
+            onToggle={(key) => setNotifEnabled((prev) => ({ ...prev, [key]: !prev[key] }))}
+            onSave={handleSaveNotifications}
+            isSaving={notifSaving}
+          />
         ) : (
           <div className="p-10">
             <div className="mb-[40px]">
