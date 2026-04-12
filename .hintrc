@@ -27,8 +27,8 @@
       "default",
       {
         "ignore": [
-          "mask-image",
-          "backdrop-filter"
+          "backdrop-filter",
+          "mask-image"
         ]
       }
     ]

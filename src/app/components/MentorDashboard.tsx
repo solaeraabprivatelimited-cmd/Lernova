@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { getCurrentUser, mentorDashboard, profile as profileApi, setCurrentUser } from '../lib/api';
+import { getCurrentUser, mentorDashboard, profile as profileApi, notifications as notificationsApi, setCurrentUser } from '../lib/api';
 import { completePendingOnboarding, shouldShowPendingOnboarding } from '../lib/onboarding';
 import svgPaths from '../../imports/svg-awezib197y';
 import svgWellness from '../../imports/svg-fui5khiao7';
@@ -71,14 +71,14 @@ function LearnovaLogo() {
           </defs>
         </svg>
       </div>
-      <span className="font-['Righteous'] text-[#003566] text-[20px]">Learnova</span>
+      <span className="font-['Righteous'] text-blue-600 dark:text-blue-400 text-[20px]">Learnova</span>
     </div>
   );
 }
 
 function BellIcon() {
   return (
-    <svg fill="none" viewBox="0 0 24 24" className="w-6 h-6" stroke="black" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <svg fill="none" viewBox="0 0 24 24" className="w-6 h-6 dark:text-white light:text-black" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <path d="M15 17h5l-1.405-1.405A2.032 2.032 0 0 1 18 14.158V11a6.002 6.002 0 0 0-4-5.659V5a2 2 0 1 0-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 1 1-6 0v-1m6 0H9" />
     </svg>
   );
@@ -94,7 +94,7 @@ function CreateSessionIcon() {
 
 function SessionRequestsIcon() {
   return (
-    <svg fill="none" viewBox="0 0 24 24" className="w-5 h-5 shrink-0" stroke="black" strokeOpacity="0.6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <svg fill="none" viewBox="0 0 24 24" className="w-5 h-5 shrink-0 dark:text-white/60 light:text-black/60" stroke="currentColor" strokeOpacity="0.6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <path d={svgPaths.p16a0cd00} />
     </svg>
   );
@@ -102,24 +102,24 @@ function SessionRequestsIcon() {
 
 function StudyRoomIcon() {
   return (
-    <svg fill="none" viewBox="0 0 20 20" className="w-5 h-5 shrink-0">
-      <path d={svgPaths.p12a85400} fill="black" fillOpacity="0.6" />
+    <svg fill="none" viewBox="0 0 20 20" className="w-5 h-5 shrink-0 dark:text-white/60 light:text-black/60">
+      <path d={svgPaths.p12a85400} fill="currentColor" fillOpacity="0.6" />
     </svg>
   );
 }
 
 function WellnessIcon() {
   return (
-    <svg fill="none" viewBox="0 0 21 22" className="w-5 h-5 shrink-0">
-      <path d={svgPaths.p2ab57600} fill="black" fillOpacity="0.6" />
+    <svg fill="none" viewBox="0 0 21 22" className="w-5 h-5 shrink-0 dark:text-white/60 light:text-black/60">
+      <path d={svgPaths.p2ab57600} fill="currentColor" fillOpacity="0.6" />
     </svg>
   );
 }
 
 function CommunityIcon() {
   return (
-    <svg fill="none" viewBox="0 0 22 22" className="w-5 h-5 shrink-0">
-      <path d={svgPaths.p7213140} fill="black" fillOpacity="0.6" />
+    <svg fill="none" viewBox="0 0 22 22" className="w-5 h-5 shrink-0 dark:text-white/60 light:text-black/60">
+      <path d={svgPaths.p7213140} fill="currentColor" fillOpacity="0.6" />
     </svg>
   );
 }
@@ -145,7 +145,7 @@ function EditIcon() {
 
 function UserIcon() {
   return (
-    <svg fill="none" viewBox="0 0 18 18" className="w-4 h-4 shrink-0" stroke="black" strokeOpacity="0.8" strokeWidth="2" strokeLinejoin="round">
+    <svg fill="none" viewBox="0 0 18 18" className="w-4 h-4 shrink-0 dark:text-white/80 light:text-black/80" stroke="currentColor" strokeOpacity="0.8" strokeWidth="2" strokeLinejoin="round">
       <path d={svgPaths.p36395980} />
       <path d={svgPaths.p372d2a00} />
     </svg>
@@ -298,23 +298,23 @@ function SessionModal({ mode, initial, onSave, onClose }: SessionModalProps) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-      <div className="bg-white rounded-[20px] shadow-[0px_4px_50px_5px_rgba(0,0,0,0.15)] w-full max-w-[560px] p-8 flex flex-col gap-6">
+      <div className="dark:bg-[#2b2c2f] light:bg-white rounded-[20px] shadow-[0px_4px_50px_5px_rgba(0,0,0,0.15)] w-full max-w-[560px] p-8 flex flex-col gap-6">
         <div className="flex items-start justify-between">
           <div>
-            <p className="font-['Poppins'] font-medium text-[24px] text-black">
+            <p className="font-['Poppins'] font-medium text-[24px] dark:text-white light:text-black">
               {mode === 'create' ? 'Create New Session' : 'Edit Session'}
             </p>
-            <p className="font-['Poppins'] text-[13px] text-[rgba(0,0,0,0.6)]">Fill in your session details below.</p>
+            <p className="font-['Poppins'] text-[13px] dark:text-white/60 light:text-[rgba(0,0,0,0.6)]">Fill in your session details below.</p>
           </div>
-          <button onClick={onClose} className="text-[rgba(0,0,0,0.4)] hover:text-black transition-colors text-2xl leading-none mt-1">×</button>
+          <button onClick={onClose} className="dark:text-white/40 dark:hover:text-white light:text-[rgba(0,0,0,0.4)] light:hover:text-black transition-colors text-2xl leading-none mt-1">×</button>
         </div>
 
         {/* Mentor Name */}
         <div className="flex flex-col gap-2">
-          <label className="font-['Poppins'] text-[14px] text-black">Mentor Name</label>
-          <div className="border border-[rgba(0,0,0,0.2)] rounded-[10px] px-3 h-[39px] flex items-center">
+          <label className="font-['Poppins'] text-[14px] dark:text-white light:text-black">Mentor Name</label>
+          <div className="border dark:border-white/10 light:border-[rgba(0,0,0,0.2)] rounded-[10px] px-3 h-[39px] flex items-center">
             <input
-              className="flex-1 font-['Poppins'] text-[14px] outline-none"
+              className="flex-1 font-['Poppins'] text-[14px] outline-none bg-transparent dark:text-white light:text-black"
               value={form.mentorName}
               onChange={e => setForm(f => ({ ...f, mentorName: e.target.value }))}
               placeholder="e.g. Your Name or Preferred Title"
@@ -324,36 +324,36 @@ function SessionModal({ mode, initial, onSave, onClose }: SessionModalProps) {
 
         {/* Rate */}
         <div className="flex flex-col gap-2">
-          <label className="font-['Poppins'] text-[14px] text-black">Rate (₹/hr)</label>
-          <div className="border border-[rgba(0,0,0,0.2)] rounded-[10px] px-3 h-[39px] flex items-center gap-2">
-            <span className="font-['Poppins'] text-[14px] text-[rgba(0,0,0,0.5)]">₹</span>
+          <label className="font-['Poppins'] text-[14px] dark:text-white light:text-black">Rate (₹/hr)</label>
+          <div className="border dark:border-white/10 light:border-[rgba(0,0,0,0.2)] rounded-[10px] px-3 h-[39px] flex items-center gap-2">
+            <span className="font-['Poppins'] text-[14px] dark:text-white/50 light:text-[rgba(0,0,0,0.5)]">₹</span>
             <input
-              className="flex-1 font-['Poppins'] text-[14px] outline-none"
+              className="flex-1 font-['Poppins'] text-[14px] outline-none bg-transparent dark:text-white light:text-black"
               value={rateInput}
               onChange={e => setRateInput(e.target.value)}
               placeholder="Enter hourly rate"
               type="number"
               min="0"
             />
-            <span className="font-['Poppins'] text-[14px] text-[rgba(0,0,0,0.5)]">/hr</span>
+            <span className="font-['Poppins'] text-[14px] dark:text-white/50 light:text-[rgba(0,0,0,0.5)]">/hr</span>
           </div>
         </div>
 
         {/* Time Slots */}
         <div className="flex flex-col gap-2">
-          <label className="font-['Poppins'] text-[14px] text-black">Date & Time Slots</label>
+          <label className="font-['Poppins'] text-[14px] dark:text-white light:text-black">Date & Time Slots</label>
           <div className="flex flex-wrap gap-2">
             {form.timeSlots.map(slot => (
-              <div key={slot.id} className="flex items-center gap-1 border border-[rgba(0,0,0,0.2)] rounded-[10px] px-3 py-1">
-                <span className="font-['Poppins'] text-[13px]">{slot.datetime}</span>
-                <button onClick={() => removeSlot(slot.id)} className="text-[#cc3636] ml-1 leading-none text-sm">×</button>
+              <div key={slot.id} className="flex items-center gap-1 border dark:border-white/10 light:border-[rgba(0,0,0,0.2)] rounded-[10px] px-3 py-1">
+                <span className="font-['Poppins'] text-[13px] dark:text-white light:text-black">{slot.datetime}</span>
+                <button onClick={() => removeSlot(slot.id)} className="text-red-600 ml-1 leading-none text-sm">×</button>
               </div>
             ))}
           </div>
           <div className="flex gap-2">
-            <div className="flex-1 border border-[rgba(0,0,0,0.2)] rounded-[10px] px-3 h-[39px] flex items-center">
+            <div className="flex-1 border dark:border-white/10 light:border-[rgba(0,0,0,0.2)] rounded-[10px] px-3 h-[39px] flex items-center">
               <input
-                className="w-full font-['Poppins'] text-[13px] outline-none"
+                className="w-full font-['Poppins'] text-[13px] outline-none bg-transparent dark:text-white light:text-black"
                 value={newSlot}
                 onChange={e => setNewSlot(e.target.value)}
                 onKeyDown={e => e.key === 'Enter' && addSlot()}
@@ -362,7 +362,7 @@ function SessionModal({ mode, initial, onSave, onClose }: SessionModalProps) {
             </div>
             <button
               onClick={addSlot}
-              className="h-[39px] px-4 bg-[#003566] text-white rounded-[10px] font-['Poppins'] text-[13px] hover:bg-[#00284d] transition-colors"
+              className="h-[39px] px-4 bg-blue-600 text-white rounded-[10px] font-['Poppins'] text-[13px] dark:hover:bg-blue-700 light:hover:bg-blue-700 transition-colors"
             >
               Add
             </button>
@@ -371,10 +371,10 @@ function SessionModal({ mode, initial, onSave, onClose }: SessionModalProps) {
 
         {/* Number of Hours */}
         <div className="flex flex-col gap-2">
-          <label className="font-['Poppins'] text-[14px] text-black">Available Hours (comma-separated)</label>
-          <div className="border border-[rgba(0,0,0,0.2)] rounded-[10px] px-3 h-[39px] flex items-center">
+          <label className="font-['Poppins'] text-[14px] dark:text-white light:text-black">Available Hours (comma-separated)</label>
+          <div className="border dark:border-white/10 light:border-[rgba(0,0,0,0.2)] rounded-[10px] px-3 h-[39px] flex items-center">
             <input
-              className="flex-1 font-['Poppins'] text-[14px] outline-none"
+              className="flex-1 font-['Poppins'] text-[14px] outline-none bg-transparent dark:text-white light:text-black"
               value={hoursInput}
               onChange={e => setHoursInput(e.target.value)}
               placeholder="1, 2, 3"
@@ -382,19 +382,19 @@ function SessionModal({ mode, initial, onSave, onClose }: SessionModalProps) {
           </div>
         </div>
 
-        {error && <p className="font-['Poppins'] text-[13px] text-[#cc3636] -mt-3">{error}</p>}
+        {error && <p className="font-['Poppins'] text-[13px] text-red-600 -mt-3">{error}</p>}
 
         {/* Actions */}
         <div className="flex justify-end gap-3 pt-1">
           <button
             onClick={onClose}
-            className="h-[42px] px-6 border border-[rgba(0,0,0,0.3)] rounded-[20px] font-['Poppins'] text-[14px] text-[rgba(0,0,0,0.6)] hover:bg-gray-50 transition-colors"
+            className="h-[42px] px-6 border dark:border-white/20 light:border-[rgba(0,0,0,0.3)] rounded-[20px] font-['Poppins'] text-[14px] dark:text-white/60 dark:hover:bg-white/5 light:text-[rgba(0,0,0,0.6)] light:hover:bg-gray-50 transition-colors"
           >
             Cancel
           </button>
           <button
             onClick={handleSave}
-            className="h-[42px] px-8 bg-[#003566] rounded-[20px] font-['Poppins'] text-[14px] text-white hover:bg-[#00284d] transition-colors"
+            className="h-[42px] px-8 bg-blue-600 dark:bg-blue-600 light:bg-blue-600 rounded-[20px] font-['Poppins'] text-[14px] text-white dark:hover:bg-blue-700 light:hover:bg-blue-700 transition-colors"
           >
             {mode === 'create' ? 'Create Session' : 'Save Changes'}
           </button>
@@ -411,24 +411,24 @@ function SessionModal({ mode, initial, onSave, onClose }: SessionModalProps) {
 function DeleteModal({ onConfirm, onCancel }: { onConfirm: () => void; onCancel: () => void }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-      <div className="bg-white rounded-[20px] shadow-[0px_4px_50px_5px_rgba(0,0,0,0.15)] w-full max-w-[400px] p-8 flex flex-col gap-6 items-center text-center">
-        <div className="w-[60px] h-[60px] rounded-full bg-[#fde8e8] flex items-center justify-center">
+      <div className="dark:bg-[#2b2c2f] light:bg-white rounded-[20px] shadow-[0px_4px_50px_5px_rgba(0,0,0,0.15)] w-full max-w-[400px] p-8 flex flex-col gap-6 items-center text-center">
+        <div className="w-[60px] h-[60px] rounded-full dark:bg-red-500/10 light:bg-[#fde8e8] flex items-center justify-center">
           <DeleteIcon />
         </div>
         <div>
-          <p className="font-['Poppins'] font-medium text-[20px] text-black">Delete Session?</p>
-          <p className="font-['Poppins'] text-[13px] text-[rgba(0,0,0,0.6)] mt-1">This action cannot be undone. Your session post will be permanently removed.</p>
+          <p className="font-['Poppins'] font-medium text-[20px] dark:text-white light:text-black">Delete Session?</p>
+          <p className="font-['Poppins'] text-[13px] dark:text-white/60 light:text-[rgba(0,0,0,0.6)] mt-1">This action cannot be undone. Your session post will be permanently removed.</p>
         </div>
         <div className="flex gap-3 w-full">
           <button
             onClick={onCancel}
-            className="flex-1 h-[42px] border border-[rgba(0,0,0,0.3)] rounded-[20px] font-['Poppins'] text-[14px] text-[rgba(0,0,0,0.6)] hover:bg-gray-50 transition-colors"
+            className="flex-1 h-[42px] border dark:border-white/10 light:border-[rgba(0,0,0,0.3)] rounded-[20px] font-['Poppins'] text-[14px] dark:text-white/60 dark:hover:bg-white/5 light:text-[rgba(0,0,0,0.6)] light:hover:bg-gray-50 transition-colors"
           >
             Cancel
           </button>
           <button
             onClick={onConfirm}
-            className="flex-1 h-[42px] bg-[#cc3636] rounded-[20px] font-['Poppins'] text-[14px] text-white hover:bg-[#b02e2e] transition-colors"
+            className="flex-1 h-[42px] bg-red-600 rounded-[20px] font-['Poppins'] text-[14px] text-white dark:hover:bg-red-700 light:hover:bg-red-700 transition-colors"
           >
             Delete
           </button>
@@ -450,27 +450,27 @@ interface SessionCardProps {
 
 function SessionCard({ session, onDelete, onEdit }: SessionCardProps) {
   return (
-    <div className="bg-white rounded-[20px] shadow-[0px_4px_29.4px_0px_rgba(0,0,0,0.1)] p-8 flex flex-col gap-6">
+    <div className="dark:bg-[#2b2c2f] light:bg-white rounded-[20px] shadow-[0px_4px_29.4px_0px_rgba(0,0,0,0.1)] p-8 flex flex-col gap-6">
       {/* Top row */}
       <div className="flex flex-wrap gap-6 items-start justify-between">
         {/* Mentor info */}
-        <div className="bg-white rounded-[10px] shadow-[0px_4px_29.4px_0px_rgba(0,0,0,0.1)] px-4 py-3 flex items-center justify-between gap-6 min-w-[220px]">
+        <div className="dark:bg-[#3a3b3f] light:bg-white rounded-[10px] shadow-[0px_4px_29.4px_0px_rgba(0,0,0,0.1)] px-4 py-3 flex items-center justify-between gap-6 min-w-[220px]">
           <div className="flex items-center gap-2">
-            <div className="bg-[#e5e7eb] rounded-[4px] size-[27px] flex items-center justify-center">
+            <div className="dark:bg-white/10 light:bg-[#e5e7eb] rounded-[4px] size-[27px] flex items-center justify-center">
               <UserIcon />
             </div>
-            <span className="font-['Poppins'] font-medium text-[16px] text-[rgba(0,0,0,0.8)]">{session.mentorName}</span>
+            <span className="font-['Poppins'] font-medium text-[16px] dark:text-white light:text-[rgba(0,0,0,0.8)]">{session.mentorName}</span>
           </div>
-          <span className="font-['Poppins'] font-medium text-[16px] text-[rgba(0,0,0,0.8)]">{session.rate}</span>
+          <span className="font-['Poppins'] font-medium text-[16px] dark:text-white light:text-[rgba(0,0,0,0.8)]">{session.rate}</span>
         </div>
 
         {/* Date & Time Slots */}
         <div className="flex flex-col gap-2">
-          <p className="font-['Poppins'] font-medium text-[16px] text-[rgba(0,0,0,0.8)]">Date and Time Slots</p>
+          <p className="font-['Poppins'] font-medium text-[16px] dark:text-white light:text-[rgba(0,0,0,0.8)]">Date and Time Slots</p>
           <div className="flex flex-wrap gap-2">
             {session.timeSlots.map(slot => (
-              <div key={slot.id} className="border border-[rgba(0,0,0,0.2)] rounded-[10px] px-3 h-[39px] flex items-center">
-                <span className="font-['Poppins'] font-medium text-[14px] text-[rgba(0,0,0,0.8)]">{slot.datetime}</span>
+              <div key={slot.id} className="border dark:border-white/10 light:border-[rgba(0,0,0,0.2)] rounded-[10px] px-3 h-[39px] flex items-center">
+                <span className="font-['Poppins'] font-medium text-[14px] dark:text-white light:text-[rgba(0,0,0,0.8)]">{slot.datetime}</span>
               </div>
             ))}
           </div>
@@ -478,11 +478,11 @@ function SessionCard({ session, onDelete, onEdit }: SessionCardProps) {
 
         {/* Number of Hours */}
         <div className="flex flex-col gap-2">
-          <p className="font-['Poppins'] font-medium text-[16px] text-[rgba(0,0,0,0.8)]">Number of Hours</p>
+          <p className="font-['Poppins'] font-medium text-[16px] dark:text-white light:text-[rgba(0,0,0,0.8)]">Number of Hours</p>
           <div className="flex gap-2 flex-wrap">
             {session.hours.map((h, i) => (
-              <div key={i} className="border border-[rgba(0,0,0,0.2)] rounded-[10px] px-3 h-[39px] flex items-center">
-                <span className="font-['Poppins'] font-medium text-[14px] text-[rgba(0,0,0,0.8)]">{h} {h === 1 ? 'hour' : 'hours'}</span>
+              <div key={i} className="border dark:border-white/10 light:border-[rgba(0,0,0,0.2)] rounded-[10px] px-3 h-[39px] flex items-center">
+                <span className="font-['Poppins'] font-medium text-[14px] dark:text-white light:text-[rgba(0,0,0,0.8)]">{h} {h === 1 ? 'hour' : 'hours'}</span>
               </div>
             ))}
           </div>
@@ -492,23 +492,23 @@ function SessionCard({ session, onDelete, onEdit }: SessionCardProps) {
       {/* Actions */}
       {session.readOnly ? (
         <div className="flex justify-end">
-          <p className="font-['Poppins'] text-[12px] text-[rgba(0,0,0,0.45)]">Synced from your live mentor bookings</p>
+          <p className="font-['Poppins'] text-[12px] dark:text-white/45 light:text-[rgba(0,0,0,0.45)]">Synced from your live mentor bookings</p>
         </div>
       ) : (
         <div className="flex justify-end gap-4">
           <button
             onClick={onDelete}
-            className="flex items-center gap-1.5 h-[42px] px-6 border border-[#cc3636] rounded-[20px] hover:bg-[#fde8e8] transition-colors"
+            className="flex items-center gap-1.5 h-[42px] px-6 border border-red-600 rounded-[20px] dark:hover:bg-red-500/10 light:hover:bg-[#fde8e8] transition-colors"
           >
             <DeleteIcon />
-            <span className="font-['Poppins'] font-medium text-[14px] text-[#cc3636]">Delete</span>
+            <span className="font-['Poppins'] font-medium text-[14px] text-red-600">Delete</span>
           </button>
           <button
             onClick={onEdit}
-            className="flex items-center gap-1.5 h-[42px] px-6 border border-[#003566] rounded-[20px] hover:bg-[#e8f0fa] transition-colors"
+            className="flex items-center gap-1.5 h-[42px] px-6 border border-blue-600 rounded-[20px] dark:hover:bg-blue-600/10 light:hover:bg-[#e8f0fa] transition-colors"
           >
             <EditIcon />
-            <span className="font-['Poppins'] font-medium text-[14px] text-[#003566]">Edit</span>
+            <span className="font-['Poppins'] font-medium text-[14px] text-blue-600">Edit</span>
           </button>
         </div>
       )}
@@ -626,27 +626,27 @@ function CreateSessionDateTimeModal({ title = 'Create Session', initialSlots = [
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-      <div className="bg-white rounded-[20px] shadow-[0px_4px_50px_5px_rgba(0,0,0,0.1)] w-full max-w-[700px] p-8 flex flex-col gap-6">
+      <div className="dark:bg-[#2b2c2f] light:bg-white rounded-[20px] shadow-[0px_4px_50px_5px_rgba(0,0,0,0.15)] w-full max-w-[700px] sm:max-w-[600px] md:max-w-[700px] p-4 sm:p-6 lg:p-8 flex flex-col gap-4 sm:gap-6 max-h-[90vh] overflow-y-auto">
 
         {/* ── Header ─────────────────────────────────────────── */}
         <div className="flex items-start justify-between w-full">
           <div className="flex flex-col gap-1">
-            <p className="font-['Poppins'] font-semibold text-[24px] text-black">{title}</p>
-            <p className="font-['Poppins'] font-semibold text-[16px] text-black">Select Date and Time Slots</p>
+        <div className="font-['Poppins'] font-semibold text-[20px] sm:text-[24px] dark:text-white light:text-black">{title}</div>
+            <p className="font-['Poppins'] font-semibold text-[14px] sm:text-[16px] dark:text-white light:text-black">Select Date and Time Slots</p>
           </div>
           <button onClick={onClose} className="hover:opacity-60 transition-opacity">
-            <svg fill="none" viewBox="0 0 25 25" className="w-[30px] h-[30px]">
-              <circle cx="12.469" cy="12.469" r="11.719" stroke="black" strokeWidth="1.5"/>
-              <path d="M16.688 8.25L8.25 16.688M8.25 8.25L16.688 16.688" stroke="black" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5"/>
+            <svg fill="none" viewBox="0 0 25 25" className="w-[24px] sm:w-[30px] h-[24px] sm:h-[30px]">
+              <circle cx="12.469" cy="12.469" r="11.719" stroke="currentColor" strokeWidth="1.5"/>
+              <path d="M16.688 8.25L8.25 16.688M8.25 8.25L16.688 16.688" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5"/>
             </svg>
           </button>
         </div>
 
         {/* ── Calendar + Time Picker ──────────────────────────── */}
-        <div className="flex gap-6 w-full">
+        <div className="flex flex-col lg:flex-row gap-4 sm:gap-6 w-full">
 
           {/* Calendar */}
-          <div className="bg-white rounded-[5px] shadow-[0px_4px_50px_5px_rgba(0,0,0,0.1)] pb-8 pt-4 px-6 flex flex-col gap-[23px] shrink-0 w-[305px]">
+          <div className="dark:bg-[#3a3b3f] light:bg-white rounded-[5px] shadow-[0px_4px_50px_5px_rgba(0,0,0,0.1)] pb-6 sm:pb-8 pt-3 sm:pt-4 px-4 sm:px-6 flex flex-col gap-[15px] sm:gap-[23px] shrink-0 w-full lg:w-[305px]">
             {/* Month nav */}
             <div className="flex items-center justify-between w-full">
               <button onClick={prevMonth} className="hover:opacity-60 transition-opacity">
@@ -688,10 +688,10 @@ function CreateSessionDateTimeModal({ title = 'Create Session', initialSlots = [
                     className="flex items-center justify-center"
                   >
                     <span className={`w-[26px] h-[26px] flex items-center justify-center rounded-full font-['Poppins'] font-medium text-[12px] transition-colors
-                      ${selected ? 'bg-[#003566] text-white' : ''}
-                      ${!selected && todayCell && isCurrentMonth ? 'border border-[#003566] text-[#003566]' : ''}
-                      ${!selected && !todayCell && isCurrentMonth ? 'text-black hover:bg-[#c9e5ff]' : ''}
-                      ${!isCurrentMonth ? 'text-[rgba(0,0,0,0.3)]' : ''}
+                      ${selected ? 'bg-blue-600 text-white' : ''}
+                      ${!selected && todayCell && isCurrentMonth ? 'border border-blue-600 dark:border-blue-500 text-blue-600 dark:text-blue-400' : ''}
+                      ${!selected && !todayCell && isCurrentMonth ? 'text-black dark:text-white hover:bg-blue-100 dark:hover:bg-blue-900' : ''}
+                      ${!isCurrentMonth ? 'text-[rgba(0,0,0,0.3)] dark:text-[rgba(255,255,255,0.3)]' : ''}
                     `}>
                       {cell.day}
                     </span>
@@ -710,7 +710,7 @@ function CreateSessionDateTimeModal({ title = 'Create Session', initialSlots = [
 
             {/* Scrollable time list */}
             <div ref={timeScrollRef} className="flex flex-col gap-3 overflow-y-auto max-h-[270px] pr-2 relative"
-              style={{ scrollbarWidth: 'thin', scrollbarColor: '#003566 rgba(0,0,0,0.2)' }}>
+              style={{ scrollbarWidth: 'thin', scrollbarColor: 'rgb(37, 99, 235) rgba(0,0,0,0.2)' }}>
               {TIME_SLOTS.map(t => {
                 const active = selTime === t;
                 const isPastTime = !selDate || selectedSlotToDate({ id: 'preview', date: selDate, time: t }).getTime() <= Date.now();
@@ -721,8 +721,8 @@ function CreateSessionDateTimeModal({ title = 'Create Session', initialSlots = [
                     disabled={isPastTime}
                     className={`w-full rounded-[5px] px-3 py-[5px] text-left transition-colors border font-['Poppins'] text-[12px]
                       ${active
-                        ? 'bg-[#dff0ff] border-[#003566] font-semibold text-[#003566]'
-                        : 'border-[rgba(0,0,0,0.6)] text-[rgba(0,0,0,0.8)] hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed'
+                        ? 'bg-blue-100 dark:bg-blue-900 border-blue-600 dark:border-blue-500 font-semibold text-blue-600 dark:text-blue-400'
+                        : 'border-[rgba(0,0,0,0.6)] dark:border-[rgba(255,255,255,0.3)] text-[rgba(0,0,0,0.8)] dark:text-[rgba(255,255,255,0.8)] hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-40 disabled:cursor-not-allowed'
                       }`}
                   >
                     {t}
@@ -744,7 +744,7 @@ function CreateSessionDateTimeModal({ title = 'Create Session', initialSlots = [
 
           {/* Existing slot cards */}
           {slots.map(slot => (
-            <div key={slot.id} className="bg-white rounded-[5px] shadow-[0px_4px_50px_0px_rgba(0,0,0,0.1)] flex items-center justify-between p-[10px] w-full">
+            <div key={slot.id} className="dark:bg-[#3a3b3f] light:bg-white rounded-[5px] shadow-[0px_4px_50px_0px_rgba(0,0,0,0.1)] flex items-center justify-between p-2 sm:p-[10px] w-full">
               <div className="flex flex-col gap-0.5">
                 <p className="font-['Poppins'] font-medium text-[12px] text-[rgba(0,0,0,0.8)]">{formatSlotDate(slot.date)}</p>
                 <p className="font-['Poppins'] font-medium text-[12px] text-[rgba(0,0,0,0.6)]">{slot.time}</p>
@@ -762,7 +762,7 @@ function CreateSessionDateTimeModal({ title = 'Create Session', initialSlots = [
             <button
               onClick={addCurrentSlot}
               disabled={!selDate || !selTime}
-              className="bg-white rounded-[5px] border border-dashed border-[rgba(0,0,0,0.2)] shadow-[0px_4px_50px_0px_rgba(0,0,0,0.1)] flex items-center justify-center p-[10px] w-full hover:bg-gray-50 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+              className="dark:bg-[#3a3b3f] dark:border-white/10 dark:hover:bg-[#444649] light:bg-white light:border-[rgba(0,0,0,0.2)] light:hover:bg-gray-50 rounded-[5px] border dark:border-white/10 light:border-dashed light:border-[rgba(0,0,0,0.2)] shadow-[0px_4px_50px_0px_rgba(0,0,0,0.1)] flex items-center justify-center p-2 sm:p-[10px] w-full transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
             >
               <svg fill="none" viewBox="0 0 24 24" className="w-6 h-6">
                 <path d="M18 12.998H13V17.998C13 18.263 12.895 18.518 12.707 18.705C12.52 18.893 12.265 18.998 12 18.998C11.735 18.998 11.48 18.893 11.293 18.705C11.105 18.518 11 18.263 11 17.998V12.998H6C5.735 12.998 5.48 12.893 5.293 12.705C5.105 12.518 5 12.263 5 11.998C5 11.733 5.105 11.478 5.293 11.291C5.48 11.103 5.735 10.998 6 10.998H11V5.998C11 5.733 11.105 5.478 11.293 5.291C11.48 5.103 11.735 4.998 12 4.998C12.265 4.998 12.52 5.103 12.707 5.291C12.895 5.478 13 5.733 13 5.998V10.998H18C18.265 10.998 18.52 11.103 18.707 11.291C18.895 11.478 19 11.733 19 11.998C19 12.263 18.895 12.518 18.707 12.705C18.52 12.893 18.265 12.998 18 12.998Z" fill="black" fillOpacity="0.6"/>
@@ -775,14 +775,14 @@ function CreateSessionDateTimeModal({ title = 'Create Session', initialSlots = [
         <div className="flex items-center justify-end gap-4 w-full">
           <button
             onClick={onClose}
-            className="h-[42px] px-6 border border-[#cc3636] rounded-[20px] font-['Poppins'] font-medium text-[14px] text-[#cc3636] hover:bg-[#fde8e8] transition-colors"
+            className="h-[42px] px-6 border border-red-600 rounded-[20px] font-['Poppins'] font-medium text-[14px] text-red-600 dark:hover:bg-red-500/10 light:hover:bg-[#fde8e8] transition-colors"
           >
             Cancel
           </button>
           <button
             onClick={handleNext}
             disabled={slots.length === 0}
-            className="h-[42px] px-8 bg-[#003566] rounded-[20px] font-['Poppins'] font-medium text-[14px] text-white hover:bg-[#00284d] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="h-[42px] px-8 bg-blue-600 rounded-[20px] font-['Poppins'] font-medium text-[14px] text-white dark:hover:bg-blue-700 light:hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             Next
           </button>
@@ -838,29 +838,29 @@ function CreateSessionDetailsModal({ title = 'Create Session', initialFee = '', 
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-      <div className="bg-white rounded-[20px] shadow-[0px_4px_50px_5px_rgba(0,0,0,0.1)] w-full max-w-[642px] p-8 flex flex-col gap-4">
+      <div className="dark:bg-[#2b2c2f] light:bg-white rounded-[20px] shadow-[0px_4px_50px_5px_rgba(0,0,0,0.1)] w-full max-w-[642px] p-8 flex flex-col gap-4">
 
         {/* Header */}
         <div className="flex flex-col gap-[5px] w-full">
           <div className="flex items-center justify-between w-full">
-            <button onClick={onBack} className="font-['Poppins'] text-[16px] text-black hover:text-[#003566] transition-colors">
+            <button onClick={onBack} className="font-['Poppins'] text-[16px] dark:text-white light:text-black dark:hover:text-blue-400 light:hover:text-blue-600 transition-colors">
               &lt;Back
             </button>
             <button onClick={onClose} className="hover:opacity-60 transition-opacity">
               <svg fill="none" viewBox="0 0 25 25" className="w-[30px] h-[30px]">
                 <path d="M16.6875 8.25L8.25 16.6875M8.25 8.25L16.6875 16.6875"
-                  stroke="black" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5"/>
+                  stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5"/>
                 <path d="M12.4688 24.1875C18.9408 24.1875 24.1875 18.9408 24.1875 12.4688C24.1875 5.99666 18.9408 0.75 12.4688 0.75C5.99666 0.75 0.75 5.99666 0.75 12.4688C0.75 18.9408 5.99666 24.1875 12.4688 24.1875Z"
-                  stroke="black" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5"/>
+                  stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5"/>
               </svg>
             </button>
           </div>
-          <p className="font-['Poppins'] font-semibold text-[24px] text-black">{title}</p>
+          <p className="font-['Poppins'] font-semibold text-[24px] dark:text-white light:text-black">{title}</p>
         </div>
 
         {/* Fees per hour */}
         <div className="flex flex-col gap-[10px] w-full">
-          <label className="font-['Poppins'] text-[16px] text-black">Fees per hour</label>
+          <label className="font-['Poppins'] text-[16px] dark:text-white light:text-black">Fees per hour</label>
           <div className="h-[39px] rounded-[10px] w-full border border-[rgba(0,0,0,0.4)] flex items-center gap-[10px] px-[10px]">
             <svg fill="none" viewBox="0 0 24 24" className="w-6 h-6 shrink-0">
               <path d="M17.12 9.88C16.5577 9.31774 15.7952 9.00187 15 9.00187C14.2048 9.00187 13.4423 9.31774 12.88 9.88C12.3177 10.4423 12.0019 11.2048 12.0019 12C12.0019 12.7952 12.3177 13.5577 12.88 14.12C13.1584 14.3984 13.4889 14.6192 13.8527 14.7699C14.2164 14.9206 14.6063 14.9981 15 14.9981C15.3937 14.9981 15.7836 14.9206 16.1473 14.7699C16.5111 14.6192 16.8416 14.3984 17.12 14.12C17.3984 13.8416 17.6192 13.5111 17.7699 13.1473C17.9206 12.7836 17.9981 12.3937 17.9981 12C17.9981 11.6063 17.9206 11.2164 17.7699 10.8527C17.6192 10.4889 17.3984 10.1584 17.12 9.88ZM7 6V18H23V6H7ZM21 14C20.47 14 19.96 14.21 19.59 14.59C19.21 14.96 19 15.47 19 16H11C11 15.47 10.79 14.96 10.41 14.59C10.04 14.21 9.53 14 9 14V10C9.53 10 10.04 9.79 10.41 9.41C10.79 9.04 11 8.53 11 8H19C19 8.53 19.21 9.04 19.59 9.41C19.96 9.79 20.47 10 21 10V14ZM5 8H3C2.45 8 2 7.55 2 7C2 6.45 2.45 6 3 6H5V8ZM5 13H2C1.45 13 1 12.55 1 12C1 11.45 1.45 11 2 11H5V13ZM5 18H1C0.448 18 0 17.55 0 17C0 16.45 0.448 16 1 16H5V18Z" fill="black"/>
@@ -870,7 +870,7 @@ function CreateSessionDetailsModal({ title = 'Create Session', initialFee = '', 
               value={fee}
               onChange={e => setFee(e.target.value)}
               placeholder="Enter fees per hour"
-              className="flex-1 bg-transparent font-['Poppins'] text-[14px] text-[rgba(0,0,0,0.7)] placeholder:text-[rgba(0,0,0,0.4)] outline-none"
+              className="flex-1 bg-transparent font-['Poppins'] text-[14px] dark:text-white dark:placeholder:text-white/40 light:text-[rgba(0,0,0,0.7)] light:placeholder:text-[rgba(0,0,0,0.4)] outline-none"
             />
           </div>
         </div>
@@ -878,8 +878,8 @@ function CreateSessionDetailsModal({ title = 'Create Session', initialFee = '', 
         {/* Payment Mode */}
         <div className="flex flex-col gap-[10px] w-full">
           <div>
-            <p className="font-['Poppins'] text-[16px] text-black">Select your preferred payment mode</p>
-            <p className="font-['Poppins'] text-[12px] text-[rgba(0,0,0,0.8)]">Choose how you'd like to receive your payment.</p>
+            <p className="font-['Poppins'] text-[16px] dark:text-white light:text-black">Select your preferred payment mode</p>
+            <p className="font-['Poppins'] text-[12px] dark:text-white/80 light:text-[rgba(0,0,0,0.8)]">Choose how you'd like to receive your payment.</p>
           </div>
           <div className="flex gap-4 w-full">
             {paymentOptions.map(opt => {
@@ -888,12 +888,12 @@ function CreateSessionDetailsModal({ title = 'Create Session', initialFee = '', 
                 <button
                   key={opt.id}
                   onClick={() => setPaymentMode(opt.id as 'upi' | 'bank')}
-                  className={`flex-1 flex items-center gap-2 px-4 py-[10px] rounded-[5px] border border-[rgba(0,0,0,0.6)] transition-colors ${active ? 'bg-white' : 'bg-white hover:bg-gray-50'}`}
+                  className={`flex-1 flex items-center gap-2 px-4 py-[10px] rounded-[5px] border dark:border-white/20 light:border-[rgba(0,0,0,0.6)] transition-colors ${active ? 'dark:bg-blue-600/20 light:bg-blue-50' : 'dark:bg-[#3a3b3f] dark:hover:bg-[#444649] light:bg-white light:hover:bg-gray-50'}`}
                 >
                   <svg viewBox="0 0 20 20" className="w-5 h-5 shrink-0">
-                    <circle cx="10" cy="10" r="10" fill={active ? '#003566' : '#D9D9D9'} />
+                    <circle cx="10" cy="10" r="10" fill={active ? '#2563eb' : '#D9D9D9'} />
                   </svg>
-                  <span className={`font-['Poppins'] text-[16px] ${active ? 'text-[rgba(0,0,0,0.7)]' : 'text-[rgba(0,0,0,0.6)]'}`}>{opt.label}</span>
+                  <span className={`font-['Poppins'] text-[16px] ${active ? 'dark:text-blue-400 light:text-blue-600' : 'dark:text-white/60 light:text-[rgba(0,0,0,0.6)]'}`}>{opt.label}</span>
                 </button>
               );
             })}
@@ -902,7 +902,7 @@ function CreateSessionDetailsModal({ title = 'Create Session', initialFee = '', 
 
         {/* Max session hours */}
         <div className="flex flex-col gap-[10px] w-full">
-          <label className="font-['Poppins'] text-[16px] text-black">Max. no. of session time(in hrs)</label>
+          <label className="font-['Poppins'] text-[16px] dark:text-white light:text-black">Max. no. of session time(in hrs)</label>
           <div className="flex gap-4">
             {[1, 2, 3].map(h => {
               const active = sessionHours === h;
@@ -910,26 +910,26 @@ function CreateSessionDetailsModal({ title = 'Create Session', initialFee = '', 
                 <button
                   key={h}
                   onClick={() => setSessionHours(h)}
-                  className={`flex items-center gap-2 px-4 py-[10px] rounded-[5px] border border-[rgba(0,0,0,0.6)] transition-colors ${active ? 'bg-[#dff0ff]' : 'bg-white hover:bg-gray-50'}`}
+                  className={`flex items-center gap-2 px-4 py-[10px] rounded-[5px] border dark:border-white/20 light:border-[rgba(0,0,0,0.6)] transition-colors ${active ? 'dark:bg-blue-600/20 light:bg-[#dff0ff]' : 'dark:bg-[#3a3b3f] dark:hover:bg-[#444649] light:bg-white light:hover:bg-gray-50'}`}
                 >
                   <svg viewBox="0 0 20 20" className="w-5 h-5 shrink-0">
-                    <circle cx="10" cy="10" r="10" fill={active ? '#003566' : '#D9D9D9'} />
+                    <circle cx="10" cy="10" r="10" fill={active ? '#2563eb' : '#D9D9D9'} />
                   </svg>
-                  <span className={`font-['Poppins'] text-[16px] ${active ? 'text-black' : 'text-[rgba(0,0,0,0.6)]'}`}>{h}</span>
+                  <span className={`font-['Poppins'] text-[16px] ${active ? 'dark:text-blue-400 light:text-black' : 'dark:text-white/60 light:text-[rgba(0,0,0,0.6)]'}`}>{h}</span>
                 </button>
               );
             })}
           </div>
         </div>
 
-        {error && <p className="font-['Poppins'] text-[13px] text-[#cc3636] -mt-2">{error}</p>}
+        {error && <p className="font-['Poppins'] text-[13px] text-red-600 -mt-2">{error}</p>}
 
         {/* Footer */}
         <div className="flex items-center justify-end gap-4 w-full pt-2">
-          <button onClick={onClose} className="h-[42px] px-6 border border-[#cc3636] rounded-[20px] font-['Poppins'] font-medium text-[14px] text-[#cc3636] hover:bg-[#fde8e8] transition-colors">
+          <button onClick={onClose} className="h-[42px] px-6 border border-red-600 rounded-[20px] font-['Poppins'] font-medium text-[14px] text-red-600 dark:hover:bg-red-500/10 light:hover:bg-[#fde8e8] transition-colors">
             Cancel
           </button>
-          <button onClick={handlePost} className="h-[42px] px-6 bg-[#003566] rounded-[20px] font-['Poppins'] font-medium text-[14px] text-white hover:bg-[#00284d] transition-colors">
+          <button onClick={handlePost} className="h-[42px] px-6 bg-blue-600 rounded-[20px] font-['Poppins'] font-medium text-[14px] text-white dark:hover:bg-blue-700 light:hover:bg-blue-700 transition-colors">
             Post Session
           </button>
         </div>
@@ -949,7 +949,7 @@ function SuccessToast({ onClose }: { onClose: () => void }) {
   }, [onClose]);
 
   return (
-    <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-[60] bg-white rounded-[20px] shadow-[0px_4px_50px_5px_rgba(0,0,0,0.1)] flex items-center gap-6 px-8 py-5" style={{ minWidth: 380 }}>
+    <div className="fixed bottom-4 sm:bottom-8 left-1/2 -translate-x-1/2 z-[60] dark:bg-[#2b2c2f] light:bg-white rounded-[20px] shadow-[0px_4px_50px_5px_rgba(0,0,0,0.1)] flex items-center gap-4 sm:gap-6 px-4 sm:px-8 py-3 sm:py-5 w-[calc(100%-2rem)] sm:w-auto" style={{ minWidth: window.innerWidth < 640 ? undefined : 380 }}>
       <svg viewBox="0 0 55 52.6395" className="w-[55px] h-[52px] shrink-0">
         <path d="M55 26.3197C55 29.1171 51.4972 31.3267 50.6777 33.8509C49.8282 36.4671 51.3338 40.3079 49.749 42.4855C48.1484 44.6848 44.0196 44.4321 41.8202 46.0328C39.6426 47.6175 38.616 51.6311 35.9999 52.4805C33.4757 53.3001 30.2974 50.6833 27.5 50.6833C24.7026 50.6833 21.5244 53.3001 19.0002 52.4805C16.384 51.6311 15.3574 47.6175 13.1798 46.0328C10.9805 44.4321 6.85163 44.6849 5.25101 42.4856C3.66623 40.308 5.17175 36.4671 4.32237 33.851C3.50278 31.3268 0 29.1171 0 26.3197C0 23.5223 3.50278 21.3127 4.32237 18.7885C5.17182 16.1723 3.66629 12.3315 5.25108 10.1539C6.8517 7.95456 10.9805 8.20727 13.1799 6.60672C15.3574 5.02193 16.3841 1.0084 19.0002 0.15894C21.5244 -0.660647 24.7026 1.9562 27.5 1.9562C30.2974 1.9562 33.4757 -0.660647 35.9999 0.15894C38.616 1.0084 39.6427 5.02193 41.8203 6.60672C44.0196 8.20734 48.1484 7.95457 49.7491 10.154C51.3338 12.3315 49.8283 16.1724 50.6777 18.7885C51.4973 21.3126 55 23.5223 55 26.3197Z" fill="#70AF53"/>
         <path d="M23.3919 39.2567L13.569 30.3301L17.137 26.4037L22.8179 31.5662L36.1697 15.1951L40.2812 18.5484L23.3919 39.2567Z" fill="white"/>
@@ -1164,40 +1164,40 @@ function CreateSessionView({ stats, loadingStats, mentorName }: CreateSessionVie
           <p className="font-['Poppins'] text-[14px] text-[rgba(0,0,0,0.6)]">Define your session details and get ready to teach.</p>
 
           <div className="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-3 max-w-[760px]">
-            <div className="bg-white border border-[rgba(0,0,0,0.08)] rounded-[12px] px-4 py-3">
-              <p className="font-['Poppins'] text-[12px] text-[rgba(0,0,0,0.6)]">Total Sessions</p>
-              <p className="font-['Poppins'] font-semibold text-[20px] text-[#003566]">
+            <div className="dark:bg-blue-600/10 dark:border-blue-600/20 light:bg-blue-50 light:border-blue-200 border rounded-[12px] px-4 py-3">
+              <p className="font-['Poppins'] text-[12px] dark:text-white/60 light:text-[rgba(0,0,0,0.6)]">Total Sessions</p>
+              <p className="font-['Poppins'] font-semibold text-[20px] dark:text-blue-400 light:text-blue-600">
                 {loadingStats ? '--' : stats.totalSessions}
               </p>
-              <p className="font-['Poppins'] text-[11px] text-[rgba(0,0,0,0.45)]">
+              <p className="font-['Poppins'] text-[11px] dark:text-white/45 light:text-[rgba(0,0,0,0.45)]">
                 {loadingStats ? 'Loading...' : `${stats.completedSessions} completed`}
               </p>
             </div>
 
-            <div className="bg-white border border-[rgba(0,0,0,0.08)] rounded-[12px] px-4 py-3">
-              <p className="font-['Poppins'] text-[12px] text-[rgba(0,0,0,0.6)]">Total Earnings</p>
-              <p className="font-['Poppins'] font-semibold text-[20px] text-[#003566]">
+            <div className="dark:bg-orange-600/10 dark:border-orange-600/20 light:bg-orange-50 light:border-orange-200 border rounded-[12px] px-4 py-3">
+              <p className="font-['Poppins'] text-[12px] dark:text-white/60 light:text-[rgba(0,0,0,0.6)]">Total Earnings</p>
+              <p className="font-['Poppins'] font-semibold text-[20px] dark:text-orange-400 light:text-orange-600">
                 {loadingStats ? '--' : formatInr(stats.totalEarnings)}
               </p>
-              <p className="font-['Poppins'] text-[11px] text-[rgba(0,0,0,0.45)]">From completed paid sessions</p>
+              <p className="font-['Poppins'] text-[11px] dark:text-white/45 light:text-[rgba(0,0,0,0.45)]">From completed paid sessions</p>
             </div>
 
-            <div className="bg-white border border-[rgba(0,0,0,0.08)] rounded-[12px] px-4 py-3">
-              <p className="font-['Poppins'] text-[12px] text-[rgba(0,0,0,0.6)]">Average Rating</p>
-              <p className="font-['Poppins'] font-semibold text-[20px] text-[#003566]">
+            <div className="dark:bg-green-600/10 dark:border-green-600/20 light:bg-green-50 light:border-green-200 border rounded-[12px] px-4 py-3">
+              <p className="font-['Poppins'] text-[12px] dark:text-white/60 light:text-[rgba(0,0,0,0.6)]">Average Rating</p>
+              <p className="font-['Poppins'] font-semibold text-[20px] dark:text-green-400 light:text-green-600">
                 {loadingStats ? '--' : formatRating(stats.averageRating)}
               </p>
-              <p className="font-['Poppins'] text-[11px] text-[rgba(0,0,0,0.45)]">Live mentor profile score</p>
+              <p className="font-['Poppins'] text-[11px] dark:text-white/45 light:text-[rgba(0,0,0,0.45)]">Live mentor profile score</p>
             </div>
           </div>
         </div>
         <button
           onClick={() => setShowCreateStep1(true)}
           disabled={savingSession}
-          className="w-[49px] h-[49px] bg-[#003566] rounded-[12px] flex items-center justify-center hover:bg-[#00284d] transition-colors shrink-0 disabled:cursor-not-allowed disabled:opacity-60"
+          className="w-[49px] h-[49px] bg-blue-600 rounded-[12px] flex items-center justify-center dark:hover:bg-blue-700 light:hover:bg-blue-700 transition-colors shrink-0 disabled:cursor-not-allowed disabled:opacity-60"
         >
           <svg fill="none" viewBox="0 0 49 49" className="w-full h-full">
-            <rect fill="#003566" height="49" rx="12" width="49" />
+            <rect fill="currentColor" height="49" rx="12" width="49" />
             <path d={svgPaths.p36014500} fill="white" />
           </svg>
         </button>
@@ -1465,7 +1465,7 @@ function SessionRequestsView() {
       </div>
 
       {/* Filter bar */}
-      <div className="bg-white rounded-[20px] shadow-[0px_4px_50px_5px_rgba(0,0,0,0.1)] flex items-center justify-between px-6 py-[10px]">
+      <div className="dark:bg-[#2b2c2f] light:bg-white rounded-[20px] shadow-[0px_4px_50px_5px_rgba(0,0,0,0.1)] flex items-center justify-between px-3 sm:px-6 py-2 sm:py-[10px] overflow-x-auto scrollbar-hide">
         <div className="flex items-center gap-4">
           <p className="font-['Poppins'] font-medium text-[12px] text-black shrink-0">Filter By</p>
           <div className="bg-[#f3f4f6] rounded-[20px] h-[50px] flex items-center px-[6px]">
@@ -1474,11 +1474,11 @@ function SessionRequestsView() {
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
                 className={`h-[42px] px-6 rounded-[20px] font-['Poppins'] font-medium text-[12px] transition-colors whitespace-nowrap flex items-center gap-1.5
-                  ${activeTab === tab.id ? 'bg-white text-black shadow-sm' : 'text-[rgba(0,0,0,0.8)] hover:text-black'}`}
+                  ${activeTab === tab.id ? 'dark:bg-[#3a3b3f] dark:text-white light:bg-white light:text-black dark:shadow-sm light:shadow-sm' : 'dark:text-white/80 dark:hover:text-white light:text-[rgba(0,0,0,0.8)] light:hover:text-black'}`}
               >
                 {tab.label}
                 {tab.id === 'requests' && requests.filter(r => r.status === 'pending').length > 0 && (
-                  <span className="bg-[#003566] text-white text-[10px] rounded-full w-4 h-4 flex items-center justify-center">
+                  <span className="bg-blue-600 text-white text-[10px] rounded-full w-4 h-4 flex items-center justify-center">
                     {requests.filter(r => r.status === 'pending').length}
                   </span>
                 )}
@@ -1495,7 +1495,7 @@ function SessionRequestsView() {
       </div>
 
       {/* Table */}
-      <div className="bg-white rounded-[20px] shadow-[0px_4px_50px_0px_rgba(0,0,0,0.1)] overflow-hidden">
+      <div className="dark:bg-[#2b2c2f] light:bg-white rounded-[20px] shadow-[0px_4px_50px_0px_rgba(0,0,0,0.1)] overflow-hidden w-full">
 
         {/* Header row — 5-column layout for Postponed, 4-column for all others */}
         <div className="bg-[#c9e5ff] h-[62px] flex items-center px-6">
@@ -1555,7 +1555,7 @@ function SessionRequestsView() {
           visibleRows.map((req, idx) => (
             <div
               key={req.id}
-              className={`bg-white h-[62px] flex items-center px-6 ${idx < visibleRows.length - 1 ? 'border-b border-[rgba(0,0,0,0.15)]' : ''}`}
+              className={`dark:bg-[#3a3b3f] dark:text-white dark:border-white/5 light:bg-white light:text-black light:border-[rgba(0,0,0,0.15)] h-[50px] sm:h-[62px] flex items-center px-3 sm:px-6 ${idx < visibleRows.length - 1 ? 'border-b' : ''}`}
             >
               {activeTab === 'postponed' ? (
                 /* ── Postponed: 5-column layout ── */
@@ -1575,7 +1575,7 @@ function SessionRequestsView() {
                     </p>
                   </div>
                   <div className="flex-1 flex justify-center">
-                    <span className="font-['Poppins'] font-medium text-[12px] text-[#003566]">Postponed</span>
+                    <span className="font-['Poppins'] font-medium text-[12px] text-blue-600 dark:text-blue-400">Postponed</span>
                   </div>
                 </>
               ) : (
@@ -1628,14 +1628,14 @@ function SessionRequestsView() {
                   <div className="flex-1 flex justify-center">
                     {req.canJoin ? (
                       // Blue — ready to join (within 10 min of session time)
-                      <button className="bg-[#c9e5ff] flex items-center justify-center gap-1 px-4 py-1 rounded-[20px] hover:bg-[#aad6ff] transition-colors">
-                        <span className="font-['Poppins'] font-medium text-[12px] text-[#003566]">Join Session</span>
-                        <ArrowRightIcon color="#003566" opacity={1} />
+                      <button className="bg-blue-100 dark:bg-blue-900 flex items-center justify-center gap-1 px-4 py-1 rounded-[20px] hover:bg-blue-200 dark:hover:bg-blue-800 transition-colors">
+                        <span className="font-['Poppins'] font-medium text-[12px] text-blue-600 dark:text-blue-400">Join Session</span>
+                        <ArrowRightIcon color="rgb(37, 99, 235)" opacity={1} />
                       </button>
                     ) : (
                       // Gray — not yet within 10 min of session time
-                      <button disabled className="bg-[#c8c8c8] flex items-center justify-center gap-1 px-4 py-1 rounded-[20px] cursor-not-allowed">
-                        <span className="font-['Poppins'] font-medium text-[12px] text-[rgba(0,0,0,0.6)]">Join Session</span>
+                      <button disabled className="bg-gray-300 dark:bg-gray-600 flex items-center justify-center gap-1 px-4 py-1 rounded-[20px] cursor-not-allowed">
+                        <span className="font-['Poppins'] font-medium text-[12px] text-[rgba(0,0,0,0.6)] dark:text-[rgba(255,255,255,0.6)]">Join Session</span>
                         <ArrowRightIcon color="black" opacity={0.6} />
                       </button>
                     )}
@@ -1730,18 +1730,18 @@ function CreateStudyRoomView() {
       <div className="flex flex-col gap-6">
         <PageHeader />
         <div className="flex flex-col items-center justify-center py-20 gap-4 text-center">
-          <div className="w-[80px] h-[80px] bg-[#c9e5ff] rounded-full flex items-center justify-center">
-            <svg fill="none" viewBox="0 0 24 24" className="w-9 h-9" stroke="#003566" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+          <div className="w-[80px] h-[80px] bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center">
+            <svg fill="none" viewBox="0 0 24 24" className="w-9 h-9" stroke="rgb(37, 99, 235)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <path d="M20 6L9 17l-5-5" />
             </svg>
           </div>
           <p className="font-['Poppins'] font-medium text-[20px] text-black">Room Launched!</p>
           <p className="font-['Poppins'] text-[14px] text-[rgba(0,0,0,0.5)]">
-            Your study room <span className="text-[#003566] font-medium">"{roomName || 'Untitled Room'}"</span> is now live.
+            Your study room <span className="text-blue-600 dark:text-blue-400 font-medium">"{roomName || 'Untitled Room'}"</span> is now live.
           </p>
           <button
             onClick={handleReset}
-            className="mt-2 font-['Poppins'] font-medium text-[14px] text-[#003566] underline hover:opacity-70 transition-opacity"
+            className="mt-2 font-['Poppins'] font-medium text-[14px] text-blue-600 dark:text-blue-400 underline hover:opacity-70 transition-opacity"
           >
             Create another room
           </button>
@@ -1756,12 +1756,12 @@ function CreateStudyRoomView() {
       <div className="flex flex-col gap-6">
         <PageHeader />
         <div className="flex justify-center">
-          <div className="bg-white rounded-[20px] shadow-[0px_4px_50px_5px_rgba(0,0,0,0.1)] p-6 w-full max-w-[515px] flex flex-col gap-6">
+          <div className="dark:bg-[#2b2c2f] light:bg-white rounded-[20px] shadow-[0px_4px_50px_5px_rgba(0,0,0,0.1)] p-4 sm:p-6 w-full max-w-[515px] flex flex-col gap-6">
             {/* Back + title inside card */}
             <div className="flex flex-col gap-[5px]">
               <button
                 onClick={() => setStep('form')}
-                className="font-['Poppins'] text-[16px] text-black text-left hover:opacity-60 transition-opacity"
+                className="font-['Poppins'] text-[16px] dark:text-white light:text-black text-left hover:opacity-60 transition-opacity"
               >
                 &lt;Back
               </button>
@@ -1791,7 +1791,7 @@ function CreateStudyRoomView() {
               <p className="font-['Poppins'] text-[16px] text-black">Join Link</p>
               <div className="h-[39px] rounded-[10px] border border-[rgba(0,0,0,0.4)] flex items-center gap-2.5 px-2.5">
                 <Link2 className="w-[24px] h-[24px] shrink-0 text-black" strokeWidth={1.6} />
-                <p className="font-['Poppins'] font-medium text-[14px] text-[#003566]">{joinLink}</p>
+                <p className="font-['Poppins'] font-medium text-[14px] text-blue-600 dark:text-blue-400">{joinLink}</p>
               </div>
             </div>
 
@@ -1799,7 +1799,7 @@ function CreateStudyRoomView() {
             <div className="flex justify-end">
               <button
                 onClick={handleCopyLink}
-                className="bg-[#003566] text-white font-['Poppins'] font-medium text-[14px] h-[42px] px-8 rounded-[20px] hover:bg-[#00284d] transition-colors"
+                className="bg-blue-600 text-white font-['Poppins'] font-medium text-[14px] h-[42px] px-8 rounded-[20px] dark:hover:bg-blue-700 light:hover:bg-blue-700 transition-colors"
               >
                 {copied ? 'Copied!' : 'Copy Link'}
               </button>
@@ -1815,13 +1815,13 @@ function CreateStudyRoomView() {
     <div className="flex flex-col gap-6">
       <PageHeader />
       <div className="flex justify-center">
-        <div className="bg-white rounded-[20px] shadow-[0px_4px_50px_5px_rgba(0,0,0,0.1)] p-6 w-full max-w-[515px] flex flex-col gap-6">
+        <div className="dark:bg-[#2b2c2f] light:bg-white rounded-[20px] shadow-[0px_4px_50px_5px_rgba(0,0,0,0.1)] p-4 sm:p-6 w-full max-w-[515px] flex flex-col gap-6">
 
           {/* Room Name */}
           <div className="flex flex-col gap-2.5">
-            <p className="font-['Poppins'] text-[16px] text-black">Room Name</p>
-            <div className="h-[39px] rounded-[10px] border border-[rgba(0,0,0,0.4)] flex items-center gap-2.5 px-2.5">
-              <Building2 className="w-[24px] h-[24px] shrink-0 text-[rgba(0,0,0,0.6)]" strokeWidth={1.4} />
+            <p className="font-['Poppins'] text-[16px] dark:text-white light:text-black">Room Name</p>
+            <div className="h-[39px] rounded-[10px] border dark:border-white/10 light:border-[rgba(0,0,0,0.4)] flex items-center gap-2.5 px-2.5 dark:bg-[#3a3b3f] light:bg-white">
+              <Building2 className="w-[24px] h-[24px] shrink-0 dark:text-white/60 light:text-[rgba(0,0,0,0.6)]" strokeWidth={1.4} />
               <input
                 value={roomName}
                 onChange={e => setRoomName(e.target.value)}
@@ -1855,9 +1855,9 @@ function CreateStudyRoomView() {
                 max="50"
                 value={maxParticipants}
                 onChange={(e) => setMaxParticipants(parseInt(e.target.value))}
-                className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-[#003566]"
+                className="flex-1 h-2 bg-gray-200 dark:bg-gray-600 rounded-lg appearance-none cursor-pointer accent-blue-600"
               />
-              <div className="bg-[#003566] text-white rnded-[8px] px-3 py-1.5 min-w-[50px] text-center font-['Poppins'] text-[14px] font-medium">
+              <div className="bg-blue-600 dark:bg-blue-700 text-white rounded-[8px] px-3 py-1.5 min-w-[50px] text-center font-['Poppins'] text-[14px] font-medium">
                 {maxParticipants}
               </div>
             </div>
@@ -1912,13 +1912,13 @@ function CreateStudyRoomView() {
           <div className="flex gap-6 items-center">
             <button
               onClick={() => setStep('share')}
-              className="flex-1 h-[42px] rounded-[20px] border-2 border-[#003566] text-[#003566] font-['Poppins'] font-medium text-[14px] hover:bg-[#003566] hover:text-white transition-colors"
+              className="flex-1 h-[42px] rounded-[20px] border-2 border-blue-600 dark:border-blue-500 text-blue-600 dark:text-blue-400 font-['Poppins'] font-medium text-[14px] dark:hover:bg-blue-600 dark:hover:text-white light:hover:bg-blue-600 light:hover:text-white transition-colors"
             >
               Share Room
             </button>
             <button
               onClick={handleLaunch}
-              className="flex-1 h-[42px] rounded-[20px] bg-[#003566] text-white font-['Poppins'] font-medium text-[14px] hover:bg-[#00284d] transition-colors"
+              className="flex-1 h-[42px] rounded-[20px] bg-blue-600 text-white font-['Poppins'] font-medium text-[14px] dark:hover:bg-blue-700 light:hover:bg-blue-700 transition-colors"
             >
               Launch Room
             </button>
@@ -2157,7 +2157,7 @@ function EmotionalWellnessView() {
         {/* Navy send button */}
         <button
           onClick={handleMoodSend}
-          className="bg-[#003566] rounded-[50px] size-[54px] flex items-center justify-center shrink-0 hover:bg-[#004580] transition-colors"
+          className="bg-blue-600 rounded-[50px] size-[54px] flex items-center justify-center shrink-0 dark:hover:bg-blue-700 light:hover:bg-blue-700 transition-colors"
           title="Send"
         >
           {/* Up-arrow send icon (white) */}
@@ -2192,18 +2192,18 @@ function EmotionalWellnessView() {
             <RobotGreeting />
           </div>
           {/* "Ask me anything" card — matches Figma Frame14 */}
-          <div className="bg-white rounded-[12px] shadow-[0px_4px_60px_5px_rgba(0,0,0,0.15)] px-10 py-9 flex flex-col items-center gap-6 shrink-0">
-            <p className="font-['Poppins'] font-medium text-[24px] text-[rgba(0,0,0,0.6)]">Ask me anything</p>
+          <div className="dark:bg-[#3a3b3f] light:bg-white rounded-[12px] shadow-[0px_4px_60px_5px_rgba(0,0,0,0.15)] px-6 sm:px-10 py-6 sm:py-9 flex flex-col items-center gap-6 shrink-0">
+            <p className="font-['Poppins'] font-medium text-[20px] sm:text-[24px] dark:text-white/60 light:text-[rgba(0,0,0,0.6)]">Ask me anything</p>
             {/* Large mic button — white circle with shadow */}
             <button
               onClick={() => setMoodChatState('welcome')}
-              className="bg-white rounded-[100px] shadow-[0px_4px_60px_0px_rgba(0,0,0,0.1)] size-[105px] flex items-center justify-center hover:shadow-[0px_6px_40px_rgba(0,53,102,0.2)] transition-shadow"
+              className="dark:bg-[#2b2c2f] light:bg-white rounded-[100px] shadow-[0px_4px_60px_0px_rgba(0,0,0,0.1)] size-[80px] sm:size-[105px] flex items-center justify-center dark:hover:shadow-[0px_6px_40px_rgba(37,99,235,0.2)] light:hover:shadow-[0px_6px_40px_rgba(0,53,102,0.2)] transition-shadow"
               title="Stop listening"
             >
               {/* Large mic SVG — viewBox matches Figma (35.6 × 46.6) */}
               <svg fill="none" viewBox="0 0 35.6189 46.6248" className="w-9 h-12">
-                <path d={svgMicLarge.p11c0ecb0} fill="#003566" />
-                <path d={svgMicLarge.p168ffd40} stroke="#003566" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" />
+                <path d={svgMicLarge.p11c0ecb0} className="dark:fill-blue-400 light:fill-[#003566]" />
+                <path d={svgMicLarge.p168ffd40} className="dark:stroke-blue-400 light:stroke-[#003566]" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" />
               </svg>
             </button>
           </div>
@@ -2219,7 +2219,7 @@ function EmotionalWellnessView() {
         <div
           ref={moodScrollRef}
           className="flex-1 min-h-0 overflow-y-auto flex flex-col gap-4 py-4 pr-1"
-          style={{ scrollbarWidth: 'thin', scrollbarColor: '#003566 rgba(0,53,102,0.2)' }}
+          style={{ scrollbarWidth: 'thin', scrollbarColor: 'rgb(37, 99, 235) rgba(37, 99, 235, 0.2)' }}
         >
           {moodMessages.map(msg => (
             <div
@@ -2242,7 +2242,7 @@ function EmotionalWellnessView() {
                 {[0, 1, 2].map(i => (
                   <div
                     key={i}
-                    className="w-2 h-2 bg-[#003566] rounded-full"
+                    className="w-2 h-2 bg-blue-600 rounded-full"
                     style={{ animation: `bounce 1s ease-in-out ${i * 0.15}s infinite` }}
                   />
                 ))}
@@ -2298,18 +2298,18 @@ function EmotionalWellnessView() {
             onClick={() => setShowPostModal(true)}
             className="relative flex gap-[6px] h-[42px] items-center px-[16px] rounded-[10px] hover:bg-[#f0f6ff] transition-colors"
           >
-            <div aria-hidden="true" className="absolute border-2 border-[#003566] border-solid inset-[-1px] pointer-events-none rounded-[11px]" />
-            <p className="font-['Poppins'] font-medium leading-normal text-[#003566] text-[14px]">Post Article</p>
+            <div aria-hidden="true" className="absolute border-2 border-blue-600 dark:border-blue-500 border-solid inset-[-1px] pointer-events-none rounded-[11px]" />
+            <p className="font-['Poppins'] font-medium leading-normal text-blue-600 dark:text-blue-400 text-[14px]">Post Article</p>
             <svg fill="none" viewBox="0 0 24 24" className="w-6 h-6 shrink-0">
-              <path d="M12 5V19M5 12H19" stroke="#003566" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" />
+              <path d="M12 5V19M5 12H19" stroke="rgb(37, 99, 235)" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" />
             </svg>
           </button>
         </div>
 
         {/* Scrollable article list */}
-        <div className="flex-1 min-h-0 overflow-y-auto flex flex-col gap-6 py-2 pr-1" style={{ scrollbarWidth: 'thin', scrollbarColor: '#003566 rgba(0,53,102,0.15)' }}>
+        <div className="flex-1 min-h-0 overflow-y-auto flex flex-col gap-6 py-2 pr-1" style={{ scrollbarWidth: 'thin', scrollbarColor: 'rgb(37, 99, 235) rgba(37, 99, 235, 0.15)' }}>
           {resArticles.map(article => (
-            <div key={article.id} className="bg-white flex flex-col gap-[24px] items-start p-[24px] rounded-[20px] shadow-[0px_4px_50px_0px_rgba(0,0,0,0.1)] shrink-0">
+            <div key={article.id} className="dark:bg-[#2b2c2f] light:bg-white flex flex-col gap-[16px] sm:gap-[24px] items-start p-[16px] sm:p-[24px] rounded-[20px] shadow-[0px_4px_50px_0px_rgba(0,0,0,0.1)] shrink-0 min-w-[280px] sm:min-w-[320px]">
               {/* Thumbnail */}
               {article.type === 'article' ? (
                 <div className="bg-[#9f9f9f] h-[127px] overflow-clip relative rounded-[20px] shrink-0 w-[249px]">
@@ -2379,14 +2379,14 @@ function EmotionalWellnessView() {
             style={{ backgroundColor: 'rgba(0,0,0,0.2)' }}
             onClick={e => { if (e.target === e.currentTarget) setShowPostModal(false); }}
           >
-            <div className="bg-white flex flex-col gap-[24px] items-end p-[24px] rounded-[20px] shadow-[0px_4px_50px_0px_rgba(0,0,0,0.1)] w-[618px]">
+            <div className="dark:bg-[#2b2c2f] light:bg-white flex flex-col gap-[24px] items-end p-[24px] rounded-[20px] shadow-[0px_4px_50px_0px_rgba(0,0,0,0.1)] w-full sm:w-[618px]">
               {/* Heading */}
-              <p className="font-['Poppins'] font-semibold leading-normal min-w-full text-[24px] text-black">Post New Article</p>
+              <p className="font-['Poppins'] font-semibold leading-normal min-w-full text-[24px] dark:text-white light:text-black">Post New Article</p>
 
               {/* Fields */}
               <div className="flex flex-col gap-[4px] w-full">
                 {/* Title input */}
-                <div className="bg-white rounded-[10px] shadow-[0px_4px_29.4px_0px_rgba(0,0,0,0.1)] w-full">
+                <div className="dark:bg-[#3a3b3f] light:bg-white rounded-[10px] shadow-[0px_4px_29.4px_0px_rgba(0,0,0,0.1)] w-full">
                   <div className="flex items-start p-[16px] w-full">
                     <input
                       value={postTitle}
@@ -2397,7 +2397,7 @@ function EmotionalWellnessView() {
                   </div>
                 </div>
                 {/* Content textarea */}
-                <div className="bg-white h-[222px] rounded-[10px] shadow-[0px_4px_29.4px_0px_rgba(0,0,0,0.1)] w-full">
+                <div className="dark:bg-[#3a3b3f] light:bg-white h-[150px] sm:h-[222px] rounded-[10px] shadow-[0px_4px_29.4px_0px_rgba(0,0,0,0.1)] w-full">
                   <div className="flex items-start p-[16px] size-full">
                     <textarea
                       value={postContent}
@@ -2467,7 +2467,7 @@ function EmotionalWellnessView() {
                 </button>
                 <button
                   onClick={handlePostArticle}
-                  className="bg-[#003566] flex flex-1 h-[42px] items-center justify-center rounded-[20px] hover:bg-[#004580] transition-colors"
+                  className="bg-blue-600 flex flex-1 h-[42px] items-center justify-center rounded-[20px] dark:hover:bg-blue-700 light:hover:bg-blue-700 transition-colors"
                 >
                   <p className="font-['Poppins'] font-medium leading-normal text-[14px] text-white">Post Article</p>
                 </button>
@@ -2554,7 +2554,7 @@ function EmotionalWellnessView() {
           style={{ scrollbarWidth: 'thin', scrollbarColor: '#003566 rgba(0,53,102,0.15)' }}
         >
           {mcPosts.map(post => (
-            <div key={post.id} className="bg-white flex flex-col gap-[24px] items-start p-[24px] rounded-[20px] shadow-[0px_4px_50px_0px_rgba(0,0,0,0.1)] shrink-0">
+            <div key={post.id} className="dark:bg-[#2b2c2f] light:bg-white flex flex-col gap-[16px] sm:gap-[24px] items-start p-[16px] sm:p-[24px] rounded-[20px] shadow-[0px_4px_50px_0px_rgba(0,0,0,0.1)] shrink-0 min-w-[280px] sm:min-w-[320px]">
               {/* Thumbnail — only for story type */}
               {post.type === 'story' && (
                 <div className="bg-[#9f9f9f] h-[127px] overflow-clip relative rounded-[20px] shrink-0 w-[249px]">
@@ -2615,9 +2615,9 @@ function EmotionalWellnessView() {
                 {/* Dropdown trigger */}
                 <button
                   onClick={() => setMcTypeDropOpen(v => !v)}
-                  className="bg-white relative rounded-[10px] shadow-[0px_4px_29.4px_0px_rgba(0,0,0,0.1)] w-full flex items-start justify-between p-[16px] hover:bg-[#fafafa] transition-colors"
+                  className="dark:bg-[#3a3b3f] light:bg-white relative rounded-[10px] shadow-[0px_4px_29.4px_0px_rgba(0,0,0,0.1)] w-full flex items-start justify-between p-[16px] dark:hover:bg-[#444649] light:hover:bg-[#fafafa] transition-colors"
                 >
-                  <p className="font-['Poppins'] font-medium leading-normal text-[16px] text-[rgba(0,0,0,0.8)]">
+                  <p className="font-['Poppins'] font-medium leading-normal text-[16px] dark:text-white light:text-[rgba(0,0,0,0.8)]">
                     {mcPostType || 'Post Type'}
                   </p>
                   <Chevron />
@@ -2625,14 +2625,14 @@ function EmotionalWellnessView() {
 
                 {/* Dropdown panel */}
                 {mcTypeDropOpen && (
-                  <div className="absolute top-[calc(100%+4px)] left-0 right-0 bg-white rounded-[10px] shadow-[0px_4px_30px_0px_rgba(0,0,0,0.1)] z-10 flex flex-col gap-[4px]">
+                  <div className="absolute top-[calc(100%+4px)] left-0 right-0 dark:bg-[#3a3b3f] light:bg-white rounded-[10px] shadow-[0px_4px_30px_0px_rgba(0,0,0,0.1)] z-10 flex flex-col gap-[4px]">
                     {(['Quote', 'Story'] as const).map(opt => (
                       <button
                         key={opt}
                         onClick={() => { setMcPostType(opt); setMcTypeDropOpen(false); setMcPostContent(''); setMcPostAttached(false); }}
-                        className="bg-white text-left px-[16px] py-[14px] rounded-[10px] hover:bg-[#f0f6ff] transition-colors"
+                        className="dark:bg-[#3a3b3f] dark:text-white dark:hover:bg-[#444649] light:bg-white light:text-[rgba(0,0,0,0.8)] light:hover:bg-[#f0f6ff] text-left px-[16px] py-[14px] rounded-[10px] transition-colors"
                       >
-                        <p className="font-['Poppins'] font-medium text-[14px] text-[rgba(0,0,0,0.8)]">{opt}</p>
+                        <p className="font-['Poppins'] font-medium text-[14px]">{opt}</p>
                       </button>
                     ))}
                   </div>
@@ -2703,7 +2703,7 @@ function EmotionalWellnessView() {
                 <button
                   onClick={mcSubmitPost}
                   disabled={!mcCanPost}
-                  className={`flex flex-1 h-[42px] items-center justify-center rounded-[20px] transition-colors ${mcCanPost ? 'bg-[#003566] hover:bg-[#004580]' : 'bg-[#a6a6a6] cursor-not-allowed'}`}
+                  className={`flex flex-1 h-[42px] items-center justify-center rounded-[20px] transition-colors ${mcCanPost ? 'bg-blue-600 dark:hover:bg-blue-700 light:hover:bg-blue-700' : 'bg-[#a6a6a6] cursor-not-allowed'}`}
                 >
                   <p className="font-['Poppins'] font-medium leading-normal text-[14px] text-white">
                     {mcPostType === 'Story' ? 'Post Story' : 'Post'}
@@ -2796,14 +2796,14 @@ const NAV_ITEMS: { id: NavItem; label: string; icon: React.ReactNode }[] = [
 
 function Sidebar({ active, onNav }: SidebarProps) {
   return (
-    <div className="flex h-full flex-col border-r border-border/70 bg-card pt-[32px] pb-6 shadow-[0px_4px_18px_-1px_rgba(0,0,0,0.08)]">
+    <div className="flex h-full flex-col border-r border-border/70 dark:bg-[#2b2c2f] light:bg-card pt-[32px] pb-6 shadow-[0px_4px_18px_-1px_rgba(0,0,0,0.08)]">
       {/* Logo */}
       <div className="px-[32px] mb-[36px]">
         <LearnovaLogo />
       </div>
 
       {/* Menu label */}
-      <p className="px-[32px] font-['Poppins'] text-[14px] text-[rgba(0,0,0,0.6)] mb-3">Main Menu</p>
+      <p className="px-[32px] font-['Poppins'] text-[14px] dark:text-white/60 light:text-[rgba(0,0,0,0.6)] mb-3">Main Menu</p>
 
       {/* Nav items */}
       <nav className="flex flex-col gap-1.5 px-[16px]">
@@ -2813,14 +2813,17 @@ function Sidebar({ active, onNav }: SidebarProps) {
             <button
               key={item.id}
               onClick={() => onNav(item.id)}
-              className={`flex items-center gap-[6px] h-[42px] px-[16px] rounded-[10px] w-full text-left transition-colors ${
-                isActive ? 'bg-primary/12' : 'hover:bg-muted'
+              type="button"
+              className={`appearance-none flex items-center gap-[6px] h-[42px] px-[16px] rounded-[10px] w-full text-left transition-colors border-0 ${
+                isActive 
+                  ? 'dark:!bg-blue-600/30 light:!bg-blue-100 dark:text-blue-300 light:text-blue-700 [&_path]:dark:fill-blue-300 [&_path]:light:fill-blue-700 [&_path]:dark:stroke-blue-300 [&_path]:light:stroke-blue-700' 
+                  : '!bg-[transparent] dark:text-white/60 light:text-gray-600 dark:hover:!bg-white/5 light:hover:!bg-gray-100 [&_path]:dark:fill-white/50 [&_path]:light:fill-gray-600 [&_path]:dark:stroke-white/50 [&_path]:light:stroke-gray-600'
               }`}
             >
-              <span className={isActive ? '[&_path]:fill-[#003566] [&_path]:stroke-[#003566]' : ''}>
+              <span>
                 {item.icon}
               </span>
-              <span className={`font-['Poppins'] text-[14px] ${isActive ? 'text-primary' : 'text-muted-foreground'}`}>
+              <span className="font-['Poppins'] text-[14px]">
                 {item.label}
               </span>
             </button>
@@ -2833,9 +2836,9 @@ function Sidebar({ active, onNav }: SidebarProps) {
 
       {/* Mentor badge */}
       <div className="px-[16px]">
-        <div className="bg-[#003566] rounded-[12px] p-4 flex flex-col gap-1">
-          <p className="font-['Poppins'] text-[12px] text-white/70">Logged in as</p>
-          <p className="font-['Poppins'] font-medium text-[14px] text-white">Mentor Account</p>
+        <div className="dark:bg-blue-600/20 light:bg-blue-100 rounded-[12px] p-4 flex flex-col gap-1 border dark:border-blue-600/30 light:border-blue-200">
+          <p className="font-['Poppins'] text-[12px] dark:text-blue-300 light:text-blue-600">Logged in as</p>
+          <p className="font-['Poppins'] font-medium text-[14px] dark:text-blue-100 light:text-blue-700">Mentor Account</p>
         </div>
       </div>
     </div>
@@ -2856,16 +2859,16 @@ function ProfileDropdown({ onLogout, onClose, onNavigate }: ProfileDropdownProps
   return (
     <>
       <div className="fixed inset-0 z-10" onClick={onClose} />
-      <div className="absolute top-[52px] right-0 z-20 w-[180px] overflow-hidden rounded-[12px] border border-border/70 bg-card py-2 shadow-[0px_4px_20px_rgba(0,0,0,0.15)]">
+      <div className="absolute top-[52px] right-0 z-20 w-[180px] overflow-hidden rounded-[12px] border border-border/70 dark:bg-[#3a3b3f] light:bg-card py-2 shadow-[0px_4px_20px_rgba(0,0,0,0.15)]">
         <button
-          className="w-full px-4 py-2.5 text-left font-['Poppins'] text-[14px] text-foreground transition-colors hover:bg-muted"
+          className="w-full px-4 py-2.5 text-left font-['Poppins'] text-[14px] dark:text-white light:text-foreground transition-colors dark:hover:bg-[#444649] light:hover:bg-muted"
           onClick={() => { onNavigate('profile'); onClose(); }}
         >
           Profile Settings
         </button>
-        <div className="my-1 border-t border-border/70" />
+        <div className="my-1 dark:border-white/10 light:border-border/70" />
         <button
-          className="w-full px-4 py-2.5 text-left font-['Poppins'] text-[14px] text-[#cc3636] hover:bg-[#fde8e8] transition-colors"
+          className="w-full px-4 py-2.5 text-left font-['Poppins'] text-[14px] text-red-600 dark:hover:bg-red-500/10 light:hover:bg-red-50 transition-colors"
           onClick={onLogout}
         >
           Log Out
@@ -3058,14 +3061,16 @@ export function MentorDashboard({ onLogout }: MentorDashboardProps) {
       )}
 
       {/* Main area */}
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <div className="flex-1 flex flex-col overflow-hidden dark:bg-[#1a1a1a] light:bg-background">
         {/* Top bar — hidden in profile view which has its own */}
-        <div className={`flex shrink-0 items-center justify-end gap-6 border-b border-border/70 bg-background/80 px-10 py-[22px] backdrop-blur-xl ${activeNav === 'profile' ? 'hidden' : ''}`}>
+        <div className={`flex shrink-0 items-center justify-end gap-6 border-b border-border/70 dark:bg-[#2b2c2f] light:bg-background px-10 py-[22px] backdrop-blur-xl ${activeNav === 'profile' ? 'hidden' : ''}`}>
           {/* Bell */}
-          <button
-            className="relative p-1 hover:opacity-70 transition-opacity"
-            onClick={handleToggleNotifications}
-          >
+          <div className="relative bg-transparent">
+            <button
+              className="appearance-none border-0 !bg-transparent relative p-1 hover:opacity-70 transition-opacity"
+              type="button"
+              onClick={handleToggleNotifications}
+            >
             <BellIcon />
             {unreadCount > 0 && (
               <div className="absolute top-0 right-0 size-4 bg-red-500 rounded-full flex items-center justify-center text-white text-xs">
@@ -3074,13 +3079,13 @@ export function MentorDashboard({ onLogout }: MentorDashboardProps) {
             )}
             {showNotifications && (
               <div
-                className="absolute top-[44px] right-0 z-30 flex w-[380px] flex-col gap-[24px] rounded-[20px] border border-border/70 bg-card p-[32px] shadow-[0px_4px_50px_5px_rgba(0,0,0,0.1)]"
+                className="absolute top-[44px] right-0 z-30 flex w-[380px] flex-col gap-[24px] rounded-[20px] border border-border/70 dark:bg-[#3a3b3f] light:bg-card p-[32px] shadow-[0px_4px_50px_5px_rgba(0,0,0,0.1)]"
                 onClick={(e) => e.stopPropagation()}
               >
                 {/* Header */}
                 <div className="flex items-center justify-between">
-                  <p className="font-['Poppins'] font-medium text-[16px] text-black">Notifications</p>
-                  <p className="font-['Poppins'] text-[12px] text-[rgba(0,0,0,0.7)] underline cursor-pointer">View All</p>
+                  <p className="font-['Poppins'] font-medium text-[16px] dark:text-white light:text-black">Notifications</p>
+                  <p className="font-['Poppins'] text-[12px] dark:text-white/70 light:text-[rgba(0,0,0,0.7)] underline cursor-pointer">View All</p>
                 </div>
 
                 {/* Scrollable body */}
@@ -3094,9 +3099,9 @@ export function MentorDashboard({ onLogout }: MentorDashboardProps) {
                           {/* You can add icons based on notification type */}
                         </div>
                         <div className="flex flex-col font-['Poppins'] text-[12px]">
-                          <p className="text-[14px] text-black leading-normal">{notification.title}</p>
-                          <p className="text-[rgba(0,0,0,0.7)] leading-normal">{notification.message}</p>
-                          <p className="text-[rgba(0,0,0,0.5)] text-xs mt-1">{new Date(notification.createdAt).toLocaleString()}</p>
+                          <p className="text-[14px] dark:text-white light:text-black leading-normal">{notification.title}</p>
+                          <p className="dark:text-white/70 light:text-[rgba(0,0,0,0.7)] leading-normal">{notification.message}</p>
+                          <p className="dark:text-white/50 light:text-[rgba(0,0,0,0.5)] text-xs mt-1">{new Date(notification.createdAt).toLocaleString()}</p>
                         </div>
                       </div>
                     ))
@@ -3104,12 +3109,14 @@ export function MentorDashboard({ onLogout }: MentorDashboardProps) {
                 </div>
               </div>
             )}
-          </button>
+            </button>
+          </div>
 
           {/* Profile */}
-          <div className="relative">
+          <div className="relative bg-transparent">
             <button
-              className="flex items-center gap-[10px] hover:opacity-80 transition-opacity"
+              type="button"
+              className="appearance-none border-0 !bg-transparent flex items-center gap-[10px] hover:opacity-80 transition-opacity"
               onClick={() => { setShowProfile(!showProfile); setShowNotifications(false); }}
             >
               <ImageWithFallback
@@ -3118,8 +3125,8 @@ export function MentorDashboard({ onLogout }: MentorDashboardProps) {
                 className="w-[38px] h-[38px] rounded-full object-cover"
               />
               <div className="flex flex-col items-start leading-tight">
-                <span className="font-['Poppins'] text-[15px] text-black">{displayName}</span>
-                <span className="font-['Poppins'] text-[11px] text-[rgba(0,0,0,0.5)]">{displayRole}</span>
+                <span className="font-['Poppins'] text-[15px] dark:text-white light:text-black">{displayName}</span>
+                <span className="font-['Poppins'] text-[11px] dark:text-white/50 light:text-[rgba(0,0,0,0.5)]">{displayRole}</span>
               </div>
             </button>
 

@@ -47,6 +47,7 @@ export function LoginPage({
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
 
   const isMentor = activeTab === 'mentor';
 
@@ -91,6 +92,17 @@ export function LoginPage({
   const onKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
       void handleLogin();
+    }
+  };
+
+  const handleGoogleSignIn = async () => {
+    setError('');
+    setIsGoogleLoading(true);
+    try {
+      await auth.signInWithGoogle();
+    } catch (e: any) {
+      setError(e.message || 'Google sign-in failed. Please try again.');
+      setIsGoogleLoading(false);
     }
   };
 
@@ -229,10 +241,12 @@ export function LoginPage({
 
         <Button
           type="button"
-          className="h-11 w-full rounded-lg !bg-blue-600 !text-white dark:!bg-blue-600 dark:!text-white dark:hover:!bg-blue-700 light:!bg-blue-600 light:!text-white light:hover:!bg-blue-700 text-base font-semibold"
+          disabled={isGoogleLoading}
+          onClick={() => void handleGoogleSignIn()}
+          className="h-11 w-full rounded-lg !bg-blue-600 !text-white dark:!bg-blue-600 dark:!text-white dark:hover:!bg-blue-700 light:!bg-blue-600 light:!text-white light:hover:!bg-blue-700 text-base font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <BookOpenText className="size-4" />
-          Continue with Google
+          {isGoogleLoading ? 'Signing in...' : 'Continue with Google'}
         </Button>
 
         <p className="text-center text-sm dark:text-slate-400 light:text-slate-600">
