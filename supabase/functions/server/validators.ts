@@ -67,9 +67,9 @@ export const redirectUrlSchema = z
   .refine(
     (url) => {
       const allowed = [
-        'https://lernova.com',
-        'https://www.lernova.com',
-        'https://app.lernova.com',
+        'https://elmorbit.co.in',
+        'https://www.elmorbit.co.in',
+        'https://app.elmorbit.co.in',
       ];
       return allowed.some(base => url.startsWith(base));
     },

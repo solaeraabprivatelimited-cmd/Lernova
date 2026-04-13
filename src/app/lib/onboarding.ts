@@ -1,7 +1,7 @@
 export type OnboardingRole = 'student' | 'mentor';
 
-const PENDING_ONBOARDING_KEY = 'learnova_onboarding_pending_v1';
-const COMPLETED_ONBOARDING_KEY = 'learnova_onboarding_completed_v1';
+const PENDING_ONBOARDING_KEY = 'elmorbit_onboarding_pending_v1';
+const COMPLETED_ONBOARDING_KEY = 'elmorbit_onboarding_completed_v1';
 
 interface PendingOnboardingState {
   role: OnboardingRole;

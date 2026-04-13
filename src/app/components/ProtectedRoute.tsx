@@ -19,7 +19,7 @@ interface ProtectedRouteProps {
 }
 
 function LoadingScreen() {
-  return <RouteLoader label="Restoring your Learnova session..." />;
+  return <RouteLoader label="Restoring your Elm Orbit session..." />;
 }
 
 function resolveHomeRoute(user: AppUser | null): string {

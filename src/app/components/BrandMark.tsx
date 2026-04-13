@@ -30,7 +30,7 @@ export function BrandMark({ light = false, className, compact = false }: BrandMa
             light ? "text-white" : "text-primary",
           )}
         >
-          Learnova
+          Elm Orbit
         </span>
       )}
     </div>

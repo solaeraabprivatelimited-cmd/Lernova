@@ -1,6 +1,6 @@
 -- ============================================================================
 -- SECURITY UPGRADE MIGRATIONS
--- For: Lernova Security Hardening Implementation
+-- For: Elm Orbit Security Hardening Implementation
 -- Run in Supabase SQL Editor or via migration tool
 -- ============================================================================
 

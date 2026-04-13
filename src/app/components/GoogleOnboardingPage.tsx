@@ -147,7 +147,7 @@ export function GoogleOnboardingPage({
               Complete your profile
             </span>
             <h2 className="max-w-md font-['DM_Serif_Display'] text-5xl leading-none text-white">
-              Welcome to Lernova
+              Welcome to Elm Orbit
             </h2>
             <p className="max-w-md text-sm leading-7 text-white/65">
               Choose your role and display name to get started with focused study tools and community support.

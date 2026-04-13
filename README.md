@@ -1,6 +1,6 @@
-# Lernova
+# Elm Orbit
 
-Lernova is a student and mentor learning platform built around focused study rooms, live collaboration, and guided support.
+Elm Orbit is a student and mentor learning platform built around focused study rooms, live collaboration, and guided support.
 
 ## What You Can Do
 
@@ -12,7 +12,7 @@ Lernova is a student and mentor learning platform built around focused study roo
 
 ## Getting Started
 
-1. Open Lernova in your browser.
+1. Open Elm Orbit in your browser.
 2. Sign up as a student or mentor.
 3. Log in to continue to your dashboard.
 4. Start a study room or book a session depending on your role.
@@ -21,11 +21,11 @@ Lernova is a student and mentor learning platform built around focused study roo
 
 ### Landing Page
 
-The landing page introduces Lernova, explains the study modes, and gives quick access to login and sign-up.
+The landing page introduces Elm Orbit, explains the study modes, and gives quick access to login and sign-up.
 
 ### Login and Sign Up
 
-Use the login and sign-up screens to enter Lernova as a student or mentor.
+Use the login and sign-up screens to enter Elm Orbit as a student or mentor.
 
 ### Student Dashboard
 
@@ -37,7 +37,7 @@ The mentor dashboard is where mentors can manage sessions, availability, student
 
 ### Room Access
 
-If you join a shared room link, Lernova opens the room experience directly after you sign in.
+If you join a shared room link, Elm Orbit opens the room experience directly after you sign in.
 
 ## Support
 
@@ -46,4 +46,3 @@ If something does not work as expected, check that you are signed in with the co
 ## Notes
 
 This README is intended for users only. It does not include developer setup or contribution instructions.
-

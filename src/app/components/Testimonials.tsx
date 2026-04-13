@@ -75,7 +75,7 @@ export function Testimonials() {
                      </div>
                      
                      <p className="font-['Poppins'] italic text-black/70 text-sm leading-relaxed">
-                        “ Learnova completely changed the way I study. My mentor guided me through every step, and the focus sessions helped me stay on track. I’ve become more confident and disciplined in my routine. “
+                        " Elm Orbit completely changed the way I study. My mentor guided me through every step, and the focus sessions helped me stay on track. I've become more confident and disciplined in my routine. "
                      </p>
                      
                      <div>

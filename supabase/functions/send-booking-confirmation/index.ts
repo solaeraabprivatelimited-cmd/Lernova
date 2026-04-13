@@ -35,7 +35,7 @@ async function sendEmail(email: string, subject: string, htmlContent: string) {
       "api-key": BREVO_API_KEY,
     },
     body: JSON.stringify({
-      sender: { name: "Lernova", email: "solaeraab@gmail.com" },
+      sender: { name: "Elm Orbit", email: "solaeraab@gmail.com" },
       to: [{ email, name: email.split("@")[0] }],
       subject,
       htmlContent,
@@ -136,15 +136,15 @@ serve(async (req) => {
               </ul>
 
               <center>
-                <a href="https://lernova.com/dashboard" class="cta-button">Go to Dashboard</a>
+                <a href="https://elmorbit.co.in/dashboard" class="cta-button">Go to Dashboard</a>
               </center>
 
               <p>If you have any questions or need to reschedule, please contact our support team.</p>
 
-              <p>Happy Learning! 🎓<br>The Lernova Team</p>
+              <p>Happy Learning! 🎓<br>The Elm Orbit Team</p>
 
               <div class="footer">
-                <p>© 2026 Lernova. All rights reserved.<br>
+                <p>© 2026 Elm Orbit. All rights reserved.<br>
                 This is an automated email, please don't reply directly.</p>
               </div>
             </div>
@@ -156,7 +156,7 @@ serve(async (req) => {
     // Send email
     const emailResult = await sendEmail(
       studentEmail,
-      `✓ Booking Confirmed with ${mentorName} - Lernova`,
+      `✓ Booking Confirmed with ${mentorName} - Elm Orbit`,
       htmlContent
     );
 

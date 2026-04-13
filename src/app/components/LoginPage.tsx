@@ -151,7 +151,7 @@ export function LoginPage({
           </div>
 
           <blockquote className="rounded-[24px] border dark:border-white/10 light:border-slate-900/20 dark:bg-white/8 light:bg-slate-900/8 px-5 py-4 text-sm leading-7 dark:text-white/70 light:text-slate-700 backdrop-blur">
-            “Lernova helped me turn irregular effort into a routine I could actually sustain.”
+            "Elm Orbit helped me turn irregular effort into a routine I could actually sustain."
           </blockquote>
         </div>
       }
@@ -192,11 +192,11 @@ export function LoginPage({
 
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <span className="text-sm font-semibold dark:text-slate-200 light:text-slate-900">Password</span>
+              <span className="text-sm font-semibold text-foreground">Password</span>
               <button
                 type="button"
                 onClick={onForgotPassword}
-                className="text-sm font-semibold dark:!bg-transparent dark:!text-blue-400 dark:hover:!text-blue-300 light:!bg-transparent light:!text-blue-600 light:hover:!text-blue-700 transition-colors"
+                className="text-sm font-semibold text-primary hover:text-primary/80 transition-colors"
               >
                 Forgot password?
               </button>
@@ -234,27 +234,27 @@ export function LoginPage({
         </AuthSubmitButton>
 
         <div className="flex items-center gap-3">
-          <div className="h-px flex-1 dark:bg-slate-700 light:bg-slate-300" />
-          <span className="text-xs font-medium uppercase tracking-wider dark:text-slate-500 light:text-slate-500">or</span>
-          <div className="h-px flex-1 dark:bg-slate-700 light:bg-slate-300" />
+          <div className="h-px flex-1 bg-border" />
+          <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">or</span>
+          <div className="h-px flex-1 bg-border" />
         </div>
 
         <Button
           type="button"
           disabled={isGoogleLoading}
           onClick={() => void handleGoogleSignIn()}
-          className="h-11 w-full rounded-lg !bg-blue-600 !text-white dark:!bg-blue-600 dark:!text-white dark:hover:!bg-blue-700 light:!bg-blue-600 light:!text-white light:hover:!bg-blue-700 text-base font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+          className="h-11 w-full rounded-xl !bg-blue-600 !text-white hover:!bg-blue-700 text-base font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <BookOpenText className="size-4" />
           {isGoogleLoading ? 'Signing in...' : 'Continue with Google'}
         </Button>
 
-        <p className="text-center text-sm dark:text-slate-400 light:text-slate-600">
+        <p className="text-center text-sm text-muted-foreground">
           Don&apos;t have an account? {' '}
           <button
             type="button"
             onClick={onSignUp}
-            className="font-semibold dark:text-blue-400 dark:hover:text-blue-300 light:text-blue-600 light:hover:text-blue-700 transition-colors"
+            className="font-semibold text-primary transition-colors hover:text-primary/80"
           >
             Create one free
           </button>

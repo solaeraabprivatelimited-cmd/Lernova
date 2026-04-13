@@ -23,10 +23,10 @@ function generateOTP(): string {
 }
 
 async function sendOtp(email: string, otp: string, name: string): Promise<void> {
-  const subject = "Verify Your Email - Lernova";
+  const subject = "Verify Your Email - Elm Orbit";
   const htmlContent = `
     <div style="font-family: Arial, sans-serif; color: #333;">
-      <h2>Welcome to Lernova, ${name}!</h2>
+      <h2>Welcome to Elm Orbit, ${name}!</h2>
       <p>Use this code to verify your email:</p>
       <div style="background: #f0f0f0; padding: 20px; border-radius: 8px; text-align: center;">
         <h1 style="letter-spacing: 4px; color: #003566;">${otp}</h1>
@@ -37,7 +37,7 @@ async function sendOtp(email: string, otp: string, name: string): Promise<void> 
   `;
 
   await sendEmail(email, subject, htmlContent, {
-    name: "Lernova",
+    name: "Elm Orbit",
     email: "onboarding@resend.dev",
   });
 }

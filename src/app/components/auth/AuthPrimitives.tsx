@@ -5,19 +5,14 @@ import { Button } from "@/app/components/ui/button";
 import { Input } from "@/app/components/ui/input";
 import { cn } from "@/app/components/ui/utils";
 
-export function AuthCard({
-  children,
-  className,
-}: {
-  children: React.ReactNode;
-  className?: string;
-}) {
+export function AuthCard({ children, className }: { children: React.ReactNode; className?: string }) {
   return (
     <div
       className={cn(
-        "rounded-2xl border shadow-xl backdrop-blur-sm sm:p-8 p-6",
-        "dark:border-slate-700/50 dark:bg-slate-800/50 dark:shadow-black/50",
-        "light:border-slate-200 light:bg-white light:shadow-slate-100",
+        "rounded-2xl border shadow-lg backdrop-blur-sm",
+        "border-border/60 bg-card/95 shadow-black/5",
+        "dark:border-border dark:bg-card dark:shadow-black/30",
+        "p-6 sm:p-8",
         className,
       )}
     >
@@ -26,19 +21,13 @@ export function AuthCard({
   );
 }
 
-export function AuthHeading({
-  title,
-  description,
-}: {
-  title: React.ReactNode;
-  description: React.ReactNode;
-}) {
+export function AuthHeading({ title, description }: { title: React.ReactNode; description: React.ReactNode }) {
   return (
-    <div className="space-y-2">
-      <h1 className="font-['DM_Serif_Display'] text-4xl leading-tight dark:text-slate-50 light:text-slate-900 sm:text-[2.65rem]">
+    <div className="space-y-1.5">
+      <h1 className="font-['DM_Serif_Display'] text-[2.4rem] leading-tight text-foreground sm:text-[2.65rem]">
         {title}
       </h1>
-      <p className="text-base leading-6 dark:text-slate-400 light:text-slate-600 sm:text-[15px]">{description}</p>
+      <p className="text-[15px] leading-relaxed text-muted-foreground">{description}</p>
     </div>
   );
 }
@@ -53,19 +42,24 @@ export function AuthSegmentedControl<T extends string>({
   options: Array<{ value: T; label: string }>;
 }) {
   return (
-    <div className="inline-flex gap-1.5 rounded-xl dark:bg-slate-700/40 light:bg-slate-100 p-1">
+    <div
+      role="tablist"
+      className="inline-flex gap-1 rounded-xl bg-muted/60 p-1 dark:bg-muted/40"
+    >
       {options.map((option) => {
         const active = option.value === value;
         return (
           <button
             key={option.value}
             type="button"
+            role="tab"
+            aria-selected={active}
             onClick={() => onChange(option.value)}
             className={cn(
-              "px-6 py-2 text-sm font-semibold rounded-lg transition-all duration-200",
+              "px-5 py-2 text-sm font-semibold rounded-lg transition-all duration-200",
               active
-                ? "!bg-blue-600 !text-white dark:!bg-blue-600 dark:!text-white dark:!shadow-lg dark:!shadow-blue-600/40 light:!bg-blue-600 light:!text-white light:!shadow-md light:!shadow-blue-600/30"
-                : "dark:text-slate-300 dark:hover:text-slate-100 light:text-slate-700 light:hover:text-slate-900",
+                ? "bg-[#003566] text-white shadow-sm dark:bg-blue-600 dark:text-white"
+                : "text-muted-foreground hover:text-foreground",
             )}
           >
             {option.label}
@@ -84,20 +78,23 @@ interface AuthFieldProps extends React.ComponentProps<typeof Input> {
 
 export const AuthField = React.forwardRef<HTMLInputElement, AuthFieldProps>(
   ({ label, icon, endAdornment, className, ...props }, ref) => (
-    <label className={label ? "space-y-2" : "space-y-0"}>
-      {label ? <span className="text-sm font-semibold dark:text-slate-200 light:text-slate-900">{label}</span> : null}
+    <label className={label ? "space-y-2 block" : "block"}>
+      {label ? (
+        <span className="text-sm font-semibold text-foreground">{label}</span>
+      ) : null}
       <span className="relative flex items-center">
         {icon ? (
-          <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 dark:text-slate-500 light:text-slate-400">
+          <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground">
             {icon}
           </span>
         ) : null}
         <Input
           ref={ref}
           className={cn(
-            "h-12 rounded-lg text-sm shadow-sm transition-all duration-200",
-            "dark:border-slate-600/60 dark:bg-slate-700/30 dark:text-slate-50 dark:placeholder:text-slate-500 dark:focus:border-blue-500 dark:focus:ring-blue-500/30",
-            "light:border-slate-300 light:bg-slate-50 light:text-slate-900 light:placeholder:text-slate-500 light:focus:border-blue-500 light:focus:ring-blue-500/20",
+            "h-12 rounded-xl text-sm shadow-sm",
+            "border-border/70 bg-input-background text-foreground placeholder:text-muted-foreground/60",
+            "focus-visible:border-[#0967bd] focus-visible:ring-[#0967bd]/20",
+            "dark:border-border dark:bg-input dark:focus-visible:border-blue-500 dark:focus-visible:ring-blue-500/20",
             icon ? "pl-11" : "pl-4",
             endAdornment ? "pr-12" : "pr-4",
             className,
@@ -111,14 +108,18 @@ export const AuthField = React.forwardRef<HTMLInputElement, AuthFieldProps>(
     </label>
   ),
 );
-
 AuthField.displayName = "AuthField";
 
 export function AuthAlert({ children }: { children: React.ReactNode }) {
   return (
-    <div className="flex items-start gap-3 rounded-lg border px-4 py-3 text-sm dark:border-red-900/50 dark:bg-red-950/40 dark:text-red-200 light:border-red-200 light:bg-red-50 light:text-red-800">
-      <AlertCircle className="mt-0.5 size-4 shrink-0" />
-      <p className="leading-6">{children}</p>
+    <div
+      role="alert"
+      className="flex items-start gap-3 rounded-xl border px-4 py-3 text-sm
+        border-destructive/30 bg-destructive/8 text-destructive
+        dark:border-destructive/40 dark:bg-destructive/10 dark:text-red-300"
+    >
+      <AlertCircle className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
+      <p className="leading-relaxed">{children}</p>
     </div>
   );
 }
@@ -132,9 +133,10 @@ export function AuthSubmitButton({
   return (
     <Button
       className={cn(
-        "h-11 w-full rounded-lg text-base font-semibold shadow-lg transition-all duration-200",
-        "!bg-blue-600 !text-white dark:!bg-blue-600 dark:!text-white dark:hover:!bg-blue-700 dark:!shadow-blue-600/50",
-        "light:!bg-blue-600 light:!text-white light:hover:!bg-blue-700 light:!shadow-blue-600/30",
+        "h-11 w-full rounded-xl text-base font-semibold shadow-md transition-all duration-200",
+        "bg-[#003566] text-white hover:bg-[#0967bd] shadow-[#003566]/20",
+        "dark:bg-blue-600 dark:text-white dark:hover:bg-blue-700 dark:shadow-blue-600/30",
+        "active:scale-[0.98]",
         className,
       )}
       {...props}
@@ -172,7 +174,10 @@ export function AuthOtpInput({
       value={value}
       onChange={(event) => onChange(event.target.value)}
       onKeyDown={onKeyDown}
-      className="size-12 rounded-2xl border border-border/70 bg-background text-center font-['DM_Serif_Display'] text-2xl text-foreground shadow-sm shadow-black/5 outline-none transition-all focus:border-primary focus:ring-4 focus:ring-primary/12 sm:size-14"
+      className="size-12 rounded-2xl border border-border/70 bg-input-background text-center
+        font-['DM_Serif_Display'] text-2xl text-foreground shadow-sm outline-none
+        transition-all focus:border-[#0967bd] focus:ring-4 focus:ring-[#0967bd]/15
+        dark:focus:border-blue-500 dark:focus:ring-blue-500/15 sm:size-14"
     />
   );
 }

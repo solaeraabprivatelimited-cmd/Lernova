@@ -1,4 +1,4 @@
-# 🔐 LERNOVA SECURITY HARDENING - MASTER GUIDE
+# 🔐 ELM ORBIT SECURITY HARDENING - MASTER GUIDE
 
 **Status:** ✅ Phase 1 Complete | Phase 2 Ready | Phase 3 Planned  
 **Date:** April 11, 2026  
@@ -36,7 +36,7 @@
 
 ### The Problem
 
-Lernova's codebase contained **14 critical security vulnerabilities** ranging from exposed API keys to weak OTP generation, putting user accounts and data at immediate risk.
+Elm Orbit's codebase contained **14 critical security vulnerabilities** ranging from exposed API keys to weak OTP generation, putting user accounts and data at immediate risk.
 
 ### The Solution
 
@@ -182,7 +182,7 @@ CORS set to accept requests from ANY origin (`origin: "*"`):
 ```bash
 # Attacker creates evil.com, victim visits while logged in
 # Victim's browser automatically includes auth token in request
-fetch("https://api.lernova.com/profile", {
+fetch("https://api.elmorbit.co.in/profile", {
   method: "PUT",
   headers: { Authorization: "Bearer <victim-token>" },
   body: JSON.stringify({ name: "Account Hacked!" })
@@ -203,9 +203,9 @@ app.use(
 
 // AFTER (SECURE)
 const allowedOrigins = [
-  "https://lernova.com",
-  "https://www.lernova.com",
-  "https://app.lernova.com",
+  "https://elmorbit.co.in",
+  "https://www.elmorbit.co.in",
+  "https://app.elmorbit.co.in",
 ];
 
 app.use(
@@ -644,7 +644,7 @@ DEBUG_MODE=false
 LOG_LEVEL=debug
 
 # CORS Allowed Origins
-ALLOWED_ORIGINS=http://localhost:5173,http://localhost:5174,https://lernova.com
+ALLOWED_ORIGINS=http://localhost:5173,http://localhost:5174,https://elmorbit.co.in
 ```
 
 ### Create `.env` (Checked into Git - template only)
@@ -659,7 +659,7 @@ DEBUG_MODE=false
 LOG_LEVEL=debug
 
 # CORS
-ALLOWED_ORIGINS=https://lernova.com,https://www.lernova.com
+ALLOWED_ORIGINS=https://elmorbit.co.in,https://www.elmorbit.co.in
 
 # Rate Limiting
 RATE_LIMIT_ENABLED=true
@@ -764,14 +764,14 @@ curl -H "X-Test: true" http://localhost:5173/api/test
 npm run deploy:staging
 
 # Wait for deployment to complete
-# Verify: https://staging.lernova.com
+# Verify: https://staging.elmorbit.co.in
 ```
 
 **Step 4: Verify Staging**
 
 ```bash
 # Check security headers
-curl -I https://staging.lernova.com | grep -E "Content-Security|X-Frame|HSTS"
+curl -I https://staging.elmorbit.co.in | grep -E "Content-Security|X-Frame|HSTS"
 
 # Expected output:
 # Content-Security-Policy: default-src 'self'...
@@ -779,7 +779,7 @@ curl -I https://staging.lernova.com | grep -E "Content-Security|X-Frame|HSTS"
 # Strict-Transport-Security: max-age=31536000...
 
 # Test login/OTP flow manually
-# - Go to https://staging.lernova.com
+# - Go to https://staging.elmorbit.co.in
 # - Click login
 # - Enter test email
 # - Verify OTP is received
@@ -801,7 +801,7 @@ npm run deploy:prod
 
 ```bash
 # Check security headers live
-curl -I https://app.lernova.com | grep -E "Content-Security|X-Frame|HSTS"
+curl -I https://app.elmorbit.co.in | grep -E "Content-Security|X-Frame|HSTS"
 
 # Test key functionality
 # - Verify login works
@@ -839,7 +839,7 @@ curl -I https://app.lernova.com | grep -E "Content-Security|X-Frame|HSTS"
 # Should reject unauthorized origin
 curl -H "Origin: https://evil.com" \
      -H "Access-Control-Request-Method: POST" \
-     -X OPTIONS https://api.lernova.com/api/test
+     -X OPTIONS https://api.elmorbit.co.in/api/test
 
 # Expected: No 'Access-Control-Allow-Origin' header or DENY response
 ```
@@ -849,7 +849,7 @@ curl -H "Origin: https://evil.com" \
 ```bash
 # Should allow first 5 OTP attempts, then return 429
 for i in {1..10}; do
-  curl -X POST https://api.lernova.com/verify-otp \
+  curl -X POST https://api.elmorbit.co.in/verify-otp \
        -d '{"email":"test@test.com","otp":"000000"}'
   echo "Request $i  ---"
 done
@@ -861,7 +861,7 @@ done
 
 ```bash
 # Should reject invalid email
-curl -X POST https://api.lernova.com/send-otp \
+curl -X POST https://api.elmorbit.co.in/send-otp \
      -d '{"email":"invalid<script>alert(1)</script>"}'
 
 # Expected: 400 Bad Request, generic error message
@@ -870,7 +870,7 @@ curl -X POST https://api.lernova.com/send-otp \
 **Test Security Headers**
 
 ```bash
-curl -I https://app.lernova.com
+curl -I https://app.elmorbit.co.in
 
 # Expected:
 # X-Frame-Options: DENY                                 ✅
@@ -896,7 +896,7 @@ npm run build  # Verify still builds
 
 ```bash
 docker run -t owasp/zap2docker-stable \
-  zap-baseline.py -t https://app.lernova.com \
+  zap-baseline.py -t https://app.elmorbit.co.in \
   -r zap-report.html
 
 # Review report.html
@@ -1110,7 +1110,7 @@ A: Check for TypeScript errors with `npx tsc --strict`. Most common: missing imp
 
 ## QUESTIONS OR ISSUES?
 
-**Contact:** security@lernova.com  
+**Contact:** security@elmorbit.co.in  
 **Last Updated:** April 11, 2026  
 **Next Review:** April 18, 2026 (Post-production validation)
 

@@ -170,7 +170,7 @@ export function CommunityView() {
   // Normalize event for display
   const normalizeEvent = (e: CommunityEvent): CommunityEvent => ({
     ...e,
-    author: e.authorName || e.author || "Learnova Team",
+    author: e.authorName || e.author || "Elm Orbit Team",
     date: e.createdAt ? new Date(e.createdAt).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" }) : (e.date || ""),
   });
 
@@ -180,7 +180,7 @@ export function CommunityView() {
       <div className="flex flex-col items-start pb-[6px] mb-[60px]">
         <p className="font-['Poppins'] font-medium text-[40px] text-black leading-normal">Community</p>
         <p className="font-['Poppins'] text-[14px] text-[rgba(0,0,0,0.6)] leading-normal">
-          Discover upcoming and recent events from the Learnova community.
+          Discover upcoming and recent events from the Elm Orbit community.
         </p>
       </div>
 

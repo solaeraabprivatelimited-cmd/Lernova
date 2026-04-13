@@ -1,8 +1,8 @@
 -- ============================================================================
--- LERNOVA DATABASE SCHEMA
+-- ELM ORBIT DATABASE SCHEMA
 -- ============================================================================
 -- Created: March 2026
--- This migration creates all core tables for the Lernova learning platform
+-- This migration creates all core tables for the Elm Orbit learning platform
 
 -- ============================================================================
 -- USERS & AUTHENTICATION
