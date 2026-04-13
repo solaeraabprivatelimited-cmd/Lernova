@@ -3,7 +3,7 @@
  * Fast, unlimited inference for educational assistance
  */
 
-const GROQ_API_KEY = process.env.VITE_GROQ_API_KEY;
+const GROQ_API_KEY = import.meta.env.VITE_GROQ_API_KEY;
 const GROQ_API_URL = 'https://api.groq.com/openai/v1/chat/completions';
 
 if (!GROQ_API_KEY) {
@@ -149,7 +149,7 @@ export async function getAiMentorResponse(
         'Authorization': `Bearer ${GROQ_API_KEY}`,
       },
       body: JSON.stringify({
-        model: 'mixtral-8x7b-32768', // Fast and powerful Groq model
+        model: 'llama-3.1-8b-instant', // Currently supported: fast, efficient, production-ready
         messages: [
           { role: 'system', content: SYSTEM_PROMPT },
           ...messages
@@ -203,7 +203,7 @@ export async function *streamAiMentorResponse(
         'Authorization': `Bearer ${GROQ_API_KEY}`,
       },
       body: JSON.stringify({
-        model: 'mixtral-8x7b-32768',
+        model: 'llama-3.1-8b-instant',
         messages: [
           { role: 'system', content: SYSTEM_PROMPT },
           ...messages
