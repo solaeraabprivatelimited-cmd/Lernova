@@ -72,19 +72,7 @@ export function GoogleOnboardingPage({
         return;
       }
 
-      // Check if email already exists in profiles table (from email-based signup)
-      const { data: existingProfiles } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('email', googleUser.email)
-        .limit(1);
-
-      if (existingProfiles && existingProfiles.length > 0) {
-        setError(`This email is already registered. Please sign in with your password instead.`);
-        setIsLoading(false);
-        return;
-      }
-
+      // Email uniqueness is already enforced by auth.users, so profiles trigger will handle it
       await auth.completeGoogleSignup(displayName.trim(), role);
       
       // Fetch updated profile

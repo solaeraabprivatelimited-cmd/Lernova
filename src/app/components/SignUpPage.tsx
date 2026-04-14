@@ -197,28 +197,7 @@ export function SignUpPage({ onSignUp, onLogin, onBack }: SignUpPageProps) {
       const supabase = getSupabaseClient();
       
       // Get current user after Google OAuth flow initiates
-      // Note: This will redirect to Google's login, so we check before that
-      // First, get any existing profile with this email if they're coming back
-      
-      // The actual email check will happen in GoogleOnboardingPage after redirect
-      // But we can add a pre-check here if needed by getting current user
-      const { data: { user: currentUser } } = await supabase.auth.getUser();
-      
-      if (currentUser?.email) {
-        // Check if email already has a profile
-        const { data: existingProfiles } = await supabase
-          .from('profiles')
-          .select('id')
-          .eq('email', currentUser.email)
-          .limit(1);
-
-        if (existingProfiles && existingProfiles.length > 0) {
-          setError('This email is already registered. Please sign in with your password instead.');
-          setIsGoogleLoading(false);
-          return;
-        }
-      }
-      
+      // Email uniqueness is enforced by auth.users, so just proceed with Google signin
       await auth.signInWithGoogle();
     } catch (e: any) {
       setError(e.message || 'Google sign-up failed. Please try again.');
