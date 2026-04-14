@@ -1,7 +1,11 @@
 import React, { useState, useRef, useEffect } from "react";
 import { toast } from "sonner";
+<<<<<<< HEAD
 import { getCurrentUser, getSupabaseClient, paymentMethods, withdrawals, profile as profileApi, isGoogleOAuthUser, auth } from '@/app/lib/api';
 import { validateUpiId, validateBankAccount } from '@/utils/payment-validation';
+=======
+import { getCurrentUser, getSupabaseClient } from '@/app/lib/api';
+>>>>>>> 0b7861d653f816432b14d75f478e1158f1bb1909
 import svgPaths from "../../../imports/svg-xt2w7tivwg";
 import svgPathsHistory from "../../../imports/svg-w70tgomgpc";
 import svgPathsPerf from "../../../imports/svg-nif9w3w5t2";
@@ -2496,13 +2500,21 @@ function NotificationsView({
             Notifications
           </p>
         </div>
+<<<<<<< HEAD
         <p className="font-['Poppins'] text-[14px] text-[rgba(0,0,0,0.6)] dark:text-slate-400 ml-[32px]">
+=======
+        <p className="font-['Poppins'] text-[14px] text-[rgba(0,0,0,0.6)] ml-[32px]">
+>>>>>>> 0b7861d653f816432b14d75f478e1158f1bb1909
           Manage which alerts you want to receive
         </p>
       </div>
 
       {/* Toggle rows */}
+<<<<<<< HEAD
       <div className="flex flex-col gap-[16px] mb-6 bg-white dark:bg-slate-800 p-6 rounded-[20px] shadow-sm dark:shadow-lg">
+=======
+      <div className="flex flex-col gap-[16px] mb-6">
+>>>>>>> 0b7861d653f816432b14d75f478e1158f1bb1909
         {NOTIF_SETTINGS.map((item) => (
           <div key={item.key} className="flex flex-col gap-[4px] pb-6 border-b border-[rgba(0,0,0,0.1)] dark:border-slate-700 last:pb-0 last:border-0">
             <div className="flex items-center justify-between">
@@ -2532,6 +2544,7 @@ function NotificationsView({
           "Save Preferences"
         )}
       </button>
+<<<<<<< HEAD
     </div>
   );
 }
@@ -2668,6 +2681,8 @@ function SecurityView({ onAccountDeleted }: { onAccountDeleted?: () => void }) {
           isDeleting={isDeleting}
         />
       )}
+=======
+>>>>>>> 0b7861d653f816432b14d75f478e1158f1bb1909
     </div>
   );
 }
@@ -2676,7 +2691,10 @@ function SecurityView({ onAccountDeleted }: { onAccountDeleted?: () => void }) {
 
 export function MentorProfileSettings({ onBack }: MentorProfileSettingsProps) {
   const currentUser = getCurrentUser();
+<<<<<<< HEAD
   const isDark = useDarkMode();
+=======
+>>>>>>> 0b7861d653f816432b14d75f478e1158f1bb1909
   const [activeNav, setActiveNav] = useState<ProfileSubNav>("basic");
   const [menuOpen, setMenuOpen] = useState(false);
 
@@ -2715,6 +2733,7 @@ export function MentorProfileSettings({ onBack }: MentorProfileSettingsProps) {
   );
   const [notifSaving, setNotifSaving] = useState(false);
 
+<<<<<<< HEAD
   // Check if user is Google OAuth authenticated (run once on mount)
   useEffect(() => {
     let mounted = true;
@@ -2746,10 +2765,20 @@ export function MentorProfileSettings({ onBack }: MentorProfileSettingsProps) {
 
         if (!currentUser) {
           if (mounted) setEmail("");
+=======
+  // Load mentor profile from database
+  useEffect(() => {
+    const loadProfile = async () => {
+      try {
+        setIsLoading(true);
+        if (!currentUser) {
+          setEmail("");
+>>>>>>> 0b7861d653f816432b14d75f478e1158f1bb1909
           return;
         }
 
         const supabase = getSupabaseClient();
+<<<<<<< HEAD
         const { data: prof } = await supabase
           .from('profiles')
           .select('name, bio, avatar_url, mentor_grade, expertise, languages, mentor_documents, notification_preferences')
@@ -2780,6 +2809,43 @@ export function MentorProfileSettings({ onBack }: MentorProfileSettingsProps) {
 
     return () => { mounted = false; };
   }, [currentUser?.id]);
+=======
+        const { data } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', currentUser.id)
+          .single();
+
+        if (data) {
+          setFullName(data.name || "");
+          setEmail(data.email || currentUser.email || "");
+          setBio(data.bio || "");
+          setGrade(data.mentor_grade || "5-10 years");
+          setExpertise(data.expertise || "");
+          setLanguages(data.languages || []);
+          
+          // Load mentor-specific fields
+          if (data.mentor_documents) setDocs(data.mentor_documents);
+          if (data.avatar_url) setAvatarSrc(data.avatar_url);
+          
+          // Load notification preferences
+          if (data.notification_preferences) {
+            setNotifEnabled((prev) => ({
+              ...prev,
+              ...data.notification_preferences,
+            }));
+          }
+        }
+      } catch (err: any) {
+        console.log("Failed to load mentor profile:", err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadProfile();
+  }, [currentUser]);
+>>>>>>> 0b7861d653f816432b14d75f478e1158f1bb1909
 
   // Save basic information
   async function handleSaveBasicInfo() {
@@ -2806,7 +2872,10 @@ export function MentorProfileSettings({ onBack }: MentorProfileSettingsProps) {
           expertise: expertise.trim(),
           languages,
           mentor_documents: docs,
+<<<<<<< HEAD
           avatar_url: avatarSrc,
+=======
+>>>>>>> 0b7861d653f816432b14d75f478e1158f1bb1909
           updated_at: new Date().toISOString(),
         })
         .eq('id', currentUser.id);
@@ -2832,16 +2901,22 @@ export function MentorProfileSettings({ onBack }: MentorProfileSettingsProps) {
     setNotifSaving(true);
     try {
       const supabase = getSupabaseClient();
+<<<<<<< HEAD
 
       // Use live session user — not stale cache — to satisfy RLS auth.uid() = id
       const { data: { user: sessionUser } } = await supabase.auth.getUser();
       if (!sessionUser) {
         toast.error('Session expired. Please log in again.');
+=======
+      if (!currentUser) {
+        toast.error("Not authenticated");
+>>>>>>> 0b7861d653f816432b14d75f478e1158f1bb1909
         return;
       }
 
       const { error } = await supabase
         .from('profiles')
+<<<<<<< HEAD
         .upsert(
           { id: sessionUser.id, notification_preferences: notifEnabled },
           { onConflict: 'id' },
@@ -2855,6 +2930,19 @@ export function MentorProfileSettings({ onBack }: MentorProfileSettingsProps) {
       toast.success('Notification preferences saved!');
     } catch (err: any) {
       toast.error(err.message || 'Failed to save preferences');
+=======
+        .update({ notification_preferences: notifEnabled })
+        .eq('id', currentUser.id);
+
+      if (error) {
+        toast.error("Failed to save preferences");
+        return;
+      }
+
+      toast.success("Notification preferences saved!");
+    } catch (err: any) {
+      toast.error(err.message || "Failed to save preferences");
+>>>>>>> 0b7861d653f816432b14d75f478e1158f1bb1909
     } finally {
       setNotifSaving(false);
     }
@@ -3358,18 +3446,30 @@ export function MentorProfileSettings({ onBack }: MentorProfileSettingsProps) {
                           value={bio}
                           onChange={(e) => setBio(e.target.value)}
                           disabled={isSaving}
+<<<<<<< HEAD
                           className="flex-1 h-full bg-transparent font-['Poppins'] text-[14px] text-[rgba(0,0,0,0.8)] dark:text-white outline-none resize-none leading-normal disabled:opacity-60"
+=======
+                          className="flex-1 h-full bg-transparent font-['Poppins'] text-[14px] text-[rgba(0,0,0,0.8)] outline-none resize-none leading-normal disabled:opacity-60"
+>>>>>>> 0b7861d653f816432b14d75f478e1158f1bb1909
                         />
                       </div>
                     </div>
 
                     {/* Error message */}
                     {error && (
+<<<<<<< HEAD
                       <div className="bg-[#fde8e8] dark:bg-[#cc3636]/20 border border-[#cc3636] dark:border-[#cc3636]/40 rounded-[10px] px-4 py-3 flex items-center gap-2">
                         <svg className="w-4 h-4 text-[#cc3636] dark:text-[#ff8080]" fill="none" viewBox="0 0 24 24">
                           <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z" fill="currentColor" />
                         </svg>
                         <p className="font-['Poppins'] text-[12px] text-[#cc3636] dark:text-[#ff8080]">{error}</p>
+=======
+                      <div className="bg-[#fde8e8] border border-[#cc3636] rounded-[10px] px-4 py-3 flex items-center gap-2">
+                        <svg className="w-4 h-4 text-[#cc3636]" fill="none" viewBox="0 0 24 24">
+                          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z" fill="currentColor" />
+                        </svg>
+                        <p className="font-['Poppins'] text-[12px] text-[#cc3636]">{error}</p>
+>>>>>>> 0b7861d653f816432b14d75f478e1158f1bb1909
                       </div>
                     )}
 
@@ -3455,8 +3555,11 @@ export function MentorProfileSettings({ onBack }: MentorProfileSettingsProps) {
             onSave={handleSaveNotifications}
             isSaving={notifSaving}
           />
+<<<<<<< HEAD
         ) : activeNav === "security" ? (
           <SecurityView onAccountDeleted={() => window.location.href = '/login'} />
+=======
+>>>>>>> 0b7861d653f816432b14d75f478e1158f1bb1909
         ) : (
           <div className="p-10">
             <div className="mb-[40px]">
