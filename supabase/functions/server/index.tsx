@@ -12,9 +12,9 @@ app.use("*", logger(console.log));
 
 // ✅ SECURE: Restrict CORS to allowed origins only (not "*")
 const allowedOrigins = [
-  "https://lernova.com",
-  "https://www.lernova.com",
-  "https://app.lernova.com",
+  "https://elmorbit.co.in",
+  "https://www.elmorbit.co.in",
+  "https://app.elmorbit.co.in",
   // Add localhost for development if needed
   ...(Deno.env.get("ALLOWED_ORIGINS")?.split(",") || []),
 ];

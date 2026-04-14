@@ -1,8 +1,6 @@
 import * as React from "react";
 import { Moon, Sun } from "lucide-react";
 import { useTheme } from "next-themes";
-
-import { Button } from "@/app/components/ui/button";
 import { cn } from "@/app/components/ui/utils";
 
 interface ThemeToggleProps {
@@ -14,29 +12,44 @@ export function ThemeToggle({ className, showLabel = false }: ThemeToggleProps) 
   const { resolvedTheme, setTheme } = useTheme();
   const [mounted, setMounted] = React.useState(false);
 
-  React.useEffect(() => {
-    setMounted(true);
-  }, []);
+  React.useEffect(() => { setMounted(true); }, []);
 
   const isDark = mounted && resolvedTheme === "dark";
-  const nextLabel = isDark ? "Switch to light theme" : "Switch to dark theme";
+  const label = isDark ? "Switch to light mode" : "Switch to dark mode";
 
   return (
-    <Button
+    <button
       type="button"
-      variant="outline"
-      size={showLabel ? "default" : "icon"}
-      aria-label={nextLabel}
-      title={`${nextLabel}. Light mode is the default unless you save a preference.`}
+      aria-label={label}
+      title={label}
+      onClick={() => setTheme(isDark ? "light" : "dark")}
       className={cn(
-        "border-border/70 bg-white dark:bg-[#1a1a2e] text-foreground dark:text-white shadow-lg shadow-black/5 backdrop-blur supports-[backdrop-filter]:bg-white/70 dark:supports-[backdrop-filter]:bg-[#1a1a2e]/70",
-        showLabel && "gap-2 rounded-full px-4",
+        "inline-flex items-center justify-center gap-2 rounded-full border transition-all duration-300",
+        "border-border/60 bg-background/80 text-foreground shadow-sm backdrop-blur",
+        "hover:border-border hover:bg-muted hover:shadow-md active:scale-95",
+        "focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring/60 focus-visible:outline-offset-2",
+        showLabel ? "h-9 px-4 text-sm font-medium" : "size-9",
         className,
       )}
-      onClick={() => setTheme(isDark ? "light" : "dark")}
     >
-      {isDark ? <Sun className="size-4" /> : <Moon className="size-4" />}
-      {showLabel ? <span>{isDark ? "Light" : "Dark"} mode</span> : null}
-    </Button>
+      <span
+        className="relative flex items-center justify-center"
+        style={{ width: 16, height: 16 }}
+      >
+        <Sun
+          className={cn(
+            "absolute size-4 transition-all duration-300",
+            isDark ? "rotate-90 scale-0 opacity-0" : "rotate-0 scale-100 opacity-100",
+          )}
+        />
+        <Moon
+          className={cn(
+            "absolute size-4 transition-all duration-300",
+            isDark ? "rotate-0 scale-100 opacity-100" : "-rotate-90 scale-0 opacity-0",
+          )}
+        />
+      </span>
+      {showLabel && <span>{isDark ? "Light" : "Dark"} mode</span>}
+    </button>
   );
 }

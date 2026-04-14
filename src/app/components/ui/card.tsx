@@ -7,9 +7,9 @@ function Card({ className, ...props }: React.ComponentProps<"div">) {
     <div
       data-slot="card"
       className={cn(
-        "flex flex-col gap-6 rounded-xl border transition-all duration-200",
-        "dark:bg-card dark:text-card-foreground dark:border-muted/60 dark:shadow-lg",
-        "light:bg-card light:text-card-foreground light:border-border/70 light:shadow-sm",
+        "flex flex-col gap-6 rounded-2xl border transition-all duration-200",
+        "border-border/60 bg-card text-card-foreground shadow-sm",
+        "dark:border-border dark:bg-card dark:shadow-lg dark:shadow-black/20",
         className,
       )}
       {...props}
@@ -34,7 +34,7 @@ function CardTitle({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <h4
       data-slot="card-title"
-      className={cn("leading-none", className)}
+      className={cn("leading-none font-semibold text-foreground", className)}
       {...props}
     />
   );
@@ -44,7 +44,7 @@ function CardDescription({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <p
       data-slot="card-description"
-      className={cn("dark:text-muted-foreground/90 light:text-muted-foreground", className)}
+      className={cn("text-sm text-muted-foreground leading-relaxed", className)}
       {...props}
     />
   );
@@ -54,10 +54,7 @@ function CardAction({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="card-action"
-      className={cn(
-        "col-start-2 row-span-2 row-start-1 self-start justify-self-end",
-        className,
-      )}
+      className={cn("col-start-2 row-span-2 row-start-1 self-start justify-self-end", className)}
       {...props}
     />
   );
@@ -83,12 +80,4 @@ function CardFooter({ className, ...props }: React.ComponentProps<"div">) {
   );
 }
 
-export {
-  Card,
-  CardHeader,
-  CardFooter,
-  CardTitle,
-  CardAction,
-  CardDescription,
-  CardContent,
-};
+export { Card, CardHeader, CardFooter, CardTitle, CardAction, CardDescription, CardContent };

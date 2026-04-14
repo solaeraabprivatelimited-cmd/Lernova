@@ -68,10 +68,7 @@ export function LandingPage({ onLogin, onSignUp }: LandingPageProps) {
             window.scrollTo({ top: 0, behavior: 'smooth' });
           }}
         >
-          <div className="lp-nav-logo-icon">
-            <svg viewBox="0 0 24 24"><path d="M12 3L1 9l11 6 9-4.91V17h2V9L12 3zm0 12.54L4.38 11 12 6.46 19.62 11 12 15.54zM1 17v2l11 6 11-6v-2l-11 6L1 17z" /></svg>
-          </div>
-          <span className="lp-nav-logo-text">Lernova</span>
+          <span className="lp-nav-logo-text">Elm Orbit</span>
         </button>
         <ul className="lp-nav-links">
           {navItems.map((item) => (
@@ -408,7 +405,7 @@ export function LandingPage({ onLogin, onSignUp }: LandingPageProps) {
             <div className="lp-t-card featured">
               <div style={{ marginBottom: 14, fontSize: 16, letterSpacing: 2, color: '#fbbf24' }}>&#9733;&#9733;&#9733;&#9733;&#9733;</div>
               <p className="lp-t-text" style={{ color: 'rgba(255,255,255,0.8)' }}>
-                &ldquo;Lernova completely changed the way I study. My mentor guided me through every step, and the focus sessions helped me stay on track. I&rsquo;ve become more confident and disciplined.&rdquo;
+                &ldquo;Elm Orbit completely changed the way I study. My mentor guided me through every step, and the focus sessions helped me stay on track. I&rsquo;ve become more confident and disciplined.&rdquo;
               </p>
               <div className="lp-t-author">
                 <div className="lp-t-avatar" style={{ background: 'rgba(255,255,255,0.15)' }}>AM</div>
@@ -453,7 +450,7 @@ export function LandingPage({ onLogin, onSignUp }: LandingPageProps) {
       {/* ── CTA STRIP ── */}
       <section className="lp-cta-strip" id="lp-community">
         <h2>New learners welcome!<br />Start your journey today.</h2>
-        <p>Join our community of dedicated learners using Lernova to study smarter.</p>
+        <p>Join our community of dedicated learners using Elm Orbit to study smarter.</p>
         <div className="lp-cta-strip-actions">
           <button className="lp-btn-cta-white" type="button" onClick={onSignUp}>
             &#128077; Get Started Free
@@ -476,7 +473,7 @@ export function LandingPage({ onLogin, onSignUp }: LandingPageProps) {
               <div className="lp-nav-logo-icon">
                 <svg viewBox="0 0 24 24"><path d="M12 3L1 9l11 6 9-4.91V17h2V9L12 3zm0 12.54L4.38 11 12 6.46 19.62 11 12 15.54zM1 17v2l11 6 11-6v-2l-11 6L1 17z" /></svg>
               </div>
-              <span className="lp-nav-logo-text">Lernova</span>
+              <span className="lp-nav-logo-text">Elm Orbit</span>
             </button>
             <p>Empowering learners worldwide with expert-led, interactive, and goal-driven education.</p>
           </div>
@@ -496,7 +493,7 @@ export function LandingPage({ onLogin, onSignUp }: LandingPageProps) {
             <h4>Need Help?</h4>
             <ul>
               <li><button type="button" className="lp-footer-link">+1 234 567 8910</button></li>
-              <li><button type="button" className="lp-footer-link">support@lernova.com</button></li>
+              <li><button type="button" className="lp-footer-link">support@elmorbit.co.in</button></li>
               <li><button type="button" className="lp-footer-link">Help Center</button></li>
               <li><button type="button" className="lp-footer-link">Report Issue</button></li>
             </ul>
@@ -513,7 +510,7 @@ export function LandingPage({ onLogin, onSignUp }: LandingPageProps) {
         </div>
 
         <div className="lp-footer-bottom">
-          <p>&copy; 2026 Lernova. All rights reserved.</p>
+          <p>&copy; 2026 Elm Orbit. All rights reserved.</p>
           <div className="lp-footer-legal">
             <button type="button" className="lp-footer-link">Disclaimer</button>
             <button type="button" className="lp-footer-link">Privacy Policy</button>

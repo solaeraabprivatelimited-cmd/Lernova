@@ -15,8 +15,8 @@ export interface TokenStore {
  * This is a SHORT-TERM fix - long-term should migrate to HTTP-only cookies
  */
 
-const TOKEN_KEY = 'learnova_session_token';
-const USER_KEY = 'learnova_session_user';
+const TOKEN_KEY = 'elmorbit_session_token';
+const USER_KEY = 'elmorbit_session_user';
 const TOKEN_STORAGE = 'session'; // 'session' = sessionStorage, 'local' = localStorage
 
 function getStorage(): Storage {
@@ -188,7 +188,7 @@ function decodeJWTPayload(token: string): any | null {
  * When backend is ready to set HTTP-only cookies:
  * 
  * 1. Backend sets in response headers:
- *    Set-Cookie: learnova_token=<jwt>; HttpOnly; Secure; SameSite=Strict; Max-Age=3600; Path=/api
+ *    Set-Cookie: elmorbit_token=<jwt>; HttpOnly; Secure; SameSite=Strict; Max-Age=3600; Path=/api
  * 
  * 2. Frontend stops manual token storage:
  *    // Remove calls to setAccessTokenSecurely()

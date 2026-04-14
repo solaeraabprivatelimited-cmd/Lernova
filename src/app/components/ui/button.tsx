@@ -5,26 +5,28 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "./utils";
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all duration-200 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive",
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg text-sm font-semibold transition-all duration-200 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:ring-2 focus-visible:ring-ring/60 focus-visible:ring-offset-1 active:scale-[0.97]",
   {
     variants: {
       variant: {
-        default: "dark:bg-primary dark:text-primary-foreground dark:hover:bg-primary/80 dark:shadow-lg dark:shadow-primary/20 light:bg-primary light:text-primary-foreground light:hover:bg-primary/90",
+        default:
+          "bg-[#003566] text-white shadow-sm hover:bg-[#0967bd] dark:bg-blue-600 dark:hover:bg-blue-700 dark:shadow-blue-600/20",
         destructive:
-          "dark:bg-destructive/70 dark:text-white dark:hover:bg-destructive/80 dark:focus-visible:ring-destructive/40 light:bg-destructive light:text-white light:hover:bg-destructive/90 light:focus-visible:ring-destructive/20",
+          "bg-destructive text-white shadow-sm hover:bg-destructive/90 dark:bg-destructive/80 dark:hover:bg-destructive/70",
         outline:
-          "dark:border-muted/60 dark:bg-input/40 dark:text-foreground dark:hover:bg-input/60 dark:hover:text-foreground light:border light:bg-background light:text-foreground light:hover:bg-accent light:hover:text-accent-foreground",
+          "border border-border/70 bg-background text-foreground shadow-sm hover:bg-muted hover:border-border dark:border-border dark:bg-card dark:hover:bg-muted",
         secondary:
-          "dark:bg-secondary/80 dark:text-secondary-foreground dark:hover:bg-secondary/70 light:bg-secondary light:text-secondary-foreground light:hover:bg-secondary/80",
+          "bg-secondary text-secondary-foreground shadow-sm hover:bg-secondary/80 dark:bg-secondary dark:hover:bg-secondary/70",
         ghost:
-          "dark:hover:bg-accent/30 dark:hover:text-accent-foreground dark:text-foreground light:hover:bg-accent light:hover:text-accent-foreground",
-        link: "dark:text-primary dark:underline-offset-4 dark:hover:underline light:text-primary light:underline-offset-4 light:hover:underline",
+          "text-foreground hover:bg-muted dark:hover:bg-muted/60",
+        link:
+          "text-[#0967bd] underline-offset-4 hover:underline dark:text-blue-400 shadow-none",
       },
       size: {
         default: "h-9 px-4 py-2 has-[>svg]:px-3",
-        sm: "h-8 rounded-md gap-1.5 px-3 has-[>svg]:px-2.5",
-        lg: "h-10 rounded-md px-6 has-[>svg]:px-4",
-        icon: "size-9 rounded-md",
+        sm: "h-8 rounded-md gap-1.5 px-3 text-xs has-[>svg]:px-2.5",
+        lg: "h-11 rounded-xl px-6 text-base has-[>svg]:px-4",
+        icon: "size-9 rounded-lg",
       },
     },
     defaultVariants: {

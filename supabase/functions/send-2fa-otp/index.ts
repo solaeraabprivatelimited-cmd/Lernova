@@ -21,7 +21,7 @@ async function sendOtp(email: string, otp: string): Promise<void> {
   const subject = "Your Two-Factor Authentication Code";
   const htmlContent = `
     <div style="font-family: Arial, sans-serif; color: #333;">
-      <h2>Lernova Two-Factor Authentication</h2>
+      <h2>Elm Orbit Two-Factor Authentication</h2>
       <p>Use this code to complete your login:</p>
       <div style="background: #f0f0f0; padding: 20px; border-radius: 8px; text-align: center;">
         <h1 style="letter-spacing: 4px; color: #003566;">${otp}</h1>
@@ -32,7 +32,7 @@ async function sendOtp(email: string, otp: string): Promise<void> {
   `;
 
   await sendEmail(email, subject, htmlContent, {
-    name: "Lernova 2FA",
+    name: "Elm Orbit 2FA",
     email: "onboarding@resend.dev",
   });
 }

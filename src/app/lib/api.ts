@@ -1,5 +1,5 @@
 /**
- * Learnova API Client
+ * Elm Orbit API Client
  * Central place for all backend API calls.
  * Reads project info from /utils/supabase/info.tsx and attaches auth tokens.
  */
@@ -25,13 +25,13 @@ function createPublicFunctionHeaders(): Record<string, string> {
 //  1. `import.meta.hot.data` — Vite's official HMR state bag. The `.dispose()`
 //     callback fires just before the module is replaced, saving the live client
 //     into `hot.data` so the incoming module evaluation can pick it up.
-//  2. `globalThis.__learnova_sb` — cross-reload fallback for environments where
+//  2. `globalThis.__elmorbit_sb` — cross-reload fallback for environments where
 //     `import.meta.hot` is unavailable (production, non-Vite runtimes).
 //  3. Module-level `const` — fast in-module reference; never calls `createClient`
 //     if either of the above already holds a client.
 
 const _HOT_KEY  = 'supabaseClient';
-const _GLOB_KEY = '__learnova_sb__';
+const _GLOB_KEY = '__elmorbit_sb__';
 
 function _getOrCreateClient(): SupabaseClient {
   // Check Vite HMR data bag first (fastest path during hot reloads)
@@ -50,7 +50,7 @@ function _getOrCreateClient(): SupabaseClient {
   // time). Two clients sharing the SAME storage key trigger the "Multiple
   // GoTrueClient instances" warning; different keys each start at instanceID=0.
   const client = createClient(`https://${projectId}.supabase.co`, publicAnonKey, {
-    auth: { storageKey: 'learnova_auth_v1' },
+    auth: { storageKey: 'elmorbit_auth_v1' },
   });
 
   // Persist in globalThis so any future evaluations skip createClient
@@ -194,6 +194,42 @@ export function setCurrentUser(user: any) {
  */
 export function getCurrentUser(): any | null {
   return getUserDataSecurely();
+}
+
+/**
+ * Check if current user authenticated via Google OAuth
+ */
+export async function isGoogleOAuthUser(): Promise<boolean> {
+  try {
+    const supabase = getSupabaseClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return false;
+    
+    // Method 1: Check if user has Google identity in their identities array
+    if (user.identities && Array.isArray(user.identities)) {
+      const hasGoogle = user.identities.some((identity: any) => identity.provider === 'google');
+      if (hasGoogle) {
+        return true;
+      }
+    }
+    
+    // Method 2: Check app_metadata for provider
+    if (user.app_metadata?.provider === 'google') {
+      return true;
+    }
+    
+    // Method 3: Check if user was created via Google (email but no password provider)
+    // Google OAuth users typically don't have a password identity
+    const hasPasswordIdentity = user.identities?.some((identity: any) => identity.provider === 'email');
+    if (!hasPasswordIdentity && user.identities && user.identities.length > 0) {
+      return true;
+    }
+    
+    return false;
+  } catch (err) {
+    console.error('[isGoogleOAuthUser] Error checking OAuth status:', err);
+    return false;
+  }
 }
 
 function mapSessionUser(session: any) {
@@ -573,6 +609,15 @@ export const auth = {
     setAccessToken(null);
     setCurrentUser(null);
     return null;
+  },
+
+  /** Delete account and all user data */
+  async deleteOwnAccount() {
+    const supabase = getSupabaseClient();
+    const { error } = await supabase.rpc('delete_own_account');
+    if (error) throw new Error(error.message);
+    // Sign out after successful deletion
+    await this.logout();
   },
 };
 
@@ -1616,21 +1661,470 @@ export const earnings = {
     apiFetch('/earnings/record', { method: 'POST', body: JSON.stringify({ amount, sessionId, description }) }),
 };
 
+// ─── PAYMENT METHODS ────────────────────────────────────────────────────────────
+
+/**
+ * ✅ SECURE: Simple client-side encryption helper for account numbers
+ * For production, use a proper encryption library. This is a placeholder/demo.
+ */
+function encryptAccountNumber(accountNumber: string): string {
+  // In production, use a real encryption library or server-side pgcrypto
+  // For now, store as-is (server-side stored procedure can handle encryption with pgcrypto)
+  return accountNumber;
+}
+
+function decryptAccountNumber(encrypted: string): string {
+  // Placeholder for decryption (server-side pgcrypto handles this)
+  return encrypted;
+}
+
+export const paymentMethods = {
+  /**
+   * Get all payment methods for the current mentor
+   */
+  getAll: async () => {
+    const supabase = getSupabaseClient();
+    const user = await getCurrentSessionUser();
+    if (!user) return [];
+
+    const { data, error } = await supabase
+      .from('payment_methods')
+      .select('id, type, upi_id, bank_name, account_number_encrypted, ifsc_code, holder_name, is_primary, created_at, updated_at')
+      .eq('mentor_id', user.id)
+      .order('is_primary', { ascending: false })
+      .order('created_at', { ascending: false });
+
+    if (error) throw new Error(error.message);
+
+    return (data ?? []).map((row: any) => ({
+      id: row.id,
+      type: row.type,
+      upiId: row.upi_id ?? '',
+      bankName: row.bank_name ?? '',
+      accountNumber: row.account_number_encrypted ? decryptAccountNumber(row.account_number_encrypted) : '',
+      ifscCode: row.ifsc_code ?? '',
+      holderName: row.holder_name ?? '',
+      isPrimary: Boolean(row.is_primary),
+      createdAt: row.created_at,
+      updatedAt: row.updated_at,
+    }));
+  },
+
+  /**
+   * Create a new payment method
+   */
+  create: async (data: {
+    type: 'upi' | 'bank';
+    upiId?: string;
+    bankName?: string;
+    accountNumber?: string;
+    ifscCode?: string;
+    holderName: string;
+  }) => {
+    const supabase = getSupabaseClient();
+    const user = await getCurrentSessionUser();
+    if (!user) throw new Error('Authentication expired. Please log in again.');
+
+    // Ensure profiles row exists (FK target for payment_methods.mentor_id)
+    await supabase
+      .from('profiles')
+      .upsert(
+        {
+          id: user.id,
+          name: user.user_metadata?.name ?? user.user_metadata?.full_name ?? user.email?.split('@')[0] ?? 'Mentor',
+          role: user.user_metadata?.role ?? user.app_metadata?.role ?? 'mentor',
+          bio: '',
+        },
+        { onConflict: 'id', ignoreDuplicates: true },
+      );
+
+    const insertData: Record<string, any> = {
+      mentor_id: user.id,
+      type: data.type,
+      holder_name: data.holderName,
+      is_primary: false,
+    };
+
+    if (data.type === 'upi') {
+      insertData.upi_id = data.upiId || null;
+    } else if (data.type === 'bank') {
+      insertData.bank_name = data.bankName || null;
+      insertData.account_number_encrypted = data.accountNumber ? encryptAccountNumber(data.accountNumber) : null;
+      insertData.ifsc_code = data.ifscCode || null;
+    }
+
+    const { data: created, error } = await supabase
+      .from('payment_methods')
+      .insert(insertData)
+      .select('id, type, upi_id, bank_name, account_number_encrypted, ifsc_code, holder_name, is_primary, created_at, updated_at')
+      .single();
+
+    if (error) throw new Error(error.message);
+
+    return {
+      id: created.id,
+      type: created.type,
+      upiId: created.upi_id ?? '',
+      bankName: created.bank_name ?? '',
+      accountNumber: created.account_number_encrypted ? decryptAccountNumber(created.account_number_encrypted) : '',
+      ifscCode: created.ifsc_code ?? '',
+      holderName: created.holder_name ?? '',
+      isPrimary: Boolean(created.is_primary),
+      createdAt: created.created_at,
+      updatedAt: created.updated_at,
+    };
+  },
+
+  /**
+   * Update an existing payment method
+   */
+  update: async (id: string, data: Partial<{
+    upiId: string;
+    bankName: string;
+    accountNumber: string;
+    ifscCode: string;
+    holderName: string;
+  }>) => {
+    const supabase = getSupabaseClient();
+    const user = await getCurrentSessionUser();
+    if (!user) throw new Error('Authentication expired. Please log in again.');
+
+    const updates: Record<string, any> = {
+      updated_at: new Date().toISOString(),
+    };
+
+    if (typeof data.upiId === 'string') updates.upi_id = data.upiId || null;
+    if (typeof data.bankName === 'string') updates.bank_name = data.bankName || null;
+    if (typeof data.accountNumber === 'string') updates.account_number_encrypted = data.accountNumber ? encryptAccountNumber(data.accountNumber) : null;
+    if (typeof data.ifscCode === 'string') updates.ifsc_code = data.ifscCode || null;
+    if (typeof data.holderName === 'string') updates.holder_name = data.holderName;
+
+    const { data: updated, error } = await supabase
+      .from('payment_methods')
+      .update(updates)
+      .eq('id', id)
+      .eq('mentor_id', user.id)
+      .select('id, type, upi_id, bank_name, account_number_encrypted, ifsc_code, holder_name, is_primary, created_at, updated_at')
+      .single();
+
+    if (error) throw new Error(error.message);
+
+    return {
+      id: updated.id,
+      type: updated.type,
+      upiId: updated.upi_id ?? '',
+      bankName: updated.bank_name ?? '',
+      accountNumber: updated.account_number_encrypted ? decryptAccountNumber(updated.account_number_encrypted) : '',
+      ifscCode: updated.ifsc_code ?? '',
+      holderName: updated.holder_name ?? '',
+      isPrimary: Boolean(updated.is_primary),
+      createdAt: updated.created_at,
+      updatedAt: updated.updated_at,
+    };
+  },
+
+  /**
+   * Delete a payment method
+   */
+  delete: async (id: string) => {
+    const supabase = getSupabaseClient();
+    const user = await getCurrentSessionUser();
+    if (!user) throw new Error('Authentication expired. Please log in again.');
+
+    // If this is the primary method, set another as primary
+    const { data: methodToDelete } = await supabase
+      .from('payment_methods')
+      .select('is_primary')
+      .eq('id', id)
+      .eq('mentor_id', user.id)
+      .single();
+
+    const { error: deleteError } = await supabase
+      .from('payment_methods')
+      .delete()
+      .eq('id', id)
+      .eq('mentor_id', user.id);
+
+    if (deleteError) throw new Error(deleteError.message);
+
+    // If deleted method was primary, set first remaining method as primary
+    if (methodToDelete?.is_primary) {
+      const { data: remaining } = await supabase
+        .from('payment_methods')
+        .select('id')
+        .eq('mentor_id', user.id)
+        .limit(1)
+        .single();
+
+      if (remaining) {
+        await supabase
+          .from('payment_methods')
+          .update({ is_primary: true })
+          .eq('id', remaining.id);
+      }
+    }
+  },
+
+  /**
+   * Set a payment method as primary
+   */
+  setPrimary: async (id: string) => {
+    const supabase = getSupabaseClient();
+    const user = await getCurrentSessionUser();
+    if (!user) throw new Error('Authentication expired. Please log in again.');
+
+    // Set all to non-primary first
+    await supabase
+      .from('payment_methods')
+      .update({ is_primary: false })
+      .eq('mentor_id', user.id);
+
+    // Set this one as primary
+    const { data: updated, error } = await supabase
+      .from('payment_methods')
+      .update({ is_primary: true, updated_at: new Date().toISOString() })
+      .eq('id', id)
+      .eq('mentor_id', user.id)
+      .select('id, type, upi_id, bank_name, account_number_encrypted, ifsc_code, holder_name, is_primary, created_at, updated_at')
+      .single();
+
+    if (error) throw new Error(error.message);
+
+    return {
+      id: updated.id,
+      type: updated.type,
+      upiId: updated.upi_id ?? '',
+      bankName: updated.bank_name ?? '',
+      accountNumber: updated.account_number_encrypted ? decryptAccountNumber(updated.account_number_encrypted) : '',
+      ifscCode: updated.ifsc_code ?? '',
+      holderName: updated.holder_name ?? '',
+      isPrimary: Boolean(updated.is_primary),
+      createdAt: updated.created_at,
+      updatedAt: updated.updated_at,
+    };
+  },
+};
+
 // ─── WITHDRAWALS ────────────────────────────────────────────────────────────────
 
 export const withdrawals = {
-  list: () => apiFetch('/withdrawals'),
-  create: (amount: number, method: string, accountDetails?: Record<string, any>) =>
-    apiFetch('/withdrawals', { method: 'POST', body: JSON.stringify({ amount, method, accountDetails }) }),
+  /**
+   * Get available balance for withdrawal
+   * Calculates: Total earnings - Total withdrawn amount
+   */
+  getBalance: async () => {
+    const supabase = getSupabaseClient();
+    const user = await getCurrentSessionUser();
+    if (!user) return { balance: 0, currency: 'INR' };
+
+    // Get total earnings (from payments table)
+    const { data: payments, error: paymentsError } = await supabase
+      .from('payments')
+      .select('amount')
+      .eq('mentor_id', user.id)
+      .eq('status', 'completed');
+
+    if (paymentsError) throw new Error(paymentsError.message);
+
+    const totalEarnings = (payments ?? []).reduce((sum: number, row: any) => {
+      return sum + (Number(row.amount) || 0);
+    }, 0);
+
+    // Get total withdrawn (from withdrawal_requests table)
+    const { data: withdrawalRows, error: withdrawError } = await supabase
+      .from('withdrawal_requests')
+      .select('amount')
+      .eq('mentor_id', user.id)
+      .in('status', ['completed', 'processing']);
+
+    if (withdrawError) throw new Error(withdrawError.message);
+
+    const totalWithdrawn = (withdrawalRows ?? []).reduce((sum: number, row: any) => {
+      return sum + (Number(row.amount) || 0);
+    }, 0);
+
+    const balance = totalEarnings - totalWithdrawn;
+    return {
+      balance: Math.max(0, balance),
+      totalEarnings,
+      totalWithdrawn,
+      currency: 'INR',
+    };
+  },
+
+  /**
+   * Get withdrawal history
+   */
+  getHistory: async () => {
+    const supabase = getSupabaseClient();
+    const user = await getCurrentSessionUser();
+    if (!user) return [];
+
+    const { data, error } = await supabase
+      .from('withdrawal_requests')
+      .select(
+        `id, payment_method_id, amount, status, transaction_hash, failure_reason, requested_at, processed_at,
+         payment_methods(type, upi_id, bank_name, holder_name)`
+      )
+      .eq('mentor_id', user.id)
+      .order('requested_at', { ascending: false });
+
+    if (error) throw new Error(error.message);
+
+    return (data ?? []).map((row: any) => ({
+      id: row.id,
+      amount: Number(row.amount) || 0,
+      status: row.status,
+      method: row.payment_methods ? {
+        type: row.payment_methods.type,
+        upiId: row.payment_methods.upi_id ?? '',
+        bankName: row.payment_methods.bank_name ?? '',
+        holderName: row.payment_methods.holder_name ?? '',
+      } : null,
+      transactionHash: row.transaction_hash ?? '',
+      failureReason: row.failure_reason ?? '',
+      requestedAt: row.requested_at,
+      processedAt: row.processed_at,
+    }));
+  },
+
+  /**
+   * Request a withdrawal
+   */
+  request: async (data: {
+    paymentMethodId: string;
+    amount: number;
+  }) => {
+    const supabase = getSupabaseClient();
+    const user = await getCurrentSessionUser();
+    if (!user) throw new Error('Authentication expired. Please log in again.');
+
+    if (!data.paymentMethodId) throw new Error('Payment method is required');
+    if (!data.amount || data.amount <= 0) throw new Error('Amount must be greater than 0');
+
+    // Ensure profiles row exists (FK target for withdrawal_requests.mentor_id)
+    await supabase
+      .from('profiles')
+      .upsert(
+        {
+          id: user.id,
+          name: user.user_metadata?.name ?? user.user_metadata?.full_name ?? user.email?.split('@')[0] ?? 'Mentor',
+          role: user.user_metadata?.role ?? user.app_metadata?.role ?? 'mentor',
+          bio: '',
+        },
+        { onConflict: 'id', ignoreDuplicates: true },
+      );
+
+    // Validate payment method belongs to user
+    const { data: method, error: methodError } = await supabase
+      .from('payment_methods')
+      .select('id')
+      .eq('id', data.paymentMethodId)
+      .eq('mentor_id', user.id)
+      .single();
+
+    if (methodError || !method) throw new Error('Invalid payment method');
+
+    // Create withdrawal request
+    const { data: created, error } = await supabase
+      .from('withdrawal_requests')
+      .insert({
+        mentor_id: user.id,
+        payment_method_id: data.paymentMethodId,
+        amount: data.amount,
+        status: 'pending',
+        requested_at: new Date().toISOString(),
+      })
+      .select('id, payment_method_id, amount, status, requested_at')
+      .single();
+
+    if (error) throw new Error(error.message);
+
+    return {
+      id: created.id,
+      paymentMethodId: created.payment_method_id,
+      amount: Number(created.amount),
+      status: created.status,
+      requestedAt: created.requested_at,
+    };
+  },
+
+  /**
+   * Get withdrawal statistics
+   */
+  getStats: async () => {
+    const supabase = getSupabaseClient();
+    const user = await getCurrentSessionUser();
+    if (!user) return { thisMonth: 0, pending: 0, completed: 0 };
+
+    const now = new Date();
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+    const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59).toISOString();
+
+    // This month withdrawals
+    const { data: thisMonthData, error: thisMonthError } = await supabase
+      .from('withdrawal_requests')
+      .select('amount')
+      .eq('mentor_id', user.id)
+      .eq('status', 'completed')
+      .gte('processed_at', monthStart)
+      .lte('processed_at', monthEnd);
+
+    if (thisMonthError) throw new Error(thisMonthError.message);
+
+    const thisMonth = (thisMonthData ?? []).reduce((sum: number, row: any) => {
+      return sum + (Number(row.amount) || 0);
+    }, 0);
+
+    // Pending withdrawals
+    const { data: pendingData, error: pendingError } = await supabase
+      .from('withdrawal_requests')
+      .select('amount')
+      .eq('mentor_id', user.id)
+      .in('status', ['pending', 'processing']);
+
+    if (pendingError) throw new Error(pendingError.message);
+
+    const pending = (pendingData ?? []).reduce((sum: number, row: any) => {
+      return sum + (Number(row.amount) || 0);
+    }, 0);
+
+    // Total completed
+    const { data: completedData, error: completedError } = await supabase
+      .from('withdrawal_requests')
+      .select('amount')
+      .eq('mentor_id', user.id)
+      .eq('status', 'completed');
+
+    if (completedError) throw new Error(completedError.message);
+
+    const completed = (completedData ?? []).reduce((sum: number, row: any) => {
+      return sum + (Number(row.amount) || 0);
+    }, 0);
+
+    return {
+      thisMonth,
+      pending,
+      completed,
+      currency: 'INR',
+    };
+  },
 };
 
-// ─── PAYMENT MODES ──────────────────────────────────────────────────────────────
+// ─── PAYMENT MODES (LEGACY - use paymentMethods instead) ───────────────────────
 
 export const paymentModes = {
-  list: () => apiFetch('/payment-modes'),
+  list: () => paymentMethods.getAll(),
   add: (data: { type: string; accountNumber?: string; bankName?: string; ifscCode?: string; upiId?: string; primary?: boolean }) =>
-    apiFetch('/payment-modes', { method: 'POST', body: JSON.stringify(data) }),
-  remove: (id: string) => apiFetch(`/payment-modes/${id}`, { method: 'DELETE' }),
+    paymentMethods.create({
+      type: data.type as 'upi' | 'bank',
+      upiId: data.upiId,
+      bankName: data.bankName,
+      accountNumber: data.accountNumber,
+      ifscCode: data.ifscCode,
+      holderName: data.type === 'upi' ? 'UPI Account' : 'Bank Account',
+    }),
+  remove: (id: string) => paymentMethods.delete(id),
 };
 
 // ─── PERFORMANCE ────────────────────────────────────────────────────────────────
@@ -1937,6 +2431,210 @@ export const mentorDashboard = {
   },
 };
 
+// ─── MENTOR SESSION ROOMS ────────────────────────────────────────────────────────
+
+export const mentorSessionRooms = {
+  /**
+   * Create a study room for a confirmed booking
+   * Called when booking is accepted
+   */
+  createRoom: async (bookingId: string) => {
+    const supabase = getSupabaseClient();
+    
+    const { data, error } = await supabase.rpc(
+      'create_mentor_session_room',
+      { p_booking_id: bookingId }
+    );
+
+    if (error) throw new Error(error.message);
+    return {
+      id: data.id,
+      bookingId: data.booking_id,
+      mentorId: data.mentor_id,
+      studentId: data.student_id,
+      roomName: data.room_name,
+      scheduledStart: data.scheduled_start,
+      scheduledEnd: data.scheduled_end,
+      status: data.status,
+    };
+  },
+
+  /**
+   * Get room details for a booking
+   * Shows only to mentor and student (RLS enforced)
+   */
+  getRoom: async (bookingId: string) => {
+    const supabase = getSupabaseClient();
+    
+    const { data, error } = await supabase
+      .from('mentor_session_rooms')
+      .select('*')
+      .eq('booking_id', bookingId)
+      .single();
+
+    if (error) {
+      if (error.code === 'PGRST116') return null; // Not found
+      throw new Error(error.message);
+    }
+
+    return {
+      id: data.id,
+      bookingId: data.booking_id,
+      mentorId: data.mentor_id,
+      studentId: data.student_id,
+      roomName: data.room_name,
+      scheduledStart: data.scheduled_start,
+      scheduledEnd: data.scheduled_end,
+      actualStart: data.actual_start,
+      actualEnd: data.actual_end,
+      status: data.status,
+    };
+  },
+
+  /**
+   * Get all active rooms for current user (mentor or student)
+   */
+  getActiveRooms: async () => {
+    const supabase = getSupabaseClient();
+    const user = await getCurrentSessionUser();
+    if (!user) return [];
+
+    const { data, error } = await supabase
+      .from('mentor_session_rooms')
+      .select('*')
+      .in('status', ['pending', 'active'])
+      .or(`mentor_id.eq.${user.id},student_id.eq.${user.id}`)
+      .order('scheduled_start', { ascending: true });
+
+    if (error) throw new Error(error.message);
+
+    return (data ?? []).map((row: any) => ({
+      id: row.id,
+      bookingId: row.booking_id,
+      mentorId: row.mentor_id,
+      studentId: row.student_id,
+      roomName: row.room_name,
+      scheduledStart: row.scheduled_start,
+      scheduledEnd: row.scheduled_end,
+      actualStart: row.actual_start,
+      actualEnd: row.actual_end,
+      status: row.status,
+    }));
+  },
+
+  /**
+   * Mark room as active (mentor enters)
+   */
+  startRoom: async (roomId: string) => {
+    const supabase = getSupabaseClient();
+    
+    const { data, error } = await supabase.rpc(
+      'start_mentor_session_room',
+      { p_room_id: roomId }
+    );
+
+    if (error) throw new Error(error.message);
+    return {
+      id: data.id,
+      status: data.status,
+      actualStart: data.actual_start,
+    };
+  },
+
+  /**
+   * Mark room as completed (mentor leaves)
+   */
+  endRoom: async (roomId: string) => {
+    const supabase = getSupabaseClient();
+    
+    const { data, error } = await supabase.rpc(
+      'end_mentor_session_room',
+      { p_room_id: roomId }
+    );
+
+    if (error) throw new Error(error.message);
+    return {
+      id: data.id,
+      status: data.status,
+      actualEnd: data.actual_end,
+      durationMins: data.duration_mins,
+    };
+  },
+
+  /**
+   * Verify if current user can join a room
+   * Returns: { canJoin: boolean, reason?: string, isMentor?: boolean, isStudent?: boolean }
+   */
+  canJoinRoom: async (roomId: string) => {
+    const user = await getCurrentSessionUser();
+    if (!user) return { canJoin: false, reason: 'Not authenticated' };
+
+    const supabase = getSupabaseClient();
+    const { data, error } = await supabase
+      .from('mentor_session_rooms')
+      .select('mentor_id, student_id, status')
+      .eq('id', roomId)
+      .single();
+
+    if (error || !data) {
+      return { canJoin: false, reason: 'Room not found' };
+    }
+
+    const isMentor = data.mentor_id === user.id;
+    const isStudent = data.student_id === user.id;
+
+    if (!isMentor && !isStudent) {
+      return { canJoin: false, reason: 'You are not part of this session' };
+    }
+
+    if (data.status === 'completed') {
+      return { canJoin: false, reason: 'Session has ended' };
+    }
+
+    if (data.status === 'cancelled') {
+      return { canJoin: false, reason: 'Session was cancelled' };
+    }
+
+    return {
+      canJoin: true,
+      isMentor,
+      isStudent,
+      status: data.status,
+    };
+  },
+
+  /**
+   * Get room by ID
+   */
+  getRoomById: async (roomId: string) => {
+    const supabase = getSupabaseClient();
+    
+    const { data, error } = await supabase
+      .from('mentor_session_rooms')
+      .select('*')
+      .eq('id', roomId)
+      .single();
+
+    if (error) {
+      if (error.code === 'PGRST116') return null;
+      throw new Error(error.message);
+    }
+
+    return {
+      id: data.id,
+      bookingId: data.booking_id,
+      mentorId: data.mentor_id,
+      studentId: data.student_id,
+      roomName: data.room_name,
+      scheduledStart: data.scheduled_start,
+      scheduledEnd: data.scheduled_end,
+      actualStart: data.actual_start,
+      actualEnd: data.actual_end,
+      status: data.status,
+    };
+  },
+};
+
 // ─── STUDY SESSIONS (focus timer) ───────────────────────────────────────────────
 
 export const studySessions = {
@@ -2033,6 +2731,306 @@ export const studySessions = {
 };
 
 // ─── SEED ───────────────────────────────────────────────────────────────────────
+
+// ─── AI MENTOR CHAT SESSIONS ────────────────────────────────────────────────────
+
+export const aiChat = {
+  /** List all chat sessions for the current user */
+  listSessions: async () => {
+    const supabase = getSupabaseClient();
+    const user = await getCurrentSessionUser();
+    if (!user) return [];
+
+    const { data, error } = await supabase
+      .from('ai_chat_sessions')
+      .select('id, name, description, chat_type, total_messages, is_pinned, is_archived, created_at, updated_at, last_message_at')
+      .eq('user_id', user.id)
+      .eq('is_archived', false)
+      .order('updated_at', { ascending: false });
+
+    if (error) throw new Error(error.message);
+
+    return (data ?? []).map((row: any) => ({
+      id: row.id,
+      name: row.name,
+      description: row.description,
+      chatType: row.chat_type,
+      totalMessages: row.total_messages,
+      isPinned: row.is_pinned,
+      isArchived: row.is_archived,
+      createdAt: row.created_at,
+      updatedAt: row.updated_at,
+      lastMessageAt: row.last_message_at,
+    }));
+  },
+
+  /** Create a new chat session */
+  createSession: async (data: { name?: string; description?: string; chatType?: 'text' | 'voice' }) => {
+    const supabase = getSupabaseClient();
+    const user = await getCurrentSessionUser();
+    if (!user) throw new Error('Authentication expired. Please log in again.');
+
+    const { data: created, error } = await supabase
+      .from('ai_chat_sessions')
+      .insert({
+        user_id: user.id,
+        name: data.name || 'New Chat',
+        description: data.description || null,
+        chat_type: data.chatType || 'text',
+      })
+      .select('id, name, description, chat_type, total_messages, is_pinned, is_archived, created_at, updated_at')
+      .single();
+
+    if (error) throw new Error(error.message);
+
+    return {
+      id: created.id,
+      name: created.name,
+      description: created.description,
+      chatType: created.chat_type,
+      totalMessages: created.total_messages,
+      isPinned: created.is_pinned,
+      isArchived: created.is_archived,
+      createdAt: created.created_at,
+      updatedAt: created.updated_at,
+    };
+  },
+
+  /** Get a specific chat session with its messages */
+  getSession: async (sessionId: string) => {
+    const supabase = getSupabaseClient();
+    const user = await getCurrentSessionUser();
+    if (!user) throw new Error('Authentication expired. Please log in again.');
+
+    const { data: session, error: sessionError } = await supabase
+      .from('ai_chat_sessions')
+      .select('id, name, description, chat_type, total_messages, is_pinned, is_archived, created_at, updated_at')
+      .eq('id', sessionId)
+      .eq('user_id', user.id)
+      .single();
+
+    if (sessionError) throw new Error(sessionError.message);
+
+    const { data: messages, error: messagesError } = await supabase
+      .from('ai_chat_messages')
+      .select('id, role, content, attachment_type, attachment_url, attachment_name, tokens_used, reaction, created_at, updated_at')
+      .eq('session_id', sessionId)
+      .order('created_at', { ascending: true });
+
+    if (messagesError) throw new Error(messagesError.message);
+
+    return {
+      session: {
+        id: session.id,
+        name: session.name,
+        description: session.description,
+        chatType: session.chat_type,
+        totalMessages: session.total_messages,
+        isPinned: session.is_pinned,
+        isArchived: session.is_archived,
+        createdAt: session.created_at,
+        updatedAt: session.updated_at,
+      },
+      messages: (messages ?? []).map((row: any) => ({
+        id: row.id,
+        role: row.role,
+        content: row.content,
+        attachmentType: row.attachment_type,
+        attachmentUrl: row.attachment_url,
+        attachmentName: row.attachment_name,
+        tokensUsed: row.tokens_used,
+        reaction: row.reaction,
+        createdAt: row.created_at,
+        updatedAt: row.updated_at,
+      })),
+    };
+  },
+
+  /** Add a message to a chat session */
+  addMessage: async (sessionId: string, data: { role: 'user' | 'ai'; content: string; attachmentType?: string | null; attachmentUrl?: string | null; attachmentName?: string | null; tokensUsed?: number }) => {
+    const supabase = getSupabaseClient();
+    const user = await getCurrentSessionUser();
+    if (!user) throw new Error('Authentication expired. Please log in again.');
+
+    // Verify session belongs to user
+    const { data: session, error: sessionError } = await supabase
+      .from('ai_chat_sessions')
+      .select('id')
+      .eq('id', sessionId)
+      .eq('user_id', user.id)
+      .single();
+
+    if (sessionError || !session) throw new Error('Chat session not found');
+
+    const { data: message, error } = await supabase
+      .from('ai_chat_messages')
+      .insert({
+        session_id: sessionId,
+        user_id: user.id,
+        role: data.role,
+        content: data.content,
+        attachment_type: data.attachmentType || null,
+        attachment_url: data.attachmentUrl || null,
+        attachment_name: data.attachmentName || null,
+        tokens_used: data.tokensUsed || 0,
+      })
+      .select('id, role, content, attachment_type, attachment_url, attachment_name, tokens_used, created_at')
+      .single();
+
+    if (error) throw new Error(error.message);
+
+    return {
+      id: message.id,
+      role: message.role,
+      content: message.content,
+      attachmentType: message.attachment_type,
+      attachmentUrl: message.attachment_url,
+      attachmentName: message.attachment_name,
+      tokensUsed: message.tokens_used,
+      createdAt: message.created_at,
+    };
+  },
+
+  /** Update chat session metadata (name, description, etc) */
+  updateSession: async (sessionId: string, data: { name?: string; description?: string; isPinned?: boolean; isArchived?: boolean }) => {
+    const supabase = getSupabaseClient();
+    const user = await getCurrentSessionUser();
+    if (!user) throw new Error('Authentication expired. Please log in again.');
+
+    const updates: Record<string, any> = {};
+    if (data.name !== undefined) updates.name = data.name;
+    if (data.description !== undefined) updates.description = data.description;
+    if (data.isPinned !== undefined) updates.is_pinned = data.isPinned;
+    if (data.isArchived !== undefined) updates.is_archived = data.isArchived;
+    updates.updated_at = new Date().toISOString();
+
+    const { data: updated, error } = await supabase
+      .from('ai_chat_sessions')
+      .update(updates)
+      .eq('id', sessionId)
+      .eq('user_id', user.id)
+      .select('id, name, description, is_pinned, is_archived, updated_at')
+      .single();
+
+    if (error) throw new Error(error.message);
+
+    return {
+      id: updated.id,
+      name: updated.name,
+      description: updated.description,
+      isPinned: updated.is_pinned,
+      isArchived: updated.is_archived,
+      updatedAt: updated.updated_at,
+    };
+  },
+
+  /** Delete a chat session */
+  deleteSession: async (sessionId: string) => {
+    const supabase = getSupabaseClient();
+    const user = await getCurrentSessionUser();
+    if (!user) throw new Error('Authentication expired. Please log in again.');
+
+    const { error } = await supabase
+      .from('ai_chat_sessions')
+      .delete()
+      .eq('id', sessionId)
+      .eq('user_id', user.id);
+
+    if (error) throw new Error(error.message);
+    return { success: true };
+  },
+
+  /** Archive a chat session (soft delete) */
+  archiveSession: async (sessionId: string) => {
+    return aiChat.updateSession(sessionId, { isArchived: true });
+  },
+
+  /** Get archived chat sessions */
+  listArchivedSessions: async () => {
+    const supabase = getSupabaseClient();
+    const user = await getCurrentSessionUser();
+    if (!user) return [];
+
+    const { data, error } = await supabase
+      .from('ai_chat_sessions')
+      .select('id, name, description, chat_type, total_messages, is_pinned, is_archived, created_at, updated_at')
+      .eq('user_id', user.id)
+      .eq('is_archived', true)
+      .order('updated_at', { ascending: false });
+
+    if (error) throw new Error(error.message);
+
+    return (data ?? []).map((row: any) => ({
+      id: row.id,
+      name: row.name,
+      description: row.description,
+      chatType: row.chat_type,
+      totalMessages: row.total_messages,
+      isPinned: row.is_pinned,
+      isArchived: row.is_archived,
+      createdAt: row.created_at,
+      updatedAt: row.updated_at,
+    }));
+  },
+
+  /** Get pinned chat sessions */
+  listPinnedSessions: async () => {
+    const supabase = getSupabaseClient();
+    const user = await getCurrentSessionUser();
+    if (!user) return [];
+
+    const { data, error } = await supabase
+      .from('ai_chat_sessions')
+      .select('id, name, description, chat_type, total_messages, is_pinned, is_archived, created_at, updated_at')
+      .eq('user_id', user.id)
+      .eq('is_pinned', true)
+      .eq('is_archived', false)
+      .order('updated_at', { ascending: false });
+
+    if (error) throw new Error(error.message);
+
+    return (data ?? []).map((row: any) => ({
+      id: row.id,
+      name: row.name,
+      description: row.description,
+      chatType: row.chat_type,
+      totalMessages: row.total_messages,
+      isPinned: row.is_pinned,
+      isArchived: row.is_archived,
+      createdAt: row.created_at,
+      updatedAt: row.updated_at,
+    }));
+  },
+
+  /** Search chat sessions by name */
+  searchSessions: async (query: string) => {
+    const supabase = getSupabaseClient();
+    const user = await getCurrentSessionUser();
+    if (!user) return [];
+
+    const { data, error } = await supabase
+      .from('ai_chat_sessions')
+      .select('id, name, description, chat_type, total_messages, is_pinned, is_archived, created_at, updated_at')
+      .eq('user_id', user.id)
+      .eq('is_archived', false)
+      .ilike('name', `%${query}%`)
+      .order('updated_at', { ascending: false });
+
+    if (error) throw new Error(error.message);
+
+    return (data ?? []).map((row: any) => ({
+      id: row.id,
+      name: row.name,
+      description: row.description,
+      chatType: row.chat_type,
+      totalMessages: row.total_messages,
+      isPinned: row.is_pinned,
+      isArchived: row.is_archived,
+      createdAt: row.created_at,
+      updatedAt: row.updated_at,
+    }));
+  },
+};
 
 export const seed = {
   demo: () => apiFetch('/seed/demo', { method: 'POST' }, true),

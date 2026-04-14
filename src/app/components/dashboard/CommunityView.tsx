@@ -44,13 +44,13 @@ function EventCard({ event }: { event: CommunityEvent }) {
             <p className="font-['Poppins'] font-medium leading-normal text-[#003566] text-[24px] w-full whitespace-pre-wrap">
               {event.title}
             </p>
-            <p className="font-['Poppins'] leading-[21px] text-[16px] text-[rgba(0,0,0,0.7)] w-full">
+            <p className="font-['Poppins'] leading-[21px] text-[16px] text-[rgba(0,0,0,0.7)] dark:text-slate-300 w-full">
               {event.description}
             </p>
           </div>
 
           {/* Bullet detail list */}
-          <ul className="font-['Poppins'] text-[16px] text-[rgba(0,0,0,0.7)] w-full">
+          <ul className="font-['Poppins'] text-[16px] text-[rgba(0,0,0,0.7)] dark:text-slate-300 w-full">
             {event.details.map((detail, i) => (
               <li key={i} className="list-disc ms-[24px] leading-[24px] whitespace-pre-wrap">
                 {detail}
@@ -72,10 +72,10 @@ function EventCard({ event }: { event: CommunityEvent }) {
             </div>
           </div>
           <div className="flex flex-col font-['Poppins'] font-medium gap-[10px] items-start">
-            <p className="leading-[21px] text-[14px] text-[rgba(0,0,0,0.7)] whitespace-nowrap">
+            <p className="leading-[21px] text-[14px] text-[rgba(0,0,0,0.7)] dark:text-slate-300 whitespace-nowrap">
               {event.author}
             </p>
-            <p className="leading-[21px] text-[12px] text-[rgba(0,0,0,0.6)] whitespace-pre-wrap">
+            <p className="leading-[21px] text-[12px] text-[rgba(0,0,0,0.6)] dark:text-slate-400 whitespace-pre-wrap">
               {event.date}
             </p>
           </div>
@@ -116,11 +116,11 @@ function SectionHeader({
 }) {
   return (
     <div className="flex items-start justify-between leading-normal w-full">
-      <p className="font-['Poppins'] font-medium text-[20px] text-black">{title}</p>
+      <p className="font-['Poppins'] font-medium text-[20px] text-black dark:text-white">{title}</p>
       <button
         type="button"
         onClick={onToggle}
-        className="font-['Poppins'] text-[16px] text-[rgba(0,0,0,0.6)] underline decoration-solid hover:text-[rgba(0,0,0,0.8)] transition-colors cursor-pointer"
+        className="font-['Poppins'] text-[16px] text-[rgba(0,0,0,0.6)] dark:text-slate-400 underline decoration-solid hover:text-[rgba(0,0,0,0.8)] dark:hover:text-slate-200 transition-colors cursor-pointer"
       >
         {expanded ? "View Less" : "View All"}
       </button>
@@ -170,7 +170,7 @@ export function CommunityView() {
   // Normalize event for display
   const normalizeEvent = (e: CommunityEvent): CommunityEvent => ({
     ...e,
-    author: e.authorName || e.author || "Learnova Team",
+    author: e.authorName || e.author || "Elm Orbit Team",
     date: e.createdAt ? new Date(e.createdAt).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" }) : (e.date || ""),
   });
 
@@ -178,9 +178,9 @@ export function CommunityView() {
     <div className="w-full flex flex-col gap-0">
       {/* ── Page Header ── */}
       <div className="flex flex-col items-start pb-[6px] mb-[60px]">
-        <p className="font-['Poppins'] font-medium text-[40px] text-black leading-normal">Community</p>
-        <p className="font-['Poppins'] text-[14px] text-[rgba(0,0,0,0.6)] leading-normal">
-          Discover upcoming and recent events from the Learnova community.
+        <p className="font-['Poppins'] font-medium text-[40px] text-black dark:text-white leading-normal">Community</p>
+        <p className="font-['Poppins'] text-[14px] text-[rgba(0,0,0,0.6)] dark:text-slate-400 leading-normal">
+          Discover upcoming and recent events from the Elm Orbit community.
         </p>
       </div>
 
@@ -200,7 +200,7 @@ export function CommunityView() {
               onToggle={() => setShowAllUpcoming((v) => !v)}
             />
             {upcomingRows.length === 0 ? (
-              <p className="font-['Poppins'] text-[14px] text-black/40 py-4">No upcoming events yet.</p>
+              <p className="font-['Poppins'] text-[14px] text-black/40 dark:text-slate-500 py-4">No upcoming events yet.</p>
             ) : (
               upcomingRows.map((pair, i) => (
                 <EventRow key={i} events={pair.map(normalizeEvent)} />
@@ -216,7 +216,7 @@ export function CommunityView() {
               onToggle={() => setShowAllRecent((v) => !v)}
             />
             {recentRows.length === 0 ? (
-              <p className="font-['Poppins'] text-[14px] text-black/40 py-4">No recent events.</p>
+              <p className="font-['Poppins'] text-[14px] text-black/40 dark:text-slate-500 py-4">No recent events.</p>
             ) : (
               recentRows.map((pair, i) => (
                 <EventRow key={i} events={pair.map(normalizeEvent)} />

@@ -38,7 +38,7 @@ export function LaunchingRoomLoader() {
               </defs>
             </svg>
           </div>
-          <span className="font-['Righteous'] text-[20.472px] text-[#003566]">Learnova</span>
+          <span className="font-['Righteous'] text-[20.472px] text-[#003566]">Elm Orbit</span>
         </div>
 
         {/* Main Menu */}

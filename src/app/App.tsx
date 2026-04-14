@@ -143,7 +143,9 @@ export default function App() {
   return (
     <>
       {showFloatingThemeToggle ? (
-        <ThemeToggle className="fixed right-4 bottom-4 z-[70] rounded-full" />
+        <ThemeToggle
+          className="fixed right-5 bottom-5 z-[70] rounded-full shadow-lg shadow-black/10 dark:shadow-black/40"
+        />
       ) : null}
       <Toaster closeButton position="top-right" richColors />
 

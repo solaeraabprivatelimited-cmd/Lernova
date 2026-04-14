@@ -28,12 +28,7 @@ interface RoomData {
 
 type ViewType = 'selection' | 'create-room' | 'join-room' | 'join-random' | 'in-room';
 
-export function CollaborativeModeView({ 
-  onCreateRoom, 
-  onJoinRoom, 
-  onJoinRandomRoom,
-  onLeave 
-}: CollaborativeModeViewProps) {
+export function CollaborativeModeView({}: CollaborativeModeViewProps) {
   const [view, setView] = useState<ViewType>('selection');
   const [currentRoom, setCurrentRoom] = useState<RoomData | null>(null);
 
@@ -87,7 +82,7 @@ export function CollaborativeModeView({
           <div className="w-9 h-9 rounded-full border-2 border-[#003566] flex items-center justify-center bg-gradient-to-br from-[#003566] to-[#F77F00]">
             <span className="text-white font-bold text-xs">L</span>
           </div>
-          <p className="font-['Righteous'] text-base text-[#003566] dark:text-[#00d4ff]">Learnova</p>
+          <p className="font-['Righteous'] text-base text-[#003566] dark:text-[#00d4ff]">Elm Orbit</p>
         </div>
 
         {/* Center: Simple status */}

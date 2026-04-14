@@ -110,7 +110,7 @@ export function OnboardingWalkthrough({
                 First-time walkthrough
               </div>
               <DialogTitle className="text-[30px] leading-[1.05] text-white" style={{ fontFamily: "'DM Serif Display', serif" }}>
-                Welcome to Lernova, {safeName}
+                Welcome to Elm Orbit, {safeName}
               </DialogTitle>
               <DialogDescription className="max-w-[540px] text-[14px] leading-relaxed text-white/75">
                 A quick three-step guide so your first session feels clear instead of crowded.

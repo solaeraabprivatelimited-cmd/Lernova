@@ -402,7 +402,7 @@ const SidebarContent = ({
     {/* Logo */}
     <div className="flex items-center gap-3 mb-12">
        <LogoIcon />
-       <span className="font-['Righteous'] text-[#003566] text-[20px]">Learnova</span>
+       <span className="font-['Righteous'] text-[#003566] text-[20px]">Elm Orbit</span>
     </div>
 
     {/* Menu Label */}
@@ -671,7 +671,7 @@ export function StudyRoomDashboard({ onLogout }: { onLogout?: () => void }) {
     }
 
     const currentUser = getCurrentUser();
-    const reminderStoragePrefix = `learnova_reminder_notice:${currentUser?.id || 'guest'}:`;
+    const reminderStoragePrefix = `elmorbit_reminder_notice:${currentUser?.id || 'guest'}:`;
     let cancelled = false;
 
     const buildReminderDate = (dateValue?: string | null, timeValue?: string | null) => {
@@ -984,7 +984,7 @@ export function StudyRoomDashboard({ onLogout }: { onLogout?: () => void }) {
           {/* Logo */}
           <div className="flex items-center gap-3 mb-10">
             <LogoIconLight />
-            <span className="font-['Righteous'] text-white text-[20px]">Learnova</span>
+            <span className="font-['Righteous'] text-white text-[20px]">Elm Orbit</span>
           </div>
 
           {/* Menu Label */}
@@ -1091,7 +1091,7 @@ export function StudyRoomDashboard({ onLogout }: { onLogout?: () => void }) {
               </div>
 
               <div className="hidden lg:block">
-                <h2 className="text-[18px] font-bold text-[#003566] dark:text-white">
+                <h2 className="text-[18px] font-bold text-foreground">
                   {activeSection === "Study Rooms" ? "Dashboard" : activeSection}
                 </h2>
               </div>
@@ -1236,9 +1236,9 @@ export function StudyRoomDashboard({ onLogout }: { onLogout?: () => void }) {
                 <div className="flex items-center justify-between mb-5">
                   <div className="flex items-center gap-3">
                     <div className="w-1 h-5 rounded-full bg-[#f77f00]" />
-                    <h2 className="text-[16px] font-bold text-[#003566]">Choose Your Room</h2>
+                    <h2 className="text-[16px] font-bold text-foreground">Choose Your Room</h2>
                   </div>
-                  <span className="text-[12px] font-medium text-[#94a3b8]">{modes.length} available</span>
+                  <span className="text-[12px] font-medium text-muted-foreground">{modes.length} available</span>
                 </div>
 
                 {/* ── Featured Mode (Focus) — Large Hero Card ── */}
@@ -1376,7 +1376,7 @@ export function StudyRoomDashboard({ onLogout }: { onLogout?: () => void }) {
                     </div>
                     <div className="flex-1 relative z-10">
                       <p className="text-[15px] font-bold text-white mb-1">
-                        New to Learnova?
+                        New to Elm Orbit?
                       </p>
                       <p className="text-[13px] text-white/45 leading-relaxed">
                         Start with <strong className="text-[#f77f00] font-semibold">Focus Mode</strong> — it's the most popular choice for deep, distraction-free study sessions with built-in Pomodoro timers.
@@ -1432,13 +1432,13 @@ export function StudyRoomDashboard({ onLogout }: { onLogout?: () => void }) {
             {/* Coming soon fallback */}
             {activeSection !== "Study Rooms" && activeSection !== "Mentor Support" && activeSection !== "Human Mentor" && activeSection !== "Productivity Tools" && activeSection !== "Emotional Wellness" && activeSection !== "Community" && !activeSection.startsWith("AI Mentor") && (
               <div className="flex flex-col items-center justify-center h-[50vh] text-center">
-                <div className="w-16 h-16 rounded-[20px] bg-[#f5f7fa] flex items-center justify-center mb-4">
-                  <svg viewBox="0 0 24 24" className="w-7 h-7" fill="none" stroke="#94a3b8" strokeWidth="1.5" strokeLinecap="round">
+                <div className="w-16 h-16 rounded-[20px] bg-secondary flex items-center justify-center mb-4">
+                  <svg viewBox="0 0 24 24" className="w-7 h-7" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" style={{ color: 'var(--muted-foreground)' }}>
                     <circle cx="12" cy="12" r="10" /><path d="M12 6v6l4 2" />
                   </svg>
                 </div>
-                <h2 className="text-[20px] font-bold text-[#1e293b] mb-2" style={{ fontFamily: "'DM Serif Display', serif" }}>Coming Soon</h2>
-                <p className="text-[14px] text-[#94a3b8] max-w-[320px]">The <span className="font-semibold text-[#64748b]">{activeSection}</span> feature is currently under development.</p>
+                <h2 className="text-[20px] font-bold text-foreground mb-2" style={{ fontFamily: "'DM Serif Display', serif" }}>Coming Soon</h2>
+                <p className="text-[14px] text-muted-foreground max-w-[320px]">The <span className="font-semibold">{activeSection}</span> feature is currently under development.</p>
               </div>
             )}
           </div>

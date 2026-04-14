@@ -45,7 +45,7 @@ interface MentorDashboardProps {
 // SVG Icon helpers
 // ────────────────────────────────────────────────────────────────────────────────
 
-function LearnovaLogo() {
+function ElmOrbitLogo() {
   return (
     <div className="flex items-center gap-2">
       <div className="size-[35px] shrink-0">
@@ -71,7 +71,7 @@ function LearnovaLogo() {
           </defs>
         </svg>
       </div>
-      <span className="font-['Righteous'] text-blue-600 dark:text-blue-400 text-[20px]">Learnova</span>
+      <span className="font-['Righteous'] text-blue-600 dark:text-blue-400 text-[20px]">Elm Orbit</span>
     </div>
   );
 }
@@ -1160,8 +1160,8 @@ function CreateSessionView({ stats, loadingStats, mentorName }: CreateSessionVie
       {/* Page header */}
       <div className="flex items-start justify-between">
         <div>
-          <p className="font-['Poppins'] font-medium text-[40px] text-black leading-tight">Create Session</p>
-          <p className="font-['Poppins'] text-[14px] text-[rgba(0,0,0,0.6)]">Define your session details and get ready to teach.</p>
+          <p className="font-['Poppins'] font-medium text-[40px] text-foreground leading-tight">Create Session</p>
+          <p className="font-['Poppins'] text-[14px] text-muted-foreground">Define your session details and get ready to teach.</p>
 
           <div className="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-3 max-w-[760px]">
             <div className="dark:bg-blue-600/10 dark:border-blue-600/20 light:bg-blue-50 light:border-blue-200 border rounded-[12px] px-4 py-3">
@@ -1460,8 +1460,8 @@ function SessionRequestsView() {
 
       {/* Page Header */}
       <div>
-        <p className="font-['Poppins'] font-medium text-[40px] text-black leading-tight">Session Requests</p>
-        <p className="font-['Poppins'] text-[14px] text-[rgba(0,0,0,0.6)]">View and respond to incoming session requests easily.</p>
+        <p className="font-['Poppins'] font-medium text-[40px] text-foreground leading-tight">Session Requests</p>
+        <p className="font-['Poppins'] text-[14px] text-muted-foreground">View and respond to incoming session requests easily.</p>
       </div>
 
       {/* Filter bar */}
@@ -1678,7 +1678,7 @@ function CreateStudyRoomView() {
   const [roomId] = useState(() => Math.floor(1000 + Math.random() * 9000).toString());
   const [copied, setCopied] = useState(false);
 
-  const joinLink = `learnova.com/room/${roomId}`;
+const joinLink = `elmorbit.co.in/room/${roomId}`;
 
   const handleLaunch = () => {
     setStep('launching');
@@ -2721,8 +2721,8 @@ function EmotionalWellnessView() {
   return (
     <div className="flex flex-col gap-6">
       <div>
-        <p className="font-['Poppins'] font-medium text-[40px] text-black leading-tight">Emotional Wellness</p>
-        <p className="font-['Poppins'] text-[14px] text-[rgba(0,0,0,0.6)]">Everything you need to manage your mental health journey</p>
+        <p className="font-['Poppins'] font-medium text-[40px] text-foreground leading-tight">Emotional Wellness</p>
+        <p className="font-['Poppins'] text-[14px] text-muted-foreground">Everything you need to manage your mental health journey</p>
       </div>
 
       <div className="grid grid-cols-2 gap-[25px]">
@@ -2761,17 +2761,17 @@ function ComingSoon({ title }: { title: string }) {
   return (
     <div className="flex flex-col gap-4">
       <div>
-        <p className="font-['Poppins'] font-medium text-[40px] text-black leading-tight">{title}</p>
+        <p className="font-['Poppins'] font-medium text-[40px] text-foreground leading-tight">{title}</p>
       </div>
       <div className="flex flex-col items-center justify-center py-24 gap-4 text-center">
-        <div className="w-[80px] h-[80px] bg-[#c9e5ff] rounded-full flex items-center justify-center">
-          <svg fill="none" viewBox="0 0 24 24" className="w-9 h-9" stroke="#003566" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+        <div className="w-[80px] h-[80px] bg-secondary rounded-full flex items-center justify-center">
+          <svg fill="none" viewBox="0 0 24 24" className="w-9 h-9" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'var(--brand)' }}>
             <circle cx="12" cy="12" r="10" />
             <path d="M12 6v6l4 2" />
           </svg>
         </div>
-        <p className="font-['Poppins'] font-medium text-[20px] text-[rgba(0,0,0,0.6)]">Coming Soon</p>
-        <p className="font-['Poppins'] text-[14px] text-[rgba(0,0,0,0.4)] max-w-[300px]">This section is under development and will be available soon.</p>
+        <p className="font-['Poppins'] font-medium text-[20px] text-muted-foreground">Coming Soon</p>
+        <p className="font-['Poppins'] text-[14px] text-muted-foreground/70 max-w-[300px]">This section is under development and will be available soon.</p>
       </div>
     </div>
   );
@@ -2796,10 +2796,10 @@ const NAV_ITEMS: { id: NavItem; label: string; icon: React.ReactNode }[] = [
 
 function Sidebar({ active, onNav }: SidebarProps) {
   return (
-    <div className="flex h-full flex-col border-r border-border/70 dark:bg-[#2b2c2f] light:bg-card pt-[32px] pb-6 shadow-[0px_4px_18px_-1px_rgba(0,0,0,0.08)]">
+    <div className="flex h-full flex-col border-r border-border/70 bg-card pt-[32px] pb-6 shadow-sm">
       {/* Logo */}
       <div className="px-[32px] mb-[36px]">
-        <LearnovaLogo />
+        <ElmOrbitLogo />
       </div>
 
       {/* Menu label */}
@@ -3055,15 +3055,15 @@ export function MentorDashboard({ onLogout }: MentorDashboardProps) {
       </React.Suspense>
       {/* Sidebar — hidden when profile settings is open (it has its own sidebar) */}
       {activeNav !== 'profile' && (
-        <div className="w-[278px] shrink-0 h-full overflow-y-auto">
+        <div className="w-[278px] shrink-0 h-full overflow-y-auto hidden md:block">
           <Sidebar active={activeNav} onNav={setActiveNav} />
         </div>
       )}
 
       {/* Main area */}
-      <div className="flex-1 flex flex-col overflow-hidden dark:bg-[#1a1a1a] light:bg-background">
+      <div className="flex-1 flex flex-col overflow-hidden bg-background">
         {/* Top bar — hidden in profile view which has its own */}
-        <div className={`flex shrink-0 items-center justify-end gap-6 border-b border-border/70 dark:bg-[#2b2c2f] light:bg-background px-10 py-[22px] backdrop-blur-xl ${activeNav === 'profile' ? 'hidden' : ''}`}>
+        <div className={`flex shrink-0 items-center justify-end gap-6 border-b border-border/70 bg-card px-10 py-[22px] backdrop-blur-xl ${activeNav === 'profile' ? 'hidden' : ''}`}>
           {/* Bell */}
           <div className="relative bg-transparent">
             <button

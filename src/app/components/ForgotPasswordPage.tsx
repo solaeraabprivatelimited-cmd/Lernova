@@ -141,7 +141,7 @@ export function ForgotPasswordPage({ onBack }: ForgotPasswordPageProps) {
               {[
                 'Send a one-time code to your email address.',
                 'Verify the code in six quick taps.',
-                'Choose a new password and return to Learnova.',
+                'Choose a new password and return to Elm Orbit.',
               ].map((step, index) => (
                 <div key={step} className="flex gap-3">
                   <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-white/10 text-sm font-semibold text-white">

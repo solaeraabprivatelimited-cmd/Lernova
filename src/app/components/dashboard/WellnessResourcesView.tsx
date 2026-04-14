@@ -2,6 +2,7 @@ import { getCurrentUser } from "@/app/lib/api";
 import imgImage28 from "figma:asset/605a593a8aec5bcd93a6caef17da90dbf55364dc.png";
 import imgFrame1171275609 from "figma:asset/d0b5e8618139abd2e6c665600d3134442c6ea4a3.png";
 import { ImageWithFallback } from "../figma/ImageWithFallback";
+import { SkeletonWellnessResources } from "../skeletons/PageSkeletons";
 import {
   ArrowLeft, BookOpen, Plus, ThumbsUp, ThumbsDown, Play, FileText, X,
   Image as ImageIcon, Sparkles, Clock, User
@@ -184,6 +185,12 @@ export function WellnessResourcesView({ onBack }: { onBack: () => void }) {
   const [articles, setArticles] = useState<WellnessArticle[]>(initialArticles);
   const [reactions, setReactions] = useState<Record<string, "like" | "dislike" | null>>({});
   const [showPostModal, setShowPostModal] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+
+  // Show skeleton while loading
+  if (isLoading) {
+    return <SkeletonWellnessResources />;
+  }
 
   const handleLike = (id: string) => {
     setReactions((prev) => ({ ...prev, [id]: prev[id] === "like" ? null : "like" }));

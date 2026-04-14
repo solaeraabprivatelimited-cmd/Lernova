@@ -7,8 +7,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
       attribute="class"
       defaultTheme="light"
       enableSystem
-      disableTransitionOnChange
-      storageKey="learnova-theme"
+      storageKey="elmorbit-theme"
     >
       {children}
     </NextThemesProvider>

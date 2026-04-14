@@ -8,7 +8,7 @@ interface ShareRoomModalProps {
 }
 
 export function ShareRoomModal({ roomName, roomCode, onClose }: ShareRoomModalProps) {
-  const joinLink = `learnova.com/room/${roomCode}`;
+  const joinLink = `elmorbit.co.in/room/${roomCode}`;
 
   const handleCopyLink = () => {
     if (navigator.clipboard) {

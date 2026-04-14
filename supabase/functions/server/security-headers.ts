@@ -10,9 +10,9 @@
  */
 export function getSecurityHeaders(options = {}): Record<string, string> {
   const allowedDomains = [
-    'https://lernova.com',
-    'https://www.lernova.com',
-    'https://app.lernova.com',
+    'https://elmorbit.co.in',
+    'https://www.elmorbit.co.in',
+    'https://app.elmorbit.co.in',
   ];
 
   const supabaseUrl = 'https://evtvzmherkrahjsxdddi.supabase.co';
@@ -134,9 +134,9 @@ export function getSecurityHeaders(options = {}): Record<string, string> {
 export const corsConfig = {
   origin: (origin: string | undefined) => {
     const allowedOrigins = [
-      'https://lernova.com',
-      'https://www.lernova.com',
-      'https://app.lernova.com',
+      'https://elmorbit.co.in',
+      'https://www.elmorbit.co.in',
+      'https://app.elmorbit.co.in',
       // Add additional allowed origins for dev/staging
       ...(process.env.ALLOWED_ORIGINS?.split(',') || []),
     ];

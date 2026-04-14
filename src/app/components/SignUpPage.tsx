@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   ArrowRight,
   BookOpenText,
@@ -11,6 +11,7 @@ import {
   UserRound,
   Users,
 } from 'lucide-react';
+import { toast } from 'sonner';
 
 import {
   AuthAlert,
@@ -99,6 +100,9 @@ export function SignUpPage({ onSignUp, onLogin, onBack }: SignUpPageProps) {
     try {
       await auth.verifySignupOtp(email, otpCode, password);
       markOnboardingPending(activeTab);
+      toast.success('Account created successfully! 🎉', {
+        description: `Welcome${activeTab === 'mentor' ? ', mentor' : ''} - let's get you started!`,
+      });
       if (onSignUp) {
         onSignUp();
       } else {
@@ -135,6 +139,50 @@ export function SignUpPage({ onSignUp, onLogin, onBack }: SignUpPageProps) {
       void handleVerifyOtp();
     }
   };
+
+  // Auto-fill OTP from clipboard paste
+  useEffect(() => {
+    const handlePaste = async (e: ClipboardEvent) => {
+      if (stage !== 'otp') return;
+      
+      const activeEl = document.activeElement;
+      if (!(activeEl instanceof HTMLInputElement)) return;
+      if (!activeEl.id.startsWith('signup-otp-')) return;
+      
+      e.preventDefault();
+      try {
+        const pastedText = await navigator.clipboard.readText();
+        const digits = pastedText.replace(/\D/g, '').slice(0, 6);
+        
+        if (digits.length > 0) {
+          const newOtp = ['', '', '', '', '', ''];
+          for (let i = 0; i < digits.length && i < 6; i++) {
+            newOtp[i] = digits[i];
+          }
+          setOtp(newOtp);
+          toast.success('OTP auto-filled!', { duration: 2000 });
+          
+          // Auto-submit if complete
+          if (digits.length === 6) {
+            setTimeout(() => void handleVerifyOtp(), 200);
+          }
+        }
+      } catch (err) {
+        console.error('Clipboard paste error:', err);
+      }
+    };
+
+    document.addEventListener('paste', handlePaste as EventListener);
+    return () => document.removeEventListener('paste', handlePaste as EventListener);
+  }, [stage, otp]);
+
+  // Auto-submit when all 6 digits are entered
+  useEffect(() => {
+    if (stage === 'otp' && otp.every(digit => digit !== '') && !isLoading) {
+      const timer = setTimeout(() => void handleVerifyOtp(), 300);
+      return () => clearTimeout(timer);
+    }
+  }, [otp, stage, isLoading]);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
@@ -333,9 +381,9 @@ export function SignUpPage({ onSignUp, onLogin, onBack }: SignUpPageProps) {
             </AuthSubmitButton>
 
             <div className="flex items-center gap-3">
-              <div className="h-px flex-1 text-muted-foreground" />
+              <div className="h-px flex-1 bg-border" />
               <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">or</span>
-              <div className="h-px flex-1 text-muted-foreground" />
+              <div className="h-px flex-1 bg-border" />
             </div>
 
             <Button
@@ -394,7 +442,7 @@ export function SignUpPage({ onSignUp, onLogin, onBack }: SignUpPageProps) {
               onClick={() => void handleVerifyOtp()}
             >
               <span className="inline-flex items-center gap-2">
-                Verify and continue
+                {otp.every(d => d !== '') && !isLoading ? 'Auto-verifying...' : 'Verify and continue'}
                 <ArrowRight className="size-4" />
               </span>
             </AuthSubmitButton>
@@ -402,11 +450,15 @@ export function SignUpPage({ onSignUp, onLogin, onBack }: SignUpPageProps) {
             <Button
               type="button"
               variant="ghost"
-              className="w-full rounded-full text-sm text-muted-foreground hover:text-foreground"
+              className="w-full rounded-full text-xs text-muted-foreground hover:text-foreground"
               onClick={() => setStage('form')}
             >
               Back to details
             </Button>
+
+            <div className="flex items-center justify-center gap-1.5 text-xs text-muted-foreground mt-2">
+              <span>💡 Tip: Copy the code from email and paste it here for instant auto-fill</span>
+            </div>
           </>
         ) : null}
 
@@ -414,7 +466,7 @@ export function SignUpPage({ onSignUp, onLogin, onBack }: SignUpPageProps) {
           <>
             <AuthHeading
               title="You’re all set"
-              description="Your account is ready. Head to login and start using Learnova."
+              description="Your account is ready. Head to login and start using Elm Orbit."
             />
             <AuthSubmitButton type="button" onClick={onLogin}>
               <span className="inline-flex items-center gap-2">

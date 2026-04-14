@@ -23,7 +23,7 @@ export function Footer() {
           {/* Brand */}
           <div className="md:col-span-1 space-y-4">
                <div className="flex items-center gap-2">
-                    <h1 className="font-['Righteous'] text-[#003566] text-2xl">Learnova</h1>
+                    <h1 className="font-['Righteous'] text-[#003566] text-2xl">Elm Orbit</h1>
                     <div className="relative w-8 h-8 bg-[#003566] rounded-full flex items-center justify-center">
                         <svg className="w-5 h-5 text-[#F77F00]" fill="currentColor" viewBox="0 0 24 24">
                             <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" />
@@ -50,7 +50,7 @@ export function Footer() {
                <h3 className="font-['Poppins'] font-medium text-black">Need Help ?</h3>
                <div className="flex flex-col gap-2 font-['Poppins'] text-sm text-[#4d4d4d]">
                   <p>+1 234 567 8910</p>
-                  <p>support@learnova.com</p>
+                  <p>support@elmorbit.co.in</p>
                </div>
           </div>
 
@@ -71,7 +71,7 @@ export function Footer() {
       </div>
 
       <div className="max-w-[1440px] mx-auto px-4 md:px-20 mt-16 pt-8 border-t border-[#ACACAC]/50 flex flex-col md:flex-row justify-between items-center gap-4">
-           <p className="font-['Poppins'] text-sm text-[#4d4d4d]">© 2025, Learnova. All rights reserved.</p>
+           <p className="font-['Poppins'] text-sm text-[#4d4d4d]">© 2025, Elm Orbit. All rights reserved.</p>
            <div className="flex gap-6 font-['Poppins'] text-sm text-[#4d4d4d]">
                <a href="#" className="hover:text-[#003566]">Disclaimer</a>
                <span className="text-[#4d4d4d]/50">|</span>
