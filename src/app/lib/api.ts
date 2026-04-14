@@ -2431,6 +2431,210 @@ export const mentorDashboard = {
   },
 };
 
+// ─── MENTOR SESSION ROOMS ────────────────────────────────────────────────────────
+
+export const mentorSessionRooms = {
+  /**
+   * Create a study room for a confirmed booking
+   * Called when booking is accepted
+   */
+  createRoom: async (bookingId: string) => {
+    const supabase = getSupabaseClient();
+    
+    const { data, error } = await supabase.rpc(
+      'create_mentor_session_room',
+      { p_booking_id: bookingId }
+    );
+
+    if (error) throw new Error(error.message);
+    return {
+      id: data.id,
+      bookingId: data.booking_id,
+      mentorId: data.mentor_id,
+      studentId: data.student_id,
+      roomName: data.room_name,
+      scheduledStart: data.scheduled_start,
+      scheduledEnd: data.scheduled_end,
+      status: data.status,
+    };
+  },
+
+  /**
+   * Get room details for a booking
+   * Shows only to mentor and student (RLS enforced)
+   */
+  getRoom: async (bookingId: string) => {
+    const supabase = getSupabaseClient();
+    
+    const { data, error } = await supabase
+      .from('mentor_session_rooms')
+      .select('*')
+      .eq('booking_id', bookingId)
+      .single();
+
+    if (error) {
+      if (error.code === 'PGRST116') return null; // Not found
+      throw new Error(error.message);
+    }
+
+    return {
+      id: data.id,
+      bookingId: data.booking_id,
+      mentorId: data.mentor_id,
+      studentId: data.student_id,
+      roomName: data.room_name,
+      scheduledStart: data.scheduled_start,
+      scheduledEnd: data.scheduled_end,
+      actualStart: data.actual_start,
+      actualEnd: data.actual_end,
+      status: data.status,
+    };
+  },
+
+  /**
+   * Get all active rooms for current user (mentor or student)
+   */
+  getActiveRooms: async () => {
+    const supabase = getSupabaseClient();
+    const user = await getCurrentSessionUser();
+    if (!user) return [];
+
+    const { data, error } = await supabase
+      .from('mentor_session_rooms')
+      .select('*')
+      .in('status', ['pending', 'active'])
+      .or(`mentor_id.eq.${user.id},student_id.eq.${user.id}`)
+      .order('scheduled_start', { ascending: true });
+
+    if (error) throw new Error(error.message);
+
+    return (data ?? []).map((row: any) => ({
+      id: row.id,
+      bookingId: row.booking_id,
+      mentorId: row.mentor_id,
+      studentId: row.student_id,
+      roomName: row.room_name,
+      scheduledStart: row.scheduled_start,
+      scheduledEnd: row.scheduled_end,
+      actualStart: row.actual_start,
+      actualEnd: row.actual_end,
+      status: row.status,
+    }));
+  },
+
+  /**
+   * Mark room as active (mentor enters)
+   */
+  startRoom: async (roomId: string) => {
+    const supabase = getSupabaseClient();
+    
+    const { data, error } = await supabase.rpc(
+      'start_mentor_session_room',
+      { p_room_id: roomId }
+    );
+
+    if (error) throw new Error(error.message);
+    return {
+      id: data.id,
+      status: data.status,
+      actualStart: data.actual_start,
+    };
+  },
+
+  /**
+   * Mark room as completed (mentor leaves)
+   */
+  endRoom: async (roomId: string) => {
+    const supabase = getSupabaseClient();
+    
+    const { data, error } = await supabase.rpc(
+      'end_mentor_session_room',
+      { p_room_id: roomId }
+    );
+
+    if (error) throw new Error(error.message);
+    return {
+      id: data.id,
+      status: data.status,
+      actualEnd: data.actual_end,
+      durationMins: data.duration_mins,
+    };
+  },
+
+  /**
+   * Verify if current user can join a room
+   * Returns: { canJoin: boolean, reason?: string, isMentor?: boolean, isStudent?: boolean }
+   */
+  canJoinRoom: async (roomId: string) => {
+    const user = await getCurrentSessionUser();
+    if (!user) return { canJoin: false, reason: 'Not authenticated' };
+
+    const supabase = getSupabaseClient();
+    const { data, error } = await supabase
+      .from('mentor_session_rooms')
+      .select('mentor_id, student_id, status')
+      .eq('id', roomId)
+      .single();
+
+    if (error || !data) {
+      return { canJoin: false, reason: 'Room not found' };
+    }
+
+    const isMentor = data.mentor_id === user.id;
+    const isStudent = data.student_id === user.id;
+
+    if (!isMentor && !isStudent) {
+      return { canJoin: false, reason: 'You are not part of this session' };
+    }
+
+    if (data.status === 'completed') {
+      return { canJoin: false, reason: 'Session has ended' };
+    }
+
+    if (data.status === 'cancelled') {
+      return { canJoin: false, reason: 'Session was cancelled' };
+    }
+
+    return {
+      canJoin: true,
+      isMentor,
+      isStudent,
+      status: data.status,
+    };
+  },
+
+  /**
+   * Get room by ID
+   */
+  getRoomById: async (roomId: string) => {
+    const supabase = getSupabaseClient();
+    
+    const { data, error } = await supabase
+      .from('mentor_session_rooms')
+      .select('*')
+      .eq('id', roomId)
+      .single();
+
+    if (error) {
+      if (error.code === 'PGRST116') return null;
+      throw new Error(error.message);
+    }
+
+    return {
+      id: data.id,
+      bookingId: data.booking_id,
+      mentorId: data.mentor_id,
+      studentId: data.student_id,
+      roomName: data.room_name,
+      scheduledStart: data.scheduled_start,
+      scheduledEnd: data.scheduled_end,
+      actualStart: data.actual_start,
+      actualEnd: data.actual_end,
+      status: data.status,
+    };
+  },
+};
+
 // ─── STUDY SESSIONS (focus timer) ───────────────────────────────────────────────
 
 export const studySessions = {
@@ -2527,6 +2731,306 @@ export const studySessions = {
 };
 
 // ─── SEED ───────────────────────────────────────────────────────────────────────
+
+// ─── AI MENTOR CHAT SESSIONS ────────────────────────────────────────────────────
+
+export const aiChat = {
+  /** List all chat sessions for the current user */
+  listSessions: async () => {
+    const supabase = getSupabaseClient();
+    const user = await getCurrentSessionUser();
+    if (!user) return [];
+
+    const { data, error } = await supabase
+      .from('ai_chat_sessions')
+      .select('id, name, description, chat_type, total_messages, is_pinned, is_archived, created_at, updated_at, last_message_at')
+      .eq('user_id', user.id)
+      .eq('is_archived', false)
+      .order('updated_at', { ascending: false });
+
+    if (error) throw new Error(error.message);
+
+    return (data ?? []).map((row: any) => ({
+      id: row.id,
+      name: row.name,
+      description: row.description,
+      chatType: row.chat_type,
+      totalMessages: row.total_messages,
+      isPinned: row.is_pinned,
+      isArchived: row.is_archived,
+      createdAt: row.created_at,
+      updatedAt: row.updated_at,
+      lastMessageAt: row.last_message_at,
+    }));
+  },
+
+  /** Create a new chat session */
+  createSession: async (data: { name?: string; description?: string; chatType?: 'text' | 'voice' }) => {
+    const supabase = getSupabaseClient();
+    const user = await getCurrentSessionUser();
+    if (!user) throw new Error('Authentication expired. Please log in again.');
+
+    const { data: created, error } = await supabase
+      .from('ai_chat_sessions')
+      .insert({
+        user_id: user.id,
+        name: data.name || 'New Chat',
+        description: data.description || null,
+        chat_type: data.chatType || 'text',
+      })
+      .select('id, name, description, chat_type, total_messages, is_pinned, is_archived, created_at, updated_at')
+      .single();
+
+    if (error) throw new Error(error.message);
+
+    return {
+      id: created.id,
+      name: created.name,
+      description: created.description,
+      chatType: created.chat_type,
+      totalMessages: created.total_messages,
+      isPinned: created.is_pinned,
+      isArchived: created.is_archived,
+      createdAt: created.created_at,
+      updatedAt: created.updated_at,
+    };
+  },
+
+  /** Get a specific chat session with its messages */
+  getSession: async (sessionId: string) => {
+    const supabase = getSupabaseClient();
+    const user = await getCurrentSessionUser();
+    if (!user) throw new Error('Authentication expired. Please log in again.');
+
+    const { data: session, error: sessionError } = await supabase
+      .from('ai_chat_sessions')
+      .select('id, name, description, chat_type, total_messages, is_pinned, is_archived, created_at, updated_at')
+      .eq('id', sessionId)
+      .eq('user_id', user.id)
+      .single();
+
+    if (sessionError) throw new Error(sessionError.message);
+
+    const { data: messages, error: messagesError } = await supabase
+      .from('ai_chat_messages')
+      .select('id, role, content, attachment_type, attachment_url, attachment_name, tokens_used, reaction, created_at, updated_at')
+      .eq('session_id', sessionId)
+      .order('created_at', { ascending: true });
+
+    if (messagesError) throw new Error(messagesError.message);
+
+    return {
+      session: {
+        id: session.id,
+        name: session.name,
+        description: session.description,
+        chatType: session.chat_type,
+        totalMessages: session.total_messages,
+        isPinned: session.is_pinned,
+        isArchived: session.is_archived,
+        createdAt: session.created_at,
+        updatedAt: session.updated_at,
+      },
+      messages: (messages ?? []).map((row: any) => ({
+        id: row.id,
+        role: row.role,
+        content: row.content,
+        attachmentType: row.attachment_type,
+        attachmentUrl: row.attachment_url,
+        attachmentName: row.attachment_name,
+        tokensUsed: row.tokens_used,
+        reaction: row.reaction,
+        createdAt: row.created_at,
+        updatedAt: row.updated_at,
+      })),
+    };
+  },
+
+  /** Add a message to a chat session */
+  addMessage: async (sessionId: string, data: { role: 'user' | 'ai'; content: string; attachmentType?: string | null; attachmentUrl?: string | null; attachmentName?: string | null; tokensUsed?: number }) => {
+    const supabase = getSupabaseClient();
+    const user = await getCurrentSessionUser();
+    if (!user) throw new Error('Authentication expired. Please log in again.');
+
+    // Verify session belongs to user
+    const { data: session, error: sessionError } = await supabase
+      .from('ai_chat_sessions')
+      .select('id')
+      .eq('id', sessionId)
+      .eq('user_id', user.id)
+      .single();
+
+    if (sessionError || !session) throw new Error('Chat session not found');
+
+    const { data: message, error } = await supabase
+      .from('ai_chat_messages')
+      .insert({
+        session_id: sessionId,
+        user_id: user.id,
+        role: data.role,
+        content: data.content,
+        attachment_type: data.attachmentType || null,
+        attachment_url: data.attachmentUrl || null,
+        attachment_name: data.attachmentName || null,
+        tokens_used: data.tokensUsed || 0,
+      })
+      .select('id, role, content, attachment_type, attachment_url, attachment_name, tokens_used, created_at')
+      .single();
+
+    if (error) throw new Error(error.message);
+
+    return {
+      id: message.id,
+      role: message.role,
+      content: message.content,
+      attachmentType: message.attachment_type,
+      attachmentUrl: message.attachment_url,
+      attachmentName: message.attachment_name,
+      tokensUsed: message.tokens_used,
+      createdAt: message.created_at,
+    };
+  },
+
+  /** Update chat session metadata (name, description, etc) */
+  updateSession: async (sessionId: string, data: { name?: string; description?: string; isPinned?: boolean; isArchived?: boolean }) => {
+    const supabase = getSupabaseClient();
+    const user = await getCurrentSessionUser();
+    if (!user) throw new Error('Authentication expired. Please log in again.');
+
+    const updates: Record<string, any> = {};
+    if (data.name !== undefined) updates.name = data.name;
+    if (data.description !== undefined) updates.description = data.description;
+    if (data.isPinned !== undefined) updates.is_pinned = data.isPinned;
+    if (data.isArchived !== undefined) updates.is_archived = data.isArchived;
+    updates.updated_at = new Date().toISOString();
+
+    const { data: updated, error } = await supabase
+      .from('ai_chat_sessions')
+      .update(updates)
+      .eq('id', sessionId)
+      .eq('user_id', user.id)
+      .select('id, name, description, is_pinned, is_archived, updated_at')
+      .single();
+
+    if (error) throw new Error(error.message);
+
+    return {
+      id: updated.id,
+      name: updated.name,
+      description: updated.description,
+      isPinned: updated.is_pinned,
+      isArchived: updated.is_archived,
+      updatedAt: updated.updated_at,
+    };
+  },
+
+  /** Delete a chat session */
+  deleteSession: async (sessionId: string) => {
+    const supabase = getSupabaseClient();
+    const user = await getCurrentSessionUser();
+    if (!user) throw new Error('Authentication expired. Please log in again.');
+
+    const { error } = await supabase
+      .from('ai_chat_sessions')
+      .delete()
+      .eq('id', sessionId)
+      .eq('user_id', user.id);
+
+    if (error) throw new Error(error.message);
+    return { success: true };
+  },
+
+  /** Archive a chat session (soft delete) */
+  archiveSession: async (sessionId: string) => {
+    return aiChat.updateSession(sessionId, { isArchived: true });
+  },
+
+  /** Get archived chat sessions */
+  listArchivedSessions: async () => {
+    const supabase = getSupabaseClient();
+    const user = await getCurrentSessionUser();
+    if (!user) return [];
+
+    const { data, error } = await supabase
+      .from('ai_chat_sessions')
+      .select('id, name, description, chat_type, total_messages, is_pinned, is_archived, created_at, updated_at')
+      .eq('user_id', user.id)
+      .eq('is_archived', true)
+      .order('updated_at', { ascending: false });
+
+    if (error) throw new Error(error.message);
+
+    return (data ?? []).map((row: any) => ({
+      id: row.id,
+      name: row.name,
+      description: row.description,
+      chatType: row.chat_type,
+      totalMessages: row.total_messages,
+      isPinned: row.is_pinned,
+      isArchived: row.is_archived,
+      createdAt: row.created_at,
+      updatedAt: row.updated_at,
+    }));
+  },
+
+  /** Get pinned chat sessions */
+  listPinnedSessions: async () => {
+    const supabase = getSupabaseClient();
+    const user = await getCurrentSessionUser();
+    if (!user) return [];
+
+    const { data, error } = await supabase
+      .from('ai_chat_sessions')
+      .select('id, name, description, chat_type, total_messages, is_pinned, is_archived, created_at, updated_at')
+      .eq('user_id', user.id)
+      .eq('is_pinned', true)
+      .eq('is_archived', false)
+      .order('updated_at', { ascending: false });
+
+    if (error) throw new Error(error.message);
+
+    return (data ?? []).map((row: any) => ({
+      id: row.id,
+      name: row.name,
+      description: row.description,
+      chatType: row.chat_type,
+      totalMessages: row.total_messages,
+      isPinned: row.is_pinned,
+      isArchived: row.is_archived,
+      createdAt: row.created_at,
+      updatedAt: row.updated_at,
+    }));
+  },
+
+  /** Search chat sessions by name */
+  searchSessions: async (query: string) => {
+    const supabase = getSupabaseClient();
+    const user = await getCurrentSessionUser();
+    if (!user) return [];
+
+    const { data, error } = await supabase
+      .from('ai_chat_sessions')
+      .select('id, name, description, chat_type, total_messages, is_pinned, is_archived, created_at, updated_at')
+      .eq('user_id', user.id)
+      .eq('is_archived', false)
+      .ilike('name', `%${query}%`)
+      .order('updated_at', { ascending: false });
+
+    if (error) throw new Error(error.message);
+
+    return (data ?? []).map((row: any) => ({
+      id: row.id,
+      name: row.name,
+      description: row.description,
+      chatType: row.chat_type,
+      totalMessages: row.total_messages,
+      isPinned: row.is_pinned,
+      isArchived: row.is_archived,
+      createdAt: row.created_at,
+      updatedAt: row.updated_at,
+    }));
+  },
+};
 
 export const seed = {
   demo: () => apiFetch('/seed/demo', { method: 'POST' }, true),

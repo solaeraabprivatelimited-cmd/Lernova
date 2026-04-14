@@ -3,6 +3,7 @@ import { MoodCheckInView } from "./MoodCheckInView";
 import { WellnessResourcesView } from "./WellnessResourcesView";
 import { WorldChatView } from "./WorldChatView";
 import { MotivationCornerView } from "./MotivationCornerView";
+import { SkeletonWellnessResources } from "../skeletons/PageSkeletons";
 import { Heart, BookOpen, MessageCircle, Sparkles, ArrowRight, Shield } from "lucide-react";
 
 type SubView = "home" | "mood-check-in" | "wellness-resources" | "world-chat" | "motivation-corner";
@@ -56,6 +57,12 @@ function WellnessCard({ icon, title, description, cta, gradient, iconBg, onClick
 
 export function EmotionalWellnessView() {
   const [subView, setSubView] = useState<SubView>("home");
+  const [isLoading, setIsLoading] = useState(false);
+
+  // Show skeleton while loading sub-views
+  if (isLoading) {
+    return <SkeletonWellnessResources />;
+  }
 
   if (subView === "mood-check-in") return <MoodCheckInView onBack={() => setSubView("home")} />;
   if (subView === "wellness-resources") return <WellnessResourcesView onBack={() => setSubView("home")} />;

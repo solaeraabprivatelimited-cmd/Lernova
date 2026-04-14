@@ -5,6 +5,7 @@ import {
   Tooltip, ResponsiveContainer,
 } from "recharts";
 import { profile as profileApi, studySessions, moodCheckins, sessionRequests, sessions as sessionsApi, notifications as notificationsApi, getCurrentUser, getSupabaseClient, auth } from "@/app/lib/api";
+import { SkeletonProfileSettings } from "@/app/components/skeletons/PageSkeletons";
 import { enable2FA, disable2FA, get2FASettings, sendOTP, verifyOTP } from "@/utils/supabase/twoFA";
 import { toast } from "sonner";
 import {

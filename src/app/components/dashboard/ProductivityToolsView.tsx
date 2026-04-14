@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import imgNotesImage from "figma:asset/00ae786af8ac4c0943552db9a6f6dfd10268ca06.png";
 import imgPlannerImage from "figma:asset/3bed40028d21e55021d8008bb0100eca00d08ab3.png";
 import { notes as notesApi, notifications as notificationsApi, tasks as tasksApi, reminders as remindersApi, studyPlans as studyPlansApi } from "@/app/lib/api";
+import { SkeletonProductivityTools } from "@/app/components/skeletons/PageSkeletons";
 import {
   ArrowLeft, Plus, Search, FileText, Sparkles, ArrowRight,
   StickyNote, ClipboardList, Clock, ChevronDown, Check, Trash2, X,
@@ -215,6 +216,11 @@ function NotesApp({ onBack }: { onBack: () => void }) {
       console.log("Delete note error:", e);
     }
   };
+
+  // Show skeleton while loading tools
+  if (isLoading) {
+    return <SkeletonProductivityTools />;
+  }
 
   return (
     <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }} className="animate-in fade-in duration-300">

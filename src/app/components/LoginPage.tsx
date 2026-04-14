@@ -21,6 +21,7 @@ import {
 } from '@/app/components/auth/AuthPrimitives';
 import { AuthShell } from '@/app/components/auth/AuthShell';
 import { Button } from '@/app/components/ui/button';
+import { SkeletonAuthPage } from '@/app/components/skeletons/PageSkeletons';
 import { auth, profile as profileApi, setCurrentUser } from '../lib/api';
 
 interface LoginPageProps {
