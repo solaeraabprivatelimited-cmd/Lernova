@@ -4,12 +4,7 @@ import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid,
   Tooltip, ResponsiveContainer,
 } from "recharts";
-<<<<<<< HEAD
-import { profile as profileApi, studySessions, moodCheckins, sessionRequests, sessions as sessionsApi, notifications as notificationsApi, getCurrentUser, getSupabaseClient, auth } from "@/app/lib/api";
-import { SkeletonProfileSettings } from "@/app/components/skeletons/PageSkeletons";
-=======
-import { profile as profileApi, studySessions, moodCheckins, sessionRequests, sessions as sessionsApi, notifications as notificationsApi, getCurrentUser, getSupabaseClient } from "@/app/lib/api";
->>>>>>> 0b7861d653f816432b14d75f478e1158f1bb1909
+import { profile as profileApi, studySessions, moodCheckins, sessionRequests, sessions as sessionsApi, getCurrentUser, getSupabaseClient, auth } from "@/app/lib/api";
 import { enable2FA, disable2FA, get2FASettings, sendOTP, verifyOTP } from "@/utils/supabase/twoFA";
 import { toast } from "sonner";
 import {
@@ -25,9 +20,9 @@ type UserSubNav = "basic" | "my-sessions" | "study-history" | "mood-history" | "
 const FONT = { fontFamily: "'Plus Jakarta Sans', sans-serif" };
 const HEADING = { fontFamily: "'DM Serif Display', serif" };
 
-// ─────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // Shared components
-// ─────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function StatusBadge({ status }: { status: string }) {
   const map: Record<string, { bg: string; text: string; border: string }> = {
@@ -53,7 +48,6 @@ function Spinner() {
 
 function StatCard({ label, value, color, icon }: { label: string; value: string | number; color: string; icon: React.ReactNode }) {
   return (
-<<<<<<< HEAD
     <div className="bg-white dark:bg-[#22272f] rounded-[16px] md:rounded-[18px] border border-[#edf0f4] dark:border-[#3a3f47] p-3.5 md:p-5 flex flex-col gap-2 shadow-sm hover:shadow-md transition-shadow">
       <div className="flex items-center justify-between">
         <p className="text-[22px] md:text-[26px] font-bold dark:text-white" style={{ color, ...HEADING }}>{value}</p>
@@ -62,16 +56,6 @@ function StatCard({ label, value, color, icon }: { label: string; value: string 
         </div>
       </div>
       <p className="text-[11px] md:text-[12px] text-[#94a3b8] dark:text-slate-400 font-medium">{label}</p>
-=======
-    <div className="bg-white dark:bg-[#22272f] rounded-[18px] border border-[#edf0f4] dark:border-[#3a3f47] p-5 flex flex-col gap-2 shadow-sm hover:shadow-md transition-shadow">
-      <div className="flex items-center justify-between">
-        <p className="text-[26px] font-bold dark:text-white" style={{ color, ...HEADING }}>{value}</p>
-        <div className="w-9 h-9 rounded-[12px] flex items-center justify-center" style={{ background: `${color}10` }}>
-          {icon}
-        </div>
-      </div>
-      <p className="text-[12px] text-[#94a3b8] dark:text-slate-400 font-medium">{label}</p>
->>>>>>> 0b7861d653f816432b14d75f478e1158f1bb1909
     </div>
   );
 }
@@ -94,18 +78,13 @@ function Toggle({ on, onClick }: { on: boolean; onClick: () => void }) {
   );
 }
 
-<<<<<<< HEAD
 const inputClass = "w-full h-[44px] border border-[#e2e8f0] dark:border-[#3a3f47] rounded-[12px] px-4 text-[13px] outline-none focus:border-[#0967bd] focus:ring-1 focus:ring-[#0967bd]/20 transition-all text-[#1e293b] dark:text-white placeholder:text-[#94a3b8] dark:placeholder:text-slate-500 bg-white dark:bg-[#2b3139] disabled:opacity-60";
-=======
-const inputClass = "w-full h-[44px] border border-[#e2e8f0] dark:border-[#3a3f47] rounded-[12px] px-4 text-[13px] outline-none focus:border-[#0967bd] focus:ring-1 focus:ring-[#0967bd]/20 transition-all text-[#1e293b] dark:text-white placeholder:text-[#94a3b8] dark:placeholder:text-slate-500 bg-white dark:bg-[#2b3139]";
->>>>>>> 0b7861d653f816432b14d75f478e1158f1bb1909
 
-// ─────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // Basic Information
-// ─────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function BasicInfoPage() {
-  const currentUser = getCurrentUser();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [bio, setBio] = useState("");
@@ -176,13 +155,9 @@ function BasicInfoPage() {
     setIsSaving(true);
     try {
       // Update profile in database
-      const result = await profileApi.update({
+      await profileApi.update({
         name: name.trim(),
         bio: bio.trim(),
-<<<<<<< HEAD
-=======
-        gradeLevel: gradeLevel || "",
->>>>>>> 0b7861d653f816432b14d75f478e1158f1bb1909
         subjects,
       });
 
@@ -227,15 +202,9 @@ function BasicInfoPage() {
         {/* LEFT - Avatar + Subjects */}
         <div className="w-full flex flex-col gap-4">
           {/* Avatar Card */}
-<<<<<<< HEAD
           <div className="bg-white dark:bg-[#22272f] rounded-[16px] md:rounded-[20px] border border-[#edf0f4] dark:border-[#3a3f47] p-4 md:p-6 flex flex-col items-center gap-4 shadow-sm">
             <div className="relative group">
               <div className="w-[100px] md:w-[140px] h-[100px] md:h-[140px] rounded-full overflow-hidden border-4 border-white dark:border-[#2b3139] shadow-lg">
-=======
-          <div className="bg-white dark:bg-[#22272f] rounded-[20px] border border-[#edf0f4] dark:border-[#3a3f47] p-6 flex flex-col items-center gap-4 shadow-sm">
-            <div className="relative group">
-              <div className="w-[140px] h-[140px] rounded-full overflow-hidden border-4 border-white dark:border-[#2b3139] shadow-lg">
->>>>>>> 0b7861d653f816432b14d75f478e1158f1bb1909
                 <img src={avatarSrc} alt="Profile" className="w-full h-full object-cover" />
               </div>
               <button onClick={() => avatarRef.current?.click()}
@@ -246,67 +215,41 @@ function BasicInfoPage() {
             </div>
             <input ref={avatarRef} type="file" accept="image/*" className="hidden" onChange={handleAvatarChange} />
             <button onClick={() => setAvatarSrc(imgEllipse1)}
-<<<<<<< HEAD
               className="text-[11px] md:text-[12px] font-semibold text-[#94a3b8] dark:text-slate-400 hover:text-[#5a7089] dark:hover:text-slate-300 transition-colors cursor-pointer">
-=======
-              className="text-[12px] font-semibold text-[#94a3b8] dark:text-slate-400 hover:text-[#5a7089] dark:hover:text-slate-300 transition-colors cursor-pointer">
->>>>>>> 0b7861d653f816432b14d75f478e1158f1bb1909
               Reset to Default
             </button>
           </div>
 
           {/* Subjects Card */}
-<<<<<<< HEAD
           <div className="bg-white dark:bg-[#22272f] rounded-[16px] md:rounded-[20px] border border-[#edf0f4] dark:border-[#3a3f47] p-4 md:p-5 shadow-sm">
             <h3 className="text-[13px] md:text-[14px] font-bold text-[#003566] dark:text-blue-400 mb-3">Subjects</h3>
             <div className="flex flex-wrap gap-1.5 md:gap-2 mb-3">
               {subjects.map((s) => (
                 <span key={s} className="flex items-center gap-1 px-2.5 md:px-3 py-1 md:py-1.5 rounded-full text-[10px] md:text-[11px] font-semibold text-[#003566] dark:text-blue-400"
-=======
-          <div className="bg-white dark:bg-[#22272f] rounded-[20px] border border-[#edf0f4] dark:border-[#3a3f47] p-5 shadow-sm">
-            <h3 className="text-[14px] font-bold text-[#003566] dark:text-blue-400 mb-3">Subjects</h3>
-            <div className="flex flex-wrap gap-2 mb-3">
-              {subjects.map((s) => (
-                <span key={s} className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-semibold text-[#003566] dark:text-blue-400"
->>>>>>> 0b7861d653f816432b14d75f478e1158f1bb1909
                   style={{ background: 'rgba(9,103,189,0.08)', border: '1px solid rgba(9,103,189,0.1)' }}>
                   {s}
                   <button onClick={() => setSubjects((prev) => prev.filter((x) => x !== s))}
                     className="hover:text-[#cc3636] transition-colors cursor-pointer"><X className="w-3 h-3" /></button>
                 </span>
               ))}
-<<<<<<< HEAD
               {subjects.length === 0 && <p className="text-[11px] md:text-[12px] text-[#c1c7ce] dark:text-slate-600">No subjects added</p>}
-=======
-              {subjects.length === 0 && <p className="text-[12px] text-[#c1c7ce] dark:text-slate-600">No subjects added</p>}
->>>>>>> 0b7861d653f816432b14d75f478e1158f1bb1909
             </div>
             <div className="flex gap-2">
-              <input type="text" placeholder="Add subject…" value={newSubject}
+              <input type="text" placeholder="Add subjectâ€¦" value={newSubject}
                 onChange={(e) => setNewSubject(e.target.value)}
                 onKeyDown={(e) => { if (e.key === "Enter") handleAddSubject(); }}
-<<<<<<< HEAD
                 className="flex-1 h-[36px] border border-[#e2e8f0] dark:border-[#3a3f47] rounded-[10px] px-3 text-[12px] outline-none focus:border-[#0967bd] focus:ring-1 focus:ring-[#0967bd]/20 transition-colors dark:bg-[#2b3139] dark:text-white placeholder:text-[#94a3b8] dark:placeholder:text-slate-500" />
               <button onClick={handleAddSubject}
                 className="h-[36px] w-[36px] rounded-[10px] text-[12px] font-bold text-white cursor-pointer hover:shadow-md transition-all disabled:opacity-60 flex items-center justify-center shrink-0"
                 style={{ background: 'linear-gradient(135deg, #003566, #0967bd)' }}
                 disabled={isSaving}>
                 <Plus className="w-4 h-4" />
-=======
-                className="flex-1 h-[36px] border border-[#e2e8f0] dark:border-[#3a3f47] rounded-[10px] px-3 text-[12px] outline-none focus:border-[#0967bd] transition-colors dark:bg-[#2b3139] dark:text-white" />
-              <button onClick={handleAddSubject}
-                className="h-[36px] px-3 rounded-[10px] text-[12px] font-bold text-white cursor-pointer hover:shadow-md transition-all disabled:opacity-60"
-                style={{ background: 'linear-gradient(135deg, #003566, #0967bd)' }}
-                disabled={isSaving}>
-                <Plus className="w-3.5 h-3.5" />
->>>>>>> 0b7861d653f816432b14d75f478e1158f1bb1909
               </button>
             </div>
           </div>
         </div>
 
         {/* RIGHT - Form */}
-<<<<<<< HEAD
         <div className="w-full flex flex-col gap-4 md:gap-5">
           <div className="bg-white dark:bg-[#22272f] rounded-[16px] md:rounded-[20px] border border-[#edf0f4] dark:border-[#3a3f47] p-4 md:p-6 shadow-sm flex flex-col gap-4 md:gap-5">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-5">
@@ -321,7 +264,7 @@ function BasicInfoPage() {
             </div>
             <div className="flex flex-col gap-3">
               <label className="text-[12px] md:text-[13px] font-bold text-[#003566] dark:text-blue-400">Bio</label>
-              <textarea value={bio} onChange={(e) => setBio(e.target.value)} placeholder="Tell us about yourself…" rows={4}
+              <textarea value={bio} onChange={(e) => setBio(e.target.value)} placeholder="Tell us about yourselfâ€¦" rows={4}
                 className="w-full border border-[#e2e8f0] dark:border-[#3a3f47] rounded-[12px] px-4 py-3 text-[12px] md:text-[13px] outline-none focus:border-[#0967bd] focus:ring-1 focus:ring-[#0967bd]/20 transition-all text-[#1e293b] dark:text-white placeholder:text-[#94a3b8] dark:placeholder:text-slate-500 bg-white dark:bg-[#2b3139] resize-none disabled:opacity-60"
                 disabled={isSaving} />
             </div>
@@ -331,31 +274,8 @@ function BasicInfoPage() {
                 <select value={gradeLevel} onChange={(e) => setGradeLevel(e.target.value)}
                   className={`${inputClass} appearance-none cursor-pointer pr-10 disabled:opacity-60 [color-scheme:light_dark]`}
                   style={{ colorScheme: 'light dark' }}
-=======
-        <div className="flex-1 flex flex-col gap-5">
-          <div className="bg-white dark:bg-[#22272f] rounded-[20px] border border-[#edf0f4] dark:border-[#3a3f47] p-6 shadow-sm flex flex-col gap-5">
-            <div className="flex flex-col gap-2">
-              <label className="text-[13px] font-bold text-[#003566] dark:text-blue-400">Full Name</label>
-              <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="Your full name" className={inputClass} disabled={isSaving} />
-            </div>
-            <div className="flex flex-col gap-2">
-              <label className="text-[13px] font-bold text-[#003566] dark:text-blue-400">Email Address</label>
-              <input type="text" value={email} readOnly className={`${inputClass} bg-[#f8f9fc] dark:bg-[#1a1f2e] cursor-not-allowed text-[#94a3b8] dark:text-slate-500`} />
-            </div>
-            <div className="flex flex-col gap-2">
-              <label className="text-[13px] font-bold text-[#003566] dark:text-blue-400">Bio</label>
-              <textarea value={bio} onChange={(e) => setBio(e.target.value)} placeholder="Tell us about yourself…" rows={4}
-                className="w-full border border-[#e2e8f0] dark:border-[#3a3f47] rounded-[12px] px-4 py-3 text-[13px] outline-none focus:border-[#0967bd] focus:ring-1 focus:ring-[#0967bd]/20 transition-all text-[#1e293b] dark:text-white placeholder:text-[#94a3b8] dark:placeholder:text-slate-500 bg-white dark:bg-[#2b3139] resize-none disabled:opacity-60"
-                disabled={isSaving} />
-            </div>
-            <div className="flex flex-col gap-2">
-              <label className="text-[13px] font-bold text-[#003566] dark:text-blue-400">Grade / Level</label>
-              <div className="relative">
-                <select value={gradeLevel} onChange={(e) => setGradeLevel(e.target.value)}
-                  className={`${inputClass} appearance-none cursor-pointer pr-10 disabled:opacity-60`}
->>>>>>> 0b7861d653f816432b14d75f478e1158f1bb1909
                   disabled={isSaving}>
-                  <option value="">Select grade…</option>
+                  <option value="">Select gradeâ€¦</option>
                   {GRADE_OPTIONS.map((g) => <option key={g} value={g}>{g}</option>)}
                 </select>
                 <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#94a3b8] dark:text-slate-500 pointer-events-none" />
@@ -384,9 +304,9 @@ function BasicInfoPage() {
   );
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // My Sessions
-// ─────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function MySessionsPage() {
   const [allSessions, setAllSessions] = useState<any[]>([]);
@@ -418,7 +338,7 @@ function MySessionsPage() {
             setNotes(data.session_notes);
           }
         }
-      } catch (err) {
+      } catch (err: any) {
         console.log("Failed to load sessions:", err);
       } finally {
         setIsLoading(false);
@@ -427,7 +347,7 @@ function MySessionsPage() {
     loadData();
   }, []);
 
-  async function saveNotes(sessionId: string) {
+  async function saveNotes(id: string) {
     setIsSaving(true);
     try {
       const supabase = getSupabaseClient();
@@ -441,7 +361,7 @@ function MySessionsPage() {
       const { error } = await supabase
         .from('profiles')
         .update({ session_notes: notes })
-        .eq('id', user.id);
+        .eq('id', id);
 
       if (error) {
         toast.error("Failed to save notes");
@@ -496,45 +416,34 @@ function MySessionsPage() {
       </div>
 
       {isLoading ? <Spinner /> : (
-<<<<<<< HEAD
         <div className="bg-white dark:bg-[#22272f] rounded-[16px] md:rounded-[20px] overflow-hidden border border-[#edf0f4] dark:border-[#3a3f47] shadow-sm">
           {tab === "sessions" ? (
             <>
               <div className="hidden md:grid grid-cols-[2fr_1.5fr_1.5fr_0.8fr_0.8fr_1fr] px-6 py-3.5 bg-gradient-to-r from-[#001d3d] via-[#003566] to-[#0967bd] dark:from-[#1a1f2e] dark:via-[#22272f] dark:to-[#2b3139]">
                 {["Mentor", "Subject", "Date & Time", "Duration", "Notes", "Status"].map((col) => (
                   <p key={col} className="text-[10px] font-bold text-white/70 dark:text-slate-300 uppercase tracking-[0.05em]">{col}</p>
-=======
-        <div className="bg-white dark:bg-[#22272f] rounded-[20px] overflow-hidden border border-[#edf0f4] dark:border-[#3a3f47] shadow-sm">
-          {tab === "sessions" ? (
-            <>
-              <div className="grid grid-cols-[2fr_1.5fr_1.5fr_0.8fr_0.8fr_1fr] px-6 py-3.5"
-                style={{ background: 'linear-gradient(135deg, #001d3d, #003566)' }}>
-                {["Mentor", "Subject", "Date & Time", "Duration", "Notes", "Status"].map((col) => (
-                  <p key={col} className="text-[11px] font-bold text-white/70 uppercase tracking-[0.05em]">{col}</p>
->>>>>>> 0b7861d653f816432b14d75f478e1158f1bb1909
                 ))}
               </div>
               {filteredSessions.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-16"><p className="text-[13px] text-[#94a3b8] dark:text-slate-400">No sessions found</p></div>
               ) : filteredSessions.map((s, idx) => (
                 <div key={s.id} className="border-b border-[#edf0f4] dark:border-[#3a3f47] last:border-0">
-<<<<<<< HEAD
                   <div className={`grid grid-cols-1 md:grid-cols-[2fr_1.5fr_1.5fr_0.8fr_0.8fr_1fr] gap-2 md:gap-0 px-4 md:px-6 py-3 md:py-4 items-start md:items-center hover:bg-[#f8f9fc] dark:hover:bg-[#2b3139] transition-colors ${idx % 2 === 0 ? "" : "bg-[#fafbfc] dark:bg-[#1a1f2e]"} first:md:bg-transparent md:first:hover:bg-transparent`}>
                     <div className="flex justify-between items-start md:items-center w-full md:w-auto md:col-span-1">
                       <span className="md:hidden text-[10px] text-[#94a3b8] dark:text-slate-500 font-medium">Mentor</span>
-                      <span className="text-[12px] md:text-[13px] font-semibold text-[#1e293b] dark:text-white">{s.mentorName || "—"}</span>
+                      <span className="text-[12px] md:text-[13px] font-semibold text-[#1e293b] dark:text-white">{s.mentorName || "â€”"}</span>
                     </div>
                     <div className="flex justify-between items-center md:items-start">
                       <span className="md:hidden text-[10px] text-[#94a3b8] dark:text-slate-500 font-medium">Subject</span>
-                      <span className="text-[12px] text-[#5a7089] dark:text-slate-400">{s.subject || "—"}</span>
+                      <span className="text-[12px] text-[#5a7089] dark:text-slate-400">{s.subject || "â€”"}</span>
                     </div>
                     <div className="flex justify-between items-start md:items-center">
                       <div className="md:hidden text-[10px] text-[#94a3b8] dark:text-slate-500 font-medium">Date</div>
-                      <div><span className="text-[12px] font-medium text-[#1e293b] dark:text-white">{s.date || "—"}</span><br/><span className="text-[11px] text-[#94a3b8] dark:text-slate-400">{s.time || ""}</span></div>
+                      <div><span className="text-[12px] font-medium text-[#1e293b] dark:text-white">{s.date || "â€”"}</span><br/><span className="text-[11px] text-[#94a3b8] dark:text-slate-400">{s.time || ""}</span></div>
                     </div>
                     <div className="flex justify-between items-center md:items-start">
                       <span className="md:hidden text-[10px] text-[#94a3b8] dark:text-slate-500 font-medium">Duration</span>
-                      <span className="text-[12px] text-[#5a7089] dark:text-slate-400">{s.duration ? `${s.duration} min` : "—"}</span>
+                      <span className="text-[12px] text-[#5a7089] dark:text-slate-400">{s.duration ? `${s.duration} min` : "â€”"}</span>
                     </div>
                     <div className="flex justify-between items-center">
                       <span className="md:hidden text-[10px] text-[#94a3b8] dark:text-slate-500 font-medium">Actions</span>
@@ -546,22 +455,8 @@ function MySessionsPage() {
                   </div>
                   {expandedId === s.id && (
                     <div className="px-4 md:px-6 py-3 md:py-4 bg-[#f8f9fc] dark:bg-[#1a1f2e] border-t border-[#edf0f4] dark:border-[#3a3f47] flex flex-col gap-3">
-=======
-                  <div className={`grid grid-cols-[2fr_1.5fr_1.5fr_0.8fr_0.8fr_1fr] px-6 py-4 items-center hover:bg-[#f8f9fc] dark:hover:bg-[#2b3139] transition-colors ${idx % 2 === 0 ? "" : "bg-[#fafbfc] dark:bg-[#1a1f2e]"}`}>
-                    <span className="text-[13px] font-semibold text-[#1e293b] dark:text-white">{s.mentorName || "—"}</span>
-                    <span className="text-[12px] text-[#5a7089] dark:text-slate-400">{s.subject || "—"}</span>
-                    <div><span className="text-[12px] font-medium text-[#1e293b] dark:text-white">{s.date || "—"}</span><br/><span className="text-[11px] text-[#94a3b8] dark:text-slate-400">{s.time || ""}</span></div>
-                    <span className="text-[12px] text-[#5a7089] dark:text-slate-400">{s.duration ? `${s.duration} min` : "—"}</span>
-                    <button onClick={() => setExpandedId(expandedId === s.id ? null : s.id)} className="text-[12px] font-bold text-[#0967bd] hover:text-[#003566] dark:hover:text-blue-300 cursor-pointer">
-                      {notes[s.id] ? "Edit" : "Add"}
-                    </button>
-                    <StatusBadge status={s.status || "booked"} />
-                  </div>
-                  {expandedId === s.id && (
-                    <div className="px-6 py-4 bg-[#f8f9fc] dark:bg-[#1a1f2e] border-t border-[#edf0f4] dark:border-[#3a3f47] flex flex-col gap-3">
->>>>>>> 0b7861d653f816432b14d75f478e1158f1bb1909
                       <textarea value={notes[s.id] || ""} onChange={(e) => setNotes((prev) => ({ ...prev, [s.id]: e.target.value }))}
-                        placeholder="Add notes about this session…" rows={3}
+                        placeholder="Add notes about this sessionâ€¦" rows={3}
                         className="w-full border border-[#e2e8f0] dark:border-[#3a3f47] rounded-[10px] px-3 py-2 text-[12px] outline-none focus:border-[#0967bd] focus:ring-1 focus:ring-[#0967bd]/20 transition-all text-[#1e293b] dark:text-white placeholder:text-[#94a3b8] dark:placeholder:text-slate-500 bg-white dark:bg-[#2b3139]" />
                       <div className="flex gap-2 justify-end">
                         <button onClick={() => setExpandedId(null)} className="px-3 py-2 rounded-[8px] text-[12px] font-bold text-[#5a7089] dark:text-slate-400 hover:bg-[#edf0f4] dark:hover:bg-[#3a3f47] transition-colors cursor-pointer">
@@ -581,35 +476,27 @@ function MySessionsPage() {
             </>
           ) : (
             <>
-<<<<<<< HEAD
               <div className="hidden md:grid grid-cols-[2fr_1.5fr_1.5fr_0.8fr_1fr] px-6 py-3.5 bg-gradient-to-r from-[#001d3d] via-[#003566] to-[#0967bd] dark:from-[#1a1f2e] dark:via-[#22272f] dark:to-[#2b3139]">
                 {["Mentor", "Subject", "Preferred Date", "Notes", "Status"].map((col) => (
                   <p key={col} className="text-[10px] font-bold text-white/70 dark:text-slate-300 uppercase tracking-[0.05em]">{col}</p>
-=======
-              <div className="grid grid-cols-[2fr_1.5fr_1.5fr_0.8fr_1fr] px-6 py-3.5"
-                style={{ background: 'linear-gradient(135deg, #001d3d, #003566)' }}>
-                {["Mentor", "Subject", "Preferred Date", "Notes", "Status"].map((col) => (
-                  <p key={col} className="text-[11px] font-bold text-white/70 uppercase tracking-[0.05em]">{col}</p>
->>>>>>> 0b7861d653f816432b14d75f478e1158f1bb1909
                 ))}
               </div>
               {filteredRequests.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-16"><p className="text-[13px] text-[#94a3b8] dark:text-slate-400">No requests found</p></div>
               ) : filteredRequests.map((r, idx) => (
                 <div key={r.id} className="border-b border-[#edf0f4] dark:border-[#3a3f47] last:border-0">
-<<<<<<< HEAD
                   <div className={`grid grid-cols-1 md:grid-cols-[2fr_1.5fr_1.5fr_0.8fr_1fr] gap-2 md:gap-0 px-4 md:px-6 py-3 md:py-4 items-start md:items-center hover:bg-[#f8f9fc] dark:hover:bg-[#2b3139] transition-colors ${idx % 2 === 0 ? "" : "bg-[#fafbfc] dark:bg-[#1a1f2e]"}`}>
                     <div className="flex justify-between items-start md:items-center w-full md:w-auto md:col-span-1">
                       <span className="md:hidden text-[10px] text-[#94a3b8] dark:text-slate-500 font-medium">Mentor</span>
-                      <span className="text-[12px] md:text-[13px] font-semibold text-[#1e293b] dark:text-white">{r.mentorName || "—"}</span>
+                      <span className="text-[12px] md:text-[13px] font-semibold text-[#1e293b] dark:text-white">{r.mentorName || "â€”"}</span>
                     </div>
                     <div className="flex justify-between items-center">
                       <span className="md:hidden text-[10px] text-[#94a3b8] dark:text-slate-500 font-medium">Subject</span>
-                      <span className="text-[12px] text-[#5a7089] dark:text-slate-400">{r.subject || "—"}</span>
+                      <span className="text-[12px] text-[#5a7089] dark:text-slate-400">{r.subject || "â€”"}</span>
                     </div>
                     <div className="flex justify-between items-center">
                       <span className="md:hidden text-[10px] text-[#94a3b8] dark:text-slate-500 font-medium">Preferred Date</span>
-                      <span className="text-[12px] font-medium text-[#1e293b] dark:text-white">{r.preferredDate || "—"}</span>
+                      <span className="text-[12px] font-medium text-[#1e293b] dark:text-white">{r.preferredDate || "â€”"}</span>
                     </div>
                     <div className="flex justify-between items-center">
                       <span className="md:hidden text-[10px] text-[#94a3b8] dark:text-slate-500 font-medium">Actions</span>
@@ -621,21 +508,8 @@ function MySessionsPage() {
                   </div>
                   {expandedId === r.id && (
                     <div className="px-4 md:px-6 py-3 md:py-4 bg-[#f8f9fc] dark:bg-[#1a1f2e] border-t border-[#edf0f4] dark:border-[#3a3f47] flex flex-col gap-3">
-=======
-                  <div className={`grid grid-cols-[2fr_1.5fr_1.5fr_0.8fr_1fr] px-6 py-4 items-center hover:bg-[#f8f9fc] dark:hover:bg-[#2b3139] transition-colors ${idx % 2 === 0 ? "" : "bg-[#fafbfc] dark:bg-[#1a1f2e]"}`}>
-                    <span className="text-[13px] font-semibold text-[#1e293b] dark:text-white">{r.mentorName || "—"}</span>
-                    <span className="text-[12px] text-[#5a7089] dark:text-slate-400">{r.subject || "—"}</span>
-                    <span className="text-[12px] font-medium text-[#1e293b] dark:text-white">{r.preferredDate || "—"}</span>
-                    <button onClick={() => setExpandedId(expandedId === r.id ? null : r.id)} className="text-[12px] font-bold text-[#0967bd] hover:text-[#003566] dark:hover:text-blue-300 cursor-pointer">
-                      {notes[r.id] ? "Edit" : "Add"}
-                    </button>
-                    <StatusBadge status={r.status || "pending"} />
-                  </div>
-                  {expandedId === r.id && (
-                    <div className="px-6 py-4 bg-[#f8f9fc] dark:bg-[#1a1f2e] border-t border-[#edf0f4] dark:border-[#3a3f47] flex flex-col gap-3">
->>>>>>> 0b7861d653f816432b14d75f478e1158f1bb1909
                       <textarea value={notes[r.id] || ""} onChange={(e) => setNotes((prev) => ({ ...prev, [r.id]: e.target.value }))}
-                        placeholder="Add notes about this request…" rows={3}
+                        placeholder="Add notes about this requestâ€¦" rows={3}
                         className="w-full border border-[#e2e8f0] dark:border-[#3a3f47] rounded-[10px] px-3 py-2 text-[12px] outline-none focus:border-[#0967bd] focus:ring-1 focus:ring-[#0967bd]/20 transition-all text-[#1e293b] dark:text-white placeholder:text-[#94a3b8] dark:placeholder:text-slate-500 bg-white dark:bg-[#2b3139]" />
                       <div className="flex gap-2 justify-end">
                         <button onClick={() => setExpandedId(null)} className="px-3 py-2 rounded-[8px] text-[12px] font-bold text-[#5a7089] dark:text-slate-400 hover:bg-[#edf0f4] dark:hover:bg-[#3a3f47] transition-colors cursor-pointer">
@@ -660,9 +534,9 @@ function MySessionsPage() {
   );
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // Study History
-// ─────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 const WEEKLY_FALLBACK = [
   { day: "MON", hours: 1.0 }, { day: "TUE", hours: 1.5 }, { day: "WED", hours: 0.5 },
@@ -687,7 +561,7 @@ function StudyHistoryPage() {
   history.forEach((s) => { modeCounts[s.mode] = (modeCounts[s.mode] || 0) + 1; });
 
   return (
-    <div className="p-4 md:p-6 lg:p-8 lg:p-10" style={FONT}>
+    <div className="p-6 md:p-8 lg:p-10" style={FONT}>
       <SectionHeader title="Study History" desc="Your study sessions and progress over time" />
 
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4 mb-5 md:mb-6">
@@ -698,15 +572,9 @@ function StudyHistoryPage() {
       </div>
 
       {/* Chart */}
-<<<<<<< HEAD
       <div className="bg-white dark:bg-[#22272f] rounded-[16px] md:rounded-[20px] border border-[#edf0f4] dark:border-[#3a3f47] p-4 md:p-6 mb-4 md:mb-5 shadow-sm overflow-x-auto">
         <h3 className="text-[14px] md:text-[16px] font-bold text-[#003566] dark:text-blue-400 mb-4">Weekly Study Hours</h3>
         <div className="h-[150px] md:h-[180px] min-w-[300px] md:min-w-full">
-=======
-      <div className="bg-white dark:bg-[#22272f] rounded-[20px] border border-[#edf0f4] dark:border-[#3a3f47] p-6 mb-5 shadow-sm">
-        <h3 className="text-[16px] font-bold text-[#003566] dark:text-blue-400 mb-4">Weekly Study Hours</h3>
-        <div className="h-[180px]">
->>>>>>> 0b7861d653f816432b14d75f478e1158f1bb1909
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart data={WEEKLY_FALLBACK} margin={{ top: 8, right: 8, left: -20, bottom: 0 }}>
               <defs>
@@ -727,13 +595,8 @@ function StudyHistoryPage() {
 
       {/* Mode breakdown */}
       {Object.keys(modeCounts).length > 0 && (
-<<<<<<< HEAD
         <div className="bg-white dark:bg-[#22272f] rounded-[16px] md:rounded-[20px] border border-[#edf0f4] dark:border-[#3a3f47] p-4 md:p-6 mb-4 md:mb-5 shadow-sm">
           <h3 className="text-[14px] md:text-[16px] font-bold text-[#003566] dark:text-blue-400 mb-4">Sessions by Mode</h3>
-=======
-        <div className="bg-white dark:bg-[#22272f] rounded-[20px] border border-[#edf0f4] dark:border-[#3a3f47] p-6 mb-5 shadow-sm">
-          <h3 className="text-[16px] font-bold text-[#003566] dark:text-blue-400 mb-4">Sessions by Mode</h3>
->>>>>>> 0b7861d653f816432b14d75f478e1158f1bb1909
           <div className="flex flex-wrap gap-2.5">
             {Object.entries(modeCounts).map(([mode, count]) => (
               <div key={mode} className="flex items-center gap-2.5 rounded-[12px] px-4 py-2.5"
@@ -749,20 +612,13 @@ function StudyHistoryPage() {
 
       {/* Recent sessions table */}
       {isLoading ? <Spinner /> : history.length > 0 ? (
-<<<<<<< HEAD
         <div className="bg-white dark:bg-[#22272f] rounded-[16px] md:rounded-[20px] overflow-hidden border border-[#edf0f4] dark:border-[#3a3f47] shadow-sm">
           <div className="hidden md:grid grid-cols-[2fr_1fr_1fr_1fr] px-6 py-3.5 bg-gradient-to-r from-[#001d3d] via-[#003566] to-[#0967bd] dark:from-[#1a1f2e] dark:via-[#22272f] dark:to-[#2b3139]">
-=======
-        <div className="bg-white dark:bg-[#22272f] rounded-[20px] overflow-hidden border border-[#edf0f4] dark:border-[#3a3f47] shadow-sm">
-          <div className="grid grid-cols-[2fr_1fr_1fr_1fr] px-6 py-3.5"
-            style={{ background: 'linear-gradient(135deg, #001d3d, #003566)' }}>
->>>>>>> 0b7861d653f816432b14d75f478e1158f1bb1909
             {["Mode", "Duration", "Pomodoros", "Date"].map((col) => (
               <p key={col} className="text-[10px] md:text-[11px] font-bold text-white/70 dark:text-slate-300 uppercase tracking-[0.05em]">{col}</p>
             ))}
           </div>
           {history.slice(0, 20).map((s, idx) => (
-<<<<<<< HEAD
             <div key={s.id} className={`grid grid-cols-1 md:grid-cols-[2fr_1fr_1fr_1fr] gap-3 md:gap-0 px-4 md:px-6 py-3 md:py-3.5 items-start md:items-center border-b border-[#edf0f4] dark:border-[#3a3f47] last:border-0 hover:bg-[#f8f9fc] dark:hover:bg-[#2b3139] transition-colors ${idx % 2 ? "bg-[#fafbfc] dark:bg-[#1a1f2e]" : ""}`}>
               <div className="flex items-center justify-between md:col-span-4">
                 <div className="md:hidden text-[11px] text-[#94a3b8] dark:text-slate-500 font-medium">Mode</div>
@@ -771,16 +627,9 @@ function StudyHistoryPage() {
                 <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: MODE_COLORS[s.mode] || "#003566" }} />
                 <span className="text-[12px] md:text-[13px] font-medium text-[#1e293b] dark:text-white">{s.mode}</span>
               </div>
-=======
-            <div key={s.id} className={`grid grid-cols-[2fr_1fr_1fr_1fr] px-6 py-3.5 items-center border-b border-[#edf0f4] dark:border-[#3a3f47] last:border-0 hover:bg-[#f8f9fc] dark:hover:bg-[#2b3139] transition-colors ${idx % 2 ? "bg-[#fafbfc] dark:bg-[#1a1f2e]" : ""}`}>
-              <div className="flex items-center gap-2.5">
-                <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: MODE_COLORS[s.mode] || "#003566" }} />
-                <span className="text-[13px] font-medium text-[#1e293b] dark:text-white">{s.mode}</span>
-              </div>
->>>>>>> 0b7861d653f816432b14d75f478e1158f1bb1909
               <span className="text-[12px] text-[#5a7089] dark:text-slate-400">{Math.round(s.durationMinutes || 0)} min</span>
               <span className="text-[12px] text-[#5a7089] dark:text-slate-400">{s.completedPomodoros || 0}</span>
-              <span className="text-[11px] text-[#94a3b8] dark:text-slate-500">{s.timestamp ? new Date(s.timestamp).toLocaleDateString("en-US", { month: "short", day: "numeric" }) : "—"}</span>
+              <span className="text-[11px] text-[#94a3b8] dark:text-slate-500">{s.timestamp ? new Date(s.timestamp).toLocaleDateString("en-US", { month: "short", day: "numeric" }) : "â€”"}</span>
             </div>
           ))}
         </div>
@@ -794,21 +643,21 @@ function StudyHistoryPage() {
   );
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // Mood History
-// ─────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 const MOOD_META: Record<string, { emoji: string; color: string; bg: string }> = {
-  "Amazing":   { emoji: "😄", color: "#16a34a", bg: "rgba(34,197,94,0.08)" },
-  "Good":      { emoji: "🙂", color: "#2563eb", bg: "rgba(37,99,235,0.08)" },
-  "Okay":      { emoji: "😐", color: "#f77f00", bg: "rgba(247,127,0,0.08)" },
-  "Low":       { emoji: "😔", color: "#7c3aed", bg: "rgba(124,58,237,0.08)" },
-  "Stressed":  { emoji: "😰", color: "#cc3636", bg: "rgba(204,54,54,0.08)" },
-  "Anxious":   { emoji: "😟", color: "#cc3636", bg: "rgba(204,54,54,0.08)" },
-  "Sad":       { emoji: "😢", color: "#6b7280", bg: "rgba(107,114,128,0.08)" },
-  "Happy":     { emoji: "😊", color: "#16a34a", bg: "rgba(34,197,94,0.08)" },
-  "Motivated": { emoji: "💪", color: "#003566", bg: "rgba(0,53,102,0.08)" },
-  "Tired":     { emoji: "😴", color: "#6b7280", bg: "rgba(107,114,128,0.08)" },
+  "Amazing":   { emoji: "ðŸ˜„", color: "#16a34a", bg: "rgba(34,197,94,0.08)" },
+  "Good":      { emoji: "ðŸ™‚", color: "#2563eb", bg: "rgba(37,99,235,0.08)" },
+  "Okay":      { emoji: "ðŸ˜", color: "#f77f00", bg: "rgba(247,127,0,0.08)" },
+  "Low":       { emoji: "ðŸ˜”", color: "#7c3aed", bg: "rgba(124,58,237,0.08)" },
+  "Stressed":  { emoji: "ðŸ˜°", color: "#cc3636", bg: "rgba(204,54,54,0.08)" },
+  "Anxious":   { emoji: "ðŸ˜Ÿ", color: "#cc3636", bg: "rgba(204,54,54,0.08)" },
+  "Sad":       { emoji: "ðŸ˜¢", color: "#6b7280", bg: "rgba(107,114,128,0.08)" },
+  "Happy":     { emoji: "ðŸ˜Š", color: "#16a34a", bg: "rgba(34,197,94,0.08)" },
+  "Motivated": { emoji: "ðŸ’ª", color: "#003566", bg: "rgba(0,53,102,0.08)" },
+  "Tired":     { emoji: "ðŸ˜´", color: "#6b7280", bg: "rgba(107,114,128,0.08)" },
 };
 
 function MoodHistoryPage() {
@@ -819,7 +668,7 @@ function MoodHistoryPage() {
 
   const moodCounts: Record<string, number> = {};
   checkins.forEach((c) => { moodCounts[c.mood] = (moodCounts[c.mood] || 0) + 1; });
-  const topMood = Object.entries(moodCounts).sort((a, b) => b[1] - a[1])[0]?.[0] || "—";
+  const topMood = Object.entries(moodCounts).sort((a, b) => b[1] - a[1])[0]?.[0] || "â€”";
 
   return (
     <div className="p-6 md:p-8 lg:p-10" style={FONT}>
@@ -837,13 +686,13 @@ function MoodHistoryPage() {
           <h3 className="text-[16px] font-bold text-[#003566] dark:text-blue-400 mb-4">Mood Frequency</h3>
           <div className="flex flex-wrap gap-2.5">
             {Object.entries(moodCounts).sort((a, b) => b[1] - a[1]).map(([mood, count]) => {
-              const meta = MOOD_META[mood] || { emoji: "🙂", color: "#003566", bg: "rgba(0,53,102,0.08)" };
+              const meta = MOOD_META[mood] || { emoji: "ðŸ™‚", color: "#003566", bg: "rgba(0,53,102,0.08)" };
               return (
                 <div key={mood} className="flex items-center gap-2.5 rounded-[14px] px-4 py-2.5"
                   style={{ background: meta.bg, border: `1px solid ${meta.color}15` }}>
                   <span className="text-[16px]">{meta.emoji}</span>
                   <span className="text-[12px] font-semibold" style={{ color: meta.color }}>{mood}</span>
-                  <span className="text-[12px] font-bold" style={{ color: meta.color }}>{count}×</span>
+                  <span className="text-[12px] font-bold" style={{ color: meta.color }}>{count}Ã—</span>
                 </div>
               );
             })}
@@ -855,9 +704,8 @@ function MoodHistoryPage() {
       {isLoading ? <Spinner /> : checkins.length > 0 ? (
         <div className="flex flex-col gap-2.5 md:gap-3">
           {checkins.slice(0, 30).map((c) => {
-            const meta = MOOD_META[c.mood] || { emoji: "🙂", color: "#003566", bg: "rgba(0,53,102,0.08)" };
+            const meta = MOOD_META[c.mood] || { emoji: "ðŸ™‚", color: "#003566", bg: "rgba(0,53,102,0.08)" };
             return (
-<<<<<<< HEAD
               <div key={c.id} className="bg-white dark:bg-[#22272f] rounded-[14px] md:rounded-[16px] border border-[#edf0f4] dark:border-[#3a3f47] px-3.5 md:px-5 py-3 md:py-4 flex items-center gap-3 md:gap-4 hover:shadow-md transition-shadow">
                 <div className="w-9 md:w-11 h-9 md:h-11 rounded-[12px] md:rounded-[14px] flex items-center justify-center shrink-0 text-[18px] md:text-[22px]" style={{ background: meta.bg }}>
                   {c.emoji || meta.emoji}
@@ -867,17 +715,6 @@ function MoodHistoryPage() {
                   {c.note && <p className="text-[11px] md:text-[12px] text-[#5a7089] dark:text-slate-400 mt-0.5 truncate">{c.note}</p>}
                 </div>
                 <p className="text-[10px] md:text-[11px] text-[#c1c7ce] dark:text-slate-600 whitespace-nowrap shrink-0">
-=======
-              <div key={c.id} className="bg-white dark:bg-[#22272f] rounded-[16px] border border-[#edf0f4] dark:border-[#3a3f47] px-5 py-4 flex items-center gap-4 hover:shadow-md transition-shadow">
-                <div className="w-11 h-11 rounded-[14px] flex items-center justify-center shrink-0 text-[22px]" style={{ background: meta.bg }}>
-                  {c.emoji || meta.emoji}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-[14px] font-bold" style={{ color: meta.color }}>{c.mood}</p>
-                  {c.note && <p className="text-[12px] text-[#5a7089] dark:text-slate-400 mt-0.5 truncate">{c.note}</p>}
-                </div>
-                <p className="text-[11px] text-[#c1c7ce] dark:text-slate-600 whitespace-nowrap shrink-0">
->>>>>>> 0b7861d653f816432b14d75f478e1158f1bb1909
                   {c.timestamp ? new Date(c.timestamp).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : ""}
                 </p>
               </div>
@@ -894,9 +731,9 @@ function MoodHistoryPage() {
   );
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // Account & Security
-// ─────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function DeleteAccountModal({ onConfirm, onCancel, isDeleting }: {
   onConfirm: () => void;
@@ -1023,7 +860,6 @@ function SecurityPage({ onAccountDeleted }: { onAccountDeleted?: () => void }) {
       setStatus("error");
       setErrorMsg(err.message || "Failed to update password.");
     }
-<<<<<<< HEAD
   }
 
   async function handleDeleteAccount() {
@@ -1038,8 +874,6 @@ function SecurityPage({ onAccountDeleted }: { onAccountDeleted?: () => void }) {
       setIsDeleting(false);
       toast.error(err.message || "Failed to delete account");
     }
-=======
->>>>>>> 0b7861d653f816432b14d75f478e1158f1bb1909
   }
 
   function PwField({ label, value, show, onToggle, onChange }: {
@@ -1047,24 +881,14 @@ function SecurityPage({ onAccountDeleted }: { onAccountDeleted?: () => void }) {
   }) {
     return (
       <div className="flex flex-col gap-2">
-<<<<<<< HEAD
-        <label className="text-[11px] md:text-[12px] font-bold text-[#003566] dark:text-blue-400">{label}</label>
-        <div className="relative">
-          <div className="absolute left-3 top-1/2 -translate-y-1/2 text-[#94a3b8] dark:text-slate-500"><Lock className="w-3.5 md:w-4 h-3.5 md:h-4" /></div>
-=======
         <label className="text-[13px] font-bold text-[#003566] dark:text-blue-400">{label}</label>
         <div className="relative">
           <div className="absolute left-3 top-1/2 -translate-y-1/2 text-[#94a3b8] dark:text-slate-500"><Lock className="w-4 h-4" /></div>
->>>>>>> 0b7861d653f816432b14d75f478e1158f1bb1909
           <input type={show ? "text" : "password"} value={value} onChange={(e) => onChange(e.target.value)}
             placeholder="••••••••" className={`${inputClass} pl-9 md:pl-10 pr-9 md:pr-10 text-[12px] md:text-[13px] h-[38px] md:h-[40px]`} />
           <button type="button" onClick={onToggle}
             className="absolute right-3 top-1/2 -translate-y-1/2 text-[#94a3b8] dark:text-slate-500 hover:text-[#5a7089] dark:hover:text-slate-400 cursor-pointer transition-colors">
-<<<<<<< HEAD
-            {show ? <EyeOff className="w-3.5 md:w-4 h-3.5 md:h-4" /> : <Eye className="w-3.5 md:w-4 h-3.5 md:h-4" />}
-=======
             {show ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
->>>>>>> 0b7861d653f816432b14d75f478e1158f1bb1909
           </button>
         </div>
       </div>
@@ -1072,10 +896,9 @@ function SecurityPage({ onAccountDeleted }: { onAccountDeleted?: () => void }) {
   }
 
   return (
-    <div className="p-4 md:p-6 lg:p-8 lg:p-10" style={FONT}>
+    <div className="p-6 md:p-8 lg:p-10" style={FONT}>
       <SectionHeader title="Account & Security" desc="Keep your account safe and up to date" />
 
-<<<<<<< HEAD
       <div className="max-w-full md:max-w-[500px] space-y-4 md:space-y-5">
         <div className="bg-white dark:bg-[#22272f] rounded-[16px] md:rounded-[20px] border border-[#edf0f4] dark:border-[#3a3f47] p-4 md:p-6 shadow-sm">
           <div className="flex items-center gap-2.5 mb-4 md:mb-5">
@@ -1083,15 +906,6 @@ function SecurityPage({ onAccountDeleted }: { onAccountDeleted?: () => void }) {
               <Lock className="w-4 h-4 text-[#003566]" />
             </div>
             <h3 className="text-[15px] md:text-[16px] font-bold text-[#003566] dark:text-blue-400">Change Password</h3>
-=======
-      <div className="max-w-[500px] space-y-5">
-        <div className="bg-white dark:bg-[#22272f] rounded-[20px] border border-[#edf0f4] dark:border-[#3a3f47] p-6 shadow-sm">
-          <div className="flex items-center gap-2.5 mb-5">
-            <div className="w-8 h-8 rounded-[10px] flex items-center justify-center" style={{ background: 'rgba(0,53,102,0.06)' }}>
-              <Lock className="w-4 h-4 text-[#003566]" />
-            </div>
-            <h3 className="text-[16px] font-bold text-[#003566] dark:text-blue-400">Change Password</h3>
->>>>>>> 0b7861d653f816432b14d75f478e1158f1bb1909
           </div>
 
           <div className="space-y-4 md:space-y-4">
@@ -1124,7 +938,6 @@ function SecurityPage({ onAccountDeleted }: { onAccountDeleted?: () => void }) {
         </div>
 
         {/* Account Info */}
-<<<<<<< HEAD
         <div className="bg-white dark:bg-[#22272f] rounded-[16px] md:rounded-[20px] border border-[#edf0f4] dark:border-[#3a3f47] p-4 md:p-6 shadow-sm">
           <h3 className="text-[15px] md:text-[16px] font-bold text-[#003566] dark:text-blue-400 mb-4">Account Info</h3>
           <TwoFASettings />
@@ -1134,17 +947,6 @@ function SecurityPage({ onAccountDeleted }: { onAccountDeleted?: () => void }) {
               <p className="text-[10px] md:text-[11px] text-[#94a3b8] dark:text-slate-400 mt-0.5">Permanently remove your account and data</p>
             </div>
             <button onClick={() => setShowDeleteModal(true)} className="text-[10px] md:text-[11px] font-bold text-[#cc3636] border border-[#cc3636] px-3 py-1.5 md:px-3 md:py-1.5 rounded-[10px] hover:bg-red-50 dark:hover:bg-[#2b3139] transition-colors cursor-pointer flex items-center gap-1.5 whitespace-nowrap w-full md:w-auto justify-center md:justify-start">
-=======
-        <div className="bg-white dark:bg-[#22272f] rounded-[20px] border border-[#edf0f4] dark:border-[#3a3f47] p-6 shadow-sm">
-          <h3 className="text-[16px] font-bold text-[#003566] dark:text-blue-400 mb-4">Account Info</h3>
-          <TwoFASettings />
-          <div className="flex items-center justify-between py-4 border-t border-[#edf0f4] dark:border-[#3a3f47]">
-            <div>
-              <p className="text-[13px] font-semibold text-[#1e293b] dark:text-white">Delete Account</p>
-              <p className="text-[11px] text-[#94a3b8] dark:text-slate-400 mt-0.5">Permanently remove your account and data</p>
-            </div>
-            <button className="text-[11px] font-bold text-[#cc3636] border border-[#cc3636] px-3 py-1.5 rounded-[10px] hover:bg-red-50 dark:hover:bg-[#2b3139] transition-colors cursor-pointer flex items-center gap-1.5">
->>>>>>> 0b7861d653f816432b14d75f478e1158f1bb1909
               <Trash2 className="w-3 h-3" /> Delete
             </button>
           </div>
@@ -1163,9 +965,9 @@ function SecurityPage({ onAccountDeleted }: { onAccountDeleted?: () => void }) {
   );
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // Notifications
-// ─────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 const NOTIF_SETTINGS = [
   { key: "sessionAlerts", label: "Session Alerts", desc: "Get notified about upcoming sessions, confirmations, and cancellations.", defaultOn: true },
@@ -1247,7 +1049,6 @@ function NotificationsPage() {
     <div className="p-4 md:p-6 lg:p-8 lg:p-10" style={FONT}>
       <SectionHeader title="Notifications" desc="Choose which notifications you'd like to receive" />
 
-<<<<<<< HEAD
       <div className="max-w-full md:max-w-[640px] bg-white dark:bg-[#22272f] rounded-[16px] md:rounded-[20px] border border-[#edf0f4] dark:border-[#3a3f47] shadow-sm overflow-hidden">
         <div className="p-4 md:p-6 flex flex-col gap-0">
           {NOTIF_SETTINGS.map((item, i) => (
@@ -1259,48 +1060,24 @@ function NotificationsPage() {
               <div className="flex justify-between items-center md:items-start">
                 <span className="md:hidden text-[11px] text-[#94a3b8] dark:text-slate-500 font-medium">Enable</span>
                 <Toggle on={enabled[item.key]} onClick={() => setEnabled((prev) => ({ ...prev, [item.key]: !prev[item.key] }))} />
-=======
-      <div className="max-w-[640px] bg-white dark:bg-[#22272f] rounded-[20px] border border-[#edf0f4] dark:border-[#3a3f47] shadow-sm overflow-hidden">
-        <div className="p-6 flex flex-col gap-0">
-          {NOTIF_SETTINGS.map((item, i) => (
-            <div key={item.key} className={`flex items-start justify-between gap-6 py-5 ${i < NOTIF_SETTINGS.length - 1 ? "border-b border-[#edf0f4] dark:border-[#3a3f47]" : ""}`}>
-              <div className="flex-1 min-w-0">
-                <p className="text-[14px] font-bold text-[#1e293b] dark:text-white mb-0.5">{item.label}</p>
-                <p className="text-[12px] text-[#94a3b8] dark:text-slate-400 leading-relaxed">{item.desc}</p>
->>>>>>> 0b7861d653f816432b14d75f478e1158f1bb1909
               </div>
             </div>
           ))}
         </div>
 
-<<<<<<< HEAD
         <div className="flex justify-end px-4 md:px-6 py-3 md:py-4 border-t border-[#edf0f4] dark:border-[#3a3f47]">
           <button onClick={handleSave} disabled={isSaving}
             className="h-[42px] md:h-[44px] px-6 md:px-8 rounded-[14px] text-[12px] md:text-[13px] font-bold text-white transition-all cursor-pointer hover:shadow-lg disabled:opacity-60 flex items-center gap-2 w-full md:w-auto justify-center md:justify-start"
-=======
-        <div className="flex justify-end px-6 py-4 border-t border-[#edf0f4] dark:border-[#3a3f47]">
-          <button onClick={handleSave} disabled={isSaving}
-            className="h-[44px] px-8 rounded-[14px] text-[13px] font-bold text-white transition-all cursor-pointer hover:shadow-lg disabled:opacity-60 flex items-center gap-2"
->>>>>>> 0b7861d653f816432b14d75f478e1158f1bb1909
             style={{ background: 'linear-gradient(135deg, #003566, #0967bd)' }}>
             {isSaving ? (
               <>
                 <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-<<<<<<< HEAD
                 <span className="hidden md:inline">Saving...</span>
               </>
             ) : saved ? (
               <><Check className="w-4 h-4" /> <span className="hidden md:inline">Saved!</span></>
             ) : (
               <><Save className="w-4 h-4" /> <span className="hidden md:inline">Save Preferences</span><span className="md:hidden">Save</span></>
-=======
-                Saving...
-              </>
-            ) : saved ? (
-              <><Check className="w-4 h-4" /> Saved!</>
-            ) : (
-              <><Save className="w-4 h-4" /> Save Preferences</>
->>>>>>> 0b7861d653f816432b14d75f478e1158f1bb1909
             )}
           </button>
         </div>
@@ -1309,9 +1086,9 @@ function NotificationsPage() {
   );
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // Main UserProfileSettings
-// ─────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 const navConfig: { key: UserSubNav; label: string; icon: React.ReactNode }[] = [
   { key: "basic", label: "Basic Information", icon: <User className="w-[18px] h-[18px]" /> },
@@ -1498,9 +1275,8 @@ export function UserProfileSettings({ onBack }: UserProfileSettingsProps) {
   const currentUser = getCurrentUser();
 
   return (
-<<<<<<< HEAD
     <div className="flex flex-col md:flex-row h-full w-full overflow-hidden" style={FONT}>
-      {/* ── Mobile Tab Navigation ── */}
+      {/* â”€â”€ Mobile Tab Navigation â”€â”€ */}
       <div className="md:hidden flex flex-col gap-3 bg-white dark:bg-[#22272f] border-b border-[#edf0f4] dark:border-[#3a3f47] px-4 py-3">
         <div className="flex items-center justify-between gap-2 mb-2">
           <button onClick={onBack} className="flex items-center gap-2 text-[#5a7089] dark:text-slate-400 hover:text-[#003566] dark:hover:text-blue-400 transition-colors">
@@ -1530,17 +1306,10 @@ export function UserProfileSettings({ onBack }: UserProfileSettingsProps) {
         </div>
       </div>
 
-      {/* ── Desktop Sidebar Navigation ── */}
+      {/* â”€â”€ Desktop Sidebar Navigation â”€â”€ */}
       <div className="hidden md:flex md:w-[280px] shrink-0 flex-col overflow-y-auto border-r border-[#edf0f4] dark:border-[#3a3f47] bg-white dark:bg-[#1a1f2e]">
         {/* Back + Title */}
         <div className="px-6 pt-8 pb-5 bg-white dark:bg-[#1a1f2e]">
-=======
-    <div className="flex h-full w-full overflow-hidden" style={FONT}>
-      {/* ── Left sub-nav sidebar ── */}
-      <div className="w-[260px] shrink-0 flex flex-col overflow-y-auto border-r border-[#edf0f4] dark:border-[#3a3f47] bg-gradient-to-b from-white to-[#f8f9fc] dark:from-[#1a1f2e] dark:to-[#22272f]">
-        {/* Back + Title */}
-        <div className="px-6 pt-8 pb-5">
->>>>>>> 0b7861d653f816432b14d75f478e1158f1bb1909
           <button onClick={onBack} className="flex items-center gap-2 text-[#5a7089] dark:text-slate-400 hover:text-[#003566] dark:hover:text-blue-400 mb-3 transition-colors group cursor-pointer">
             <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
             <span className="text-[12px] font-medium">Dashboard</span>
@@ -1549,13 +1318,8 @@ export function UserProfileSettings({ onBack }: UserProfileSettingsProps) {
         </div>
 
         {/* Avatar preview */}
-<<<<<<< HEAD
         <div className="flex flex-col items-center gap-2.5 px-6 py-5 border-b border-[#edf0f4] dark:border-[#3a3f47] bg-white dark:bg-[#1a1f2e]">
           <div className="w-[72px] h-[72px] rounded-full overflow-hidden border-3 border-[#edf0f4] dark:border-[#3a3f47] shadow-lg">
-=======
-        <div className="flex flex-col items-center gap-2.5 px-6 pb-5 border-b border-[#edf0f4] dark:border-[#3a3f47]">
-          <div className="w-[72px] h-[72px] rounded-full overflow-hidden border-3 border-white dark:border-[#2b3139] shadow-lg">
->>>>>>> 0b7861d653f816432b14d75f478e1158f1bb1909
             <img src={currentUser?.avatar || imgEllipse1} alt="Profile" className="w-full h-full object-cover" />
           </div>
           <div className="text-center">
@@ -1573,7 +1337,6 @@ export function UserProfileSettings({ onBack }: UserProfileSettingsProps) {
             const isActive = activeNav === item.key;
             return (
               <button key={item.key} onClick={() => setActiveNav(item.key)}
-<<<<<<< HEAD
                 className="flex items-center gap-3 px-4 py-2.5 rounded-[12px] w-full text-left transition-all cursor-pointer font-medium text-[13px]"
                 style={isActive ? {
                   background: 'linear-gradient(135deg, #003566, #0967bd)',
@@ -1584,16 +1347,6 @@ export function UserProfileSettings({ onBack }: UserProfileSettingsProps) {
                 }}>
                 <span style={{ display: 'flex', alignItems: 'center' }}>{item.icon}</span>
                 <span>{item.label}</span>
-=======
-                className={`flex items-center gap-3 px-4 py-2.5 rounded-[12px] w-full text-left transition-all cursor-pointer ${
-                  isActive
-                    ? "text-[#003566] dark:text-blue-400 font-bold"
-                    : "text-[#94a3b8] dark:text-slate-500 hover:text-[#5a7089] dark:hover:text-slate-400 hover:bg-[#f5f7fa] dark:hover:bg-[#2b3139]"
-                }`}
-                style={isActive ? { background: 'rgba(9,103,189,0.06)', border: '1px solid rgba(9,103,189,0.08)' } : undefined}>
-                <span className={isActive ? "text-[#0967bd] dark:text-blue-300" : ""}>{item.icon}</span>
-                <span className="text-[13px]">{item.label}</span>
->>>>>>> 0b7861d653f816432b14d75f478e1158f1bb1909
                 {isActive && <div className="ml-auto w-1.5 h-1.5 rounded-full bg-[#f77f00]" />}
               </button>
             );
@@ -1601,10 +1354,7 @@ export function UserProfileSettings({ onBack }: UserProfileSettingsProps) {
         </nav>
       </div>
 
-<<<<<<< HEAD
-=======
-      {/* ── Main scrollable content ── */}
->>>>>>> 0b7861d653f816432b14d75f478e1158f1bb1909
+
       <div className="flex-1 overflow-y-auto bg-[#f8f9fc] dark:bg-[#1a1f2e]">
         {activeNav === "basic" && <BasicInfoPage />}
         {activeNav === "my-sessions" && <MySessionsPage />}
@@ -1616,3 +1366,4 @@ export function UserProfileSettings({ onBack }: UserProfileSettingsProps) {
     </div>
   );
 }
+

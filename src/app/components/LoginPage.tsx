@@ -244,11 +244,7 @@ export function LoginPage({
           type="button"
           disabled={isGoogleLoading}
           onClick={() => void handleGoogleSignIn()}
-<<<<<<< HEAD
           className="h-11 w-full rounded-xl !bg-blue-600 !text-white hover:!bg-blue-700 text-base font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
-=======
-          className="h-11 w-full rounded-lg !bg-blue-600 !text-white dark:!bg-blue-600 dark:!text-white dark:hover:!bg-blue-700 light:!bg-blue-600 light:!text-white light:hover:!bg-blue-700 text-base font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
->>>>>>> 0b7861d653f816432b14d75f478e1158f1bb1909
         >
           <BookOpenText className="size-4" />
           {isGoogleLoading ? 'Signing in...' : 'Continue with Google'}
