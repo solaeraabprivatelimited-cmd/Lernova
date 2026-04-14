@@ -71,11 +71,7 @@ function ElmOrbitLogo() {
           </defs>
         </svg>
       </div>
-<<<<<<< HEAD
       <span className="font-['Righteous'] text-blue-600 dark:text-blue-400 text-[20px]">Elm Orbit</span>
-=======
-      <span className="font-['Righteous'] text-blue-600 dark:text-blue-400 text-[20px]">Learnova</span>
->>>>>>> 0b7861d653f816432b14d75f478e1158f1bb1909
     </div>
   );
 }
@@ -2800,11 +2796,7 @@ const NAV_ITEMS: { id: NavItem; label: string; icon: React.ReactNode }[] = [
 
 function Sidebar({ active, onNav }: SidebarProps) {
   return (
-<<<<<<< HEAD
     <div className="flex h-full flex-col border-r border-border/70 bg-card pt-[32px] pb-6 shadow-sm">
-=======
-    <div className="flex h-full flex-col border-r border-border/70 dark:bg-[#2b2c2f] light:bg-card pt-[32px] pb-6 shadow-[0px_4px_18px_-1px_rgba(0,0,0,0.08)]">
->>>>>>> 0b7861d653f816432b14d75f478e1158f1bb1909
       {/* Logo */}
       <div className="px-[32px] mb-[36px]">
         <ElmOrbitLogo />
@@ -3069,15 +3061,9 @@ export function MentorDashboard({ onLogout }: MentorDashboardProps) {
       )}
 
       {/* Main area */}
-<<<<<<< HEAD
       <div className="flex-1 flex flex-col overflow-hidden bg-background">
         {/* Top bar — hidden in profile view which has its own */}
         <div className={`flex shrink-0 items-center justify-end gap-6 border-b border-border/70 bg-card px-10 py-[22px] backdrop-blur-xl ${activeNav === 'profile' ? 'hidden' : ''}`}>
-=======
-      <div className="flex-1 flex flex-col overflow-hidden dark:bg-[#1a1a1a] light:bg-background">
-        {/* Top bar — hidden in profile view which has its own */}
-        <div className={`flex shrink-0 items-center justify-end gap-6 border-b border-border/70 dark:bg-[#2b2c2f] light:bg-background px-10 py-[22px] backdrop-blur-xl ${activeNav === 'profile' ? 'hidden' : ''}`}>
->>>>>>> 0b7861d653f816432b14d75f478e1158f1bb1909
           {/* Bell */}
           <div className="relative bg-transparent">
             <button

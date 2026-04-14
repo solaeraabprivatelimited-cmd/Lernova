@@ -381,15 +381,9 @@ export function SignUpPage({ onSignUp, onLogin, onBack }: SignUpPageProps) {
             </AuthSubmitButton>
 
             <div className="flex items-center gap-3">
-<<<<<<< HEAD
               <div className="h-px flex-1 bg-border" />
               <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">or</span>
               <div className="h-px flex-1 bg-border" />
-=======
-              <div className="h-px flex-1 text-muted-foreground" />
-              <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">or</span>
-              <div className="h-px flex-1 text-muted-foreground" />
->>>>>>> 0b7861d653f816432b14d75f478e1158f1bb1909
             </div>
 
             <Button
