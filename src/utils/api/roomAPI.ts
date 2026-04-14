@@ -166,12 +166,9 @@ async function ensureRelationalUserRow() {
     .from('profiles')
     .upsert({
       id: user.id,
-      email: user.email,
       name: user.name,
       avatar_url: user.avatar_url,
       role: user.role === 'mentor' ? 'mentor' : 'student',
-      is_active: true,
-      last_login_at: new Date().toISOString(),
     }, { onConflict: 'id' });
 
   if (error) {

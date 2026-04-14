@@ -526,20 +526,21 @@ export const auth = {
   /** Check if an email already exists in the system */
   async checkEmailExists(email: string): Promise<boolean> {
     const supabase = getSupabaseClient();
-    const { data: users, error } = await supabase.auth.admin.listUsers();
-    
-    if (error) {
-      // Fallback: If admin API fails, check profiles table
-      const { data: profiles } = await supabase
-        .from('profiles')
-        .select('user_id')
-        .eq('email', email)
-        .limit(1);
-      return (profiles?.length ?? 0) > 0;
+    try {
+      const { data: users, error } = await supabase.auth.admin.listUsers();
+      
+      if (error) {
+        console.error('Failed to check email existence:', error);
+        // If admin API fails, default to false (allow signup attempt, let auth.users handle uniqueness)
+        return false;
+      }
+      
+      // Check if email exists in auth users
+      return users.some(u => u.email?.toLowerCase() === email.toLowerCase());
+    } catch (err) {
+      console.error('Error checking email existence:', err);
+      return false;
     }
-    
-    // Check if email exists in auth users
-    return users.some(u => u.email?.toLowerCase() === email.toLowerCase());
   },
 
   /** Step 1: Request password reset (send code) */
