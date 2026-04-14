@@ -12,7 +12,56 @@ const genId = () => crypto.randomUUID();
 const nowIso = () => new Date().toISOString();
 
 /**
- * Extract user ID from JWT Bearer token
+ * Extract user from Supabase JWT context
+ * When verify_jwt is true, Supabase injects user into context
+ * Falls back to manual JWT decode for compatibility
+ */
+function getUserIdFromContext(c: Context): string | null {
+  try {
+    // First, try to get user from Supabase's verified context
+    const user = c.get("user");
+    if (user?.sub) {
+      console.log("[Auth] Got user from verified context:", user.sub);
+      return user.sub;
+    }
+
+    // Fallback: Extract from Authorization header manually
+    const authHeader = c.req.header("Authorization");
+    if (!authHeader?.startsWith("Bearer ")) {
+      console.log("[Auth] No Bearer token found");
+      return null;
+    }
+
+    const token = authHeader.slice(7);
+    const parts = token.split(".");
+    if (parts.length !== 3) {
+      console.error("[Auth] Invalid token format");
+      return null;
+    }
+
+    // Decode payload
+    let payload = parts[1];
+    payload = payload.replace(/-/g, "+").replace(/_/g, "/");
+    payload += "=".repeat((4 - (payload.length % 4)) % 4);
+    
+    const decoded = JSON.parse(atob(payload));
+    const userId = decoded.sub || decoded.user_id;
+    
+    if (!userId) {
+      console.error("[Auth] No user ID in token claims");
+      return null;
+    }
+
+    console.log("[Auth] Extracted user ID from token:", userId);
+    return userId;
+  } catch (error) {
+    console.error("[Auth] Failed to get user ID:", error);
+    return null;
+  }
+}
+
+/**
+ * Extract user ID from JWT Bearer token (DEPRECATED - use getUserIdFromContext)
  * Decodes the JWT payload to extract the 'sub' (subject/user ID) claim
  * Works with Supabase ES256-signed tokens
  */
@@ -149,10 +198,11 @@ export function registerWebRTCRoutes(app: any, adminClient: () => any) {
   /** Create a new WebRTC study room */
   app.post("/webrtc/rooms", async (c: Context) => {
     try {
-      const authHeader = c.req.header("Authorization");
-      if (!authHeader?.startsWith("Bearer ")) {
+      // Extract and validate user ID from verified JWT context
+      const userId = getUserIdFromContext(c);
+      if (!userId) {
         return c.json(
-          errorResponse("MISSING_AUTH", "Authorization header required"),
+          errorResponse("INVALID_TOKEN", "Could not extract user ID from token"),
           401
         );
       }
@@ -187,15 +237,6 @@ export function registerWebRTCRoutes(app: any, adminClient: () => any) {
             "Max participants must be between 2 and 20"
           ),
           400
-        );
-      }
-
-      // Extract user ID from JWT token
-      const userId = extractUserIdFromToken(authHeader);
-      if (!userId) {
-        return c.json(
-          errorResponse("INVALID_TOKEN", "Could not extract user ID from token"),
-          401
         );
       }
 
@@ -361,23 +402,16 @@ export function registerWebRTCRoutes(app: any, adminClient: () => any) {
   /** List active rooms */
   app.get("/webrtc/rooms", async (c: Context) => {
     try {
-      const authHeader = c.req.header("Authorization");
-      if (!authHeader?.startsWith("Bearer ")) {
-        return c.json(
-          errorResponse("MISSING_AUTH", "Authorization header required"),
-          401
-        );
-      }
-
-      const supabase = adminClient();
-
-      const userId = extractUserIdFromToken(authHeader);
+      // Extract and validate user ID from verified JWT context
+      const userId = getUserIdFromContext(c);
       if (!userId) {
         return c.json(
           errorResponse("INVALID_TOKEN", "Could not extract user ID from token"),
           401
         );
       }
+
+      const supabase = adminClient();
 
       const { data: rooms, error } = await supabase
         .from("webrtc_rooms")
@@ -417,10 +451,11 @@ export function registerWebRTCRoutes(app: any, adminClient: () => any) {
   /** Join a room */
   app.post("/webrtc/rooms/:roomId/join", async (c: Context) => {
     try {
-      const authHeader = c.req.header("Authorization");
-      if (!authHeader?.startsWith("Bearer ")) {
+      // Extract and validate user ID from verified JWT context
+      const userId = getUserIdFromContext(c);
+      if (!userId) {
         return c.json(
-          errorResponse("MISSING_AUTH", "Authorization required"),
+          errorResponse("INVALID_TOKEN", "Could not extract user ID from token"),
           401
         );
       }
@@ -445,15 +480,6 @@ export function registerWebRTCRoutes(app: any, adminClient: () => any) {
         return c.json(
           errorResponse("ROOM_CLOSED", "Room is no longer active"),
           410
-        );
-      }
-
-      // Extract user ID from JWT token
-      const userId = extractUserIdFromToken(authHeader);
-      if (!userId) {
-        return c.json(
-          errorResponse("INVALID_TOKEN", "Could not extract user ID from token"),
-          401
         );
       }
 
@@ -748,24 +774,17 @@ export function registerWebRTCRoutes(app: any, adminClient: () => any) {
   /** Leave a room */
   app.post("/webrtc/rooms/:roomId/leave", async (c: Context) => {
     try {
-      const authHeader = c.req.header("Authorization");
-      if (!authHeader?.startsWith("Bearer ")) {
-        return c.json(
-          errorResponse("MISSING_AUTH", "Authorization required"),
-          401
-        );
-      }
-
-      const { roomId } = c.req.param();
-      const supabase = adminClient();
-
-      const userId = extractUserIdFromToken(authHeader);
+      // Extract and validate user ID from verified JWT context
+      const userId = getUserIdFromContext(c);
       if (!userId) {
         return c.json(
           errorResponse("INVALID_TOKEN", "Could not extract user ID from token"),
           401
         );
       }
+
+      const { roomId } = c.req.param();
+      const supabase = adminClient();
 
       const now = nowIso();
 
@@ -809,15 +828,8 @@ export function registerWebRTCRoutes(app: any, adminClient: () => any) {
   /** Send WebRTC signaling message */
   app.post("/webrtc/signal", async (c: Context) => {
     try {
-      const authHeader = c.req.header("Authorization");
-      if (!authHeader?.startsWith("Bearer ")) {
-        return c.json(
-          errorResponse("MISSING_AUTH", "Authorization header required"),
-          401
-        );
-      }
-
-      const userId = extractUserIdFromToken(authHeader);
+      // Extract and validate user ID from verified JWT context
+      const userId = getUserIdFromContext(c);
       if (!userId) {
         return c.json(
           errorResponse("INVALID_TOKEN", "Could not extract user ID from token"),
@@ -1012,13 +1024,8 @@ export function registerWebRTCRoutes(app: any, adminClient: () => any) {
   app.post("/webrtc/room/:roomId/join", async (c: Context) => {
     try {
       const { roomId } = c.req.param();
-      const authHeader = c.req.header("Authorization");
-
-      if (!authHeader?.startsWith("Bearer ")) {
-        return c.json({ error: "Unauthorized" }, 401);
-      }
-
-      const userId = extractUserIdFromToken(authHeader);
+      // Extract and validate user ID from verified JWT context
+      const userId = getUserIdFromContext(c);
       if (!userId) {
         return c.json({ error: "Invalid token" }, 401);
       }
@@ -1044,15 +1051,8 @@ export function registerWebRTCRoutes(app: any, adminClient: () => any) {
   // ─────────────────────────────────────────────────────────────────────────────
   app.get("/webrtc/rooms/:roomId/notes/me", async (c: Context) => {
     try {
-      const authHeader = c.req.header("Authorization");
-      if (!authHeader?.startsWith("Bearer ")) {
-        return c.json(
-          errorResponse("MISSING_AUTH", "Authorization required"),
-          401
-        );
-      }
-
-      const userId = extractUserIdFromToken(authHeader);
+      // Extract and validate user ID from verified JWT context
+      const userId = getUserIdFromContext(c);
       if (!userId) {
         return c.json(
           errorResponse("INVALID_TOKEN", "Could not extract user ID from token"),
@@ -1128,15 +1128,8 @@ export function registerWebRTCRoutes(app: any, adminClient: () => any) {
 
   app.put("/webrtc/rooms/:roomId/notes/me", async (c: Context) => {
     try {
-      const authHeader = c.req.header("Authorization");
-      if (!authHeader?.startsWith("Bearer ")) {
-        return c.json(
-          errorResponse("MISSING_AUTH", "Authorization required"),
-          401
-        );
-      }
-
-      const userId = extractUserIdFromToken(authHeader);
+      // Extract and validate user ID from verified JWT context
+      const userId = getUserIdFromContext(c);
       if (!userId) {
         return c.json(
           errorResponse("INVALID_TOKEN", "Could not extract user ID from token"),
@@ -1222,15 +1215,8 @@ export function registerWebRTCRoutes(app: any, adminClient: () => any) {
   // ─────────────────────────────────────────────────────────────────────────────
   app.get("/webrtc/rooms/:roomId/notes", async (c: Context) => {
     try {
-      const authHeader = c.req.header("Authorization");
-      if (!authHeader?.startsWith("Bearer ")) {
-        return c.json(
-          errorResponse("MISSING_AUTH", "Authorization required"),
-          401
-        );
-      }
-
-      const userId = extractUserIdFromToken(authHeader);
+      // Extract and validate user ID from verified JWT context
+      const userId = getUserIdFromContext(c);
       if (!userId) {
         return c.json(
           errorResponse("INVALID_TOKEN", "Could not extract user ID from token"),
@@ -1297,15 +1283,8 @@ export function registerWebRTCRoutes(app: any, adminClient: () => any) {
 
   app.post("/webrtc/rooms/:roomId/notes", async (c: Context) => {
     try {
-      const authHeader = c.req.header("Authorization");
-      if (!authHeader?.startsWith("Bearer ")) {
-        return c.json(
-          errorResponse("MISSING_AUTH", "Authorization required"),
-          401
-        );
-      }
-
-      const userId = extractUserIdFromToken(authHeader);
+      // Extract and validate user ID from verified JWT context
+      const userId = getUserIdFromContext(c);
       if (!userId) {
         return c.json(
           errorResponse("INVALID_TOKEN", "Could not extract user ID from token"),
@@ -1398,15 +1377,8 @@ export function registerWebRTCRoutes(app: any, adminClient: () => any) {
 
   app.put("/webrtc/rooms/:roomId/notes/:noteId", async (c: Context) => {
     try {
-      const authHeader = c.req.header("Authorization");
-      if (!authHeader?.startsWith("Bearer ")) {
-        return c.json(
-          errorResponse("MISSING_AUTH", "Authorization required"),
-          401
-        );
-      }
-
-      const userId = extractUserIdFromToken(authHeader);
+      // Extract and validate user ID from verified JWT context
+      const userId = getUserIdFromContext(c);
       if (!userId) {
         return c.json(
           errorResponse("INVALID_TOKEN", "Could not extract user ID from token"),
@@ -1504,15 +1476,8 @@ export function registerWebRTCRoutes(app: any, adminClient: () => any) {
 
   app.delete("/webrtc/rooms/:roomId/notes/:noteId", async (c: Context) => {
     try {
-      const authHeader = c.req.header("Authorization");
-      if (!authHeader?.startsWith("Bearer ")) {
-        return c.json(
-          errorResponse("MISSING_AUTH", "Authorization required"),
-          401
-        );
-      }
-
-      const userId = extractUserIdFromToken(authHeader);
+      // Extract and validate user ID from verified JWT context
+      const userId = getUserIdFromContext(c);
       if (!userId) {
         return c.json(
           errorResponse("INVALID_TOKEN", "Could not extract user ID from token"),
@@ -1585,15 +1550,8 @@ export function registerWebRTCRoutes(app: any, adminClient: () => any) {
 
   app.get("/webrtc/rooms/:roomId/chat", async (c: Context) => {
     try {
-      const authHeader = c.req.header("Authorization");
-      if (!authHeader?.startsWith("Bearer ")) {
-        return c.json(
-          errorResponse("MISSING_AUTH", "Authorization required"),
-          401
-        );
-      }
-
-      const userId = extractUserIdFromToken(authHeader);
+      // Extract and validate user ID from verified JWT context
+      const userId = getUserIdFromContext(c);
       if (!userId) {
         return c.json(
           errorResponse("INVALID_TOKEN", "Could not extract user ID from token"),
@@ -1697,15 +1655,8 @@ export function registerWebRTCRoutes(app: any, adminClient: () => any) {
 
   app.post("/webrtc/rooms/:roomId/chat", async (c: Context) => {
     try {
-      const authHeader = c.req.header("Authorization");
-      if (!authHeader?.startsWith("Bearer ")) {
-        return c.json(
-          errorResponse("MISSING_AUTH", "Authorization required"),
-          401
-        );
-      }
-
-      const userId = extractUserIdFromToken(authHeader);
+      // Extract and validate user ID from verified JWT context
+      const userId = getUserIdFromContext(c);
       if (!userId) {
         return c.json(
           errorResponse("INVALID_TOKEN", "Could not extract user ID from token"),
