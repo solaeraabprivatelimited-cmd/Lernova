@@ -784,7 +784,7 @@ export function CollaborativeModeRoom({
                     />
                   ) : (
                     <div className="flex h-full min-h-[220px] items-center justify-center bg-[#303134] text-sm text-white/70">
-                      Camera is off
+                      Video is stopped
                     </div>
                   )}
                   <div className="absolute bottom-3 left-3 rounded-full bg-black/55 px-3 py-1 text-sm text-white">
@@ -824,7 +824,7 @@ export function CollaborativeModeRoom({
                       ) : (
                         <div className="flex h-full min-h-[220px] items-center justify-center bg-[#303134] text-sm text-white/70">
                           {peer.connectionState === 'connected'
-                            ? `${peerLabel} camera is off`
+                            ? `${peerLabel}: Video is stopped`
                             : `Connecting to ${peerLabel}...`}
                         </div>
                       )}

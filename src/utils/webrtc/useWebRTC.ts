@@ -343,10 +343,18 @@ export function useWebRTC({
             }
           });
 
+          // Remove peers that are no longer in the room (regardless of connection state)
           Array.from(updated.keys()).forEach((peerId) => {
-            if (!remotePeerIds.includes(peerId) && updated.get(peerId)?.connectionState !== 'connected') {
+            if (!remotePeerIds.includes(peerId)) {
+              console.log('[useWebRTC] Peer left room, removing:', peerId);
               updated.delete(peerId);
               initiatedPeersRef.current.delete(peerId);
+              initiatedPeerTimestampsRef.current.delete(peerId);
+              peerConnectionStateRef.current.delete(peerId);
+              // Close peer connection
+              if (managerRef.current) {
+                managerRef.current.closeConnection(peerId);
+              }
             }
           });
 
