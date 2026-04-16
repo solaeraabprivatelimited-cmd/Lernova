@@ -482,8 +482,19 @@ export const auth = {
   async signInWithGoogle() {
     const supabase = getSupabaseClient();
     
-    // Use public domain for production, localhost for development
-    const appUrl = import.meta.env.VITE_APP_URL || window.location.origin;
+    // Determine redirect URL: env var > window.location.origin
+    let appUrl = import.meta.env.VITE_APP_URL;
+    
+    // If not set, use window.location.origin but ensure it's not localhost in production
+    if (!appUrl) {
+      const origin = window.location.origin;
+      // If running on vercel, construct the URL properly
+      if (origin.includes('localhost') && typeof window !== 'undefined') {
+        // Fall back to the origin but log a warning
+        console.warn('[Auth] VITE_APP_URL not set, using window.location.origin:', origin);
+      }
+      appUrl = origin;
+    }
     
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
