@@ -21,6 +21,7 @@ interface UseWebRTCOptions {
   enableVideo?: boolean;
   enableAudio?: boolean;
   onError?: (error: Error) => void;
+  onTrackStateChange?: () => void;  // Called when remote track state changes (mute/unmute)
   autoStart?: boolean;
 }
 
@@ -93,6 +94,7 @@ export function useWebRTC({
   enableVideo = true,
   enableAudio = true,
   onError,
+  onTrackStateChange,
   // autoStart = false, // Reserved for future use
 }: UseWebRTCOptions) {
   const managerRef = useRef<WebRTCManager | null>(null);
@@ -207,6 +209,8 @@ export function useWebRTC({
             updated.set(peerId, peerState);
             return updated;
           });
+          // Notify component of track state change (for mute/unmute UI updates)
+          onTrackStateChange?.();
         });
 
         manager.on('peer-connected', (peerId: string) => {
@@ -263,6 +267,19 @@ export function useWebRTC({
           setLocalStream(stream);
         });
 
+        manager.on('local-track-state-changed', async (trackKind: 'audio' | 'video', enabled: boolean) => {
+          console.log(`[useWebRTC] Local ${trackKind} track ${enabled ? 'enabled' : 'disabled'}, sending renegotiation offers...`);
+          // Send new offers to all connected peers to notify them of track state changes
+          const peersMap = new Map(peers);
+          for (const [peerId] of peersMap) {
+            try {
+              await createAndSendOffer(peerId);
+            } catch (error) {
+              console.warn(`[useWebRTC] Failed to send renegotiation offer to ${peerId}:`, error);
+            }
+          }
+        });
+
         manager.on('metrics', (metrics: any) => {
           setMetrics(metrics);
         });
@@ -313,7 +330,7 @@ export function useWebRTC({
       peerConnectionStateRef.current.clear();
       processedSignalIdsRef.current.clear();
     };
-  }, [enableVideo, enableAudio, onError, roomId, userId, sendSignal]);
+  }, [enableVideo, enableAudio, onError, onTrackStateChange, roomId, userId, sendSignal]);
 
   useEffect(() => {
     if (!initialized || !managerRef.current || !userId || !roomId) return;

@@ -108,6 +108,7 @@ export class WebRTCManager {
   private onConnectionStateChange?: (peerId: string, state: PeerConnectionState) => void;
   private onICECandidate?: (peerId: string, candidate: RTCIceCandidateInit) => void;
   private onLocalStreamUpdated?: (stream: MediaStream) => void;
+  private onLocalTrackStateChanged?: (trackKind: 'audio' | 'video', enabled: boolean) => void;
 
   constructor(config: Partial<WebRTCConfig> = {}) {
     this.config = {
@@ -155,6 +156,9 @@ export class WebRTCManager {
       case 'local-stream-updated':
         this.onLocalStreamUpdated = callback as (stream: MediaStream) => void;
         break;
+      case 'local-track-state-changed':
+        this.onLocalTrackStateChanged = callback as (trackKind: 'audio' | 'video', enabled: boolean) => void;
+        break;
     }
   }
 
@@ -166,6 +170,7 @@ export class WebRTCManager {
       channelCount: { ideal: 1, max: 1 },
       sampleRate: { ideal: 48000 },
       sampleSize: { ideal: 16 },
+      latency: { ideal: 0.01 }, // Minimize latency for real-time feel
       ...(deviceId ? { deviceId: { exact: deviceId } } : {}),
     };
   }
@@ -184,9 +189,12 @@ export class WebRTCManager {
     const payloadType = opusMatch[1];
     const fmtpRegex = new RegExp(`^a=fmtp:${payloadType}\\s+(.+)$`, 'im');
     const desiredParams = [
-      'useinbandfec=1',
-      'minptime=10',
-      'maxaveragebitrate=64000',
+      'useinbandfec=1',      // In-band FEC for better robustness
+      'minptime=10',         // Minimum ptime for better continuity
+      'maxaveragebitrate=128000', // Increased from 64000 for better audio quality
+      'maxplaybackrate=48000', // Allow full 48kHz playback
+      'stereo=0',            // Mono for consistency
+      'sprop-stereo=0',
     ];
 
     let nextSdp = sdp;
@@ -198,6 +206,35 @@ export class WebRTCManager {
         .filter((entry) => entry.length > 0);
       const existingKeys = new Set(
         existingParams.map((entry) => entry.split('=')[0]?.trim()).filter(Boolean)
+      );
+
+      for (const param of desiredParams) {
+        const key = param.split('=')[0];
+        if (!existingKeys.has(key)) {
+          existingParams.push(param);
+        }
+      }
+
+      nextSdp = nextSdp.replace(
+        fmtpRegex,
+        `a=fmtp:${payloadType} ${existingParams.join(';')}`
+      );
+    } else {
+      const rtpMapRegex = new RegExp(
+        `^a=rtpmap:${payloadType}\\s+opus\\/48000(?:\\/2)?$`,
+        'im'
+      );
+      nextSdp = nextSdp.replace(
+        rtpMapRegex,
+        (line) => `${line}\r\na=fmtp:${payloadType} ${desiredParams.join(';')}`
+      );
+    }
+
+    return {
+      ...description,
+      sdp: nextSdp,
+    };
+  }
       );
 
       for (const param of desiredParams) {
@@ -247,11 +284,15 @@ export class WebRTCManager {
           }
           return {
             ...encoding,
-            maxBitrate: 64000,
+            maxBitrate: 128000,  // Increased from 64000 for better audio quality
+            minBitrate: 32000,   // Set minimum bitrate for stability
+            dtx: true,           // Enable DTX (Discontinuous Transmission) for bandwidth saving
+            maxFramerate: 50,    // Audio frames per second
           };
         });
 
         await sender.setParameters(parameters);
+        console.log('[WebRTC] Audio sender tuned for continuous streaming');
       } catch (error) {
         console.warn('[WebRTC] Unable to tune audio sender parameters:', error);
       }
@@ -339,33 +380,60 @@ export class WebRTCManager {
       kind === 'audio' ? stream.getAudioTracks() : stream.getVideoTracks();
 
     if (!enabled) {
+      // Instead of stopping tracks, just disable them to keep stream continuous
+      // This prevents audio/video cutoffs when toggling mute/unmute
       if (kind === 'video') {
         if (this.screenShareTrack) {
-          this.screenShareTrack.stop();
-          this.screenShareTrack = null;
+          this.screenShareTrack.enabled = false;
         }
-        if (this.cameraTrackBeforeScreenShare) {
-          this.cameraTrackBeforeScreenShare.stop();
-          this.cameraTrackBeforeScreenShare = null;
+        // For video, we still need to remove disabled camera tracks if screen sharing
+        if (this.screenShareTrack) {
+          currentTracks.forEach((track) => {
+            if (track !== this.screenShareTrack) {
+              stream.removeTrack(track);
+              track.stop();
+            }
+          });
+        } else {
+          // Just disable video tracks if not screen sharing
+          currentTracks.forEach((track) => {
+            track.enabled = false;
+          });
         }
+      } else {
+        // For audio, always just disable tracks (never stop them)
+        // This ensures continuous audio stream when re-enabling
+        currentTracks.forEach((track) => {
+          track.enabled = false;
+        });
       }
-
-      currentTracks.forEach((track) => {
-        track.stop();
-        stream.removeTrack(track);
-      });
-      await this.replaceOutgoingTrackAcrossPeers(kind, null);
+      
       this.onLocalStreamUpdated?.(stream);
+      this.onLocalTrackStateChanged?.(kind, enabled);
       return stream;
     }
 
+    // Re-enable disabled tracks if they're still available
+    const existingDisabledTrack = currentTracks.find(
+      (track) => track.readyState === 'live' && !track.enabled
+    );
+    if (existingDisabledTrack) {
+      existingDisabledTrack.enabled = true;
+      this.onLocalStreamUpdated?.(stream);
+      this.onLocalTrackStateChanged?.(kind, enabled);
+      return stream;
+    }
+
+    // Check if we already have a live track
     const existingLiveTrack = currentTracks.find((track) => track.readyState === 'live');
     if (existingLiveTrack) {
       existingLiveTrack.enabled = true;
       this.onLocalStreamUpdated?.(stream);
+      this.onLocalTrackStateChanged?.(kind, enabled);
       return stream;
     }
 
+    // Only acquire new track if we have no live tracks at all
     const preferredDeviceId =
       kind === 'audio'
         ? this.selectedAudioDeviceId ?? undefined
@@ -394,6 +462,7 @@ export class WebRTCManager {
     }
 
     this.onLocalStreamUpdated?.(stream);
+    this.onLocalTrackStateChanged?.(kind, enabled);
     return stream;
   }
 
@@ -870,11 +939,21 @@ export class WebRTCManager {
       // Listen for track state changes (mute/unmute) to trigger UI updates
       event.track.onmute = () => {
         console.log(`[WebRTC] Track muted from ${peerId}:`, event.track.kind);
+        // Emit stream update to force UI re-render
         this.onStreamReceived?.(peerId, remoteStream);
       };
 
       event.track.onunmute = () => {
         console.log(`[WebRTC] Track unmuted from ${peerId}:`, event.track.kind);
+        // Emit stream update to force UI re-render
+        this.onStreamReceived?.(peerId, remoteStream);
+      };
+
+      event.track.onended = () => {
+        console.log(`[WebRTC] Track ended from ${peerId}:`, event.track.kind);
+        // Remove ended track from stream
+        remoteStream.removeTrack(event.track);
+        // Emit stream update to reflect track removal
         this.onStreamReceived?.(peerId, remoteStream);
       };
 

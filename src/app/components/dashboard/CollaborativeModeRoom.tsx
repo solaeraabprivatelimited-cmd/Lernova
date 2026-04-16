@@ -3,7 +3,7 @@
  * Manages WebRTC connections, video/audio streams, and room interactions
  */
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { MessageSquare, BookOpen, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useWebRTC } from '@/utils/webrtc/useWebRTC';
 import { getSupabaseClient } from '../../lib/api';
@@ -62,6 +62,8 @@ export function CollaborativeModeRoom({
   const [chatError, setChatError] = useState('');
   const [participantDirectory, setParticipantDirectory] = useState<Record<string, string>>({});
   const [trackStateCounter, setTrackStateCounter] = useState(0);
+  const videoRefs = useRef<{[key: string]: React.RefObject<HTMLVideoElement> | null}>({});
+  const localVideoRef = useRef<HTMLVideoElement>(null);
   const [activeSideTab, setActiveSideTab] = useState<'notes' | 'chat'>('chat');
   const [isParticipantsPanelCollapsed, setIsParticipantsPanelCollapsed] = useState(false);
 
@@ -163,6 +165,11 @@ export function CollaborativeModeRoom({
     console.error('[CollaborativeModeRoom] WebRTC error:', err);
   }, []);
 
+  // Handle track state changes (when remote peer mutes/unmutes video/audio)
+  const handleTrackStateChange = useCallback(() => {
+    setTrackStateCounter((c) => c + 1);
+  }, []);
+
   // Initialize WebRTC with audio enabled
   const {
     initialized,
@@ -181,6 +188,7 @@ export function CollaborativeModeRoom({
     enableVideo: true,
     enableAudio: true,
     onError: handleWebRTCError,
+    onTrackStateChange: handleTrackStateChange,
   });
 
   // Handle audio toggle
@@ -402,66 +410,24 @@ export function CollaborativeModeRoom({
     };
   }, [localStream]);
 
-  // Aggressively clean up peer video elements when they become invisible
-  // This prevents frozen video frames from persisting on screen
+  // Cleanup video refs on unmount
   useEffect(() => {
-    const cleanup = () => {
-      peers.forEach((peer) => {
-        const peerVideoTrack = peer.stream?.getVideoTracks()[0] ?? null;
-        const peerAudioTrack = peer.stream?.getAudioTracks()[0] ?? null;
-        
-        const shouldBeVisible =
-          !!peerVideoTrack &&
-          peerVideoTrack.readyState === 'live' &&
-          peerVideoTrack.enabled &&
-          !peerVideoTrack.muted &&
-          peer.stream;
-
-        // Log audio track state for debugging
-        if (peerAudioTrack) {
-          console.log(`[CollaborativeModeRoom] Audio track for ${peer.peerId}:`, {
-            enabled: peerAudioTrack.enabled,
-            muted: peerAudioTrack.muted,
-            readyState: peerAudioTrack.readyState,
-          });
-        }
-
-        if (!shouldBeVisible) {
-          // Find and forcefully clear any video elements for this peer (NOT audio)
-          requestAnimationFrame(() => {
-            const peerElements = document.querySelectorAll(`[data-peer-id="${peer.peerId}"] video`);
-            peerElements.forEach((videoEl) => {
-              if (videoEl instanceof HTMLVideoElement) {
-                try {
-                  // Forceful clearing sequence for video only
-                  videoEl.srcObject = null;
-                  videoEl.src = '';
-                  videoEl.pause();
-                  
-                  // Trigger canvas repaint
-                  const ctx = (videoEl as any).getContext?.('2d');
-                  if (ctx) {
-                    ctx.clearRect(0, 0, videoEl.width, videoEl.height);
-                  }
-                  
-                  // Reset video element state
-                  videoEl.load();
-                  console.log(`[CollaborativeModeRoom] Cleared frozen frame for peer ${peer.peerId}`);
-                } catch (e) {
-                  console.warn(`[CollaborativeModeRoom] Failed to clear video for peer ${peer.peerId}:`, e);
-                }
-              }
-            });
-          });
+    return () => {
+      Object.values(videoRefs.current).forEach(ref => {
+        const video = ref?.current;
+        if (video) {
+          video.srcObject = null;
+          video.pause();
         }
       });
+      if (localVideoRef.current) {
+        localVideoRef.current.srcObject = null;
+        localVideoRef.current.pause();
+      }
     };
+  }, []);
 
-    // Run cleanup immediately and continuously
-    cleanup();
-    const interval = setInterval(cleanup, 500); // Every 500ms to catch any frozen frames
-    return () => clearInterval(interval);
-  }, [peers, trackStateCounter]);
+  // Removed aggressive cleanup - conditional rendering handles it
 
   const handleAudioDeviceChange = useCallback(
     async (nextAudioDeviceId: string) => {
