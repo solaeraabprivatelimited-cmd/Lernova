@@ -123,7 +123,7 @@ export function useWebRTC({
         throw new Error('Authentication required for WebRTC signaling');
       }
 
-      const response = await fetch(`${BASE_URL}/webrtc/signal`, {
+      const response = await fetch(`${BASE_URL}/webrtc/signal/${signal.toUserId}?roomId=${roomId}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -131,11 +131,8 @@ export function useWebRTC({
           apikey: publicAnonKey,
         },
         body: JSON.stringify({
-          roomId,
-          fromUserId: userId,
-          toUserId: signal.toUserId,
-          signalType: signal.signalType,
-          payload: signal.payload,
+          type: signal.signalType,
+          data: signal.payload,
         }),
       });
 
