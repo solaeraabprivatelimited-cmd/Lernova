@@ -212,6 +212,7 @@ export function SilentModeView({ onLeave, onBackToFocus, onReportSubmitted }: Si
   const [pinnedParticipant, setPinnedParticipant] = useState<number | null>(null);
   const [isTimerPanelOpen, setIsTimerPanelOpen] = useState(false);
   const [isBlockNotificationsPanelOpen, setIsBlockNotificationsPanelOpen] = useState(false);
+  const [isNotificationsBlocked, setIsNotificationsBlocked] = useState(false);
   const [isNotesPanelOpen, setIsNotesPanelOpen] = useState(false);
   const [isPeoplePanelOpen, setIsPeoplePanelOpen] = useState(false);
   const [isVideoEnabled, setIsVideoEnabled] = useState(true);
@@ -453,7 +454,7 @@ export function SilentModeView({ onLeave, onBackToFocus, onReportSubmitted }: Si
         {/* Focus Timer Panel */}
         <FocusTimerPanel isOpen={isTimerPanelOpen} onClose={() => setIsTimerPanelOpen(false)} onTimerStart={handleTimerStart} />
         {/* Block Notifications Panel */}
-        <BlockNotificationsPanel isOpen={isBlockNotificationsPanelOpen} onClose={() => setIsBlockNotificationsPanelOpen(false)} />
+        <BlockNotificationsPanel isOpen={isBlockNotificationsPanelOpen} onClose={() => setIsBlockNotificationsPanelOpen(false)} isBlocked={isNotificationsBlocked} onToggle={() => setIsNotificationsBlocked(!isNotificationsBlocked)} />
         {/* Timer Notification */}
         <TimerNotification 
           visible={timerNotification.visible} 

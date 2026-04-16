@@ -5,9 +5,12 @@ interface BlockNotificationsPanelProps {
   onClose: () => void;
   isBlocked: boolean;
   onToggle: () => void;
+  isOpen?: boolean;
 }
 
-export function BlockNotificationsPanel({ onClose, isBlocked, onToggle }: BlockNotificationsPanelProps) {
+export function BlockNotificationsPanel({ onClose, isBlocked, onToggle, isOpen = true }: BlockNotificationsPanelProps) {
+  if (!isOpen) return null;
+
   return (
     <div className="absolute right-8 top-[62px] bg-black/40 backdrop-blur-lg rounded-[20px] w-[462px] h-[722px] p-8 flex flex-col gap-6 font-['Poppins'] overflow-y-auto z-[75]" onClick={(e) => e.stopPropagation()}>
       {/* Header */}
