@@ -408,6 +408,8 @@ export function CollaborativeModeRoom({
     const cleanup = () => {
       peers.forEach((peer) => {
         const peerVideoTrack = peer.stream?.getVideoTracks()[0] ?? null;
+        const peerAudioTrack = peer.stream?.getAudioTracks()[0] ?? null;
+        
         const shouldBeVisible =
           !!peerVideoTrack &&
           peerVideoTrack.readyState === 'live' &&
@@ -415,14 +417,23 @@ export function CollaborativeModeRoom({
           !peerVideoTrack.muted &&
           peer.stream;
 
+        // Log audio track state for debugging
+        if (peerAudioTrack) {
+          console.log(`[CollaborativeModeRoom] Audio track for ${peer.peerId}:`, {
+            enabled: peerAudioTrack.enabled,
+            muted: peerAudioTrack.muted,
+            readyState: peerAudioTrack.readyState,
+          });
+        }
+
         if (!shouldBeVisible) {
-          // Find and forcefully clear any video elements for this peer
+          // Find and forcefully clear any video elements for this peer (NOT audio)
           requestAnimationFrame(() => {
             const peerElements = document.querySelectorAll(`[data-peer-id="${peer.peerId}"] video`);
             peerElements.forEach((videoEl) => {
               if (videoEl instanceof HTMLVideoElement) {
                 try {
-                  // Forceful clearing sequence
+                  // Forceful clearing sequence for video only
                   videoEl.srcObject = null;
                   videoEl.src = '';
                   videoEl.pause();
@@ -496,15 +507,18 @@ export function CollaborativeModeRoom({
 
       try {
         setSelectedAudioOutputDeviceId(nextAudioOutputDeviceId);
-        // Set audio output sink ID for all audio elements (remote stream audio)
+        // Set audio output sink ID for all audio elements (peer stream audio)
         const audioElements = document.querySelectorAll('audio');
+        let updated = 0;
         audioElements.forEach((audio) => {
           if ('setSinkId' in audio) {
             (audio as any).setSinkId(nextAudioOutputDeviceId).catch((err: Error) => {
               console.warn('[CollaborativeModeRoom] Failed to set audio output device:', err);
             });
+            updated++;
           }
         });
+        console.log(`[CollaborativeModeRoom] Updated audio output device for ${updated} audio elements`);
       } catch (err) {
         console.error('[CollaborativeModeRoom] Failed to switch audio output device:', err);
       }
@@ -1007,6 +1021,30 @@ export function CollaborativeModeRoom({
                   );
                 })}
               </div>
+
+              {/* Render audio elements for each peer to enable audio playback */}
+              {peers.map((peer) => (
+                <audio
+                  key={`audio-${peer.peerId}`}
+                  autoPlay
+                  playsInline
+                  ref={(audio) => {
+                    if (!audio || !peer.stream) return;
+                    if (audio.srcObject !== peer.stream) {
+                      audio.srcObject = peer.stream;
+                      console.log(`[CollaborativeModeRoom] Audio element connected for peer ${peer.peerId}`);
+                      // Apply selected audio output device if available
+                      if (selectedAudioOutputDeviceId && 'setSinkId' in audio) {
+                        (audio as any).setSinkId(selectedAudioOutputDeviceId).catch((err: Error) => {
+                          console.warn(`[CollaborativeModeRoom] Failed to set audio output for peer ${peer.peerId}:`, err);
+                        });
+                      }
+                    }
+                    void audio.play().catch(() => {});
+                  }}
+                  className="hidden"
+                />
+              ))}
 
               <div className="rounded-2xl border border-[#3c4043] bg-[#2b2c2f] p-3">
                 <button
