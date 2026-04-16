@@ -170,7 +170,6 @@ export class WebRTCManager {
       channelCount: { ideal: 1, max: 1 },
       sampleRate: { ideal: 48000 },
       sampleSize: { ideal: 16 },
-      latency: { ideal: 0.01 }, // Minimize latency for real-time feel
       ...(deviceId ? { deviceId: { exact: deviceId } } : {}),
     };
   }
@@ -206,35 +205,6 @@ export class WebRTCManager {
         .filter((entry) => entry.length > 0);
       const existingKeys = new Set(
         existingParams.map((entry) => entry.split('=')[0]?.trim()).filter(Boolean)
-      );
-
-      for (const param of desiredParams) {
-        const key = param.split('=')[0];
-        if (!existingKeys.has(key)) {
-          existingParams.push(param);
-        }
-      }
-
-      nextSdp = nextSdp.replace(
-        fmtpRegex,
-        `a=fmtp:${payloadType} ${existingParams.join(';')}`
-      );
-    } else {
-      const rtpMapRegex = new RegExp(
-        `^a=rtpmap:${payloadType}\\s+opus\\/48000(?:\\/2)?$`,
-        'im'
-      );
-      nextSdp = nextSdp.replace(
-        rtpMapRegex,
-        (line) => `${line}\r\na=fmtp:${payloadType} ${desiredParams.join(';')}`
-      );
-    }
-
-    return {
-      ...description,
-      sdp: nextSdp,
-    };
-  }
       );
 
       for (const param of desiredParams) {
