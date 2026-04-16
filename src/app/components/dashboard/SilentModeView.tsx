@@ -260,10 +260,10 @@ export function SilentModeView({ onLeave, onBackToFocus, onReportSubmitted }: Si
     return `${mins.toString().padStart(2, '0')}:00 min`;
   };
 
-  const handleTimerStart = (name: string, duration: number) => {
+  const handleTimerStart = (duration: number, label: string) => {
     setTimerNotification({
       visible: true,
-      name: name,
+      name: label,
       duration: formatDuration(duration)
     });
   };
