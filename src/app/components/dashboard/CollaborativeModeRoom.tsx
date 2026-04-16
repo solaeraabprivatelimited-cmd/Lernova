@@ -805,18 +805,21 @@ export function CollaborativeModeRoom({
                   const peerVideoVisible =
                     !!peerVideoTrack &&
                     peerVideoTrack.readyState === 'live' &&
-                    peerVideoTrack.enabled;
+                    peerVideoTrack.enabled &&
+                    !peerVideoTrack.muted &&
+                    peer.stream;
 
                   return (
                     <div
                       key={peer.peerId}
-                      className="relative overflow-hidden rounded-2xl border border-[#3c4043] bg-[#2b2c2f]"
+                      className="relative overflow-hidden rounded-2xl border border-[#3c4043] bg-[#2b2c2f] h-full min-h-[180px]"
                     >
-                      {peer.stream && peerVideoVisible ? (
+                      {peerVideoVisible && peer.stream ? (
                         <video
                           key={`video-${peer.peerId}-visible`}
                           autoPlay
                           playsInline
+                          muted
                           className="h-full w-full object-cover"
                           ref={(video) => {
                             if (!video || !peer.stream) return;
@@ -828,10 +831,10 @@ export function CollaborativeModeRoom({
                         />
                       ) : null}
                       {!peerVideoVisible && (
-                        <div className="absolute inset-0 flex h-full min-h-[180px] flex-col items-center justify-center bg-gradient-to-b from-[#1a1a2e] to-[#303134]">
+                        <div className="absolute inset-0 flex h-full flex-col items-center justify-center bg-gradient-to-b from-[#1a1a2e] to-[#303134]">
                           <div className="mb-3 text-3xl opacity-40">📹</div>
                           <p className="text-base font-semibold text-white">Camera Off</p>
-                          <p className="mt-2 text-xs text-white/60">Waiting for video...</p>
+                          <p className="mt-2 text-xs text-white/60">Peer disabled camera</p>
                         </div>
                       )}
                       <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent px-3 py-2.5">

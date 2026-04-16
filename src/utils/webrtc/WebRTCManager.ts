@@ -867,6 +867,17 @@ export class WebRTCManager {
         remoteStream.addTrack(event.track);
       }
 
+      // Listen for track state changes (mute/unmute) to trigger UI updates
+      event.track.onmute = () => {
+        console.log(`[WebRTC] Track muted from ${peerId}:`, event.track.kind);
+        this.onStreamReceived?.(peerId, remoteStream);
+      };
+
+      event.track.onunmute = () => {
+        console.log(`[WebRTC] Track unmuted from ${peerId}:`, event.track.kind);
+        this.onStreamReceived?.(peerId, remoteStream);
+      };
+
       this.onStreamReceived?.(peerId, remoteStream);
     };
 

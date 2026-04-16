@@ -5,7 +5,7 @@ export default {
   theme: {
     extend: {
       screens: {
-        xs: '375px',  // Extra small devices (mobile phones)
+        xs: "375px", // Extra small devices (mobile phones)
       },
     },
   },
