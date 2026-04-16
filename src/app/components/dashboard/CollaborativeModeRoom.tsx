@@ -58,6 +58,7 @@ export function CollaborativeModeRoom({
   const [sendingChat, setSendingChat] = useState(false);
   const [chatError, setChatError] = useState('');
   const [participantDirectory, setParticipantDirectory] = useState<Record<string, string>>({});
+  const [trackStateCounter, setTrackStateCounter] = useState(0);
   const [activeSideTab, setActiveSideTab] = useState<'notes' | 'chat'>('chat');
   const [isParticipantsPanelCollapsed, setIsParticipantsPanelCollapsed] = useState(false);
 
@@ -314,6 +315,82 @@ export function CollaborativeModeRoom({
     
     return undefined;
   }, [enumerateInputDevices, initialized, localStream]);
+
+  // Monitor peer video track state changes (mute/unmute, enable/disable)
+  // This forces re-renders when video state changes to show/hide "Camera Off" fallback
+  useEffect(() => {
+    const trackStateListeners: Array<{ track: MediaStreamTrack; listener: () => void }> = [];
+
+    const setupTrackListeners = () => {
+      // Clean up old listeners
+      trackStateListeners.forEach(({ track, listener }) => {
+        track.removeEventListener('mute', listener);
+        track.removeEventListener('unmute', listener);
+        track.removeEventListener('ended', listener);
+      });
+      trackStateListeners.length = 0;
+
+      // Setup new listeners for all peer video tracks
+      peers.forEach((peer) => {
+        const videoTrack = peer.stream?.getVideoTracks()[0];
+        if (videoTrack) {
+          const listener = () => {
+            console.log(`[CollaborativeModeRoom] Track state changed for ${peer.peerId}:`, {
+              muted: videoTrack.muted,
+              enabled: videoTrack.enabled,
+              readyState: videoTrack.readyState,
+            });
+            // Force re-render
+            setTrackStateCounter((c) => c + 1);
+          };
+
+          videoTrack.addEventListener('mute', listener);
+          videoTrack.addEventListener('unmute', listener);
+          videoTrack.addEventListener('ended', listener);
+
+          trackStateListeners.push({ track: videoTrack, listener });
+        }
+      });
+    };
+
+    if (peers.length > 0) {
+      setupTrackListeners();
+    }
+
+    return () => {
+      trackStateListeners.forEach(({ track, listener }) => {
+        track.removeEventListener('mute', listener);
+        track.removeEventListener('unmute', listener);
+        track.removeEventListener('ended', listener);
+      });
+    };
+  }, [peers]);
+
+  // Monitor local video track state changes
+  useEffect(() => {
+    const localVideoTrack = localStream?.getVideoTracks()[0];
+    if (!localVideoTrack) return;
+
+    const handleTrackChange = () => {
+      console.log('[CollaborativeModeRoom] Local video track state changed:', {
+        muted: localVideoTrack.muted,
+        enabled: localVideoTrack.enabled,
+        readyState: localVideoTrack.readyState,
+      });
+      // Force re-render to update video visibility
+      setTrackStateCounter((c) => c + 1);
+    };
+
+    localVideoTrack.addEventListener('mute', handleTrackChange);
+    localVideoTrack.addEventListener('unmute', handleTrackChange);
+    localVideoTrack.addEventListener('ended', handleTrackChange);
+
+    return () => {
+      localVideoTrack.removeEventListener('mute', handleTrackChange);
+      localVideoTrack.removeEventListener('unmute', handleTrackChange);
+      localVideoTrack.removeEventListener('ended', handleTrackChange);
+    };
+  }, [localStream]);
 
   const handleAudioDeviceChange = useCallback(
     async (nextAudioDeviceId: string) => {
@@ -697,7 +774,7 @@ export function CollaborativeModeRoom({
 
   const localVideoTrack = localStream?.getVideoTracks()[0] ?? null;
   const localVideoVisible =
-    !!localVideoTrack && localVideoTrack.readyState === 'live' && videoEnabled;
+    !!localVideoTrack && localVideoTrack.readyState === 'live' && videoEnabled && !localVideoTrack.muted && localVideoTrack.enabled;
   const localParticipantLabel = participantDirectory[userId] || currentUserName || 'You';
 
   return (
@@ -763,7 +840,7 @@ export function CollaborativeModeRoom({
         ) : (
           <div className="flex h-full flex-col gap-3 lg:gap-4 lg:flex-row">
             <div className="flex min-h-0 flex-1 flex-col gap-3 lg:gap-4">
-              <div className="grid flex-1 auto-rows-[minmax(180px,1fr)] gap-2 grid-cols-1 xs:grid-cols-2 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
+              <div key={`video-grid-${trackStateCounter}`} className="grid flex-1 auto-rows-[minmax(180px,1fr)] gap-2 grid-cols-1 xs:grid-cols-2 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
                 <div className="relative overflow-hidden rounded-2xl border border-[#3c4043] bg-[#2b2c2f]">
                   {localStream && localVideoVisible ? (
                     <video
@@ -795,6 +872,8 @@ export function CollaborativeModeRoom({
                 </div>
 
                 {peers.map((peer) => {
+                  // Re-evaluate video visibility when trackStateCounter changes
+                  // This ensures "Camera Off" fallback appears when peer disables camera
                   const peerLabel =
                     participantDirectory[peer.peerId] || `Participant ${peer.peerId.slice(0, 8)}`;
                   const peerVideoTrack = peer.stream?.getVideoTracks()[0] ?? null;
