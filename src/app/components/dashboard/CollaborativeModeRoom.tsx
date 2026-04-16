@@ -4,7 +4,7 @@
  */
 
 import { useState, useEffect, useCallback } from 'react';
-import { MessageSquare, BookOpen, Users, ChevronLeft, ChevronRight } from 'lucide-react';
+import { MessageSquare, BookOpen, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useWebRTC } from '@/utils/webrtc/useWebRTC';
 import { getSupabaseClient } from '../../lib/api';
 import { roomAPI, RoomChatMessage, RoomNoteEntry } from '@/utils/api/roomAPI';
@@ -60,7 +60,6 @@ export function CollaborativeModeRoom({
   const [participantDirectory, setParticipantDirectory] = useState<Record<string, string>>({});
   const [activeSideTab, setActiveSideTab] = useState<'notes' | 'chat'>('chat');
   const [isParticipantsPanelCollapsed, setIsParticipantsPanelCollapsed] = useState(false);
-  const [inactivityTimeoutId, setInactivityTimeoutId] = useState<NodeJS.Timeout | null>(null);
 
   // Get current user ID and verify authentication
   useEffect(() => {
@@ -94,7 +93,7 @@ export function CollaborativeModeRoom({
 
   // Cleanup on tab close
   useEffect(() => {
-    const handleBeforeUnload = async (e: BeforeUnloadEvent) => {
+    const handleBeforeUnload = () => {
       // Leave room when tab is closed
       if (participantId && roomId) {
         try {
@@ -132,8 +131,6 @@ export function CollaborativeModeRoom({
         }
         onLeaveRoom?.();
       }, INACTIVITY_TIMEOUT_MS);
-
-      setInactivityTimeoutId(timeoutId);
     };
 
     // Activity event listeners
@@ -316,6 +313,8 @@ export function CollaborativeModeRoom({
         navigator.mediaDevices.removeEventListener('devicechange', handleDeviceChange);
       };
     }
+    
+    return undefined;
   }, [enumerateInputDevices, initialized, localStream]);
 
   const handleAudioDeviceChange = useCallback(
@@ -770,7 +769,7 @@ export function CollaborativeModeRoom({
                 <div className="relative overflow-hidden rounded-2xl border border-[#3c4043] bg-[#2b2c2f]">
                   {localStream && localVideoVisible ? (
                     <video
-                      key={`local-video-visible`}
+                      key={`local-video-active`}
                       autoPlay
                       muted
                       playsInline
@@ -783,8 +782,7 @@ export function CollaborativeModeRoom({
                         void video.play().catch(() => {});
                       }}
                     />
-                  ) : null}
-                  {!localVideoVisible && (
+                  ) : (
                     <div className="absolute inset-0 flex h-full min-h-[180px] flex-col items-center justify-center bg-gradient-to-b from-[#1a1a2e] to-[#303134]">
                       <div className="mb-3 text-2xl opacity-30">📹</div>
                       <p className="text-base font-semibold text-white">Camera Off</p>
@@ -816,7 +814,7 @@ export function CollaborativeModeRoom({
                     >
                       {peerVideoVisible && peer.stream ? (
                         <video
-                          key={`video-${peer.peerId}`}
+                          key={`video-${peer.peerId}-active`}
                           autoPlay
                           playsInline
                           muted
