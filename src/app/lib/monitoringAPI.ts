@@ -1,4 +1,33 @@
 /**
+ * ⚠️ DEPRECATED: Backend API Routes Migrated
+ * 
+ * This file contains backend-only code that has been MIGRATED to:
+ * 📍 Lernova_API/monitoring_routes.py (FastAPI endpoints)
+ * 
+ * These functions are NO LONGER used in the frontend.
+ * The frontend should call API endpoints instead:
+ * 
+ * ✅ MIGRATED ENDPOINTS:
+ * - POST /monitoring/db/sessions → startMonitoringSession()
+ * - POST /monitoring/db/events → logMonitoringEvent()
+ * - POST /monitoring/db/skeleton → storeSkeletonData()
+ * - POST /monitoring/db/occupancy → updateOccupancy()
+ * - GET /monitoring/db/rooms/{room_id}/status → getRoomStatus()
+ * - GET /monitoring/db/rooms/{room_id}/events → getEventHistory()
+ * - POST /monitoring/db/rules → createBehaviorRule()
+ * 
+ * 🔗 API URL Configuration:
+ * Use the VITE_API_URL environment variable from .env:
+ * const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+ * 
+ * @deprecated Use Lernova_API/monitoring_routes.py endpoints instead
+ * @see ../../../Lernova_API/monitoring_routes.py
+ * @see ../api.ts for API client setup
+ */
+
+// This file is kept for reference only. DO NOT IMPORT THIS IN FRONTEND CODE.
+
+/**
  * Study Room Monitoring API
  * Next.js API routes for privacy-first surveillance system
  */

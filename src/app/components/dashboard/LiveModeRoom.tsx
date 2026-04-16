@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Bell, Mic, MicOff, Video, VideoOff, Users, Smile, MessageSquare, Timer, StickyNote, ChevronLeft, ChevronRight, Pin, BellOff } from 'lucide-react';
+import { Bell, Mic, MicOff, Video, VideoOff, Users, Smile, MessageSquare, Timer, StickyNote, ChevronLeft, ChevronRight, Pin, BellOff, Settings } from 'lucide-react';
 import imgImage15 from "figma:asset/0aa69f592fdcbc59e46001832f55ebdbca9f8cf7.png";
 import imgFrame427318269 from "figma:asset/ad5368a3315b88119c1a283a49b009c3a7227d4f.png";
 import imgFrame427318272 from "figma:asset/2e6af28c0e5d2548ed01b2eb2977da2ecb16db3e.png";
@@ -15,6 +15,7 @@ import { PeoplePanel } from "./PeoplePanel";
 import { ReactionPicker } from "./ReactionPicker";
 import { ReactionBurst } from "./ReactionBurst";
 import { MessagesPanel } from "./MessagesPanel";
+import { ModeConfigurationPanel } from "./ModeConfigurationPanel";
 
 interface LiveModeRoomProps {
   roomName?: string;
@@ -65,6 +66,7 @@ export function LiveModeRoom({
   const [showReactionPicker, setShowReactionPicker] = useState(false);
   const [reactionBursts, setReactionBursts] = useState<Array<{ id: string; emoji: string }>>([]);
   const [showMessages, setShowMessages] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
   const totalPages = 20;
 
   // Viewers (all participants except the host)
@@ -475,6 +477,14 @@ export function LiveModeRoom({
           >
             <MessageSquare className="w-6 h-6 text-white" />
           </button>
+
+          {/* Settings Button */}
+          <button
+            onClick={() => setShowSettings(!showSettings)}
+            className="bg-[#3a3a3a] hover:bg-[#4a4a4a] rounded-full p-3 transition-colors"
+          >
+            <Settings className="w-6 h-6 text-white" />
+          </button>
         </div>
 
         {/* Right Side - Leave Room */}
@@ -555,6 +565,18 @@ export function LiveModeRoom({
           currentUserId={currentUserId}
           currentUserName="Host"
           currentUserAvatar={participants[currentUserId].image}
+        />
+      )}
+
+      {/* Mode Configuration Panel */}
+      {showSettings && (
+        <ModeConfigurationPanel
+          mode="live"
+          onClose={() => setShowSettings(false)}
+          onSave={(config) => {
+            console.log('Live Mode Configuration Saved:', config);
+            setShowSettings(false);
+          }}
         />
       )}
     </div>

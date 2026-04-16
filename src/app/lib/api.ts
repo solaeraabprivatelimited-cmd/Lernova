@@ -2,12 +2,23 @@
  * Elm Orbit API Client
  * Central place for all backend API calls.
  * Reads project info from /utils/supabase/info.tsx and attaches auth tokens.
+ * 
+ * API_URL Configuration:
+ * - Development: http://localhost:8000
+ * - Staging: https://staging-api.elmorbit.co.in
+ * - Production: https://api.elmorbit.co.in
+ * 
+ * Set via environment variables:
+ * - VITE_API_URL (frontend)
+ * - API_URL (backend/.env)
  */
 
 import { projectId, publicAnonKey } from '../../../utils/supabase/info';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
-export const BASE_URL = `https://${projectId}.supabase.co/functions/v1/server`;
+// ✅ SECURE: API_URL from environment, fallback to Supabase Edge Functions
+export const API_URL = import.meta.env.VITE_API_URL || `https://${projectId}.supabase.co/functions/v1/server`;
+export const BASE_URL = API_URL;
 
 function createPublicFunctionHeaders(): Record<string, string> {
   return {

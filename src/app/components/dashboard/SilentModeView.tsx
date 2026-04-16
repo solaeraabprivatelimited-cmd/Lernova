@@ -15,6 +15,7 @@ import { NotesPanel } from "./NotesPanel";
 import { PeoplePanel } from "./PeoplePanel";
 import { ReactionBar } from "./ReactionBar";
 import { FloatingReactions } from "./FloatingReactions";
+import { ModeConfigurationPanel } from "./ModeConfigurationPanel";
 
 // Pin Icon Component
 function PinIcon() {
@@ -225,6 +226,7 @@ export function SilentModeView({ onLeave, onBackToFocus, onReportSubmitted }: Si
     name: "",
     duration: ""
   });
+  const [showSettings, setShowSettings] = useState(false);
 
   // Participant images and names (populated from room data)
   const participants: Array<{
@@ -428,13 +430,21 @@ export function SilentModeView({ onLeave, onBackToFocus, onReportSubmitted }: Si
             </button>
           </div>
 
-          {/* Right: Leave Room Button */}
-          <button 
-            onClick={onLeave}
-            className="bg-[#cc3636] hover:bg-[#b32e2e] active:scale-95 px-6 py-3 h-[42px] rounded-[24px] transition-all"
-          >
-            <p className="font-semibold text-[16px] text-white whitespace-nowrap">Leave Room</p>
-          </button>
+          {/* Right: Buttons Container */}
+          <div className="flex items-center gap-3">
+            <button 
+              onClick={() => setShowSettings(true)}
+              className="bg-white/[0.1] hover:bg-white/[0.15] active:scale-95 px-6 py-3 h-[42px] rounded-[24px] transition-all"
+            >
+              <p className="font-semibold text-[16px] text-white whitespace-nowrap">Settings</p>
+            </button>
+            <button 
+              onClick={onLeave}
+              className="bg-[#cc3636] hover:bg-[#b32e2e] active:scale-95 px-6 py-3 h-[42px] rounded-[24px] transition-all"
+            >
+              <p className="font-semibold text-[16px] text-white whitespace-nowrap">Leave Room</p>
+            </button>
+          </div>
         </div>
 
         {/* Reaction Bar */}
@@ -463,15 +473,11 @@ export function SilentModeView({ onLeave, onBackToFocus, onReportSubmitted }: Si
             mode="live"
           />
         )}
-        
-        {/* Floating Reactions */}
-        <FloatingReactions reactions={reactions} />
-      </div>
-    );
-  }
-
-  // Default Grid View (No one pinned)
-  return (
+      {/* Floating Reactions */}
+      <FloatingReactions reactions={reactions} />
+    </div>
+  );
+}
     <div className="fixed inset-0 z-50 bg-[#141316] font-['Poppins'] overflow-hidden">
       {/* Main Content Grid */}
       <div className="h-full w-full flex flex-col md:flex-row gap-6 p-4 md:p-8 pb-[120px]">
@@ -626,13 +632,21 @@ export function SilentModeView({ onLeave, onBackToFocus, onReportSubmitted }: Si
           </button>
         </div>
 
-        {/* Right: Leave Room Button */}
-        <button 
-          onClick={onLeave}
-          className="bg-[#cc3636] hover:bg-[#b32e2e] active:scale-95 px-6 py-3 h-[42px] rounded-[24px] transition-all"
-        >
-          <p className="font-semibold text-[16px] text-white whitespace-nowrap">Leave Room</p>
-        </button>
+        {/* Right: Buttons Container */}
+        <div className="flex items-center gap-3">
+          <button 
+            onClick={() => setShowSettings(true)}
+            className="bg-white/[0.1] hover:bg-white/[0.15] active:scale-95 px-6 py-3 h-[42px] rounded-[24px] transition-all"
+          >
+            <p className="font-semibold text-[16px] text-white whitespace-nowrap">Settings</p>
+          </button>
+          <button 
+            onClick={onLeave}
+            className="bg-[#cc3636] hover:bg-[#b32e2e] active:scale-95 px-6 py-3 h-[42px] rounded-[24px] transition-all"
+          >
+            <p className="font-semibold text-[16px] text-white whitespace-nowrap">Leave Room</p>
+          </button>
+        </div>
       </div>
 
       {/* Reaction Bar */}
@@ -657,6 +671,21 @@ export function SilentModeView({ onLeave, onBackToFocus, onReportSubmitted }: Si
           onPinParticipant={togglePin}
           pinnedParticipantId={pinnedParticipant}
           mode="live"
+        />
+      )}
+
+      {/* Floating Reactions */}
+      <FloatingReactions reactions={reactions} />
+
+      {/* Mode Configuration Panel */}
+      {showSettings && (
+        <ModeConfigurationPanel
+          mode="silent"
+          onClose={() => setShowSettings(false)}
+          onSave={(config) => {
+            console.log('Silent Mode Configuration Saved:', config);
+            setShowSettings(false);
+          }}
         />
       )}
     </div>

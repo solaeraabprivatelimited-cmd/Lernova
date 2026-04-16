@@ -18,12 +18,12 @@ interface Room {
 }
 
 const availableRooms: Room[] = [
-  { id: '1', name: 'NEET Room', subject: 'NEET', roomId: '2456' },
-  { id: '2', name: 'IELTS Room', subject: 'IELTS (English)', roomId: '2456' },
-  { id: '3', name: 'Social Room', subject: 'Social', roomId: '2456' },
-  { id: '4', name: 'EAMCET Room', subject: 'EAMCET', roomId: '2456' },
-  { id: '5', name: 'French Room', subject: 'French', roomId: '2456' },
-  { id: '6', name: 'Java Room', subject: 'Java', roomId: '2456' },
+  { id: '1', name: 'NEET Room', subject: 'NEET', roomId: 'NEET-7K9M2' },
+  { id: '2', name: 'IELTS Room', subject: 'IELTS (English)', roomId: 'IELTS-3B4N7' },
+  { id: '3', name: 'Social Room', subject: 'Social', roomId: 'SOCIAL-5P8Q1' },
+  { id: '4', name: 'EAMCET Room', subject: 'EAMCET', roomId: 'EAMCET-9X2W6' },
+  { id: '5', name: 'French Room', subject: 'French', roomId: 'FRENCH-4L6V3' },
+  { id: '6', name: 'Java Room', subject: 'Java', roomId: 'JAVA-8T5S0' },
 ];
 
 export function JoinRandomRoomView({ onBack, onJoinRoom }: JoinRandomRoomViewProps) {

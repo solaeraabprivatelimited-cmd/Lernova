@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { SilentModeView } from "./SilentModeView";
 import { PostReportNotification } from "./PostReportNotification";
 import { notes as notesApi, studySessions } from "@/app/lib/api";
+import { ModeConfigurationPanel } from "./ModeConfigurationPanel";
 
 // Import Images
 import imgScreenshot111 from "figma:asset/a474824d07b7e42cbfd6a81ec948e9946f5e4c3e.png";
@@ -489,6 +490,7 @@ export function FocusMode({ onLeave }: FocusModeProps) {
   const [blockNotifs, setBlockNotifs] = useState(false);
   const [isSilentMode, setIsSilentMode] = useState(false);
   const [elapsed, setElapsed] = useState(0);
+  const [showSettings, setShowSettings] = useState(false);
   const [reportNotification, setReportNotification] = useState<{ visible: boolean; name: string }>({ visible: false, name: "" });
 
   // Elapsed timer
@@ -663,7 +665,30 @@ export function FocusMode({ onLeave }: FocusModeProps) {
           </svg>
           Leave
         </button>
+
+        {/* Settings button */}
+        <button
+          onClick={() => setShowSettings(true)}
+          className="h-12 px-7 rounded-full flex items-center gap-2 text-[14px] font-bold text-white transition-all hover:scale-105 active:scale-95 shadow-lg shrink-0 cursor-pointer bg-white/[0.1] hover:bg-white/[0.15]"
+        >
+          <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="12" cy="12" r="3" /><path d="M12 1v6m0 6v6M4.22 4.22l4.24 4.24m6.08 0l4.24-4.24M1 12h6m6 0h6M4.22 19.78l4.24-4.24m6.08 0l4.24 4.24" />
+          </svg>
+          Settings
+        </button>
       </div>
+
+      {/* Mode Configuration Panel */}
+      {showSettings && (
+        <ModeConfigurationPanel
+          mode="focus"
+          onClose={() => setShowSettings(false)}
+          onSave={(config) => {
+            console.log('Focus Mode Configuration Saved:', config);
+            setShowSettings(false);
+          }}
+        />
+      )}
     </div>
   );
 }
