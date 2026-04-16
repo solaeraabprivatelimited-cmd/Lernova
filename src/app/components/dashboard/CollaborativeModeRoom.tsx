@@ -768,22 +768,19 @@ export function CollaborativeModeRoom({
             <div className="flex min-h-0 flex-1 flex-col gap-4">
               <div className="grid flex-1 auto-rows-[minmax(220px,1fr)] grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
                 <div className="relative overflow-hidden rounded-2xl border border-[#3c4043] bg-[#2b2c2f]">
-                  {localStream ? (
+                  {localStream && localVideoVisible ? (
                     <video
+                      key={`local-video-visible`}
                       autoPlay
                       muted
                       playsInline
-                      className={`h-full w-full object-cover ${localVideoVisible ? '' : 'hidden'}`}
+                      className="h-full w-full object-cover"
                       ref={(video) => {
-                        if (!video) return;
-                        if (localVideoVisible && localStream && video.srcObject !== localStream) {
+                        if (!video || !localStream) return;
+                        if (video.srcObject !== localStream) {
                           video.srcObject = localStream;
-                          void video.play().catch(() => {});
-                        } else if (!localVideoVisible) {
-                          // Clear video when not visible to prevent frozen frame
-                          video.pause();
-                          video.srcObject = null;
                         }
+                        void video.play().catch(() => {});
                       }}
                     />
                   ) : null}
@@ -813,21 +810,18 @@ export function CollaborativeModeRoom({
                       key={peer.peerId}
                       className="relative overflow-hidden rounded-2xl border border-[#3c4043] bg-[#2b2c2f]"
                     >
-                      {peer.stream ? (
+                      {peer.stream && peerVideoVisible ? (
                         <video
+                          key={`video-${peer.peerId}-visible`}
                           autoPlay
                           playsInline
-                          className={`h-full w-full object-cover ${peerVideoVisible ? '' : 'hidden'}`}
+                          className="h-full w-full object-cover"
                           ref={(video) => {
-                            if (!video) return;
-                            if (peerVideoVisible && peer.stream && video.srcObject !== peer.stream) {
+                            if (!video || !peer.stream) return;
+                            if (video.srcObject !== peer.stream) {
                               video.srcObject = peer.stream;
-                              void video.play().catch(() => {});
-                            } else if (!peerVideoVisible) {
-                              // Clear video when not visible to prevent frozen frame
-                              video.pause();
-                              video.srcObject = null;
                             }
+                            void video.play().catch(() => {});
                           }}
                         />
                       ) : null}
