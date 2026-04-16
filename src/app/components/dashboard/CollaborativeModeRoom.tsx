@@ -705,16 +705,16 @@ export function CollaborativeModeRoom({
 
   return (
     <div className="flex min-h-screen flex-col bg-[#202124] text-white">
-      <div className="border-b border-white/10 bg-[#1f1f20]/95 px-4 py-4 sm:px-6">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-          <div>
-            <h1 className="text-2xl font-semibold tracking-tight">{roomName}</h1>
-            <p className="mt-1 text-sm text-white/70">{subject}</p>
+      <div className="border-b border-white/10 bg-[#1f1f20]/95 px-3 py-3 sm:px-4 lg:px-6 lg:py-4">
+        <div className="flex flex-col gap-2 xs:gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="min-w-0">
+            <h1 className="text-lg sm:text-xl lg:text-2xl font-semibold tracking-tight truncate">{roomName}</h1>
+            <p className="mt-0.5 sm:mt-1 text-xs sm:text-sm text-white/70 truncate">{subject}</p>
           </div>
-          <div className="flex flex-wrap items-center gap-3">
+          <div className="flex flex-wrap items-center gap-2 xs:gap-2.5">
             {roomShareUrl ? (
-              <div className="flex max-w-[420px] items-center gap-2 rounded-full border border-[#3c4043] bg-[#2b2c2f] px-3 py-2 text-sm text-white/80">
-                <span className="shrink-0 text-xs uppercase tracking-[0.14em] text-white/55">Room URL</span>
+              <div className="hidden sm:flex max-w-[300px] md:max-w-[400px] items-center gap-2 rounded-full border border-[#3c4043] bg-[#2b2c2f] px-3 py-2 text-xs lg:text-sm text-white/80">
+                <span className="shrink-0 text-xs uppercase tracking-[0.14em] text-white/55">URL</span>
                 <span className="truncate">{roomShareUrl}</span>
                 <button
                   onClick={handleCopyRoomLink}
@@ -724,17 +724,17 @@ export function CollaborativeModeRoom({
                 </button>
               </div>
             ) : null}
-            <div className="rounded-full border border-[#3c4043] bg-[#2b2c2f] px-4 py-2 text-sm text-[#8ab4f8]">
-              End-to-End encrypted
+            <div className="hidden xs:block rounded-full border border-[#3c4043] bg-[#2b2c2f] px-2 xs:px-3 py-1.5 xs:py-2 text-xs lg:text-sm text-[#8ab4f8]">
+              🔒 Encrypted
             </div>
-            <div className="rounded-full border border-[#3c4043] bg-[#2b2c2f] px-4 py-2 text-sm text-white/80">
-              {participantCount}/{maxParticipants} participants
+            <div className="hidden xs:block rounded-full border border-[#3c4043] bg-[#2b2c2f] px-2 xs:px-3 py-1.5 xs:py-2 text-xs lg:text-sm text-white/80">
+              {participantCount}/{maxParticipants}
             </div>
             <button
               onClick={handleLeaveRoom}
-              className="rounded-full bg-[#ea4335] px-5 py-2 text-sm font-medium text-white transition hover:bg-[#dc3527]"
+              className="rounded-full bg-[#ea4335] px-3 xs:px-4 py-1.5 xs:py-2 text-xs xs:text-sm font-medium text-white transition hover:bg-[#dc3527]"
             >
-              Leave Room
+              Leave
             </button>
           </div>
         </div>
@@ -764,9 +764,9 @@ export function CollaborativeModeRoom({
             </div>
           </div>
         ) : (
-          <div className="flex h-full flex-col gap-4 lg:flex-row">
-            <div className="flex min-h-0 flex-1 flex-col gap-4">
-              <div className="grid flex-1 auto-rows-[minmax(220px,1fr)] grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
+          <div className="flex h-full flex-col gap-3 lg:gap-4 lg:flex-row">
+            <div className="flex min-h-0 flex-1 flex-col gap-3 lg:gap-4">
+              <div className="grid flex-1 auto-rows-[minmax(180px,1fr)] gap-2 grid-cols-1 xs:grid-cols-2 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
                 <div className="relative overflow-hidden rounded-2xl border border-[#3c4043] bg-[#2b2c2f]">
                   {localStream && localVideoVisible ? (
                     <video
@@ -785,14 +785,16 @@ export function CollaborativeModeRoom({
                     />
                   ) : null}
                   {!localVideoVisible && (
-                    <div className="absolute inset-0 flex h-full min-h-[220px] items-center justify-center bg-[#303134] text-sm text-white/70">
-                      Video is stopped
+                    <div className="absolute inset-0 flex h-full min-h-[180px] flex-col items-center justify-center bg-gradient-to-b from-[#1a1a2e] to-[#303134]">
+                      <div className="mb-3 text-2xl opacity-30">📹</div>
+                      <p className="text-base font-semibold text-white">Camera Off</p>
+                      <p className="mt-1 text-sm text-white/60">Click Camera button to enable</p>
                     </div>
                   )}
-                  <div className="absolute bottom-3 left-3 rounded-full bg-black/55 px-3 py-1 text-sm text-white">
-                    {localParticipantLabel} (You)
-                    {isScreenSharing ? ' | Sharing screen' : ''}
-                    {!audioEnabled ? ' | Mic off' : ''}
+                  <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent px-3 py-2.5">
+                    <p className="text-base font-bold text-white">{localParticipantLabel}</p>
+                    <p className="text-xs text-white/70">{isScreenSharing ? '📺 Sharing screen' : '(You)'}</p>
+                    {!audioEnabled && <p className="text-xs text-orange-300">🔇 Microphone off</p>}
                   </div>
                 </div>
 
@@ -826,14 +828,17 @@ export function CollaborativeModeRoom({
                         />
                       ) : null}
                       {!peerVideoVisible && (
-                        <div className="absolute inset-0 flex h-full min-h-[220px] items-center justify-center bg-[#303134] text-sm text-white/70">
-                          {peer.connectionState === 'connected'
-                            ? `${peerLabel}: Video is stopped`
-                            : `Connecting to ${peerLabel}...`}
+                        <div className="absolute inset-0 flex h-full min-h-[180px] flex-col items-center justify-center bg-gradient-to-b from-[#1a1a2e] to-[#303134]">
+                          <div className="mb-3 text-3xl opacity-40">📹</div>
+                          <p className="text-base font-semibold text-white">Camera Off</p>
+                          <p className="mt-2 text-xs text-white/60">Waiting for video...</p>
                         </div>
                       )}
-                      <div className="absolute bottom-3 left-3 rounded-full bg-black/55 px-3 py-1 text-sm text-white">
-                        {peerLabel}
+                      <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent px-3 py-2.5">
+                        <p className="text-base font-bold text-white truncate">{peerLabel}</p>
+                        <p className={`text-xs ${peer.connectionState === 'connected' ? 'text-green-300' : 'text-yellow-300'}`}>
+                          {peer.connectionState === 'connected' ? '🟢 Connected' : '🟡 Connecting...'}
+                        </p>
                       </div>
                     </div>
                   );
@@ -841,7 +846,7 @@ export function CollaborativeModeRoom({
               </div>
 
               <div className="rounded-2xl border border-[#3c4043] bg-[#2b2c2f] p-3">
-                <div className="grid gap-3 lg:grid-cols-2">
+                <div className="grid gap-2 lg:gap-3 grid-cols-1 md:grid-cols-2">
                   <div>
                     <label className="mb-1 block text-xs uppercase tracking-[0.16em] text-white/60">Microphone</label>
                     <select
@@ -850,7 +855,7 @@ export function CollaborativeModeRoom({
                         void handleAudioDeviceChange(event.target.value);
                       }}
                       disabled={switchingDevices || audioDevices.length === 0}
-                      className="w-full rounded-xl border border-[#5f6368] bg-[#202124] px-3 py-2 text-sm text-white outline-none transition focus:border-[#8ab4f8]"
+                      className="w-full rounded-xl border border-[#5f6368] bg-[#202124] px-3 py-2 text-xs md:text-sm text-white outline-none transition focus:border-[#8ab4f8]"
                     >
                       {audioDevices.length === 0 ? (
                         <option value="">No microphone detected</option>
@@ -871,7 +876,7 @@ export function CollaborativeModeRoom({
                         void handleVideoDeviceChange(event.target.value);
                       }}
                       disabled={switchingDevices || videoDevices.length === 0}
-                      className="w-full rounded-xl border border-[#5f6368] bg-[#202124] px-3 py-2 text-sm text-white outline-none transition focus:border-[#8ab4f8]"
+                      className="w-full rounded-xl border border-[#5f6368] bg-[#202124] px-3 py-2 text-xs md:text-sm text-white outline-none transition focus:border-[#8ab4f8]"
                     >
                       {videoDevices.length === 0 ? (
                         <option value="">No camera detected</option>
@@ -892,45 +897,45 @@ export function CollaborativeModeRoom({
                   onClick={() => {
                     void handleToggleAudio();
                   }}
-                  className={`rounded-full px-4 py-2 text-sm font-medium transition ${
+                  className={`rounded-full px-3 md:px-4 py-2 text-xs md:text-sm font-medium transition ${
                     audioEnabled ? 'bg-[#3c4043] hover:bg-[#5f6368]' : 'bg-[#ea4335] hover:bg-[#dc3527]'
                   }`}
                 >
-                  {audioEnabled ? 'Mute' : 'Unmute'}
+                  {audioEnabled ? '🎤 Mute' : '🔇 Unmute'}
                 </button>
                 <button
                   onClick={() => {
                     void handleToggleVideo();
                   }}
-                  className={`rounded-full px-4 py-2 text-sm font-medium transition ${
+                  className={`rounded-full px-3 md:px-4 py-2 text-xs md:text-sm font-medium transition ${
                     videoEnabled ? 'bg-[#3c4043] hover:bg-[#5f6368]' : 'bg-[#ea4335] hover:bg-[#dc3527]'
                   }`}
                 >
-                  {videoEnabled ? 'Stop Video' : 'Start Video'}
+                  {videoEnabled ? '📷 Stop' : '📷 Start'}
                 </button>
                 <button
                   onClick={() => {
                     void handleToggleScreenShare();
                   }}
-                  className={`rounded-full px-4 py-2 text-sm font-medium transition ${
+                  className={`rounded-full px-3 md:px-4 py-2 text-xs md:text-sm font-medium transition ${
                     isScreenSharing ? 'bg-[#1a73e8] hover:bg-[#1767cc]' : 'bg-[#3c4043] hover:bg-[#5f6368]'
                   }`}
                 >
-                  {isScreenSharing ? 'Stop Sharing' : 'Share Screen'}
+                  {isScreenSharing ? '📺 Stop' : '📺 Share'}
                 </button>
               </div>
             </div>
 
-            <div className="w-full shrink-0 lg:w-[360px] xl:w-[420px]">
-              <div className="flex h-full flex-col gap-4">
-                <div className="rounded-2xl border border-[#3c4043] bg-[#2b2c2f] p-4">
+            <div className="w-full shrink-0 lg:w-[320px] xl:w-[380px]">
+              <div className="flex h-full flex-col gap-3 lg:gap-4">
+                <div className="rounded-2xl border border-[#3c4043] bg-[#2b2c2f] p-3 lg:p-4">
                   <p className="text-xs uppercase tracking-[0.16em] text-white/60">Room Code</p>
-                  <div className="mt-1 flex items-center justify-between gap-2">
-                    <p className="truncate text-lg font-semibold">{roomCode ?? 'Private room'}</p>
+                  <div className="mt-1 flex flex-col xs:flex-row xs:items-center xs:justify-between gap-2">
+                    <p className="truncate text-sm md:text-lg font-semibold">{roomCode ?? 'Private room'}</p>
                     {roomCode ? (
                       <button
                         onClick={handleCopyRoomCode}
-                        className="rounded-full border border-[#5f6368] px-3 py-1 text-xs text-white/80 transition hover:bg-[#3c4043]"
+                        className="rounded-full border border-[#5f6368] px-3 py-1 text-xs text-white/80 transition hover:bg-[#3c4043] whitespace-nowrap"
                       >
                         {codeCopyFeedback || 'Copy'}
                       </button>
@@ -938,8 +943,8 @@ export function CollaborativeModeRoom({
                   </div>
                 </div>
 
-                <div className="rounded-2xl border border-[#3c4043] bg-[#2b2c2f] p-4">
-                  <div className="mb-3 flex items-center justify-between">
+                <div className="rounded-2xl border border-[#3c4043] bg-[#2b2c2f] p-3 lg:p-4">
+                  <div className="mb-2 lg:mb-3 flex items-center justify-between">
                     <p className="text-xs uppercase tracking-[0.16em] text-white/60">Participants</p>
                     <button
                       onClick={() => setIsParticipantsPanelCollapsed(!isParticipantsPanelCollapsed)}
@@ -954,18 +959,18 @@ export function CollaborativeModeRoom({
                     </button>
                   </div>
                   {!isParticipantsPanelCollapsed && (
-                    <div className="max-h-36 space-y-2 overflow-y-auto">
+                    <div className="max-h-32 md:max-h-40 space-y-1.5 lg:space-y-2 overflow-y-auto">
                       {Object.entries(participantDirectory).length === 0 ? (
-                        <p className="text-sm text-white/70">No active participants yet.</p>
+                        <p className="text-xs lg:text-sm text-white/70">No active participants yet.</p>
                       ) : (
                         Object.entries(participantDirectory).map(([id, name]) => (
                           <div
                             key={id}
-                            className="flex items-center justify-between rounded-xl border border-[#3c4043] bg-[#202124] px-3 py-2 text-sm"
+                            className="flex items-center justify-between rounded-lg lg:rounded-xl border border-[#3c4043] bg-[#202124] px-2.5 lg:px-3 py-1.5 lg:py-2 text-xs lg:text-sm"
                           >
                             <span className="truncate text-white/90">{name}</span>
                             {id === userId ? (
-                              <span className="rounded-full bg-[#1a73e8]/20 px-2 py-0.5 text-xs text-[#8ab4f8]">You</span>
+                              <span className="rounded-full bg-[#1a73e8]/20 px-1.5 lg:px-2 py-0.5 text-xs text-[#8ab4f8] whitespace-nowrap ml-1">You</span>
                             ) : null}
                           </div>
                         ))
@@ -974,29 +979,29 @@ export function CollaborativeModeRoom({
                   )}
                 </div>
 
-                <div className="flex min-h-0 flex-1 flex-col rounded-2xl border border-[#3c4043] bg-[#2b2c2f] p-4">
-                  <div className="mb-3 flex gap-2">
+                <div className="flex min-h-0 flex-1 flex-col rounded-2xl border border-[#3c4043] bg-[#2b2c2f] p-3 lg:p-4">
+                  <div className="mb-2 lg:mb-3 flex flex-wrap gap-2">
                     <button
                       onClick={() => setActiveSideTab('chat')}
-                      className={`flex items-center gap-2 rounded-full px-3 py-1.5 text-sm transition ${
+                      className={`flex items-center gap-1.5 lg:gap-2 rounded-full px-2.5 lg:px-3 py-1.5 text-xs lg:text-sm transition ${
                         activeSideTab === 'chat'
                           ? 'bg-[#1a73e8] text-white'
                           : 'bg-[#202124] text-white/70 hover:bg-[#3c4043]'
                       }`}
                     >
-                      <MessageSquare className="size-4" />
-                      Chat
+                      <MessageSquare className="size-3 lg:size-4" />
+                      <span>Chat</span>
                     </button>
                     <button
                       onClick={() => setActiveSideTab('notes')}
-                      className={`flex items-center gap-2 rounded-full px-3 py-1.5 text-sm transition ${
+                      className={`flex items-center gap-1.5 lg:gap-2 rounded-full px-2.5 lg:px-3 py-1.5 text-xs lg:text-sm transition ${
                         activeSideTab === 'notes'
                           ? 'bg-[#1a73e8] text-white'
                           : 'bg-[#202124] text-white/70 hover:bg-[#3c4043]'
                       }`}
                     >
-                      <BookOpen className="size-4" />
-                      Notes
+                      <BookOpen className="size-3 lg:size-4" />
+                      <span>Notes</span>
                     </button>
                   </div>
 

@@ -76,18 +76,18 @@ export function CollaborativeModeView({}: CollaborativeModeViewProps) {
   // Modern navbar component
   const TopNavbar = () => (
     <div className="bg-white dark:bg-[#1a1a2e] border-b border-black/10 dark:border-white/10 sticky top-0 z-40">
-      <div className="flex items-center justify-between px-6 h-16">
+      <div className="flex items-center justify-between px-3 xs:px-4 sm:px-6 h-14 sm:h-16">
         {/* Left: Logo & Branding */}
-        <div className="flex items-center gap-2">
-          <div className="w-9 h-9 rounded-full border-2 border-[#003566] flex items-center justify-center bg-gradient-to-br from-[#003566] to-[#F77F00]">
+        <div className="flex items-center gap-1.5 xs:gap-2 min-w-0">
+          <div className="w-7 xs:w-8 h-7 xs:h-8 rounded-full border-2 border-[#003566] flex items-center justify-center bg-gradient-to-br from-[#003566] to-[#F77F00] shrink-0">
             <span className="text-white font-bold text-xs">L</span>
           </div>
-          <p className="font-['Righteous'] text-base text-[#003566] dark:text-[#00d4ff]">Elm Orbit</p>
+          <p className="font-['Righteous'] text-sm xs:text-base text-[#003566] dark:text-[#00d4ff] truncate">Elm Orbit</p>
         </div>
 
         {/* Center: Simple status */}
         {view !== 'in-room' && (
-          <div className="text-sm text-black/60 dark:text-white/60">
+          <div className="text-xs xs:text-sm text-black/60 dark:text-white/60 hidden sm:block">
             {view === 'selection' && 'Browse Rooms'}
             {view === 'create-room' && 'Create Room'}
             {view === 'join-room' && 'Join Custom Room'}
@@ -96,14 +96,14 @@ export function CollaborativeModeView({}: CollaborativeModeViewProps) {
         )}
 
         {/* Right: Notification & Profile */}
-        <div className="flex items-center gap-4">
-          <button className="relative p-2 hover:bg-black/5 dark:hover:bg-white/10 rounded-lg transition-colors">
-            <Bell className="w-5 h-5 text-black dark:text-white" />
-            <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
+        <div className="flex items-center gap-3 xs:gap-4 shrink-0">
+          <button className="relative p-1.5 xs:p-2 hover:bg-black/5 dark:hover:bg-white/10 rounded-lg transition-colors">
+            <Bell className="w-4 xs:w-5 h-4 xs:h-5 text-black dark:text-white" />
+            <span className="absolute top-1 right-1 w-1.5 h-1.5 bg-red-500 rounded-full"></span>
           </button>
           
           <button className="flex items-center gap-2 hover:opacity-80 transition-opacity">
-            <img src={imgEllipse1} alt="Profile" className="w-8 h-8 rounded-full" />
+            <img src={imgEllipse1} alt="Profile" className="w-6 xs:w-8 h-6 xs:h-8 rounded-full" />
           </button>
         </div>
       </div>
@@ -127,7 +127,7 @@ export function CollaborativeModeView({}: CollaborativeModeViewProps) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-white to-gray-50 dark:from-[#0f0f1e] dark:to-[#1a1a2e]">
         <TopNavbar />
-        <div className="flex-1 pt-8">
+        <div className="flex-1 pt-6 sm:pt-8">
           <CreateCustomRoom 
             onBack={() => setView('selection')}
             onLaunchRoom={handleLaunchRoom}
@@ -141,7 +141,7 @@ export function CollaborativeModeView({}: CollaborativeModeViewProps) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-white to-gray-50 dark:from-[#0f0f1e] dark:to-[#1a1a2e]">
         <TopNavbar />
-        <div className="flex-1 pt-8">
+        <div className="flex-1 pt-6 sm:pt-8">
           <JoinCustomRoom 
             onBack={() => setView('selection')}
             onEnterRoom={handleEnterRoom}
@@ -155,7 +155,7 @@ export function CollaborativeModeView({}: CollaborativeModeViewProps) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-white to-gray-50 dark:from-[#0f0f1e] dark:to-[#1a1a2e]">
         <TopNavbar />
-        <div className="flex-1 pt-8">
+        <div className="flex-1 pt-6 sm:pt-8">
           <JoinRandomRoomView 
             onBack={() => setView('selection')}
             onJoinRoom={handleJoinRandomRoom}
@@ -171,20 +171,20 @@ export function CollaborativeModeView({}: CollaborativeModeViewProps) {
       <TopNavbar />
 
       {/* Hero Section */}
-      <div className="px-8 py-16 pt-8">
+      <div className="px-3 xs:px-4 sm:px-6 lg:px-8 py-8 sm:py-12 md:py-16 pt-6 sm:pt-8">
         <div className="max-w-7xl mx-auto">
           {/* Header */}
-          <div className="mb-16">
-            <div className="inline-flex items-center gap-2 mb-4 px-4 py-2 bg-[#c9e5ff] dark:bg-[#003566] rounded-full">
-              <Zap className="w-4 h-4 text-[#003566] dark:text-[#00d4ff]" />
-              <span className="text-sm font-medium text-[#003566] dark:text-white">Collaborative Learning</span>
+          <div className="mb-10 sm:mb-12 md:mb-16">
+            <div className="inline-flex items-center gap-2 mb-3 xs:mb-4 px-3 xs:px-4 py-2 bg-[#c9e5ff] dark:bg-[#003566] rounded-full">
+              <Zap className="w-3.5 xs:w-4 h-3.5 xs:h-4 text-[#003566] dark:text-[#00d4ff]" />
+              <span className="text-xs xs:text-sm font-medium text-[#003566] dark:text-white">Collaborative Learning</span>
             </div>
-            <h1 className="text-5xl font-bold text-black dark:text-white mb-4">Study Together</h1>
-            <p className="text-xl text-black/70 dark:text-white/70">Choose how you want to study with others</p>
+            <h1 className="text-3xl xs:text-4xl sm:text-5xl font-bold text-black dark:text-white mb-2 xs:mb-4">Study Together</h1>
+            <p className="text-base xs:text-lg sm:text-xl text-black/70 dark:text-white/70">Choose how you want to study with others</p>
           </div>
 
           {/* Room Cards Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 md:gap-8">
             {/* Create Custom Room */}
             <div className="group bg-white dark:bg-[#1a1a2e] rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 border border-black/5 dark:border-white/10">
               <div className="relative h-48 bg-gradient-to-br from-[#502616] to-[#8B4513] overflow-hidden">
