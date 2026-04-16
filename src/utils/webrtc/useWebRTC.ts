@@ -494,7 +494,7 @@ export function useWebRTC({
                 await managerRef.current!.handleAnswer(from_user_id, signalPayload);
                 break;
 
-              case 'ice-candidate':
+              case 'candidate':
                 console.log('[useWebRTC] Received ICE candidate from', from_user_id);
                 await managerRef.current!.addICECandidate(from_user_id, signalPayload);
                 break;
