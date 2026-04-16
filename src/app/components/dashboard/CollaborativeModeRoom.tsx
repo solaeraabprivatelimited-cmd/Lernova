@@ -43,7 +43,10 @@ export function CollaborativeModeRoom({
   const [videoDevices, setVideoDevices] = useState<MediaDeviceInfo[]>([]);
   const [selectedAudioDeviceId, setSelectedAudioDeviceId] = useState('');
   const [selectedVideoDeviceId, setSelectedVideoDeviceId] = useState('');
+  const [audioOutputDevices, setAudioOutputDevices] = useState<MediaDeviceInfo[]>([]);
+  const [selectedAudioOutputDeviceId, setSelectedAudioOutputDeviceId] = useState('');
   const [switchingDevices, setSwitchingDevices] = useState(false);
+  const [settingsModalOpen, setSettingsModalOpen] = useState(false);
   const [roomJoinError, setRoomJoinError] = useState('');
   const [roomNotes, setRoomNotes] = useState<RoomNoteEntry[]>([]);
   const [selectedRoomNoteId, setSelectedRoomNoteId] = useState<string | null>(null);
@@ -232,9 +235,11 @@ export function CollaborativeModeRoom({
     const devices = await navigator.mediaDevices.enumerateDevices();
     const audioInputs = devices.filter((device) => device.kind === 'audioinput');
     const videoInputs = devices.filter((device) => device.kind === 'videoinput');
+    const audioOutputs = devices.filter((device) => device.kind === 'audiooutput');
 
     setAudioDevices(audioInputs);
     setVideoDevices(videoInputs);
+    setAudioOutputDevices(audioOutputs);
 
     const currentAudioDeviceId = localStream?.getAudioTracks()[0]?.getSettings().deviceId ?? '';
     const currentVideoDeviceId = localStream?.getVideoTracks()[0]?.getSettings().deviceId ?? '';
@@ -258,6 +263,11 @@ export function CollaborativeModeRoom({
       }
       return videoInputs[0]?.deviceId ?? '';
     });
+
+    // Set default audio output device if available
+    if (audioOutputs.length > 0) {
+      setSelectedAudioOutputDeviceId(audioOutputs[0].deviceId);
+    }
   }, [localStream]);
 
   const handleCopyRoomCode = useCallback(async () => {
@@ -461,6 +471,28 @@ export function CollaborativeModeRoom({
       }
     },
     [selectedAudioDeviceId, selectedVideoDeviceId, setMediaDevices]
+  );
+
+  const handleAudioOutputDeviceChange = useCallback(
+    async (nextAudioOutputDeviceId: string) => {
+      if (!nextAudioOutputDeviceId) return;
+
+      try {
+        setSelectedAudioOutputDeviceId(nextAudioOutputDeviceId);
+        // Set audio output sink ID for all audio elements (remote stream audio)
+        const audioElements = document.querySelectorAll('audio');
+        audioElements.forEach((audio) => {
+          if ('setSinkId' in audio) {
+            (audio as any).setSinkId(nextAudioOutputDeviceId).catch((err: Error) => {
+              console.warn('[CollaborativeModeRoom] Failed to set audio output device:', err);
+            });
+          }
+        });
+      } catch (err) {
+        console.error('[CollaborativeModeRoom] Failed to switch audio output device:', err);
+      }
+    },
+    []
   );
 
   useEffect(() => {
@@ -960,51 +992,109 @@ export function CollaborativeModeRoom({
               </div>
 
               <div className="rounded-2xl border border-[#3c4043] bg-[#2b2c2f] p-3">
-                <div className="grid gap-2 lg:gap-3 grid-cols-1 md:grid-cols-2">
-                  <div>
-                    <label className="mb-1 block text-xs uppercase tracking-[0.16em] text-white/60">Microphone</label>
-                    <select
-                      value={selectedAudioDeviceId}
-                      onChange={(event) => {
-                        void handleAudioDeviceChange(event.target.value);
-                      }}
-                      disabled={switchingDevices || audioDevices.length === 0}
-                      className="w-full rounded-xl border border-[#5f6368] bg-[#202124] px-3 py-2 text-xs md:text-sm text-white outline-none transition focus:border-[#8ab4f8]"
+                <button
+                  onClick={() => setSettingsModalOpen(true)}
+                  className="w-full rounded-xl bg-[#00d4ff] px-4 py-2.5 font-semibold text-[#1a1a2e] transition hover:bg-[#00b8d4] active:scale-95"
+                >
+                  ⚙️ Settings
+                </button>
+              </div>
+
+              {/* Settings Modal */}
+              {settingsModalOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4">
+                  <div className="w-full max-w-md rounded-2xl border border-[#3c4043] bg-[#1a1a2e] p-6">
+                    <div className="mb-6 flex items-center justify-between">
+                      <h2 className="text-xl font-bold text-white">Settings</h2>
+                      <button
+                        onClick={() => setSettingsModalOpen(false)}
+                        className="text-2xl text-white/60 transition hover:text-white"
+                      >
+                        ✕
+                      </button>
+                    </div>
+
+                    <div className="space-y-4">
+                      {/* Microphone */}
+                      <div>
+                        <label className="mb-2 block text-sm font-semibold text-white">🎤 Microphone</label>
+                        <select
+                          value={selectedAudioDeviceId}
+                          onChange={(event) => {
+                            void handleAudioDeviceChange(event.target.value);
+                          }}
+                          disabled={switchingDevices || audioDevices.length === 0}
+                          className="w-full rounded-lg border border-[#5f6368] bg-[#202124] px-3 py-2 text-sm text-white outline-none transition focus:border-[#8ab4f8]"
+                        >
+                          {audioDevices.length === 0 ? (
+                            <option value="">No microphone detected</option>
+                          ) : (
+                            audioDevices.map((device, index) => (
+                              <option key={device.deviceId} value={device.deviceId}>
+                                {device.label || `Microphone ${index + 1}`}
+                              </option>
+                            ))
+                          )}
+                        </select>
+                      </div>
+
+                      {/* Camera */}
+                      <div>
+                        <label className="mb-2 block text-sm font-semibold text-white">📹 Camera</label>
+                        <select
+                          value={selectedVideoDeviceId}
+                          onChange={(event) => {
+                            void handleVideoDeviceChange(event.target.value);
+                          }}
+                          disabled={switchingDevices || videoDevices.length === 0}
+                          className="w-full rounded-lg border border-[#5f6368] bg-[#202124] px-3 py-2 text-sm text-white outline-none transition focus:border-[#8ab4f8]"
+                        >
+                          {videoDevices.length === 0 ? (
+                            <option value="">No camera detected</option>
+                          ) : (
+                            videoDevices.map((device, index) => (
+                              <option key={device.deviceId} value={device.deviceId}>
+                                {device.label || `Camera ${index + 1}`}
+                              </option>
+                            ))
+                          )}
+                        </select>
+                      </div>
+
+                      {/* Speaker/Audio Output */}
+                      <div>
+                        <label className="mb-2 block text-sm font-semibold text-white">🔊 Speaker</label>
+                        <select
+                          value={selectedAudioOutputDeviceId}
+                          onChange={(event) => {
+                            void handleAudioOutputDeviceChange(event.target.value);
+                          }}
+                          disabled={audioOutputDevices.length === 0}
+                          className="w-full rounded-lg border border-[#5f6368] bg-[#202124] px-3 py-2 text-sm text-white outline-none transition focus:border-[#8ab4f8]"
+                        >
+                          {audioOutputDevices.length === 0 ? (
+                            <option value="">No speaker detected</option>
+                          ) : (
+                            audioOutputDevices.map((device, index) => (
+                              <option key={device.deviceId} value={device.deviceId}>
+                                {device.label || `Speaker ${index + 1}`}
+                              </option>
+                            ))
+                          )}
+                        </select>
+                      </div>
+                    </div>
+
+                    <button
+                      onClick={() => setSettingsModalOpen(false)}
+                      className="mt-6 w-full rounded-lg bg-[#3c4043] px-4 py-2 font-semibold text-white transition hover:bg-[#4a4b50]"
                     >
-                      {audioDevices.length === 0 ? (
-                        <option value="">No microphone detected</option>
-                      ) : (
-                        audioDevices.map((device, index) => (
-                          <option key={device.deviceId} value={device.deviceId}>
-                            {device.label || `Microphone ${index + 1}`}
-                          </option>
-                        ))
-                      )}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="mb-1 block text-xs uppercase tracking-[0.16em] text-white/60">Camera</label>
-                    <select
-                      value={selectedVideoDeviceId}
-                      onChange={(event) => {
-                        void handleVideoDeviceChange(event.target.value);
-                      }}
-                      disabled={switchingDevices || videoDevices.length === 0}
-                      className="w-full rounded-xl border border-[#5f6368] bg-[#202124] px-3 py-2 text-xs md:text-sm text-white outline-none transition focus:border-[#8ab4f8]"
-                    >
-                      {videoDevices.length === 0 ? (
-                        <option value="">No camera detected</option>
-                      ) : (
-                        videoDevices.map((device, index) => (
-                          <option key={device.deviceId} value={device.deviceId}>
-                            {device.label || `Camera ${index + 1}`}
-                          </option>
-                        ))
-                      )}
-                    </select>
+                      Done
+                    </button>
                   </div>
                 </div>
-              </div>
+              )}
+
 
               <div className="flex flex-wrap justify-center gap-2">
                 <button
