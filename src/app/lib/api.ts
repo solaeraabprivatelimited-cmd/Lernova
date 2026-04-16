@@ -482,19 +482,24 @@ export const auth = {
   async signInWithGoogle() {
     const supabase = getSupabaseClient();
     
-    // Determine redirect URL: env var > window.location.origin
+    // Determine redirect URL with multiple fallbacks
     let appUrl = import.meta.env.VITE_APP_URL;
     
-    // If not set, use window.location.origin but ensure it's not localhost in production
+    // If not set, construct from window location
     if (!appUrl) {
       const origin = window.location.origin;
-      // If running on vercel, construct the URL properly
-      if (origin.includes('localhost') && typeof window !== 'undefined') {
-        // Fall back to the origin but log a warning
-        console.warn('[Auth] VITE_APP_URL not set, using window.location.origin:', origin);
+      
+      // Force HTTPS for Vercel deployments
+      if (origin.includes('vercel.app')) {
+        appUrl = origin.replace('http://', 'https://');
+      } else {
+        appUrl = origin;
       }
-      appUrl = origin;
+      
+      console.log('[Auth] VITE_APP_URL not set, using:', appUrl);
     }
+    
+    console.log('[Auth] OAuth redirect URL:', `${appUrl}/onboarding/google`);
     
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
