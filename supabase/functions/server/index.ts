@@ -40,9 +40,34 @@ function validateAuth(c: any) {
     return { valid: true, type: "apikey" };
   }
   
-  // Check if using Bearer token
+  // Check if using Bearer token (ES256 or HS256)
   if (authHeader?.startsWith("Bearer ")) {
-    return { valid: true, type: "jwt" };
+    const token = authHeader.slice(7);
+    try {
+      // Validate token format (3 parts separated by dots)
+      const parts = token.split(".");
+      if (parts.length !== 3) {
+        return { valid: false, reason: "Invalid token format" };
+      }
+      
+      // Decode payload to check claims (no signature verification needed for Edge Functions)
+      let payload = parts[1];
+      payload = payload.replace(/-/g, "+").replace(/_/g, "/");
+      payload += "=".repeat((4 - (payload.length % 4)) % 4);
+      
+      const decoded = JSON.parse(atob(payload));
+      
+      // Check for required claims
+      if (!decoded.sub && !decoded.user_id) {
+        return { valid: false, reason: "Invalid token: no user ID" };
+      }
+      
+      // Accept both ES256 and HS256 algorithms
+      return { valid: true, type: "jwt", userId: decoded.sub || decoded.user_id };
+    } catch (e) {
+      console.error("[Auth] Token validation error:", e);
+      return { valid: false, reason: "Invalid token" };
+    }
   }
   
   return { valid: false, reason: "Invalid auth format" };
