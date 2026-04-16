@@ -435,6 +435,12 @@ export class WebRTCManager {
         return this.peerConnections.get(peerId)!;
       }
 
+      // Ensure local media is initialized before creating peer connection
+      if (!this.localStream) {
+        console.log(`[WebRTC] Local media not initialized, initializing now for ${peerId}`);
+        await this.initializeLocalMedia();
+      }
+
       // Create peer connection with TURN servers
       const peerConnection = new RTCPeerConnection({
         iceServers: this.config.iceServers,
@@ -442,10 +448,11 @@ export class WebRTCManager {
         rtcpMuxPolicy: 'require',
       });
 
-      // Add local tracks
+      // Add local tracks to peer connection
       if (this.localStream) {
         this.localStream.getTracks().forEach((track) => {
           peerConnection.addTrack(track, this.localStream!);
+          console.log(`[WebRTC] Added ${track.kind} track to peer connection for ${peerId}`);
         });
 
         const hasAudioTrack = this.localStream.getAudioTracks().length > 0;
@@ -456,6 +463,15 @@ export class WebRTCManager {
         if (!hasVideoTrack && this.config.enableVideo) {
           peerConnection.addTransceiver('video', { direction: 'sendrecv' });
         }
+      } else {
+        // Fallback: add transceivers if local stream still unavailable
+        if (this.config.enableAudio) {
+          peerConnection.addTransceiver('audio', { direction: 'sendrecv' });
+        }
+        if (this.config.enableVideo) {
+          peerConnection.addTransceiver('video', { direction: 'sendrecv' });
+        }
+        console.warn(`[WebRTC] Could not add local tracks for ${peerId}, using transceivers only`);
       }
 
       await this.applyAudioSenderTuning(peerConnection);
