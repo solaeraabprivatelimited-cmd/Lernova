@@ -30,7 +30,7 @@ interface PeerState {
   stream?: MediaStream;
 }
 
-type SignalType = 'offer' | 'answer' | 'ice-candidate' | 'renegotiate' | 'reconnect';
+type SignalType = 'offer' | 'answer' | 'candidate';
 
 function normalizeSignalPayload(payload: unknown) {
   if (typeof payload !== 'string') {
@@ -250,7 +250,7 @@ export function useWebRTC({
             try {
               await sendSignal({
                 toUserId: peerId,
-                signalType: 'ice-candidate',
+                signalType: 'candidate',
                 payload: candidate,
               });
             } catch (err) {
