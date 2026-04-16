@@ -405,34 +405,51 @@ export function CollaborativeModeRoom({
   // Aggressively clean up peer video elements when they become invisible
   // This prevents frozen video frames from persisting on screen
   useEffect(() => {
-    peers.forEach((peer) => {
-      const peerVideoTrack = peer.stream?.getVideoTracks()[0] ?? null;
-      const shouldBeVisible =
-        !!peerVideoTrack &&
-        peerVideoTrack.readyState === 'live' &&
-        peerVideoTrack.enabled &&
-        !peerVideoTrack.muted &&
-        peer.stream;
+    const cleanup = () => {
+      peers.forEach((peer) => {
+        const peerVideoTrack = peer.stream?.getVideoTracks()[0] ?? null;
+        const shouldBeVisible =
+          !!peerVideoTrack &&
+          peerVideoTrack.readyState === 'live' &&
+          peerVideoTrack.enabled &&
+          !peerVideoTrack.muted &&
+          peer.stream;
 
-      if (!shouldBeVisible) {
-        // Find and clear any video elements for this peer
-        setTimeout(() => {
-          const peerElements = document.querySelectorAll(`[data-peer-id="${peer.peerId}"] video`);
-          peerElements.forEach((videoEl) => {
-            if (videoEl instanceof HTMLVideoElement) {
-              try {
-                videoEl.srcObject = null;
-                videoEl.pause();
-                videoEl.load();
-                console.log(`[CollaborativeModeRoom] Cleared frozen frame for peer ${peer.peerId}`);
-              } catch (e) {
-                console.warn(`[CollaborativeModeRoom] Failed to clear video for peer ${peer.peerId}:`, e);
+        if (!shouldBeVisible) {
+          // Find and forcefully clear any video elements for this peer
+          requestAnimationFrame(() => {
+            const peerElements = document.querySelectorAll(`[data-peer-id="${peer.peerId}"] video`);
+            peerElements.forEach((videoEl) => {
+              if (videoEl instanceof HTMLVideoElement) {
+                try {
+                  // Forceful clearing sequence
+                  videoEl.srcObject = null;
+                  videoEl.src = '';
+                  videoEl.pause();
+                  
+                  // Trigger canvas repaint
+                  const ctx = (videoEl as any).getContext?.('2d');
+                  if (ctx) {
+                    ctx.clearRect(0, 0, videoEl.width, videoEl.height);
+                  }
+                  
+                  // Reset video element state
+                  videoEl.load();
+                  console.log(`[CollaborativeModeRoom] Cleared frozen frame for peer ${peer.peerId}`);
+                } catch (e) {
+                  console.warn(`[CollaborativeModeRoom] Failed to clear video for peer ${peer.peerId}:`, e);
+                }
               }
-            }
+            });
           });
-        }, 0);
-      }
-    });
+        }
+      });
+    };
+
+    // Run cleanup immediately and continuously
+    cleanup();
+    const interval = setInterval(cleanup, 500); // Every 500ms to catch any frozen frames
+    return () => clearInterval(interval);
   }, [peers, trackStateCounter]);
 
   const handleAudioDeviceChange = useCallback(
