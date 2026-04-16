@@ -94,13 +94,11 @@ export function CollaborativeModeRoom({
   // Cleanup on tab close
   useEffect(() => {
     const handleBeforeUnload = () => {
-      // Leave room when tab is closed
+      // Leave room when tab is closed (non-blocking)
       if (participantId && roomId) {
-        try {
-          await roomAPI.leaveRoom(roomId);
-        } catch (err) {
+        roomAPI.leaveRoom(roomId).catch((err) => {
           console.error('[CollaborativeModeRoom] Error leaving room on unload:', err);
-        }
+        });
       }
       onLeaveRoom?.();
     };
