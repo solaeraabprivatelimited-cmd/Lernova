@@ -768,22 +768,27 @@ export function CollaborativeModeRoom({
             <div className="flex min-h-0 flex-1 flex-col gap-4">
               <div className="grid flex-1 auto-rows-[minmax(220px,1fr)] grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
                 <div className="relative overflow-hidden rounded-2xl border border-[#3c4043] bg-[#2b2c2f]">
-                  {localStream && localVideoVisible ? (
+                  {localStream ? (
                     <video
                       autoPlay
                       muted
                       playsInline
-                      className="h-full w-full object-cover"
+                      className={`h-full w-full object-cover ${localVideoVisible ? '' : 'hidden'}`}
                       ref={(video) => {
-                        if (!video || !localStream) return;
-                        if (video.srcObject !== localStream) {
+                        if (!video) return;
+                        if (localVideoVisible && localStream && video.srcObject !== localStream) {
                           video.srcObject = localStream;
+                          void video.play().catch(() => {});
+                        } else if (!localVideoVisible) {
+                          // Clear video when not visible to prevent frozen frame
+                          video.pause();
+                          video.srcObject = null;
                         }
-                        void video.play().catch(() => {});
                       }}
                     />
-                  ) : (
-                    <div className="flex h-full min-h-[220px] items-center justify-center bg-[#303134] text-sm text-white/70">
+                  ) : null}
+                  {!localVideoVisible && (
+                    <div className="absolute inset-0 flex h-full min-h-[220px] items-center justify-center bg-[#303134] text-sm text-white/70">
                       Video is stopped
                     </div>
                   )}
@@ -808,21 +813,26 @@ export function CollaborativeModeRoom({
                       key={peer.peerId}
                       className="relative overflow-hidden rounded-2xl border border-[#3c4043] bg-[#2b2c2f]"
                     >
-                      {peer.stream && peerVideoVisible ? (
+                      {peer.stream ? (
                         <video
                           autoPlay
                           playsInline
-                          className="h-full w-full object-cover"
+                          className={`h-full w-full object-cover ${peerVideoVisible ? '' : 'hidden'}`}
                           ref={(video) => {
-                            if (!video || !peer.stream) return;
-                            if (video.srcObject !== peer.stream) {
+                            if (!video) return;
+                            if (peerVideoVisible && peer.stream && video.srcObject !== peer.stream) {
                               video.srcObject = peer.stream;
+                              void video.play().catch(() => {});
+                            } else if (!peerVideoVisible) {
+                              // Clear video when not visible to prevent frozen frame
+                              video.pause();
+                              video.srcObject = null;
                             }
-                            void video.play().catch(() => {});
                           }}
                         />
-                      ) : (
-                        <div className="flex h-full min-h-[220px] items-center justify-center bg-[#303134] text-sm text-white/70">
+                      ) : null}
+                      {!peerVideoVisible && (
+                        <div className="absolute inset-0 flex h-full min-h-[220px] items-center justify-center bg-[#303134] text-sm text-white/70">
                           {peer.connectionState === 'connected'
                             ? `${peerLabel}: Video is stopped`
                             : `Connecting to ${peerLabel}...`}
