@@ -92,6 +92,7 @@ export class WebRTCManager {
   private isAudioCaptureEnabled = true;
   private isVideoCaptureEnabled = true;
   private screenShareTrack: MediaStreamTrack | null = null;
+  private screenShareAudioTrack: MediaStreamTrack | null = null;
   private cameraTrackBeforeScreenShare: MediaStreamTrack | null = null;
   private retryAttempts = new Map<string, number>();
   private diagnosticsInterval: number | null = null;
@@ -350,31 +351,24 @@ export class WebRTCManager {
       kind === 'audio' ? stream.getAudioTracks() : stream.getVideoTracks();
 
     if (!enabled) {
-      // Instead of stopping tracks, just disable them to keep stream continuous
-      // This prevents audio/video cutoffs when toggling mute/unmute
+      // Stop and remove tracks to release hardware access
+      // This ensures the OS can release the camera/microphone
       if (kind === 'video') {
         if (this.screenShareTrack) {
           this.screenShareTrack.enabled = false;
         }
-        // For video, we still need to remove disabled camera tracks if screen sharing
-        if (this.screenShareTrack) {
-          currentTracks.forEach((track) => {
-            if (track !== this.screenShareTrack) {
-              stream.removeTrack(track);
-              track.stop();
-            }
-          });
-        } else {
-          // Just disable video tracks if not screen sharing
-          currentTracks.forEach((track) => {
-            track.enabled = false;
-          });
-        }
-      } else {
-        // For audio, always just disable tracks (never stop them)
-        // This ensures continuous audio stream when re-enabling
+        // For video, remove and stop camera tracks (but keep screen share if active)
         currentTracks.forEach((track) => {
-          track.enabled = false;
+          if (track !== this.screenShareTrack) {
+            stream.removeTrack(track);
+            track.stop();
+          }
+        });
+      } else {
+        // For audio, remove and stop all audio tracks to release mic access
+        currentTracks.forEach((track) => {
+          stream.removeTrack(track);
+          track.stop();
         });
       }
       
@@ -723,7 +717,11 @@ export class WebRTCManager {
     return !!this.screenShareTrack;
   }
 
-  async startScreenShare(): Promise<MediaStream> {
+  isScreenShareAudioActive(): boolean {
+    return !!this.screenShareAudioTrack;
+  }
+
+  async startScreenShare(withAudio: boolean = false): Promise<MediaStream> {
     if (!navigator.mediaDevices?.getDisplayMedia) {
       throw new Error('Screen sharing is not supported on this browser');
     }
@@ -733,7 +731,7 @@ export class WebRTCManager {
 
     const displayStream = await navigator.mediaDevices.getDisplayMedia({
       video: true,
-      audio: false,
+      audio: withAudio,
     });
 
     const displayTrack = displayStream.getVideoTracks()[0];
@@ -751,6 +749,14 @@ export class WebRTCManager {
 
     this.screenShareTrack = displayTrack;
     stream.addTrack(displayTrack);
+
+    // Add screen share audio if available
+    const displayAudioTrack = displayStream.getAudioTracks()[0] ?? null;
+    if (displayAudioTrack) {
+      this.screenShareAudioTrack = displayAudioTrack;
+      stream.addTrack(displayAudioTrack);
+      console.log('[WebRTC] Screen share audio track added');
+    }
 
     await this.replaceOutgoingTrackAcrossPeers('video', displayTrack);
     this.onLocalStreamUpdated?.(stream);
@@ -777,6 +783,14 @@ export class WebRTCManager {
     stream.removeTrack(this.screenShareTrack);
     this.screenShareTrack.stop();
     this.screenShareTrack = null;
+
+    // Stop screen share audio if present
+    if (this.screenShareAudioTrack) {
+      stream.removeTrack(this.screenShareAudioTrack);
+      this.screenShareAudioTrack.stop();
+      this.screenShareAudioTrack = null;
+      console.log('[WebRTC] Screen share audio track stopped');
+    }
 
     let nextVideoTrack: MediaStreamTrack | null = null;
 

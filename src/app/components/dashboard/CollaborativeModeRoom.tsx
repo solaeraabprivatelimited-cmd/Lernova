@@ -902,8 +902,8 @@ export function CollaborativeModeRoom({
         ) : (
           <div className="flex h-full flex-col gap-3 lg:gap-4 lg:flex-row">
             <div className="flex min-h-0 flex-1 flex-col gap-3 lg:gap-4">
-              <div key={`video-grid-${trackStateCounter}`} className="grid flex-1 auto-rows-[minmax(180px,1fr)] gap-2 grid-cols-1 xs:grid-cols-2 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
-                <div className="relative overflow-hidden rounded-2xl border border-[#3c4043] bg-[#2b2c2f]">
+              <div key={`video-grid-${trackStateCounter}`} className="flex flex-1 gap-3 overflow-x-auto pb-2 min-h-[300px]">
+                <div className="relative flex-shrink-0 w-80 overflow-hidden rounded-2xl border border-[#3c4043] bg-[#2b2c2f]">
                   {localStream && localVideoVisible ? (
                     <video
                       key={`local-video-active`}
@@ -950,7 +950,7 @@ export function CollaborativeModeRoom({
                     <div
                       key={peer.peerId}
                       data-peer-id={peer.peerId}
-                      className="relative overflow-hidden rounded-2xl border border-[#3c4043] bg-[#2b2c2f] h-full min-h-[180px]"
+                      className="relative flex-shrink-0 w-80 overflow-hidden rounded-2xl border border-[#3c4043] bg-[#2b2c2f]"
                     >
                       {peerVideoVisible && peer.stream ? (
                         <video

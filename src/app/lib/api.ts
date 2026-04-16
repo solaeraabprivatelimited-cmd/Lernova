@@ -481,10 +481,14 @@ export const auth = {
   /** OAuth sign-in with Google */
   async signInWithGoogle() {
     const supabase = getSupabaseClient();
+    
+    // Use public domain for production, localhost for development
+    const appUrl = import.meta.env.VITE_APP_URL || window.location.origin;
+    
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: `${window.location.origin}/onboarding/google`,
+        redirectTo: `${appUrl}/onboarding/google`,
       },
     });
     if (error) throw new Error(error.message);
