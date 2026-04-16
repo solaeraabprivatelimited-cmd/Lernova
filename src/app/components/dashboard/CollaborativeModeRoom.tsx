@@ -392,6 +392,39 @@ export function CollaborativeModeRoom({
     };
   }, [localStream]);
 
+  // Aggressively clean up peer video elements when they become invisible
+  // This prevents frozen video frames from persisting on screen
+  useEffect(() => {
+    peers.forEach((peer) => {
+      const peerVideoTrack = peer.stream?.getVideoTracks()[0] ?? null;
+      const shouldBeVisible =
+        !!peerVideoTrack &&
+        peerVideoTrack.readyState === 'live' &&
+        peerVideoTrack.enabled &&
+        !peerVideoTrack.muted &&
+        peer.stream;
+
+      if (!shouldBeVisible) {
+        // Find and clear any video elements for this peer
+        setTimeout(() => {
+          const peerElements = document.querySelectorAll(`[data-peer-id="${peer.peerId}"] video`);
+          peerElements.forEach((videoEl) => {
+            if (videoEl instanceof HTMLVideoElement) {
+              try {
+                videoEl.srcObject = null;
+                videoEl.pause();
+                videoEl.load();
+                console.log(`[CollaborativeModeRoom] Cleared frozen frame for peer ${peer.peerId}`);
+              } catch (e) {
+                console.warn(`[CollaborativeModeRoom] Failed to clear video for peer ${peer.peerId}:`, e);
+              }
+            }
+          });
+        }, 0);
+      }
+    });
+  }, [peers, trackStateCounter]);
+
   const handleAudioDeviceChange = useCallback(
     async (nextAudioDeviceId: string) => {
       if (!nextAudioDeviceId || nextAudioDeviceId === selectedAudioDeviceId) {
@@ -887,17 +920,21 @@ export function CollaborativeModeRoom({
                   return (
                     <div
                       key={peer.peerId}
+                      data-peer-id={peer.peerId}
                       className="relative overflow-hidden rounded-2xl border border-[#3c4043] bg-[#2b2c2f] h-full min-h-[180px]"
                     >
                       {peerVideoVisible && peer.stream ? (
                         <video
-                          key={`video-${peer.peerId}-active`}
+                          key={`video-${peer.peerId}-${peerVideoVisible}`}
                           autoPlay
                           playsInline
                           muted
                           className="h-full w-full object-cover bg-black"
                           ref={(video) => {
-                            if (!video || !peer.stream) return;
+                            if (!video || !peer.stream) {
+                              // Cleanup: clear any existing video element
+                              return;
+                            }
                             if (video.srcObject !== peer.stream) {
                               video.srcObject = peer.stream;
                             }
