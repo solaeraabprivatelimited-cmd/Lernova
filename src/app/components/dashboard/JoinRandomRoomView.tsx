@@ -56,26 +56,26 @@ export function JoinRandomRoomView({ onBack, onJoinRoom }: JoinRandomRoomViewPro
         {/* Breadcrumb */}
         <button 
           onClick={onBack}
-          className="text-[16px] text-black/70 mb-6 hover:text-black transition-colors"
+          className="text-[16px] text-black/70 dark:text-white/70 mb-6 hover:text-black dark:hover:text-white transition-colors"
         >
           &lt; Back
         </button>
 
         {/* Title */}
         <div className="mb-10">
-          <h1 className="text-[40px] font-medium text-black mb-1.5">Join Random Room</h1>
-          <p className="text-[14px] text-black/60">Join an open study room and start learning instantly.</p>
+          <h1 className="text-[40px] font-medium text-black dark:text-white mb-1.5">Join Random Room</h1>
+          <p className="text-[14px] text-black/60 dark:text-white/60">Join an open study room and start learning instantly.</p>
         </div>
 
         {/* Search Bar */}
-        <div className="bg-black/10 rounded-[20px] h-[42px] flex items-center gap-3 px-6 mb-[66px]">
-          <Search className="w-6 h-6 text-black/60" />
+        <div className="bg-black/10 dark:bg-white/10 rounded-[20px] h-[42px] flex items-center gap-3 px-6 mb-[66px]">
+          <Search className="w-6 h-6 text-black/60 dark:text-white/60" />
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Find study rooms by subject or topic."
-            className="flex-1 outline-none text-[16px] text-black placeholder:text-black/60 bg-transparent"
+            className="flex-1 outline-none text-[16px] text-black dark:text-white placeholder:text-black/60 dark:placeholder:text-white/60 bg-transparent"
           />
         </div>
 
@@ -84,16 +84,16 @@ export function JoinRandomRoomView({ onBack, onJoinRoom }: JoinRandomRoomViewPro
           {filteredRooms.map((room) => (
               <div
                 key={room.id}
-                className="bg-white rounded-[20px] shadow-[0px_4px_50px_5px_rgba(0,0,0,0.1)] p-8 flex flex-col items-end"
+                className="bg-white dark:bg-[#1a1a2e] rounded-[20px] shadow-[0px_4px_50px_5px_rgba(0,0,0,0.1)] dark:shadow-[0px_4px_50px_5px_rgba(0,0,0,0.3)] p-8 flex flex-col items-end"
               >
-                <h3 className="text-[24px] font-medium text-black w-full mb-2.5">{room.name}</h3>
-                <p className="text-[16px] text-black/70 w-full mb-2.5">Subject: {room.subject}</p>
-                <p className="text-[16px] text-black/70 w-full mb-2.5">Room ID: {room.roomId}</p>
+                <h3 className="text-[24px] font-medium text-black dark:text-white w-full mb-2.5">{room.name}</h3>
+                <p className="text-[16px] text-black/70 dark:text-white/70 w-full mb-2.5">Subject: {room.subject}</p>
+                <p className="text-[16px] text-black/70 dark:text-white/70 w-full mb-2.5">Room ID: {room.roomId}</p>
                 <button
                   onClick={() => handleJoinRoom(room)}
-                  className="border border-[#003566] rounded-[20px] h-[42px] px-6 flex items-center justify-center hover:bg-[#003566] hover:text-white transition-all group"
+                  className="border border-[#003566] dark:border-[#00d4ff] rounded-[20px] h-[42px] px-6 flex items-center justify-center hover:bg-[#003566] dark:hover:bg-[#00d4ff] hover:text-white dark:hover:text-black transition-all group"
                 >
-                  <span className="text-[14px] font-medium text-[#003566] group-hover:text-white">Join Room</span>
+                  <span className="text-[14px] font-medium text-[#003566] dark:text-[#00d4ff] group-hover:text-white dark:group-hover:text-black">Join Room</span>
                 </button>
               </div>
             ))}
@@ -102,7 +102,7 @@ export function JoinRandomRoomView({ onBack, onJoinRoom }: JoinRandomRoomViewPro
           {/* No Results */}
           {filteredRooms.length === 0 && (
             <div className="text-center py-20">
-              <p className="text-[16px] text-black/60">No rooms found matching your search.</p>
+              <p className="text-[16px] text-black/60 dark:text-white/60">No rooms found matching your search.</p>
             </div>
           )}
         </div>

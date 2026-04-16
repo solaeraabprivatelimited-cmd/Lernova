@@ -44,26 +44,26 @@ export function JoinCustomRoom({ onBack, onEnterRoom }: JoinCustomRoomProps) {
       <div className="px-20 pb-10">
         <button 
           onClick={onBack}
-          className="text-[16px] text-black/70 mb-6 hover:text-black transition-colors"
+          className="text-[16px] text-black/70 dark:text-white/70 mb-6 hover:text-black dark:hover:text-white transition-colors"
         >
           &lt; Back
         </button>
           
         <div className="mb-12">
-          <h1 className="text-[40px] font-medium text-black mb-1.5">Join Custom Room</h1>
-          <p className="text-[14px] text-black/60">Paste a room code like STUDY-AB12CD or drop in the share link.</p>
+          <h1 className="text-[40px] font-medium text-black dark:text-white mb-1.5">Join Custom Room</h1>
+          <p className="text-[14px] text-black/60 dark:text-white/60">Paste a room code like STUDY-AB12CD or drop in the share link.</p>
         </div>
 
         {/* Form Card */}
-        <div className="bg-white rounded-[20px] shadow-[0px_4px_50px_5px_rgba(0,0,0,0.1)] p-6 w-[467px]">
+        <div className="bg-white dark:bg-[#1a1a2e] rounded-[20px] shadow-[0px_4px_50px_5px_rgba(0,0,0,0.1)] dark:shadow-[0px_4px_50px_5px_rgba(0,0,0,0.3)] p-6 w-[467px]">
           <div className="flex flex-col gap-6">
             {/* Room Code / Link */}
             <div className="flex flex-col gap-2.5">
-              <label className="text-[16px] text-black">Room Code / Link</label>
-              <div className="h-[39px] rounded-[10px] border border-black/40 flex items-center gap-2.5 px-2.5">
+              <label className="text-[16px] text-black dark:text-white">Room Code / Link</label>
+              <div className="h-[39px] rounded-[10px] border border-black/40 dark:border-white/20 dark:bg-white/5 flex items-center gap-2.5 px-2.5">
                 <svg width="27" height="27" viewBox="0 0 27 27" fill="none">
-                  <path d={svgPaths.p6efe00} fill="black" />
-                  <path d={svgPaths.p1e94b00} fill="black" />
+                  <path d={svgPaths.p6efe00} fill="currentColor" className="text-black dark:text-white" />
+                  <path d={svgPaths.p1e94b00} fill="currentColor" className="text-black dark:text-white" />
                 </svg>
                 <input
                   type="text"
@@ -71,10 +71,10 @@ export function JoinCustomRoom({ onBack, onEnterRoom }: JoinCustomRoomProps) {
                   onChange={(e) => setRoomInput(e.target.value)}
                   onKeyPress={handleKeyPress}
                   placeholder="STUDY-AB12CD"
-                  className="flex-1 outline-none text-[14px] text-black placeholder:text-black/60 bg-transparent"
+                  className="flex-1 outline-none text-[14px] text-black dark:text-white placeholder:text-black/60 dark:placeholder:text-white/60 bg-transparent"
                 />
               </div>
-              <p className="text-[12px] text-black/60">Study rooms support up to 20 live participants with end-to-end encrypted audio and video.</p>
+              <p className="text-[12px] text-black/60 dark:text-white/60">Study rooms support up to 20 live participants with end-to-end encrypted audio and video.</p>
             </div>
 
             {/* Enter Room Button */}
