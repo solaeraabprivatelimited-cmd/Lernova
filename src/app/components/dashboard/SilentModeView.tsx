@@ -478,6 +478,8 @@ export function SilentModeView({ onLeave, onBackToFocus, onReportSubmitted }: Si
     </div>
   );
 }
+
+  return (
     <div className="fixed inset-0 z-50 bg-[#141316] font-['Poppins'] overflow-hidden">
       {/* Main Content Grid */}
       <div className="h-full w-full flex flex-col md:flex-row gap-6 p-4 md:p-8 pb-[120px]">
