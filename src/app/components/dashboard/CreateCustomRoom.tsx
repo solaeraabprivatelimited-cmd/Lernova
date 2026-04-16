@@ -67,21 +67,21 @@ export function CreateCustomRoom({ onBack, onLaunchRoom }: CreateCustomRoomProps
   return (
     <>
       {/* Breadcrumb & Title */}
-      <div className="px-20 pb-10">
+      <div className="px-4 xs:px-6 sm:px-8 lg:px-20 pb-6 sm:pb-10">
         <button 
           onClick={onBack}
-          className="text-[16px] text-black/70 dark:text-white/70 mb-6 hover:text-black dark:hover:text-white transition-colors"
+          className="text-xs xs:text-sm sm:text-base text-black/70 dark:text-white/70 mb-4 sm:mb-6 hover:text-black dark:hover:text-white transition-colors"
         >
           &lt; Back
         </button>
           
-        <div className="mb-12">
-          <h1 className="text-[40px] font-medium text-black dark:text-white mb-1.5">Create Custom Room</h1>
-          <p className="text-[14px] text-black/60 dark:text-white/60">Build your own space to learn your way.</p>
+        <div className="mb-8 sm:mb-12">
+          <h1 className="text-2xl xs:text-3xl sm:text-4xl font-medium text-black dark:text-white mb-1.5 sm:mb-2">Create Custom Room</h1>
+          <p className="text-xs xs:text-sm text-black/60 dark:text-white/60">Build your own space to learn your way.</p>
         </div>
 
         {/* Form Card */}
-        <div className="bg-white dark:bg-[#1a1a2e] rounded-[20px] shadow-[0px_4px_50px_5px_rgba(0,0,0,0.1)] dark:shadow-[0px_4px_50px_5px_rgba(0,0,0,0.3)] p-6 w-[515px]">
+        <div className="bg-white dark:bg-[#1a1a2e] rounded-xl sm:rounded-[20px] shadow-[0px_4px_50px_5px_rgba(0,0,0,0.1)] dark:shadow-[0px_4px_50px_5px_rgba(0,0,0,0.3)] p-4 sm:p-6 w-full sm:w-[515px]">
           <div className="flex flex-col gap-6">
             {/* Room Name */}
             <div className="flex flex-col gap-2.5">

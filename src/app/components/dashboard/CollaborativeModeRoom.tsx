@@ -816,11 +816,11 @@ export function CollaborativeModeRoom({
                     >
                       {peerVideoVisible && peer.stream ? (
                         <video
-                          key={`video-${peer.peerId}-visible`}
+                          key={`video-${peer.peerId}`}
                           autoPlay
                           playsInline
                           muted
-                          className="h-full w-full object-cover"
+                          className="h-full w-full object-cover bg-black"
                           ref={(video) => {
                             if (!video || !peer.stream) return;
                             if (video.srcObject !== peer.stream) {
@@ -829,8 +829,7 @@ export function CollaborativeModeRoom({
                             void video.play().catch(() => {});
                           }}
                         />
-                      ) : null}
-                      {!peerVideoVisible && (
+                      ) : (
                         <div className="absolute inset-0 flex h-full flex-col items-center justify-center bg-gradient-to-b from-[#1a1a2e] to-[#303134]">
                           <div className="mb-3 text-3xl opacity-40">📹</div>
                           <p className="text-base font-semibold text-white">Camera Off</p>
