@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect, useCallback } from "react";
 import imgSayHi1 from "figma:asset/5e91c4f0fbdda278a8c62c9c5428eca49ba69e08.png";
 import { moodCheckins } from "@/app/lib/api";
 import { getMoodCheckInResponse, formatChatHistory, type ChatMessage as GroqChatMessage } from "@/app/lib/groq";
+import { FormattedMessage } from "@/app/components/common/FormattedMessage";
 import { ArrowLeft, Send, Mic, MicOff, Bot, User, Sparkles, Heart, X, AlertCircle } from "lucide-react";
 
 /* ── Types ── */
@@ -37,14 +38,14 @@ const voiceTranscriptions = [
 /* ── AI Response Logic ── */
 const moodResponses: Record<string, string> = {
   happy: "That's wonderful to hear! Being happy is a great state of mind. What's making you feel this way? Recognizing the sources of our joy helps us cultivate more of it.",
-  sad: "I'm sorry you're feeling down. It's okay to feel sad sometimes \u2014 it's part of being human. Would you like to talk about what's on your mind? I'm here to listen.",
-  stressed: "Stress can be really overwhelming. Take a deep breath with me \u2014 in for 4 counts, hold for 4, out for 4. Would you like me to suggest some stress-relief techniques?",
+  sad: "I'm sorry you're feeling down. It's okay to feel sad sometimes — it's part of being human. Would you like to talk about what's on your mind? I'm here to listen.",
+  stressed: "Stress can be really overwhelming. Take a deep breath with me — in for 4 counts, hold for 4, out for 4. Would you like me to suggest some stress-relief techniques?",
   anxious: "Feeling anxious can be tough. Remember, you're safe right now. Try grounding yourself: name 5 things you can see, 4 you can touch, 3 you can hear. Would you like to explore more calming strategies?",
-  tired: "It sounds like you need some rest. Make sure you're taking care of yourself \u2014 hydration, breaks, and sleep are important. Would you like tips for better energy management?",
+  tired: "It sounds like you need some rest. Make sure you're taking care of yourself — hydration, breaks, and sleep are important. Would you like tips for better energy management?",
   angry: "I understand you're feeling frustrated. It's valid to feel angry. Taking a moment to step back and breathe can help. What triggered this feeling? Let's work through it together.",
   excited: "Your excitement is contagious! Channel that positive energy into something productive. What are you looking forward to?",
   confused: "Feeling confused is a normal part of learning and growing. Sometimes stepping away and coming back with fresh eyes helps. Would you like to break down what's confusing you?",
-  lonely: "Feeling lonely is more common than you think. You're not alone in this \u2014 I'm here, and there are communities waiting to connect with you. Would you like to explore the World Chat?",
+  lonely: "Feeling lonely is more common than you think. You're not alone in this — I'm here, and there are communities waiting to connect with you. Would you like to explore the World Chat?",
   grateful: "Gratitude is a beautiful emotion! Studies show that practicing gratitude regularly can boost happiness by 25%. What are you grateful for today?",
 };
 
@@ -336,7 +337,7 @@ export function MoodCheckInView({ onBack }: MoodCheckInViewProps) {
                         : "rounded-[18px] rounded-bl-[6px] bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 shadow-[0_1px_3px_rgba(0,0,0,0.04)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.2)] border border-slate-200 dark:border-slate-700"
                     }`}
                     style={msg.sender === "user" ? { background: 'linear-gradient(135deg, #003566, #0967bd)' } : undefined}>
-                      {msg.text}
+                      {msg.sender === "ai" ? <FormattedMessage text={msg.text} /> : msg.text}
                     </div>
                     <p className={`text-[10px] mt-1.5 ${msg.sender === "user" ? "text-right text-slate-200" : "text-slate-500 dark:text-slate-400"}`}>
                       {msg.timestamp.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })}

@@ -1,6 +1,7 @@
 import React from 'react';
 import { ArrowLeft, Plus, Search, Mic, Send, Image as ImageIcon, FileText, X, MessageSquare, Sparkles, Clock, Bot, User, Zap, Copy, Check, ThumbsUp, ThumbsDown, RotateCcw, Trash2, Archive } from 'lucide-react';
 import { getAiMentorResponse, formatChatHistory } from '@/app/lib/groq';
+import { FormattedMessage } from '@/app/components/common/FormattedMessage';
 import { aiChat } from '@/app/lib/api';
 import { toast } from 'sonner';
 import { SkeletonChatPage } from '@/app/components/skeletons/PageSkeletons';
@@ -691,24 +692,7 @@ export function AiMentorChat({ onBack, onVoiceMode }: AiMentorChatProps) {
                     </div>
                   ) : (
                     <div className="bg-white dark:bg-slate-800 rounded-[18px] rounded-bl-[6px] px-5 py-4 shadow-[0_1px_3px_rgba(0,0,0,0.04)] dark:shadow-slate-900/20 border border-slate-200 dark:border-slate-700">
-                      {msg.text.split('\n\n').map((paragraph, pi) => {
-                        // Check if paragraph is a list
-                        if (paragraph.trim().match(/^[-*]/)) {
-                          const items = paragraph.split('\n').filter(line => line.trim().match(/^[-*]/));
-                          return (
-                            <ul key={pi} className={`text-[14px] text-slate-900 dark:text-white leading-[1.75] list-disc list-inside ${pi > 0 ? 'mt-3' : ''}`}>
-                              {items.map((item, idx) => (
-                                <li key={idx} className="ml-2">{formatText(item.replace(/^[-*]\s*/, ''))}</li>
-                              ))}
-                            </ul>
-                          );
-                        }
-                        return (
-                          <p key={pi} className={`text-[14px] text-slate-900 dark:text-white leading-[1.75] ${pi > 0 ? 'mt-3' : ''}`}>
-                            {formatText(paragraph)}
-                          </p>
-                        );
-                      })}
+                      <FormattedMessage text={msg.text} />
                     </div>
                   )}
                   <div className={`flex items-center gap-2 mt-1 ${msg.role === 'user' ? 'flex-row-reverse' : ''}`}>

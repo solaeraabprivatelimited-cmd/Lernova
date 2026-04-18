@@ -1,6 +1,7 @@
 import React from 'react';
 import { ArrowLeft, Plus, Search, Mic, MicOff, MessageSquare, Sparkles, Clock, Bot, User, Keyboard, Zap, Volume2, Trash2, Archive } from 'lucide-react';
 import { getAiMentorResponse, formatChatHistory } from '@/app/lib/groq';
+import { FormattedMessage } from '@/app/components/common/FormattedMessage';
 import { aiChat } from '@/app/lib/api';
 import { toast } from 'sonner';
 import { SkeletonChatPage } from '@/app/components/skeletons/PageSkeletons';
@@ -552,7 +553,11 @@ export function AiMentorVoiceChat({ onBack, onTextMode }: AiMentorVoiceChatProps
                         <Volume2 className="w-3 h-3 opacity-50" />
                         <span className="text-[10px] opacity-60 font-medium">{msg.role === 'user' ? 'You' : 'AI Response'}</span>
                       </div>
-                      <p className="text-[14px] leading-relaxed">{msg.text}</p>
+                      {msg.role === 'user' ? (
+                        <p className="text-[14px] leading-relaxed">{msg.text}</p>
+                      ) : (
+                        <FormattedMessage text={msg.text} />
+                      )}
                     </div>
                     <p className={`text-[10px] mt-1.5 ${msg.role === 'user' ? 'text-right' : 'text-left'} text-slate-400 dark:text-slate-500`}>{msg.time}</p>
                   </div>
