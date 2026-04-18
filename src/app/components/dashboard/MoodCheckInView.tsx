@@ -1,7 +1,8 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import imgSayHi1 from "figma:asset/5e91c4f0fbdda278a8c62c9c5428eca49ba69e08.png";
 import { moodCheckins } from "@/app/lib/api";
-import { ArrowLeft, Send, Mic, MicOff, Bot, User, Sparkles, Heart, X } from "lucide-react";
+import { getMoodCheckInResponse, formatChatHistory, type ChatMessage as GroqChatMessage } from "@/app/lib/groq";
+import { ArrowLeft, Send, Mic, MicOff, Bot, User, Sparkles, Heart, X, AlertCircle } from "lucide-react";
 
 /* ── Types ── */
 interface ChatMessage {
@@ -111,6 +112,7 @@ export function MoodCheckInView({ onBack }: MoodCheckInViewProps) {
   const [isListening, setIsListening] = useState(false);
   const [listeningSeconds, setListeningSeconds] = useState(0);
   const [savedCheckins, setSavedCheckins] = useState<SavedMoodCheckin[]>([]);
+  const [apiError, setApiError] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const listeningTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -129,18 +131,51 @@ export function MoodCheckInView({ onBack }: MoodCheckInViewProps) {
     }
   }, []);
 
-  const sendMessage = useCallback((text: string, forcedMood?: { mood: string; emoji: string }) => {
+  const sendMessage = useCallback(async (text: string, forcedMood?: { mood: string; emoji: string }) => {
     const trimmed = text.trim();
     if (!trimmed) return;
-    setMessages((prev) => [...prev, { id: Date.now().toString(), sender: "user", text: trimmed, timestamp: new Date() }]);
+    
+    const userMessageId = Date.now().toString();
+    setMessages((prev) => [...prev, { id: userMessageId, sender: "user", text: trimmed, timestamp: new Date() }]);
     persistMoodCheckin(trimmed, forcedMood);
     setInputValue("");
     setIsTyping(true);
-    setTimeout(() => {
-      setMessages((prev) => [...prev, { id: (Date.now() + 1).toString(), sender: "ai", text: getAIResponse(trimmed), timestamp: new Date() }]);
+    setApiError(null);
+    
+    try {
+      // Convert messages to Groq format for context
+      const groqHistory = formatChatHistory(
+        messages.map(msg => ({ 
+          role: msg.sender as 'user' | 'ai', 
+          text: msg.text 
+        }))
+      );
+      
+      // Get AI response from Groq
+      const aiResponse = await getMoodCheckInResponse(trimmed, groqHistory);
+      
+      setMessages((prev) => [...prev, { 
+        id: (Date.now() + 1).toString(), 
+        sender: "ai", 
+        text: aiResponse, 
+        timestamp: new Date() 
+      }]);
+    } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : 'Failed to get AI response';
+      console.error('Mood check-in API error:', error);
+      setApiError(errorMsg);
+      
+      // Fallback response if API fails
+      setMessages((prev) => [...prev, { 
+        id: (Date.now() + 1).toString(), 
+        sender: "ai", 
+        text: "I'm having trouble connecting right now, but I'm still here to listen. Please share how you're feeling, and I'll do my best to support you.", 
+        timestamp: new Date() 
+      }]);
+    } finally {
       setIsTyping(false);
-    }, 1200 + Math.random() * 800);
-  }, [persistMoodCheckin]);
+    }
+  }, [messages, persistMoodCheckin]);
 
   const handleSend = () => sendMessage(inputValue);
   const handleKeyDown = (e: React.KeyboardEvent) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSend(); } };
@@ -337,6 +372,17 @@ export function MoodCheckInView({ onBack }: MoodCheckInViewProps) {
 
         {/* Bottom Bar */}
         <div className="shrink-0 pt-3 pb-2">
+          {apiError && (
+            <div className="mb-2 max-w-[800px] mx-auto flex items-start gap-2.5 px-4 py-3 rounded-[14px] bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 animate-in fade-in slide-in-from-top-2 duration-200">
+              <AlertCircle className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+              <div className="flex-1 min-w-0">
+                <p className="text-[12px] text-amber-700 dark:text-amber-300">{apiError}</p>
+              </div>
+              <button onClick={() => setApiError(null)} className="text-amber-600 dark:text-amber-400 hover:text-amber-800 dark:hover:text-amber-200 cursor-pointer shrink-0">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          )}
           {isListening ? (
             /* Voice Listening Panel */
             <div className="bg-white rounded-[22px] border border-[#edf0f4] shadow-xl p-6 flex flex-col items-center gap-4 max-w-[800px] mx-auto animate-in fade-in zoom-in-95 duration-200">
