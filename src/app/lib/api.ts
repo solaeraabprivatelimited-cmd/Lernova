@@ -1610,81 +1610,6 @@ export const notifications = {
   },
 };
 
-// ─── MENTORS ────────────────────────────────────────────────────────────────────
-
-export const mentors = {
-  list: async () => {
-    const supabase = getSupabaseClient();
-
-    const { data: mentorProfiles, error: mentorProfilesError } = await supabase
-      .from('mentor_profiles')
-      .select('user_id, bio, rating, session_count, total_hours, hourly_rate, specializations, verified')
-      .order('verified', { ascending: false })
-      .order('rating', { ascending: false });
-
-    if (mentorProfilesError) throw new Error(mentorProfilesError.message);
-
-    const mentorIds = (mentorProfiles ?? []).map((row: any) => row.user_id).filter(Boolean);
-    if (mentorIds.length === 0) return [];
-
-    const { data: userRows, error: usersError } = await supabase
-      .from('users')
-      .select('id, name, avatar_url, role')
-      .in('id', mentorIds)
-      .eq('role', 'mentor');
-
-    if (usersError) throw new Error(usersError.message);
-
-    const { data: sessionRows, error: sessionsError } = await supabase
-      .from('mentor_sessions')
-      .select('id, mentor_id, scheduled_at, duration_mins, status')
-      .in('mentor_id', mentorIds)
-      .eq('status', 'pending')
-      .gte('scheduled_at', toDatabaseLocalTimestamp(new Date()))
-      .order('scheduled_at', { ascending: true });
-
-    if (sessionsError) throw new Error(sessionsError.message);
-
-    const usersById = new Map((userRows ?? []).map((row: any) => [row.id, row]));
-    const sessionsByMentor = new Map<string, Array<{ id: string; scheduledAt: string; durationMins: number }>>();
-
-    for (const row of sessionRows ?? []) {
-      if (!row?.mentor_id || !row?.scheduled_at || !row?.id) continue;
-      const existing = sessionsByMentor.get(row.mentor_id) ?? [];
-      existing.push({
-        id: row.id,
-        scheduledAt: row.scheduled_at,
-        durationMins: Math.max(30, Number(row.duration_mins) || 60),
-      });
-      sessionsByMentor.set(row.mentor_id, existing);
-    }
-
-    return (mentorProfiles ?? [])
-      .map((profile: any) => {
-        const user = usersById.get(profile.user_id);
-        if (!user) return null;
-        const availableSlots = sessionsByMentor.get(profile.user_id) ?? [];
-
-        return {
-          id: profile.user_id,
-          name: user.name ?? 'Mentor',
-          avatarUrl: user.avatar_url ?? null,
-          bio: profile.bio ?? '',
-          rating: profile.rating == null ? null : Number(profile.rating),
-          sessionCount: Number(profile.session_count ?? 0),
-          totalHours: Number(profile.total_hours ?? 0),
-          hourlyRate: Number(profile.hourly_rate ?? 0),
-          specializations: Array.isArray(profile.specializations) ? profile.specializations.filter(Boolean) : [],
-          verified: Boolean(profile.verified),
-          availableSlots,
-          availableSessionCount: availableSlots.length,
-          isAvailable: availableSlots.length > 0,
-        };
-      })
-      .filter(Boolean);
-  },
-};
-
 // ─── MENTOR EARNINGS ────────────────────────────────────────────────────────────
 
 export const earnings = {
@@ -2670,6 +2595,78 @@ export const mentorSessionRooms = {
 // ─── MENTORS ────────────────────────────────────────────────────────────────────
 
 export const mentors = {
+  /** List all mentors with their profiles and availability */
+  list: async () => {
+    const supabase = getSupabaseClient();
+
+    const { data: mentorProfiles, error: mentorProfilesError } = await supabase
+      .from('mentor_profiles')
+      .select('user_id, bio, rating, session_count, total_hours, hourly_rate, specializations, verified')
+      .order('verified', { ascending: false })
+      .order('rating', { ascending: false });
+
+    if (mentorProfilesError) throw new Error(mentorProfilesError.message);
+
+    const mentorIds = (mentorProfiles ?? []).map((row: any) => row.user_id).filter(Boolean);
+    if (mentorIds.length === 0) return [];
+
+    const { data: userRows, error: usersError } = await supabase
+      .from('users')
+      .select('id, name, avatar_url, role')
+      .in('id', mentorIds)
+      .eq('role', 'mentor');
+
+    if (usersError) throw new Error(usersError.message);
+
+    const { data: sessionRows, error: sessionsError } = await supabase
+      .from('mentor_sessions')
+      .select('id, mentor_id, scheduled_at, duration_mins, status')
+      .in('mentor_id', mentorIds)
+      .eq('status', 'pending')
+      .gte('scheduled_at', toDatabaseLocalTimestamp(new Date()))
+      .order('scheduled_at', { ascending: true });
+
+    if (sessionsError) throw new Error(sessionsError.message);
+
+    const usersById = new Map((userRows ?? []).map((row: any) => [row.id, row]));
+    const sessionsByMentor = new Map<string, Array<{ id: string; scheduledAt: string; durationMins: number }>>();
+
+    for (const row of sessionRows ?? []) {
+      if (!row?.mentor_id || !row?.scheduled_at || !row?.id) continue;
+      const existing = sessionsByMentor.get(row.mentor_id) ?? [];
+      existing.push({
+        id: row.id,
+        scheduledAt: row.scheduled_at,
+        durationMins: Math.max(30, Number(row.duration_mins) || 60),
+      });
+      sessionsByMentor.set(row.mentor_id, existing);
+    }
+
+    return (mentorProfiles ?? [])
+      .map((profile: any) => {
+        const user = usersById.get(profile.user_id);
+        if (!user) return null;
+        const availableSlots = sessionsByMentor.get(profile.user_id) ?? [];
+
+        return {
+          id: profile.user_id,
+          name: user.name ?? 'Mentor',
+          avatarUrl: user.avatar_url ?? null,
+          bio: profile.bio ?? '',
+          rating: profile.rating == null ? null : Number(profile.rating),
+          sessionCount: Number(profile.session_count ?? 0),
+          totalHours: Number(profile.total_hours ?? 0),
+          hourlyRate: Number(profile.hourly_rate ?? 0),
+          specializations: Array.isArray(profile.specializations) ? profile.specializations.filter(Boolean) : [],
+          verified: Boolean(profile.verified),
+          availableSlots,
+          availableSessionCount: availableSlots.length,
+          isAvailable: availableSlots.length > 0,
+        };
+      })
+      .filter(Boolean);
+  },
+
   /** Browse available mentors with optional filters */
   browse: async (params?: {
     subject?: string;
