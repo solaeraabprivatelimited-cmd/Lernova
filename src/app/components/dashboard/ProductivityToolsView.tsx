@@ -473,7 +473,7 @@ const priorityConfig = {
 function ModalBackdrop({ children, onClose }: { children: React.ReactNode; onClose: () => void }) {
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-[#001d3d]/40 backdrop-blur-sm" onClick={onClose} />
+      <div className="absolute inset-0 bg-black/40 dark:bg-black/60 backdrop-blur-sm" onClick={onClose} />
       {children}
     </div>
   );
@@ -483,14 +483,14 @@ function ModalBackdrop({ children, onClose }: { children: React.ReactNode; onClo
 function FormInput({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="flex flex-col gap-2">
-      <label className="text-[13px] font-bold text-[#003566]">{label}</label>
+      <label className="text-[13px] font-bold text-slate-900 dark:text-white">{label}</label>
       {children}
     </div>
   );
 }
 
-const inputClass = "w-full h-[44px] border border-[#e2e8f0] rounded-[12px] px-4 text-[13px] outline-none focus:border-[#0967bd] focus:ring-1 focus:ring-[#0967bd]/20 transition-all text-[#1e293b] placeholder:text-[#94a3b8] bg-white";
-const selectClass = "w-full h-[44px] border border-[#e2e8f0] rounded-[12px] px-4 pr-9 text-[13px] outline-none focus:border-[#0967bd] focus:ring-1 focus:ring-[#0967bd]/20 transition-all text-[#1e293b] bg-white appearance-none cursor-pointer";
+const inputClass = "w-full h-[44px] border border-slate-300 dark:border-slate-600 rounded-[12px] px-4 text-[13px] outline-none focus:border-blue-600 dark:focus:border-blue-400 focus:ring-1 focus:ring-blue-600/20 dark:focus:ring-blue-400/20 transition-all text-slate-900 dark:text-white placeholder:text-slate-500 dark:placeholder:text-slate-400 bg-white dark:bg-slate-700";
+const selectClass = "w-full h-[44px] border border-slate-300 dark:border-slate-600 rounded-[12px] px-4 pr-9 text-[13px] outline-none focus:border-blue-600 dark:focus:border-blue-400 focus:ring-1 focus:ring-blue-600/20 dark:focus:ring-blue-400/20 transition-all text-slate-900 dark:text-white bg-white dark:bg-slate-700 appearance-none cursor-pointer";
 
 function PlannerApp({ onBack }: { onBack: () => void }) {
   const [tasks, setTasks] = useState<PlannerTask[]>([]);
@@ -670,10 +670,10 @@ function PlannerApp({ onBack }: { onBack: () => void }) {
   const visiblePlans = showAllPlans ? studyPlans : studyPlans.slice(0, 3);
 
   return (
-    <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }} className="animate-in fade-in duration-300">
+    <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }} className="animate-in fade-in duration-300 bg-white dark:bg-slate-950">
       {/* Breadcrumb */}
       <button onClick={onBack}
-        className="flex items-center gap-2 text-[#5a7089] hover:text-[#003566] mb-5 transition-colors group cursor-pointer">
+        className="flex items-center gap-2 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 mb-5 transition-colors group cursor-pointer">
         <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
         <span className="text-[13px] font-medium">Productivity Tools</span>
       </button>
@@ -685,7 +685,7 @@ function PlannerApp({ onBack }: { onBack: () => void }) {
             style={{ background: 'linear-gradient(135deg, #f77f00, #ff9a3c)' }}>
             <ClipboardList className="w-5 h-5 text-white" />
           </div>
-          <h1 className="text-[28px] md:text-[34px] text-[#003566]"
+          <h1 className="text-[28px] md:text-[34px] text-slate-900 dark:text-white"
             style={{ fontFamily: "'DM Serif Display', serif" }}>
             Planner
           </h1>
@@ -702,27 +702,27 @@ function PlannerApp({ onBack }: { onBack: () => void }) {
           {showAddPopup && (
             <>
               <div className="fixed inset-0 z-[90]" onClick={() => setShowAddPopup(false)} />
-              <div className="absolute right-0 top-[52px] z-[91] bg-white rounded-[18px] shadow-xl border border-[#edf0f4] p-3 flex flex-col gap-1 w-[220px] animate-in fade-in slide-in-from-top-2 duration-200">
+              <div className="absolute right-0 top-[52px] z-[91] bg-white dark:bg-slate-800 rounded-[18px] shadow-xl border border-slate-200 dark:border-slate-700 p-3 flex flex-col gap-1 w-[220px] animate-in fade-in slide-in-from-top-2 duration-200">
                 <button onClick={() => { setShowAddPopup(false); setShowAddTaskInput(true); }}
-                  className="flex items-center gap-3 px-3 py-2.5 rounded-[12px] hover:bg-[#f5f7fa] cursor-pointer transition-colors w-full text-left">
+                  className="flex items-center gap-3 px-3 py-2.5 rounded-[12px] hover:bg-slate-100 dark:hover:bg-slate-700 cursor-pointer transition-colors w-full text-left">
                   <div className="w-8 h-8 rounded-[10px] bg-[#f77f00] flex items-center justify-center shrink-0">
                     <Target className="w-4 h-4 text-white" />
                   </div>
-                  <span className="text-[13px] font-semibold text-[#1e293b]">Add New Task</span>
+                  <span className="text-[13px] font-semibold text-slate-900 dark:text-white">Add New Task</span>
                 </button>
                 <button onClick={() => { setShowAddPopup(false); setShowAddReminderInput(true); }}
-                  className="flex items-center gap-3 px-3 py-2.5 rounded-[12px] hover:bg-[#f5f7fa] cursor-pointer transition-colors w-full text-left">
+                  className="flex items-center gap-3 px-3 py-2.5 rounded-[12px] hover:bg-slate-100 dark:hover:bg-slate-700 cursor-pointer transition-colors w-full text-left">
                   <div className="w-8 h-8 rounded-[10px] bg-[#ffd60a] flex items-center justify-center shrink-0">
                     <Bell className="w-4 h-4 text-white" />
                   </div>
-                  <span className="text-[13px] font-semibold text-[#1e293b]">Smart Reminder</span>
+                  <span className="text-[13px] font-semibold text-slate-900 dark:text-white">Smart Reminder</span>
                 </button>
                 <button onClick={() => { setShowAddPopup(false); setShowCreateModal(true); }}
-                  className="flex items-center gap-3 px-3 py-2.5 rounded-[12px] hover:bg-[#f5f7fa] cursor-pointer transition-colors w-full text-left">
+                  className="flex items-center gap-3 px-3 py-2.5 rounded-[12px] hover:bg-slate-100 dark:hover:bg-slate-700 cursor-pointer transition-colors w-full text-left">
                   <div className="w-8 h-8 rounded-[10px] bg-[#1ca4b3] flex items-center justify-center shrink-0">
                     <BookOpen className="w-4 h-4 text-white" />
                   </div>
-                  <span className="text-[13px] font-semibold text-[#1e293b]">Study Plan</span>
+                  <span className="text-[13px] font-semibold text-slate-900 dark:text-white">Study Plan</span>
                 </button>
               </div>
             </>
@@ -733,14 +733,14 @@ function PlannerApp({ onBack }: { onBack: () => void }) {
       {/* ═══ Add New Task Modal ═══ */}
       {showAddTaskInput && (
         <ModalBackdrop onClose={() => { setShowAddTaskInput(false); setNewTaskTitle(""); }}>
-          <div className="relative bg-white rounded-[24px] shadow-2xl p-7 w-full max-w-[520px] z-10 animate-in fade-in zoom-in-95 duration-200">
+          <div className="relative bg-white dark:bg-slate-800 rounded-[24px] shadow-2xl p-7 w-full max-w-[520px] z-10 animate-in fade-in zoom-in-95 duration-200">
             <div className="flex items-center gap-3 mb-6">
-              <div className="w-10 h-10 rounded-[14px] bg-[#f77f00] flex items-center justify-center shrink-0">
+              <div className="w-10 h-10 rounded-[14px] bg-orange-500 flex items-center justify-center shrink-0">
                 <Target className="w-5 h-5 text-white" />
               </div>
-              <h2 className="text-[22px] font-bold text-[#003566]" style={{ fontFamily: "'DM Serif Display', serif" }}>Add New Task</h2>
+              <h2 className="text-[22px] font-bold text-slate-900 dark:text-white" style={{ fontFamily: "'DM Serif Display', serif" }}>Add New Task</h2>
               <button onClick={() => { setShowAddTaskInput(false); setNewTaskTitle(""); }}
-                className="ml-auto w-8 h-8 rounded-[10px] hover:bg-[#f5f7fa] flex items-center justify-center text-[#94a3b8] hover:text-[#003566] transition-colors cursor-pointer">
+                className="ml-auto w-8 h-8 rounded-[10px] hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 transition-colors cursor-pointer">
                 <X className="w-4 h-4" />
               </button>
             </div>
@@ -767,14 +767,14 @@ function PlannerApp({ onBack }: { onBack: () => void }) {
       {/* ═══ Add Smart Reminder Modal ═══ */}
       {showAddReminderInput && (
         <ModalBackdrop onClose={() => { setShowAddReminderInput(false); setNewReminderTitle(""); setReminderFrequency("Daily"); setReminderDate(""); setReminderTime(""); }}>
-          <div className="relative bg-white rounded-[24px] shadow-2xl p-7 w-full max-w-[520px] z-10 animate-in fade-in zoom-in-95 duration-200">
+          <div className="relative bg-white dark:bg-slate-800 rounded-[24px] shadow-2xl p-7 w-full max-w-[520px] z-10 animate-in fade-in zoom-in-95 duration-200">
             <div className="flex items-center gap-3 mb-6">
-              <div className="w-10 h-10 rounded-[14px] bg-[#ffd60a] flex items-center justify-center shrink-0">
+              <div className="w-10 h-10 rounded-[14px] bg-yellow-400 flex items-center justify-center shrink-0">
                 <Bell className="w-5 h-5 text-white" />
               </div>
-              <h2 className="text-[22px] font-bold text-[#003566]" style={{ fontFamily: "'DM Serif Display', serif" }}>Smart Reminder</h2>
+              <h2 className="text-[22px] font-bold text-slate-900 dark:text-white" style={{ fontFamily: "'DM Serif Display', serif" }}>Smart Reminder</h2>
               <button onClick={() => { setShowAddReminderInput(false); setNewReminderTitle(""); setReminderFrequency("Daily"); setReminderDate(""); setReminderTime(""); }}
-                className="ml-auto w-8 h-8 rounded-[10px] hover:bg-[#f5f7fa] flex items-center justify-center text-[#94a3b8] hover:text-[#003566] transition-colors cursor-pointer">
+                className="ml-auto w-8 h-8 rounded-[10px] hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 transition-colors cursor-pointer">
                 <X className="w-4 h-4" />
               </button>
             </div>
@@ -789,7 +789,7 @@ function PlannerApp({ onBack }: { onBack: () => void }) {
                   <select value={reminderFrequency} onChange={(e) => setReminderFrequency(e.target.value)} className={selectClass}>
                     <option value="Daily">Daily</option><option value="Weekly">Weekly</option><option value="Monthly">Monthly</option><option value="Once">Once</option>
                   </select>
-                  <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#94a3b8] pointer-events-none" />
+                  <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 dark:text-slate-400 pointer-events-none" />
                 </div>
               </FormInput>
             </div>
@@ -803,7 +803,7 @@ function PlannerApp({ onBack }: { onBack: () => void }) {
             </div>
             <div className="flex items-center gap-3 mt-6">
               <button onClick={() => { setShowAddReminderInput(false); setNewReminderTitle(""); setReminderFrequency("Daily"); setReminderDate(""); setReminderTime(""); }}
-                className="flex-1 h-[44px] rounded-[14px] border border-[#cc3636] text-[#cc3636] font-bold text-[13px] hover:bg-red-50 transition-colors cursor-pointer">
+                className="flex-1 h-[44px] rounded-[14px] border border-red-600 dark:border-red-500 text-red-600 dark:text-red-400 font-bold text-[13px] hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors cursor-pointer">
                 Cancel
               </button>
               <button onClick={handleAddReminder} disabled={isSavingReminder || !newReminderTitle.trim()}
@@ -819,14 +819,14 @@ function PlannerApp({ onBack }: { onBack: () => void }) {
       {/* ═══ Create Study Plan Modal ═══ */}
       {showCreateModal && (
         <ModalBackdrop onClose={() => { setShowCreateModal(false); resetForm(); }}>
-          <div className="relative bg-white rounded-[24px] shadow-2xl p-7 w-full max-w-[560px] max-h-[90vh] overflow-y-auto z-10 animate-in fade-in zoom-in-95 duration-200">
+          <div className="relative bg-white dark:bg-slate-800 rounded-[24px] shadow-2xl p-7 w-full max-w-[560px] max-h-[90vh] overflow-y-auto z-10 animate-in fade-in zoom-in-95 duration-200">
             <div className="flex items-center gap-3 mb-6">
-              <div className="w-10 h-10 rounded-[14px] bg-[#1ca4b3] flex items-center justify-center shrink-0">
+              <div className="w-10 h-10 rounded-[14px] bg-cyan-600 flex items-center justify-center shrink-0">
                 <BookOpen className="w-5 h-5 text-white" />
               </div>
-              <h2 className="text-[22px] font-bold text-[#003566]" style={{ fontFamily: "'DM Serif Display', serif" }}>Create Study Plan</h2>
+              <h2 className="text-[22px] font-bold text-slate-900 dark:text-white" style={{ fontFamily: "'DM Serif Display', serif" }}>Create Study Plan</h2>
               <button onClick={() => { setShowCreateModal(false); resetForm(); }}
-                className="ml-auto w-8 h-8 rounded-[10px] hover:bg-[#f5f7fa] flex items-center justify-center text-[#94a3b8] hover:text-[#003566] transition-colors cursor-pointer">
+                className="ml-auto w-8 h-8 rounded-[10px] hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 transition-colors cursor-pointer">
                 <X className="w-4 h-4" />
               </button>
             </div>
@@ -852,7 +852,7 @@ function PlannerApp({ onBack }: { onBack: () => void }) {
                   <select value={formReminder} onChange={(e) => setFormReminder(e.target.value)} className={selectClass}>
                     <option value="Daily">Daily</option><option value="Weekly">Weekly</option><option value="Monthly">Monthly</option><option value="None">None</option>
                   </select>
-                  <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#94a3b8] pointer-events-none" />
+                  <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 dark:text-slate-400 pointer-events-none" />
                 </div>
               </FormInput>
               <FormInput label="Priority">
@@ -860,13 +860,13 @@ function PlannerApp({ onBack }: { onBack: () => void }) {
                   <select value={formPriority} onChange={(e) => setFormPriority(e.target.value as any)} className={selectClass}>
                     <option value="low">Low</option><option value="medium">Medium</option><option value="high">High</option>
                   </select>
-                  <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#94a3b8] pointer-events-none" />
+                  <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 dark:text-slate-400 pointer-events-none" />
                 </div>
               </FormInput>
             </div>
             <div className="flex items-center gap-3 mt-6">
               <button onClick={() => { setShowCreateModal(false); resetForm(); }}
-                className="flex-1 h-[44px] rounded-[14px] border border-[#cc3636] text-[#cc3636] font-bold text-[13px] hover:bg-red-50 transition-colors cursor-pointer">
+                className="flex-1 h-[44px] rounded-[14px] border border-red-600 dark:border-red-500 text-red-600 dark:text-red-400 font-bold text-[13px] hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors cursor-pointer">
                 Cancel
               </button>
               <button onClick={handleCreateStudyPlan} disabled={isSavingPlan || !formSubject.trim()}
@@ -882,7 +882,7 @@ function PlannerApp({ onBack }: { onBack: () => void }) {
       {/* Loading */}
       {isLoading && (
         <div className="flex justify-center py-16">
-          <div className="w-8 h-8 border-2 border-[#003566]/15 border-t-[#0967bd] rounded-full animate-spin" />
+          <div className="w-8 h-8 border-2 border-slate-200 dark:border-slate-700 border-t-blue-600 dark:border-t-blue-400 rounded-full animate-spin" />
         </div>
       )}
 
@@ -891,16 +891,16 @@ function PlannerApp({ onBack }: { onBack: () => void }) {
         <div className="flex flex-col gap-5">
 
           {/* ───── My Tasks Card ───── */}
-          <div className="bg-white rounded-[20px] border border-[#edf0f4] shadow-sm overflow-hidden">
+          <div className="bg-white dark:bg-slate-800 rounded-[20px] border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden">
             <div className="px-6 py-5">
               <div className="flex items-center justify-between mb-5">
                 <div className="flex items-center gap-2.5">
-                  <div className="w-8 h-8 rounded-[10px] bg-[#f77f00] flex items-center justify-center">
+                  <div className="w-8 h-8 rounded-[10px] bg-orange-500 flex items-center justify-center">
                     <Target className="w-4 h-4 text-white" />
                   </div>
-                  <h3 className="text-[15px] font-bold text-[#003566]">My Tasks</h3>
+                  <h3 className="text-[15px] font-bold text-slate-900 dark:text-white">My Tasks</h3>
                 </div>
-                <span className="px-3 py-1 rounded-full text-[11px] font-semibold text-[#5a7089]"
+                <span className="px-3 py-1 rounded-full text-[11px] font-semibold text-slate-600 dark:text-slate-300"
                   style={{ background: 'rgba(0,53,102,0.04)', border: '1px solid rgba(0,53,102,0.06)' }}>
                   {tasks.length} tasks
                 </span>
@@ -909,42 +909,42 @@ function PlannerApp({ onBack }: { onBack: () => void }) {
                 {visibleTasks.map((task) => (
                   <div key={task.id}
                     className={`rounded-[14px] flex items-center justify-between px-4 py-3.5 transition-colors ${
-                      task.completed ? 'bg-[#f0fdf4]' : 'bg-[#f8f9fc]'
+                      task.completed ? 'bg-green-50 dark:bg-green-900/20' : 'bg-slate-50 dark:bg-slate-700'
                     }`}>
                     <div className="flex items-center gap-3 min-w-0">
                       <button onClick={() => toggleTask(task.id)} className="cursor-pointer shrink-0">
                         {task.completed ? (
-                          <div className="w-5 h-5 rounded-full bg-[#22c55e] flex items-center justify-center">
+                          <div className="w-5 h-5 rounded-full bg-green-500 flex items-center justify-center">
                             <Check className="w-3 h-3 text-white" strokeWidth={3} />
                           </div>
                         ) : (
-                          <div className="w-5 h-5 rounded-full border-2 border-[#c1c7ce] hover:border-[#0967bd] transition-colors" />
+                          <div className="w-5 h-5 rounded-full border-2 border-slate-300 dark:border-slate-500 hover:border-blue-600 dark:hover:border-blue-400 transition-colors" />
                         )}
                       </button>
-                      <span className={`text-[13px] truncate ${task.completed ? "line-through text-[#94a3b8]" : "text-[#2d3748] font-medium"}`}>
+                      <span className={`text-[13px] truncate ${task.completed ? "line-through text-slate-400 dark:text-slate-500" : "text-slate-900 dark:text-white font-medium"}`}>
                         {task.title}
                       </span>
                     </div>
                     <div className="flex items-center gap-2 shrink-0">
-                      {task.completed && <span className="text-[10px] font-bold text-[#22c55e]">Done</span>}
+                      {task.completed && <span className="text-[10px] font-bold text-green-600 dark:text-green-400">Done</span>}
                       {!task.completed && (
-                        <button onClick={() => toggleTask(task.id)} className="p-1.5 rounded-[8px] hover:bg-green-50 text-[#22c55e] cursor-pointer transition-colors" title="Complete">
+                        <button onClick={() => toggleTask(task.id)} className="p-1.5 rounded-[8px] hover:bg-green-50 dark:hover:bg-green-900/20 text-green-600 dark:text-green-400 cursor-pointer transition-colors" title="Complete">
                           <Check className="w-3.5 h-3.5" />
                         </button>
                       )}
-                      <button onClick={() => deleteTask(task.id)} className="p-1.5 rounded-[8px] hover:bg-red-50 text-[#c1c7ce] hover:text-[#cc3636] cursor-pointer transition-colors" title="Delete">
+                      <button onClick={() => deleteTask(task.id)} className="p-1.5 rounded-[8px] hover:bg-red-50 dark:hover:bg-red-900/20 text-slate-300 dark:text-slate-600 hover:text-red-600 dark:hover:text-red-400 cursor-pointer transition-colors" title="Delete">
                         <Trash2 className="w-3.5 h-3.5" />
                       </button>
                     </div>
                   </div>
                 ))}
                 {tasks.length === 0 && (
-                  <p className="text-[13px] text-[#94a3b8] text-center py-8">No tasks yet — tap + to add your first task</p>
+                  <p className="text-[13px] text-slate-400 dark:text-slate-500 text-center py-8">No tasks yet — tap + to add your first task</p>
                 )}
               </div>
               {tasks.length > 3 && (
                 <button onClick={() => setShowAllTasks(!showAllTasks)}
-                  className="w-full mt-4 text-[12px] font-bold text-[#0967bd] hover:text-[#003566] cursor-pointer transition-colors">
+                  className="w-full mt-4 text-[12px] font-bold text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 cursor-pointer transition-colors">
                   {showAllTasks ? "Show Less" : `View All (${tasks.length})`}
                 </button>
               )}
@@ -952,56 +952,56 @@ function PlannerApp({ onBack }: { onBack: () => void }) {
           </div>
 
           {/* ───── Active Reminders Card ───── */}
-          <div className="bg-white rounded-[20px] border border-[#edf0f4] shadow-sm overflow-hidden">
+          <div className="bg-white dark:bg-slate-800 rounded-[20px] border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden">
             <div className="px-6 py-5">
               <div className="flex items-center justify-between mb-5">
                 <div className="flex items-center gap-2.5">
-                  <div className="w-8 h-8 rounded-[10px] bg-[#ffd60a] flex items-center justify-center">
+                  <div className="w-8 h-8 rounded-[10px] bg-yellow-400 flex items-center justify-center">
                     <Bell className="w-4 h-4 text-white" />
                   </div>
-                  <h3 className="text-[15px] font-bold text-[#003566]">Active Reminders</h3>
+                  <h3 className="text-[15px] font-bold text-slate-900 dark:text-white">Active Reminders</h3>
                 </div>
               </div>
               <div className="flex flex-col gap-2.5">
                 {visibleReminders.map((reminder) => (
                   <div key={reminder.id}
                     className={`rounded-[14px] flex items-center justify-between px-4 py-3.5 transition-colors ${
-                      reminder.completed ? 'bg-[#f0fdf4]' : 'bg-[#f8f9fc]'
+                      reminder.completed ? 'bg-green-50 dark:bg-green-900/20' : 'bg-slate-50 dark:bg-slate-700'
                     }`}>
                     <div className="flex items-center gap-3 min-w-0">
                       <button onClick={() => toggleReminder(reminder.id)} className="cursor-pointer shrink-0">
                         {reminder.completed ? (
-                          <div className="w-5 h-5 rounded-full bg-[#22c55e] flex items-center justify-center">
+                          <div className="w-5 h-5 rounded-full bg-green-500 flex items-center justify-center">
                             <Check className="w-3 h-3 text-white" strokeWidth={3} />
                           </div>
                         ) : (
-                          <div className="w-5 h-5 rounded-full border-2 border-[#c1c7ce] hover:border-[#ffd60a] transition-colors" />
+                          <div className="w-5 h-5 rounded-full border-2 border-slate-300 dark:border-slate-500 hover:border-yellow-400 dark:hover:border-yellow-400 transition-colors" />
                         )}
                       </button>
-                      <span className={`text-[13px] truncate ${reminder.completed ? "line-through text-[#94a3b8]" : "text-[#2d3748] font-medium"}`}>
+                      <span className={`text-[13px] truncate ${reminder.completed ? "line-through text-slate-400 dark:text-slate-500" : "text-slate-900 dark:text-white font-medium"}`}>
                         {reminder.title}
                       </span>
                     </div>
                     <div className="flex items-center gap-2 shrink-0">
-                      {reminder.completed && <span className="text-[10px] font-bold text-[#22c55e]">Done</span>}
+                      {reminder.completed && <span className="text-[10px] font-bold text-green-600 dark:text-green-400">Done</span>}
                       {!reminder.completed && (
-                        <button onClick={() => toggleReminder(reminder.id)} className="p-1.5 rounded-[8px] hover:bg-green-50 text-[#22c55e] cursor-pointer transition-colors" title="Complete">
+                        <button onClick={() => toggleReminder(reminder.id)} className="p-1.5 rounded-[8px] hover:bg-green-50 dark:hover:bg-green-900/20 text-green-600 dark:text-green-400 cursor-pointer transition-colors" title="Complete">
                           <Check className="w-3.5 h-3.5" />
                         </button>
                       )}
-                      <button onClick={() => deleteReminder(reminder.id)} className="p-1.5 rounded-[8px] hover:bg-red-50 text-[#c1c7ce] hover:text-[#cc3636] cursor-pointer transition-colors" title="Delete">
+                      <button onClick={() => deleteReminder(reminder.id)} className="p-1.5 rounded-[8px] hover:bg-red-50 dark:hover:bg-red-900/20 text-slate-300 dark:text-slate-600 hover:text-red-600 dark:hover:text-red-400 cursor-pointer transition-colors" title="Delete">
                         <Trash2 className="w-3.5 h-3.5" />
                       </button>
                     </div>
                   </div>
                 ))}
                 {reminders.length === 0 && (
-                  <p className="text-[13px] text-[#94a3b8] text-center py-8">No reminders yet — tap + to add a smart reminder</p>
+                  <p className="text-[13px] text-slate-400 dark:text-slate-500 text-center py-8">No reminders yet — tap + to add a smart reminder</p>
                 )}
               </div>
               {reminders.length > 3 && (
                 <button onClick={() => setShowAllReminders(!showAllReminders)}
-                  className="w-full mt-4 text-[12px] font-bold text-[#0967bd] hover:text-[#003566] cursor-pointer transition-colors">
+                  className="w-full mt-4 text-[12px] font-bold text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 cursor-pointer transition-colors">
                   {showAllReminders ? "Show Less" : `View All (${reminders.length})`}
                 </button>
               )}
@@ -1009,19 +1009,19 @@ function PlannerApp({ onBack }: { onBack: () => void }) {
           </div>
 
           {/* ───── Study Plans Card ───── */}
-          <div className="bg-white rounded-[20px] border border-[#edf0f4] shadow-sm overflow-hidden">
+          <div className="bg-white dark:bg-slate-800 rounded-[20px] border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden">
             <div className="px-6 py-5">
               <div className="flex items-center justify-between mb-5">
                 <div className="flex items-center gap-2.5">
-                  <div className="w-8 h-8 rounded-[10px] bg-[#1ca4b3] flex items-center justify-center">
+                  <div className="w-8 h-8 rounded-[10px] bg-cyan-600 flex items-center justify-center">
                     <BookOpen className="w-4 h-4 text-white" />
                   </div>
-                  <h3 className="text-[15px] font-bold text-[#003566]">Study Plans</h3>
+                  <h3 className="text-[15px] font-bold text-slate-900 dark:text-white">Study Plans</h3>
                 </div>
               </div>
 
               {/* Tab Pills */}
-              <div className="p-1 rounded-[14px] flex mb-5" style={{ background: '#f5f7fa' }}>
+              <div className="p-1 rounded-[14px] flex mb-5 bg-slate-100 dark:bg-slate-700">
                 {([
                   { key: "today" as const, label: "Today's Plan" },
                   { key: "weekly" as const, label: "Weekly Overview" },
@@ -1030,8 +1030,8 @@ function PlannerApp({ onBack }: { onBack: () => void }) {
                   <button key={tab.key} onClick={() => setStudyTab(tab.key)}
                     className={`flex-1 h-[38px] rounded-[12px] flex items-center justify-center text-[12px] font-bold cursor-pointer transition-all ${
                       studyTab === tab.key
-                        ? "bg-white text-[#003566] shadow-sm"
-                        : "text-[#94a3b8] hover:text-[#5a7089]"
+                        ? "bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-sm"
+                        : "text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300"
                     }`}>
                     {tab.label}
                   </button>
@@ -1048,13 +1048,13 @@ function PlannerApp({ onBack }: { onBack: () => void }) {
                         <div key={plan.id} className="rounded-[16px] flex items-center justify-between px-5 py-4 transition-colors"
                           style={{ background: config.bg, border: `1px solid ${config.border}` }}>
                           <div className="flex flex-col gap-1.5 min-w-0">
-                            <span className="text-[13px] font-bold text-[#1e293b]">{plan.title}</span>
+                            <span className="text-[13px] font-bold text-slate-900 dark:text-white">{plan.title}</span>
                             <div className="flex items-center gap-2">
-                              <Clock className="w-3 h-3 text-[#94a3b8]" />
-                              <span className="text-[11px] text-[#94a3b8]">{plan.time}</span>
+                              <Clock className="w-3 h-3 text-slate-400 dark:text-slate-500" />
+                              <span className="text-[11px] text-slate-500 dark:text-slate-400">{plan.time}</span>
                             </div>
                             <div className="flex items-center gap-2.5 mt-0.5">
-                              <div className="w-[80px] h-[4px] bg-black/5 rounded-full overflow-hidden">
+                              <div className="w-[80px] h-[4px] bg-black/5 dark:bg-white/5 rounded-full overflow-hidden">
                                 <div className="h-full rounded-full transition-all" style={{ width: `${plan.progress}%`, background: config.barColor }} />
                               </div>
                               <span className="text-[10px] font-medium" style={{ color: config.badgeText }}>{plan.progress}%</span>
@@ -1066,11 +1066,11 @@ function PlannerApp({ onBack }: { onBack: () => void }) {
                               {config.label}
                             </span>
                             <button onClick={() => handleCompleteStudyPlan(plan.id)}
-                              className="p-1.5 rounded-[8px] hover:bg-green-50 text-[#22c55e] cursor-pointer transition-colors" title="Complete">
+                              className="p-1.5 rounded-[8px] hover:bg-green-50 dark:hover:bg-green-900/20 text-green-600 dark:text-green-400 cursor-pointer transition-colors" title="Complete">
                               <CheckCircle className="w-4 h-4" />
                             </button>
                             <button onClick={() => deleteStudyPlan(plan.id)}
-                              className="p-1.5 rounded-[8px] hover:bg-red-50 text-[#c1c7ce] hover:text-[#cc3636] cursor-pointer transition-colors" title="Delete">
+                              className="p-1.5 rounded-[8px] hover:bg-red-50 dark:hover:bg-red-900/20 text-slate-300 dark:text-slate-600 hover:text-red-600 dark:hover:text-red-400 cursor-pointer transition-colors" title="Delete">
                               <Trash2 className="w-3.5 h-3.5" />
                             </button>
                           </div>
@@ -1078,12 +1078,12 @@ function PlannerApp({ onBack }: { onBack: () => void }) {
                       );
                     })}
                     {studyPlans.length === 0 && (
-                      <p className="text-[13px] text-[#94a3b8] text-center py-8">No study plans yet — tap + to create your first plan</p>
+                      <p className="text-[13px] text-slate-400 dark:text-slate-500 text-center py-8">No study plans yet — tap + to create your first plan</p>
                     )}
                   </div>
                   {studyPlans.length > 3 && (
                     <button onClick={() => setShowAllPlans(!showAllPlans)}
-                      className="w-full mt-4 text-[12px] font-bold text-[#0967bd] hover:text-[#003566] cursor-pointer transition-colors">
+                      className="w-full mt-4 text-[12px] font-bold text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 cursor-pointer transition-colors">
                       {showAllPlans ? "Show Less" : `View All (${studyPlans.length})`}
                     </button>
                   )}
@@ -1099,30 +1099,30 @@ function PlannerApp({ onBack }: { onBack: () => void }) {
                       return (
                         <div key={weekDay.id} className="flex flex-col">
                           <button onClick={() => setExpandedDays(isExpanded ? expandedDays.filter((d) => d !== weekDay.id) : [...expandedDays, weekDay.id])}
-                            className={`bg-[#f8f9fc] w-full flex items-center justify-between px-5 py-4 cursor-pointer hover:bg-[#f0f2f5] transition-colors ${
+                            className={`bg-slate-50 dark:bg-slate-700 w-full flex items-center justify-between px-5 py-4 cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-600 transition-colors ${
                               isExpanded ? "rounded-t-[16px]" : "rounded-[16px]"
                             }`}>
                             <div>
-                              <p className="text-[14px] font-bold text-[#1e293b]">{weekDay.day}</p>
-                              <p className="text-[11px] text-[#94a3b8]">{weekDay.date}</p>
+                              <p className="text-[14px] font-bold text-slate-900 dark:text-white">{weekDay.day}</p>
+                              <p className="text-[11px] text-slate-500 dark:text-slate-400">{weekDay.date}</p>
                             </div>
                             <div className="flex items-center gap-2">
-                              <span className="text-[11px] font-medium text-[#5a7089]">{weekDay.sessions.length} sessions</span>
-                              <ChevronDown className={`w-4 h-4 text-[#94a3b8] transition-transform duration-200 ${isExpanded ? "rotate-180" : ""}`} />
+                              <span className="text-[11px] font-medium text-slate-600 dark:text-slate-300">{weekDay.sessions.length} sessions</span>
+                              <ChevronDown className={`w-4 h-4 text-slate-400 dark:text-slate-500 transition-transform duration-200 ${isExpanded ? "rotate-180" : ""}`} />
                             </div>
                           </button>
                           {isExpanded && (
-                            <div className="border border-[#edf0f4] border-t-0 rounded-b-[16px] px-4 py-3 flex flex-col gap-2.5">
+                            <div className="border border-slate-200 dark:border-slate-700 border-t-0 rounded-b-[16px] px-4 py-3 flex flex-col gap-2.5 bg-white dark:bg-slate-800">
                               {weekDay.sessions.map((session) => {
                                 const config = priorityConfig[session.priority];
                                 return (
                                   <div key={session.id} className="rounded-[14px] flex items-center justify-between px-4 py-3.5"
                                     style={{ background: config.bg, border: `1px solid ${config.border}` }}>
                                     <div className="flex flex-col gap-1">
-                                      <span className="text-[12px] font-bold text-[#1e293b]">{session.title}</span>
-                                      <span className="text-[11px] text-[#94a3b8]">{session.time}</span>
+                                      <span className="text-[12px] font-bold text-slate-900 dark:text-white">{session.title}</span>
+                                      <span className="text-[11px] text-slate-500 dark:text-slate-400">{session.time}</span>
                                       <div className="flex items-center gap-2 mt-0.5">
-                                        <div className="w-[70px] h-[3px] bg-black/5 rounded-full overflow-hidden">
+                                        <div className="w-[70px] h-[3px] bg-black/5 dark:bg-white/5 rounded-full overflow-hidden">
                                           <div className="h-full rounded-full" style={{ width: `${session.progress}%`, background: config.barColor }} />
                                         </div>
                                         <span className="text-[9px] font-medium" style={{ color: config.badgeText }}>{session.progress}%</span>
@@ -1143,7 +1143,7 @@ function PlannerApp({ onBack }: { onBack: () => void }) {
                   </div>
                   {initialWeeklyData.length > 3 && (
                     <button onClick={() => setShowAllWeekly(!showAllWeekly)}
-                      className="w-full mt-4 text-[12px] font-bold text-[#0967bd] hover:text-[#003566] cursor-pointer transition-colors">
+                      className="w-full mt-4 text-[12px] font-bold text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 cursor-pointer transition-colors">
                       {showAllWeekly ? "Show Less" : "View All"}
                     </button>
                   )}
@@ -1158,21 +1158,21 @@ function PlannerApp({ onBack }: { onBack: () => void }) {
                       <div className="flex flex-col items-center justify-center py-12 text-center">
                         <div className="w-14 h-14 rounded-[18px] flex items-center justify-center mb-3"
                           style={{ background: 'rgba(34,197,94,0.08)' }}>
-                          <CheckCircle className="w-6 h-6 text-[#22c55e]/40" />
+                          <CheckCircle className="w-6 h-6 text-green-500/40" />
                         </div>
-                        <p className="text-[14px] font-semibold text-[#5a7089]">No completed plans yet</p>
-                        <p className="text-[12px] text-[#94a3b8] mt-1">Complete your study plans to see them here</p>
+                        <p className="text-[14px] font-semibold text-slate-600 dark:text-slate-300">No completed plans yet</p>
+                        <p className="text-[12px] text-slate-500 dark:text-slate-400 mt-1">Complete your study plans to see them here</p>
                       </div>
                     )}
                     {(showAllCompleted ? completedPlans : completedPlans.slice(0, 3)).map((plan) => (
-                      <div key={plan.id} className="bg-[#f8f9fc] rounded-[14px] flex items-center justify-between px-5 py-4">
+                      <div key={plan.id} className="bg-slate-50 dark:bg-slate-700 rounded-[14px] flex items-center justify-between px-5 py-4">
                         <div className="flex items-center gap-3">
-                          <div className="w-5 h-5 rounded-full bg-[#22c55e] flex items-center justify-center shrink-0">
+                          <div className="w-5 h-5 rounded-full bg-green-500 flex items-center justify-center shrink-0">
                             <Check className="w-3 h-3 text-white" strokeWidth={3} />
                           </div>
                           <div>
-                            <p className="text-[13px] font-bold text-[#1e293b]">{plan.title}</p>
-                            <p className="text-[11px] text-[#94a3b8]">{`${plan.date}  |  ${plan.time}`}</p>
+                            <p className="text-[13px] font-bold text-slate-900 dark:text-white">{plan.title}</p>
+                            <p className="text-[11px] text-slate-500 dark:text-slate-400">{`${plan.date}  |  ${plan.time}`}</p>
                           </div>
                         </div>
                       </div>
@@ -1180,7 +1180,7 @@ function PlannerApp({ onBack }: { onBack: () => void }) {
                   </div>
                   {completedPlans.length > 3 && (
                     <button onClick={() => setShowAllCompleted(!showAllCompleted)}
-                      className="w-full mt-4 text-[12px] font-bold text-[#0967bd] hover:text-[#003566] cursor-pointer transition-colors">
+                      className="w-full mt-4 text-[12px] font-bold text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 cursor-pointer transition-colors">
                       {showAllCompleted ? "Show Less" : `View All (${completedPlans.length})`}
                     </button>
                   )}
