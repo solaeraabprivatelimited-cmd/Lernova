@@ -302,7 +302,7 @@ export function SilentModeView({ onLeave, onBackToFocus, onReportSubmitted }: Si
   };
 
   // If someone is pinned, show the pinned layout
-  if (pinnedParticipant !== null) {
+  if (pinnedParticipant !== null && participants.length > 0) {
     const pinned = participants[pinnedParticipant];
     const others = participants.filter((_, idx) => idx !== pinnedParticipant);
     
@@ -313,11 +313,13 @@ export function SilentModeView({ onLeave, onBackToFocus, onReportSubmitted }: Si
           
           {/* Left Column - Small Tiles (First participant) */}
           <div className="flex flex-col gap-6 justify-start">
-            <SmallParticipantTile 
-              image={others[0].image}
-              name={others[0].name}
-              onPin={() => togglePin(participants.findIndex(p => p.name === others[0].name))}
-            />
+            {others.length > 0 && others[0] && (
+              <SmallParticipantTile 
+                image={others[0].image || ''}
+                name={others[0].name || 'Participant'}
+                onPin={() => togglePin(participants.findIndex(p => p.name === others[0].name))}
+              />
+            )}
           </div>
 
           {/* Center - Large Pinned Participant */}
@@ -346,8 +348,8 @@ export function SilentModeView({ onLeave, onBackToFocus, onReportSubmitted }: Si
             {others.slice(1).map((participant, idx) => (
               <SmallParticipantTile 
                 key={idx}
-                image={participant.image}
-                name={participant.name}
+                image={participant?.image || ''}
+                name={participant?.name || 'Participant'}
                 onPin={() => togglePin(participants.findIndex(p => p.name === participant.name))}
               />
             ))}
@@ -480,6 +482,25 @@ export function SilentModeView({ onLeave, onBackToFocus, onReportSubmitted }: Si
   );
 }
 
+  // Empty participants fallback
+  if (participants.length === 0) {
+    return (
+      <div className="fixed inset-0 z-50 bg-[#141316] font-['Poppins'] overflow-hidden flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-6xl mb-4">🎓</div>
+          <h2 className="text-white text-2xl font-bold mb-2">No Participants Yet</h2>
+          <p className="text-white/60 mb-6 max-w-md">Participants will appear here when they join the study session.</p>
+          <button 
+            onClick={onLeave}
+            className="bg-[#cc3636] hover:bg-[#b32e2e] active:scale-95 px-6 py-3 rounded-[24px] transition-all text-white font-semibold"
+          >
+            Leave Room
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="fixed inset-0 z-50 bg-[#141316] font-['Poppins'] overflow-hidden">
       {/* Main Content Grid */}
@@ -504,56 +525,68 @@ export function SilentModeView({ onLeave, onBackToFocus, onReportSubmitted }: Si
         <div className="flex flex-col gap-8 w-full md:w-auto">
           {/* Row 1 */}
           <div className="flex gap-6 justify-center md:justify-start flex-wrap">
-            <ParticipantTile 
-              image={participants[0].image} 
-              name={participants[0].name}
-              isPinned={false}
-              onTogglePin={() => togglePin(0)}
-              showCameraOff={!isVideoEnabled}
-            />
-            <ParticipantTile 
-              image={participants[1].image} 
-              name={participants[1].name}
-              isPinned={false}
-              onTogglePin={() => togglePin(1)}
-              showCameraOff={!isVideoEnabled}
-            />
+            {participants.length > 0 && participants[0] && (
+              <ParticipantTile 
+                image={participants[0].image || ''} 
+                name={participants[0].name || 'Participant 1'}
+                isPinned={false}
+                onTogglePin={() => togglePin(0)}
+                showCameraOff={!isVideoEnabled}
+              />
+            )}
+            {participants.length > 1 && participants[1] && (
+              <ParticipantTile 
+                image={participants[1].image || ''} 
+                name={participants[1].name || 'Participant 2'}
+                isPinned={false}
+                onTogglePin={() => togglePin(1)}
+                showCameraOff={!isVideoEnabled}
+              />
+            )}
           </div>
 
           {/* Row 2 */}
           <div className="flex gap-6 justify-center md:justify-start flex-wrap">
-            <ParticipantTile 
-              image={participants[2].image} 
-              name={participants[2].name}
-              isPinned={false}
-              onTogglePin={() => togglePin(2)}
-              showCameraOff={!isVideoEnabled}
-            />
-            <ParticipantTile 
-              image={participants[3].image} 
-              name={participants[3].name}
-              isPinned={false}
-              onTogglePin={() => togglePin(3)}
-              showCameraOff={!isVideoEnabled}
-            />
+            {participants.length > 2 && participants[2] && (
+              <ParticipantTile 
+                image={participants[2].image || ''} 
+                name={participants[2].name || 'Participant 3'}
+                isPinned={false}
+                onTogglePin={() => togglePin(2)}
+                showCameraOff={!isVideoEnabled}
+              />
+            )}
+            {participants.length > 3 && participants[3] && (
+              <ParticipantTile 
+                image={participants[3].image || ''} 
+                name={participants[3].name || 'Participant 4'}
+                isPinned={false}
+                onTogglePin={() => togglePin(3)}
+                showCameraOff={!isVideoEnabled}
+              />
+            )}
           </div>
 
           {/* Row 3 */}
           <div className="flex gap-6 justify-center md:justify-start flex-wrap">
-            <ParticipantTile 
-              image={participants[4].image} 
-              name={participants[4].name}
-              isPinned={false}
-              onTogglePin={() => togglePin(4)}
-              showCameraOff={!isVideoEnabled}
-            />
-            <ParticipantTile 
-              image={participants[5].image} 
-              name={participants[5].name}
-              isPinned={false}
-              onTogglePin={() => togglePin(5)}
-              showCameraOff={!isVideoEnabled}
-            />
+            {participants.length > 4 && participants[4] && (
+              <ParticipantTile 
+                image={participants[4].image || ''} 
+                name={participants[4].name || 'Participant 5'}
+                isPinned={false}
+                onTogglePin={() => togglePin(4)}
+                showCameraOff={!isVideoEnabled}
+              />
+            )}
+            {participants.length > 5 && participants[5] && (
+              <ParticipantTile 
+                image={participants[5].image || ''} 
+                name={participants[5].name || 'Participant 6'}
+                isPinned={false}
+                onTogglePin={() => togglePin(5)}
+                showCameraOff={!isVideoEnabled}
+              />
+            )}
           </div>
         </div>
       </div>

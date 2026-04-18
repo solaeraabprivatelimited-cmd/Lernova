@@ -1399,7 +1399,7 @@ export function StudyRoomDashboard({ onLogout }: { onLogout?: () => void }) {
             {activeSection === "Mentor Support" && (
               <React.Suspense fallback={sectionLoader}>
                 <MentorSupport
-                  onStartAiMentor={() => navigateToSection("AI Mentor")}
+                  onStartAiMentor={() => navigateToSection("AI Mentor Chat")}
                   onStartHumanMentor={() => navigateToSection("Human Mentor")}
                 />
               </React.Suspense>
