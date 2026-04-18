@@ -84,14 +84,14 @@ function PostModal({ onClose, onPost }: {
 
   return (
     <ModalBackdrop onClose={onClose}>
-      <div className="relative bg-white rounded-[24px] shadow-2xl p-7 w-full max-w-[560px] max-h-[90vh] overflow-y-auto z-10 animate-in fade-in zoom-in-95 duration-200">
+      <div className="relative bg-white dark:bg-slate-800 rounded-[24px] shadow-2xl p-7 w-full max-w-[560px] max-h-[90vh] overflow-y-auto z-10 animate-in fade-in zoom-in-95 duration-200">
         <div className="flex items-center gap-3 mb-6">
           <div className="w-10 h-10 rounded-[14px] flex items-center justify-center"
             style={{ background: 'linear-gradient(135deg, #7f00ff, #e100ff)' }}>
             <Sparkles className="w-5 h-5 text-white" />
           </div>
-          <h2 className="text-[22px] font-bold text-[#003566]" style={{ fontFamily: "'DM Serif Display', serif" }}>Share Inspiration</h2>
-          <button onClick={onClose} className="ml-auto w-8 h-8 rounded-[10px] hover:bg-[#f5f7fa] flex items-center justify-center text-[#94a3b8] hover:text-[#003566] transition-colors cursor-pointer">
+          <h2 className="text-[22px] font-bold text-slate-900 dark:text-white" style={{ fontFamily: "'DM Serif Display', serif" }}>Share Inspiration</h2>
+          <button onClick={onClose} className="ml-auto w-8 h-8 rounded-[10px] hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 transition-colors cursor-pointer">
             <X className="w-4 h-4" />
           </button>
         </div>
@@ -99,18 +99,18 @@ function PostModal({ onClose, onPost }: {
         {/* Post Type Dropdown */}
         <div className="relative mb-4">
           <button onClick={() => setDropdownOpen((p) => !p)}
-            className="w-full h-[44px] border border-[#e2e8f0] rounded-[12px] px-4 flex items-center justify-between cursor-pointer hover:border-[#c9ddf0] transition-colors bg-white">
-            <span className={`text-[13px] ${postType ? "font-semibold text-[#1e293b]" : "text-[#94a3b8]"}`}>{dropdownLabel}</span>
-            <ChevronDown className={`w-4 h-4 text-[#94a3b8] transition-transform ${dropdownOpen ? "rotate-180" : ""}`} />
+            className="w-full h-[44px] border border-slate-200 dark:border-slate-600 rounded-[12px] px-4 flex items-center justify-between cursor-pointer hover:border-slate-300 dark:hover:border-slate-500 transition-colors bg-white dark:bg-slate-700">
+            <span className={`text-[13px] ${postType ? "font-semibold text-slate-900 dark:text-white" : "text-slate-400 dark:text-slate-500"}`}>{dropdownLabel}</span>
+            <ChevronDown className={`w-4 h-4 text-slate-400 dark:text-slate-500 transition-transform ${dropdownOpen ? "rotate-180" : ""}`} />
           </button>
           {dropdownOpen && (
-            <div className="absolute top-full left-0 mt-1 w-full bg-white rounded-[12px] shadow-xl border border-[#edf0f4] z-10 overflow-hidden animate-in fade-in slide-in-from-top-1 duration-150">
+            <div className="absolute top-full left-0 mt-1 w-full bg-white dark:bg-slate-700 rounded-[12px] shadow-xl border border-slate-200 dark:border-slate-600 z-10 overflow-hidden animate-in fade-in slide-in-from-top-1 duration-150">
               <button onClick={() => { setPostType("quote"); setDropdownOpen(false); }}
-                className={`w-full flex items-center gap-3 px-4 py-3 text-left cursor-pointer transition-colors text-[13px] ${postType === "quote" ? "bg-[#0967bd]/5 text-[#003566] font-semibold" : "text-[#5a7089] hover:bg-[#f5f7fa]"}`}>
+                className={`w-full flex items-center gap-3 px-4 py-3 text-left cursor-pointer transition-colors text-[13px] ${postType === "quote" ? "bg-purple-100 dark:bg-purple-900/30 text-purple-900 dark:text-purple-300 font-semibold" : "text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-600"}`}>
                 <Quote className="w-4 h-4" /> Quote
               </button>
               <button onClick={() => { setPostType("story"); setDropdownOpen(false); }}
-                className={`w-full flex items-center gap-3 px-4 py-3 text-left cursor-pointer transition-colors text-[13px] ${postType === "story" ? "bg-[#0967bd]/5 text-[#003566] font-semibold" : "text-[#5a7089] hover:bg-[#f5f7fa]"}`}>
+                className={`w-full flex items-center gap-3 px-4 py-3 text-left cursor-pointer transition-colors text-[13px] ${postType === "story" ? "bg-purple-100 dark:bg-purple-900/30 text-purple-900 dark:text-purple-300 font-semibold" : "text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-600"}`}>
                 <BookOpen className="w-4 h-4" /> Story
               </button>
             </div>
@@ -120,30 +120,30 @@ function PostModal({ onClose, onPost }: {
         {/* Quote Input */}
         {postType === "quote" && (
           <textarea value={quoteText} onChange={(e) => setQuoteText(e.target.value)} placeholder="Type your inspiring quote here..."
-            rows={4} className="w-full border border-[#e2e8f0] rounded-[12px] px-4 py-3 text-[14px] outline-none focus:border-[#7f00ff] focus:ring-1 focus:ring-[#7f00ff]/20 transition-all text-[#1e293b] placeholder:text-[#94a3b8] bg-white resize-none leading-relaxed mb-4" />
+            rows={4} className="w-full border border-slate-200 dark:border-slate-600 rounded-[12px] px-4 py-3 text-[14px] outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500/20 transition-all text-slate-900 dark:text-white dark:bg-slate-700 placeholder:text-slate-400 dark:placeholder:text-slate-500 resize-none leading-relaxed mb-4" />
         )}
 
         {/* Story Input */}
         {postType === "story" && (
           <>
             <textarea value={storyText} onChange={(e) => setStoryText(e.target.value)} placeholder="Share your motivational story..."
-              rows={8} className="w-full border border-[#e2e8f0] rounded-[12px] px-4 py-3 text-[14px] outline-none focus:border-[#7f00ff] focus:ring-1 focus:ring-[#7f00ff]/20 transition-all text-[#1e293b] placeholder:text-[#94a3b8] bg-white resize-none leading-relaxed mb-4" />
+              rows={8} className="w-full border border-slate-200 dark:border-slate-600 rounded-[12px] px-4 py-3 text-[14px] outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500/20 transition-all text-slate-900 dark:text-white dark:bg-slate-700 placeholder:text-slate-400 dark:placeholder:text-slate-500 resize-none leading-relaxed mb-4" />
 
             {/* Attachments */}
             <div className="flex items-center gap-3 mb-4">
               {attachedImages.map((img) => (
-                <div key={img.id} className="relative w-[80px] h-[80px] rounded-[14px] overflow-hidden border border-[#edf0f4]">
+                <div key={img.id} className="relative w-[80px] h-[80px] rounded-[14px] overflow-hidden border border-slate-200 dark:border-slate-600">
                   <ImageWithFallback src={img.url} alt="Attached" className="w-full h-full object-cover" />
                   <button onClick={() => handleRemoveImage(img.id)}
-                    className="absolute top-1 right-1 w-5 h-5 bg-white/90 rounded-full flex items-center justify-center cursor-pointer shadow-sm">
-                    <X className="w-3 h-3 text-[#1e293b]" />
+                    className="absolute top-1 right-1 w-5 h-5 bg-white/90 dark:bg-slate-800/90 rounded-full flex items-center justify-center cursor-pointer shadow-sm">
+                    <X className="w-3 h-3 text-slate-900 dark:text-white" />
                   </button>
                 </div>
               ))}
               <button onClick={() => fileInputRef.current?.click()}
-                className="h-[80px] px-4 rounded-[14px] border-2 border-dashed border-[#e2e8f0] hover:border-[#f77f00] flex items-center gap-2 cursor-pointer transition-colors group">
-                <Paperclip className="w-4 h-4 text-[#c1c7ce] group-hover:text-[#f77f00] transition-colors" />
-                <span className="text-[11px] font-medium text-[#c1c7ce] group-hover:text-[#f77f00] transition-colors">Attach</span>
+                className="h-[80px] px-4 rounded-[14px] border-2 border-dashed border-slate-200 dark:border-slate-600 hover:border-orange-500 dark:hover:border-orange-500 flex items-center gap-2 cursor-pointer transition-colors group">
+                <Paperclip className="w-4 h-4 text-slate-400 dark:text-slate-500 group-hover:text-orange-500 transition-colors" />
+                <span className="text-[11px] font-medium text-slate-400 dark:text-slate-500 group-hover:text-orange-500 transition-colors">Attach</span>
               </button>
             </div>
 
