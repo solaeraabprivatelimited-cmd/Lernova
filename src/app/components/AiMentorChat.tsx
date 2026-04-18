@@ -565,18 +565,19 @@ export function AiMentorChat({ onBack, onVoiceMode }: AiMentorChatProps) {
                 {chatSessions.map((session) => (
                   <div
                     key={session.id}
-                    className={`group flex items-center gap-2 px-3 h-[40px] rounded-[12px] transition-all text-left cursor-pointer relative ${
+                    className={`group flex items-center gap-2 px-3 h-[40px] rounded-[12px] transition-all text-left cursor-pointer relative min-w-0 ${
                       currentSessionId === session.id
                         ? 'bg-white/[0.1] text-white/90'
                         : 'hover:bg-white/[0.06] text-white/40 hover:text-white/70'
                     }`}
                     onClick={() => setCurrentSessionId(session.id)}
+                    title={session.name}
                   >
                     {session.isPinned && (
                       <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-[18px] rounded-r-full bg-[#f77f00]" />
                     )}
                     <MessageSquare className="w-3.5 h-3.5 shrink-0" />
-                    <span className="text-[13px] font-medium truncate flex-1">{session.name}</span>
+                    <span className="text-[13px] font-medium truncate flex-1 overflow-hidden">{session.name}</span>
                     
                     {/* Action buttons on hover */}
                     <div className="opacity-0 group-hover:opacity-100 flex gap-1 transition-opacity">

@@ -56,46 +56,46 @@ function PostArticleModal({ onClose, onPost }: { onClose: () => void; onPost: (a
 
   return (
     <ModalBackdrop onClose={onClose}>
-      <div className="relative bg-white rounded-[24px] shadow-2xl p-7 w-full max-w-[560px] z-10 animate-in fade-in zoom-in-95 duration-200">
+      <div className="relative bg-white dark:bg-slate-800 rounded-[24px] shadow-2xl p-7 w-full max-w-[560px] z-10 animate-in fade-in zoom-in-95 duration-200">
         <div className="flex items-center gap-3 mb-6">
           <div className="w-10 h-10 rounded-[14px] flex items-center justify-center"
             style={{ background: 'linear-gradient(135deg, #003566, #0967bd)' }}>
             <FileText className="w-5 h-5 text-white" />
           </div>
-          <h2 className="text-[22px] font-bold text-[#003566]" style={{ fontFamily: "'DM Serif Display', serif" }}>Post New Article</h2>
-          <button onClick={onClose} className="ml-auto w-8 h-8 rounded-[10px] hover:bg-[#f5f7fa] flex items-center justify-center text-[#94a3b8] hover:text-[#003566] transition-colors cursor-pointer">
+          <h2 className="text-[22px] font-bold text-slate-900 dark:text-white" style={{ fontFamily: "'DM Serif Display', serif" }}>Post New Article</h2>
+          <button onClick={onClose} className="ml-auto w-8 h-8 rounded-[10px] hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 transition-colors cursor-pointer">
             <X className="w-4 h-4" />
           </button>
         </div>
 
         <div className="space-y-3 mb-4">
           <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Article Title"
-            className="w-full h-[44px] border border-[#e2e8f0] rounded-[12px] px-4 text-[14px] font-bold outline-none focus:border-[#0967bd] focus:ring-1 focus:ring-[#0967bd]/20 transition-all text-[#1e293b] placeholder:text-[#94a3b8] bg-white" />
+            className="w-full h-[44px] border border-slate-200 dark:border-slate-600 rounded-[12px] px-4 text-[14px] font-bold outline-none focus:border-[#0967bd] focus:ring-1 focus:ring-[#0967bd]/20 transition-all text-slate-900 dark:text-white dark:bg-slate-700 placeholder:text-slate-400 dark:placeholder:text-slate-500" />
           <textarea value={content} onChange={(e) => setContent(e.target.value)} placeholder="Write your article content..."
-            rows={7} className="w-full border border-[#e2e8f0] rounded-[12px] px-4 py-3 text-[14px] outline-none focus:border-[#0967bd] focus:ring-1 focus:ring-[#0967bd]/20 transition-all text-[#1e293b] placeholder:text-[#94a3b8] bg-white resize-none leading-relaxed" />
+            rows={7} className="w-full border border-slate-200 dark:border-slate-600 rounded-[12px] px-4 py-3 text-[14px] outline-none focus:border-[#0967bd] focus:ring-1 focus:ring-[#0967bd]/20 transition-all text-slate-900 dark:text-white dark:bg-slate-700 placeholder:text-slate-400 dark:placeholder:text-slate-500 resize-none leading-relaxed" />
         </div>
 
         {/* Attached Images */}
         <div className="flex items-center gap-3 mb-5">
           {attachedImages.map((img, i) => (
-            <div key={i} className="relative w-[80px] h-[80px] rounded-[14px] overflow-hidden border border-[#edf0f4]">
+            <div key={i} className="relative w-[80px] h-[80px] rounded-[14px] overflow-hidden border border-slate-200 dark:border-slate-600">
               <img src={img} alt="Attached" className="w-full h-full object-cover" />
               <button onClick={() => setAttachedImages((p) => p.filter((_, j) => j !== i))}
-                className="absolute top-1 right-1 w-5 h-5 bg-white/90 rounded-full flex items-center justify-center cursor-pointer shadow-sm">
-                <X className="w-3 h-3 text-[#1e293b]" />
+                className="absolute top-1 right-1 w-5 h-5 bg-white/90 dark:bg-slate-800/90 rounded-full flex items-center justify-center cursor-pointer shadow-sm">
+                <X className="w-3 h-3 text-slate-900 dark:text-white" />
               </button>
             </div>
           ))}
           <button onClick={() => setAttachedImages((p) => [...p, imgImage28])}
-            className="w-[80px] h-[80px] rounded-[14px] border-2 border-dashed border-[#e2e8f0] hover:border-[#f77f00] flex flex-col items-center justify-center cursor-pointer transition-colors group">
-            <ImageIcon className="w-5 h-5 text-[#c1c7ce] group-hover:text-[#f77f00] transition-colors" />
-            <span className="text-[9px] font-medium text-[#c1c7ce] group-hover:text-[#f77f00] mt-1 transition-colors">Add Image</span>
+            className="w-[80px] h-[80px] rounded-[14px] border-2 border-dashed border-slate-200 dark:border-slate-600 hover:border-[#f77f00] flex flex-col items-center justify-center cursor-pointer transition-colors group">
+            <ImageIcon className="w-5 h-5 text-slate-400 dark:text-slate-500 group-hover:text-[#f77f00] transition-colors" />
+            <span className="text-[9px] font-medium text-slate-400 dark:text-slate-500 group-hover:text-[#f77f00] mt-1 transition-colors">Add Image</span>
           </button>
         </div>
 
         <div className="flex items-center gap-3">
           <button onClick={onClose}
-            className="flex-1 h-[44px] rounded-[14px] border border-[#cc3636] text-[#cc3636] font-bold text-[13px] hover:bg-red-50 transition-colors cursor-pointer">
+            className="flex-1 h-[44px] rounded-[14px] border border-red-300 dark:border-red-900 text-red-600 dark:text-red-400 font-bold text-[13px] hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors cursor-pointer">
             Cancel
           </button>
           <button onClick={handleSubmit} disabled={!title.trim() || !content.trim()}
@@ -114,7 +114,7 @@ function ArticleCard({ article, onLike, onDislike, userReaction }: {
   article: WellnessArticle; onLike: (id: string) => void; onDislike: (id: string) => void; userReaction: "like" | "dislike" | null;
 }) {
   return (
-    <div className="bg-white rounded-[20px] border border-[#edf0f4] shadow-sm overflow-hidden hover:shadow-lg transition-all duration-300 group">
+    <div className="bg-white dark:bg-slate-900 rounded-[20px] border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden hover:shadow-lg transition-all duration-300 group">
       <div className="flex flex-col md:flex-row">
         {/* Thumbnail */}
         <div className="relative md:w-[240px] h-[180px] md:h-auto shrink-0 overflow-hidden">
@@ -218,7 +218,7 @@ export function WellnessResourcesView({ onBack }: { onBack: () => void }) {
   };
 
   return (
-    <div className="w-full flex flex-col" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+    <div className="w-full flex flex-col bg-white dark:bg-slate-950" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
       {/* Header */}
       <div className="flex items-center justify-between mb-6 shrink-0">
         <div>
@@ -253,11 +253,11 @@ export function WellnessResourcesView({ onBack }: { onBack: () => void }) {
         ))}
         {articles.length === 0 && (
           <div className="flex flex-col items-center justify-center py-20">
-            <div className="w-16 h-16 rounded-[20px] flex items-center justify-center mb-4" style={{ background: 'rgba(9,103,189,0.06)' }}>
-              <BookOpen className="w-7 h-7 text-[#0967bd]/30" />
+            <div className="w-16 h-16 rounded-[20px] flex items-center justify-center mb-4 bg-blue-100 dark:bg-blue-900/30">
+              <BookOpen className="w-7 h-7 text-blue-500 dark:text-blue-400/60" />
             </div>
-            <p className="text-[14px] font-semibold text-[#5a7089]">No resources yet</p>
-            <p className="text-[12px] text-[#94a3b8] mt-1">Be the first to post an article!</p>
+            <p className="text-[14px] font-semibold text-slate-600 dark:text-slate-300">No resources yet</p>
+            <p className="text-[12px] text-slate-500 dark:text-slate-400 mt-1">Be the first to post an article!</p>
           </div>
         )}
       </div>

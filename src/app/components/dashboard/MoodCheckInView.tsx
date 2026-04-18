@@ -176,10 +176,10 @@ export function MoodCheckInView({ onBack }: MoodCheckInViewProps) {
   ];
 
   return (
-    <div className="w-full flex flex-col h-[calc(100vh-96px)]" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+    <div className="w-full flex flex-col h-[calc(100vh-96px)] bg-white dark:bg-slate-950 text-slate-900 dark:text-white" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
       {/* Header */}
       <div className="shrink-0 mb-4">
-        <button onClick={onBack} className="flex items-center gap-2 text-[#5a7089] hover:text-[#003566] mb-3 transition-colors group cursor-pointer">
+        <button onClick={onBack} className="flex items-center gap-2 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 mb-3 transition-colors group cursor-pointer">
           <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
           <span className="text-[13px] font-medium">Emotional Wellness</span>
         </button>
@@ -188,7 +188,7 @@ export function MoodCheckInView({ onBack }: MoodCheckInViewProps) {
             style={{ background: 'linear-gradient(135deg, #b91d73, #f953c6)' }}>
             <Heart className="w-5 h-5 text-white" />
           </div>
-          <h1 className="text-[28px] md:text-[34px] text-[#003566]" style={{ fontFamily: "'DM Serif Display', serif" }}>
+          <h1 className="text-[28px] md:text-[34px] text-slate-900 dark:text-white" style={{ fontFamily: "'DM Serif Display', serif" }}>
             Mood Check-In
           </h1>
         </div>
@@ -196,10 +196,10 @@ export function MoodCheckInView({ onBack }: MoodCheckInViewProps) {
 
       {/* Chat Area */}
       <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
-        <div className="flex-1 overflow-y-auto px-1">
+        <div className="flex-1 overflow-y-auto px-1 bg-white dark:bg-slate-950">
           {!hasMessages ? (
             /* Welcome State */
-            <div className="flex flex-col items-center justify-center h-full px-4 -mt-8">
+            <div className="flex flex-col items-center justify-center h-full px-4 -mt-8 bg-white dark:bg-slate-950">
               <div className="relative mb-5">
                 <div className="absolute inset-0 blur-3xl opacity-15 rounded-full"
                   style={{ background: 'radial-gradient(circle, #f953c6, transparent 70%)' }} />
@@ -213,11 +213,11 @@ export function MoodCheckInView({ onBack }: MoodCheckInViewProps) {
                   <Heart className="w-3 h-3 text-[#b91d73]" />
                   <span className="text-[11px] font-semibold text-[#b91d73]">Safe & Private</span>
                 </div>
-                <h2 className="text-[26px] md:text-[32px] text-[#003566] mb-2"
+                <h2 className="text-[26px] md:text-[32px] text-slate-900 dark:text-white mb-2"
                   style={{ fontFamily: "'DM Serif Display', serif" }}>
                   How are you feeling today?
                 </h2>
-                <p className="text-[14px] text-[#7a8ea3] max-w-[380px] mx-auto leading-relaxed">
+                <p className="text-[14px] text-slate-600 dark:text-slate-400 max-w-[380px] mx-auto leading-relaxed">
                   Share your emotions — I'm here to listen, understand, and support you.
                 </p>
               </div>
@@ -226,9 +226,9 @@ export function MoodCheckInView({ onBack }: MoodCheckInViewProps) {
               <div className="flex flex-wrap justify-center gap-2.5 max-w-[460px]">
                 {quickMoods.map((m) => (
                   <button key={m.label} onClick={() => sendMessage(m.msg, { mood: m.mood, emoji: m.emoji })}
-                    className="flex items-center gap-2 px-4 py-2.5 rounded-[14px] bg-white border border-[#edf0f4] hover:border-[#b91d73]/20 hover:shadow-md transition-all cursor-pointer group">
+                    className="flex items-center gap-2 px-4 py-2.5 rounded-[14px] bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-[#b91d73]/20 dark:hover:border-[#b91d73]/40 hover:shadow-md dark:hover:shadow-md/20 transition-all cursor-pointer group">
                     <span className="text-[18px]">{m.emoji}</span>
-                    <span className="text-[12px] font-semibold text-[#5a7089] group-hover:text-[#003566] transition-colors">{m.label}</span>
+                    <span className="text-[12px] font-semibold text-slate-600 dark:text-slate-300 group-hover:text-slate-900 dark:group-hover:text-white transition-colors">{m.label}</span>
                   </button>
                 ))}
               </div>
@@ -236,36 +236,36 @@ export function MoodCheckInView({ onBack }: MoodCheckInViewProps) {
               {savedCheckins.length > 0 && (
                 <div className="w-full max-w-[760px] mt-10">
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
-                    <div className="bg-white rounded-[18px] border border-[#edf0f4] px-4 py-4">
-                      <p className="text-[11px] text-[#94a3b8]">Total Check-ins</p>
-                      <p className="text-[20px] font-bold text-[#003566]">{savedCheckins.length}</p>
+                    <div className="bg-white dark:bg-slate-800 rounded-[18px] border border-slate-200 dark:border-slate-700 px-4 py-4">
+                      <p className="text-[11px] text-slate-600 dark:text-slate-400">Total Check-ins</p>
+                      <p className="text-[20px] font-bold text-slate-900 dark:text-white">{savedCheckins.length}</p>
                     </div>
-                    <div className="bg-white rounded-[18px] border border-[#edf0f4] px-4 py-4">
-                      <p className="text-[11px] text-[#94a3b8]">Top Mood</p>
+                    <div className="bg-white dark:bg-slate-800 rounded-[18px] border border-slate-200 dark:border-slate-700 px-4 py-4">
+                      <p className="text-[11px] text-slate-600 dark:text-slate-400">Top Mood</p>
                       <p className="text-[20px] font-bold text-[#b91d73] capitalize">{topMood.replace(/_/g, " ")}</p>
                     </div>
-                    <div className="bg-white rounded-[18px] border border-[#edf0f4] px-4 py-4">
-                      <p className="text-[11px] text-[#94a3b8]">This Month</p>
-                      <p className="text-[20px] font-bold text-[#003566]">{thisMonthCount}</p>
+                    <div className="bg-white dark:bg-slate-800 rounded-[18px] border border-slate-200 dark:border-slate-700 px-4 py-4">
+                      <p className="text-[11px] text-slate-600 dark:text-slate-400">This Month</p>
+                      <p className="text-[20px] font-bold text-slate-900 dark:text-white">{thisMonthCount}</p>
                     </div>
                   </div>
 
-                  <div className="bg-white rounded-[20px] border border-[#edf0f4] p-5 shadow-sm">
+                  <div className="bg-white dark:bg-slate-800 rounded-[20px] border border-slate-200 dark:border-slate-700 p-5 shadow-sm">
                     <div className="flex items-center justify-between mb-3">
-                      <h3 className="text-[15px] font-bold text-[#003566]">Recent Mood History</h3>
-                      <span className="text-[11px] text-[#94a3b8]">Latest {Math.min(5, savedCheckins.length)}</span>
+                      <h3 className="text-[15px] font-bold text-slate-900 dark:text-white">Recent Mood History</h3>
+                      <span className="text-[11px] text-slate-600 dark:text-slate-400">Latest {Math.min(5, savedCheckins.length)}</span>
                     </div>
                     <div className="flex flex-col gap-2.5">
                       {savedCheckins.slice(0, 5).map((entry) => (
-                        <div key={entry.id} className="flex items-center gap-3 px-4 py-3 rounded-[14px] bg-[#fafbfc] border border-[#edf0f4]">
-                          <div className="w-10 h-10 rounded-[12px] bg-[#fdf2f8] flex items-center justify-center text-[20px]">
+                        <div key={entry.id} className="flex items-center gap-3 px-4 py-3 rounded-[14px] bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700">
+                          <div className="w-10 h-10 rounded-[12px] bg-[#fdf2f8] dark:bg-slate-800 flex items-center justify-center text-[20px]">
                             {entry.emoji || "🙂"}
                           </div>
                           <div className="flex-1 min-w-0">
-                            <p className="text-[13px] font-semibold text-[#003566] capitalize">{entry.mood.replace(/_/g, " ")}</p>
-                            {entry.note && <p className="text-[12px] text-[#5a7089] truncate">{entry.note}</p>}
+                            <p className="text-[13px] font-semibold text-slate-900 dark:text-white capitalize">{entry.mood.replace(/_/g, " ")}</p>
+                            {entry.note && <p className="text-[12px] text-slate-600 dark:text-slate-400 truncate">{entry.note}</p>}
                           </div>
-                          <p className="text-[11px] text-[#94a3b8] shrink-0">
+                          <p className="text-[11px] text-slate-600 dark:text-slate-400 shrink-0">
                             {new Date(entry.timestamp).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
                           </p>
                         </div>
@@ -277,12 +277,12 @@ export function MoodCheckInView({ onBack }: MoodCheckInViewProps) {
             </div>
           ) : (
             /* Chat Messages */
-            <div className="flex flex-col gap-4 py-4 max-w-[800px] mx-auto w-full">
+            <div className="flex flex-col gap-4 py-4 max-w-[800px] mx-auto w-full bg-white dark:bg-slate-950">
               {/* Time divider */}
               <div className="flex justify-center mb-2">
-                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-[#edf0f4] shadow-sm">
+                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm">
                   <Heart className="w-3 h-3 text-[#b91d73]" />
-                  <span className="text-[11px] font-medium text-[#94a3b8]">Mood Check-In</span>
+                  <span className="text-[11px] font-medium text-slate-600 dark:text-slate-400">Mood Check-In</span>
                 </div>
               </div>
 
@@ -295,15 +295,15 @@ export function MoodCheckInView({ onBack }: MoodCheckInViewProps) {
                     </div>
                   )}
                   <div className="max-w-[72%]">
-                    <div className={`px-5 py-3.5 text-[14px] leading-[1.7] ${
+                  <div className={`px-5 py-3.5 text-[14px] leading-[1.7] ${
                       msg.sender === "user"
                         ? "rounded-[18px] rounded-br-[6px] text-white"
-                        : "rounded-[18px] rounded-bl-[6px] bg-white text-[#2d3748] shadow-[0_1px_3px_rgba(0,0,0,0.04)] border border-[#edf0f4]"
+                        : "rounded-[18px] rounded-bl-[6px] bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 shadow-[0_1px_3px_rgba(0,0,0,0.04)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.2)] border border-slate-200 dark:border-slate-700"
                     }`}
                     style={msg.sender === "user" ? { background: 'linear-gradient(135deg, #003566, #0967bd)' } : undefined}>
                       {msg.text}
                     </div>
-                    <p className={`text-[10px] text-[#c1c7ce] mt-1.5 ${msg.sender === "user" ? "text-right" : ""}`}>
+                    <p className={`text-[10px] mt-1.5 ${msg.sender === "user" ? "text-right text-slate-200" : "text-slate-500 dark:text-slate-400"}`}>
                       {msg.timestamp.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })}
                     </p>
                   </div>
@@ -321,7 +321,7 @@ export function MoodCheckInView({ onBack }: MoodCheckInViewProps) {
                     style={{ background: 'linear-gradient(135deg, #b91d73, #f953c6)' }}>
                     <Bot className="w-3.5 h-3.5 text-white" />
                   </div>
-                  <div className="bg-white rounded-[18px] rounded-bl-[6px] px-5 py-4 shadow-sm border border-[#edf0f4]">
+                  <div className="bg-white dark:bg-slate-800 rounded-[18px] rounded-bl-[6px] px-5 py-4 shadow-sm dark:shadow-[0_1px_3px_rgba(0,0,0,0.2)] border border-slate-200 dark:border-slate-700">
                     <div className="flex items-center gap-1.5">
                       <div className="w-2 h-2 rounded-full bg-[#b91d73]/40 animate-bounce" style={{ animationDelay: '0ms' }} />
                       <div className="w-2 h-2 rounded-full bg-[#b91d73]/40 animate-bounce" style={{ animationDelay: '150ms' }} />
