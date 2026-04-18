@@ -106,6 +106,24 @@ function WaveformBars({ active }: { active: boolean }) {
 /* ── Main Component ── */
 interface MoodCheckInViewProps { onBack: () => void; }
 
+/* ── Utility Functions ── */
+function formatDate(timestamp: string | Date | undefined): string {
+  if (!timestamp) return "No date";
+  try {
+    const date = typeof timestamp === 'string' ? new Date(timestamp) : timestamp;
+    if (isNaN(date.getTime())) return "No date";
+    const now = new Date();
+    const diffTime = Math.abs(now.getTime() - date.getTime());
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    if (diffDays === 0) return "Today";
+    if (diffDays === 1) return "Yesterday";
+    if (diffDays <= 7) return `${diffDays} days ago`;
+    return date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: date.getFullYear() !== now.getFullYear() ? "numeric" : undefined });
+  } catch {
+    return "No date";
+  }
+}
+
 export function MoodCheckInView({ onBack }: MoodCheckInViewProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputValue, setInputValue] = useState("");
@@ -114,6 +132,7 @@ export function MoodCheckInView({ onBack }: MoodCheckInViewProps) {
   const [listeningSeconds, setListeningSeconds] = useState(0);
   const [savedCheckins, setSavedCheckins] = useState<SavedMoodCheckin[]>([]);
   const [apiError, setApiError] = useState<string | null>(null);
+  const [selectedCheckin, setSelectedCheckin] = useState<SavedMoodCheckin | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const listeningTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -232,8 +251,49 @@ export function MoodCheckInView({ onBack }: MoodCheckInViewProps) {
 
       {/* Chat Area */}
       <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
+        {selectedCheckin && (
+          <div className="border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 px-4 py-3 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <button onClick={() => setSelectedCheckin(null)} className="flex items-center gap-2 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 transition-colors">
+                <ArrowLeft className="w-4 h-4" />
+                <span className="text-[13px] font-medium">Back to Check-In</span>
+              </button>
+              <span className="text-[13px] text-slate-500 dark:text-slate-400">•</span>
+              <p className="text-[13px] font-medium text-slate-700 dark:text-slate-300">Reflecting on: <span className="capitalize text-[#b91d73]">{selectedCheckin.mood.replace(/_/g, " ")}</span></p>
+            </div>
+          </div>
+        )}
         <div className="flex-1 overflow-y-auto px-1 bg-white dark:bg-slate-950">
-          {!hasMessages ? (
+          {selectedCheckin ? (
+            /* Reflection View */
+            <div className="flex flex-col items-center justify-center h-full px-4 py-8 bg-white dark:bg-slate-950">
+              <div className="w-full max-w-[600px] space-y-4">
+                <div className="bg-white dark:bg-slate-800 rounded-[20px] border border-slate-200 dark:border-slate-700 p-6 shadow-sm">
+                  <div className="flex items-center gap-4 mb-4">
+                    <div className="w-16 h-16 rounded-[16px] bg-[#fdf2f8] dark:bg-slate-700 flex items-center justify-center text-[40px]">
+                      {selectedCheckin.emoji || "🙂"}
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-[14px] text-slate-600 dark:text-slate-400">Mood Check-In</p>
+                      <h2 className="text-[24px] font-bold text-slate-900 dark:text-white capitalize">{selectedCheckin.mood.replace(/_/g, " ")}</h2>
+                      <p className="text-[12px] text-slate-500 dark:text-slate-400 mt-1">{formatDate(selectedCheckin.timestamp)}</p>
+                    </div>
+                  </div>
+                  {selectedCheckin.note && (
+                    <div className="mt-4 p-4 bg-slate-50 dark:bg-slate-900 rounded-[12px] border border-slate-200 dark:border-slate-700">
+                      <p className="text-[12px] text-slate-600 dark:text-slate-400 uppercase tracking-wide font-semibold mb-2">Your Note</p>
+                      <p className="text-[14px] text-slate-900 dark:text-slate-100 leading-relaxed">{selectedCheckin.note}</p>
+                    </div>
+                  )}
+                </div>
+                <div className="bg-gradient-to-br from-[#b91d73]/5 to-[#f953c6]/5 dark:from-[#b91d73]/10 dark:to-[#f953c6]/10 rounded-[16px] border border-[#b91d73]/20 dark:border-[#b91d73]/30 p-5">
+                  <p className="text-[13px] text-slate-700 dark:text-slate-300 leading-relaxed">
+                    💭 <span className="font-semibold">Reflection Tip:</span> Take a moment to think about what contributed to this mood. Understanding the patterns can help you recognize what brings you joy, peace, or challenges.
+                  </p>
+                </div>
+              </div>
+            </div>
+          ) : !hasMessages ? (
             /* Welcome State */
             <div className="flex flex-col items-center justify-center h-full px-4 -mt-8 bg-white dark:bg-slate-950">
               <div className="relative mb-5">
@@ -293,18 +353,25 @@ export function MoodCheckInView({ onBack }: MoodCheckInViewProps) {
                     </div>
                     <div className="flex flex-col gap-2.5">
                       {savedCheckins.slice(0, 5).map((entry) => (
-                        <div key={entry.id} className="flex items-center gap-3 px-4 py-3 rounded-[14px] bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700">
+                        <button
+                          key={entry.id}
+                          onClick={() => setSelectedCheckin(entry)}
+                          className="flex items-center gap-3 px-4 py-3 rounded-[14px] bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 hover:border-[#b91d73] dark:hover:border-[#f953c6] hover:bg-white dark:hover:bg-slate-800/50 transition-all cursor-pointer group"
+                        >
                           <div className="w-10 h-10 rounded-[12px] bg-[#fdf2f8] dark:bg-slate-800 flex items-center justify-center text-[20px]">
                             {entry.emoji || "🙂"}
                           </div>
-                          <div className="flex-1 min-w-0">
+                          <div className="flex-1 min-w-0 text-left">
                             <p className="text-[13px] font-semibold text-slate-900 dark:text-white capitalize">{entry.mood.replace(/_/g, " ")}</p>
-                            {entry.note && <p className="text-[12px] text-slate-600 dark:text-slate-400 truncate">{entry.note}</p>}
+                            {entry.note && <p className="text-[12px] text-slate-600 dark:text-slate-400 truncate group-hover:text-slate-700 dark:group-hover:text-slate-300 transition-colors">{entry.note}</p>}
                           </div>
-                          <p className="text-[11px] text-slate-600 dark:text-slate-400 shrink-0">
-                            {new Date(entry.timestamp).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
-                          </p>
-                        </div>
+                          <div className="flex flex-col items-end gap-1 shrink-0">
+                            <p className="text-[11px] text-slate-600 dark:text-slate-400 group-hover:text-[#b91d73] transition-colors">
+                              {formatDate(entry.timestamp)}
+                            </p>
+                            <p className="text-[10px] text-slate-400 dark:text-slate-500 opacity-0 group-hover:opacity-100 transition-opacity">Click to reflect</p>
+                          </div>
+                        </button>
                       ))}
                     </div>
                   </div>
