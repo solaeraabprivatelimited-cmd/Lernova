@@ -2667,6 +2667,293 @@ export const mentorSessionRooms = {
   },
 };
 
+// ─── MENTORS ────────────────────────────────────────────────────────────────────
+
+export const mentors = {
+  /** Browse available mentors with optional filters */
+  browse: async (params?: {
+    subject?: string;
+    minRating?: number;
+    maxRate?: number;
+    skip?: number;
+    limit?: number;
+  }) => {
+    const queryParams = new URLSearchParams();
+    if (params?.subject) queryParams.append('subject', params.subject);
+    if (params?.minRating !== undefined) queryParams.append('min_rating', params.minRating.toString());
+    if (params?.maxRate !== undefined) queryParams.append('max_rate', params.maxRate.toString());
+    if (params?.skip !== undefined) queryParams.append('skip', params.skip.toString());
+    if (params?.limit !== undefined) queryParams.append('limit', params.limit.toString());
+
+    const url = `/mentors/browse${queryParams.toString() ? '?' + queryParams.toString() : ''}`;
+    return apiFetch(url, { method: 'GET' });
+  },
+
+  /** Get detailed profile of a specific mentor */
+  getProfile: async (mentorId: string) => {
+    return apiFetch(`/mentors/${mentorId}`, { method: 'GET' });
+  },
+
+  /** Get mentor's availability within a date range */
+  getAvailability: async (mentorId: string, dateFrom: string, dateTo: string) => {
+    const queryParams = new URLSearchParams({
+      date_from: dateFrom,
+      date_to: dateTo,
+    });
+    return apiFetch(`/mentors/${mentorId}/availability?${queryParams.toString()}`, { method: 'GET' });
+  },
+
+  /** Book a session with a mentor */
+  bookSession: async (booking: {
+    mentorId: string;
+    availabilityId: string;
+    sessionDate: string;
+    sessionTime: string;
+    durationMins: number;
+    subject: string;
+    notes?: string;
+  }) => {
+    return apiFetch('/mentors/sessions/book', {
+      method: 'POST',
+      body: JSON.stringify({
+        mentor_id: booking.mentorId,
+        availability_id: booking.availabilityId,
+        session_date: booking.sessionDate,
+        session_time: booking.sessionTime,
+        duration_mins: booking.durationMins,
+        subject: booking.subject,
+        notes: booking.notes,
+      }),
+    });
+  },
+
+  /** Get current user's mentor sessions */
+  getMySessions: async () => {
+    return apiFetch('/mentors/sessions/my-sessions', { method: 'GET' });
+  },
+
+  /** Update a mentor session */
+  updateSession: async (sessionId: string, update: {
+    status?: string;
+    review?: string;
+    rating?: number;
+    notes?: string;
+  }) => {
+    return apiFetch(`/mentors/sessions/${sessionId}`, {
+      method: 'PUT',
+      body: JSON.stringify({
+        status: update.status,
+        review: update.review,
+        rating: update.rating,
+        notes: update.notes,
+      }),
+    });
+  },
+};
+
+// ─── COMMUNITY EVENTS ────────────────────────────────────────────────────────────
+
+export const communityEvents = {
+  /** Get list of community events with pagination */
+  list: async (params?: {
+    upcoming?: boolean;
+    skip?: number;
+    limit?: number;
+    eventType?: string;
+  }) => {
+    const queryParams = new URLSearchParams();
+    if (params?.upcoming !== undefined) queryParams.append('upcoming', params.upcoming.toString());
+    if (params?.skip !== undefined) queryParams.append('skip', params.skip.toString());
+    if (params?.limit !== undefined) queryParams.append('limit', params.limit.toString());
+    if (params?.eventType) queryParams.append('event_type', params.eventType);
+
+    const url = `/community/events${queryParams.toString() ? '?' + queryParams.toString() : ''}`;
+    return apiFetch(url, { method: 'GET' });
+  },
+
+  /** Get detailed information about a specific event */
+  getDetail: async (eventId: string) => {
+    return apiFetch(`/community/events/${eventId}`, { method: 'GET' });
+  },
+
+  /** Create a new community event */
+  create: async (event: {
+    title: string;
+    description: string;
+    details?: string[];
+    eventDate: string;
+    location?: string;
+    eventType?: string;
+    maxAttendees?: number;
+  }) => {
+    return apiFetch('/community/events', {
+      method: 'POST',
+      body: JSON.stringify({
+        title: event.title,
+        description: event.description,
+        details: event.details || [],
+        event_date: event.eventDate,
+        location: event.location,
+        event_type: event.eventType || 'general',
+        max_attendees: event.maxAttendees,
+      }),
+    });
+  },
+
+  /** Join a community event */
+  join: async (eventId: string) => {
+    return apiFetch(`/community/events/${eventId}/join`, { method: 'POST' });
+  },
+
+  /** Leave a community event */
+  leave: async (eventId: string) => {
+    return apiFetch(`/community/events/${eventId}/leave`, { method: 'DELETE' });
+  },
+
+  /** Delete a community event (owner only) */
+  delete: async (eventId: string) => {
+    return apiFetch(`/community/events/${eventId}`, { method: 'DELETE' });
+  },
+};
+
+// ─── ROOM CONFIGURATION ────────────────────────────────────────────────────────
+
+export const roomConfig = {
+  /** Get current room configuration */
+  getConfig: async (roomId: string) => {
+    return apiFetch(`/rooms/${roomId}/config`, { method: 'GET' });
+  },
+
+  /** Update room configuration */
+  updateConfig: async (roomId: string, config: {
+    ambientSound?: string;
+    notificationLevel?: 'silent' | 'normal' | 'active';
+    timerDurationMins?: number;
+    breakDurationMins?: number;
+    autoStartBreak?: boolean;
+    showTimer?: boolean;
+    showParticipantList?: boolean;
+    enableReactions?: boolean;
+    enableWhiteboard?: boolean;
+  }) => {
+    return apiFetch(`/rooms/${roomId}/config`, {
+      method: 'PUT',
+      body: JSON.stringify({
+        ambient_sound: config.ambientSound,
+        notification_level: config.notificationLevel,
+        timer_duration_mins: config.timerDurationMins,
+        break_duration_mins: config.breakDurationMins,
+        auto_start_break: config.autoStartBreak,
+        show_timer: config.showTimer,
+        show_participant_list: config.showParticipantList,
+        enable_reactions: config.enableReactions,
+        enable_whiteboard: config.enableWhiteboard,
+      }),
+    });
+  },
+
+  /** Get available productivity tools */
+  getAvailableTools: async () => {
+    return apiFetch('/rooms/tools/available', { method: 'GET' });
+  },
+
+  /** Get details for a specific tool */
+  getToolDetails: async (toolId: string) => {
+    return apiFetch(`/rooms/tools/${toolId}`, { method: 'GET' });
+  },
+
+  /** Track tool usage */
+  trackToolUsage: async (toolId: string, usageDurationSeconds: number, sessionDate: string) => {
+    return apiFetch(`/rooms/tools/${toolId}/use`, {
+      method: 'POST',
+      body: JSON.stringify({
+        tool_id: toolId,
+        usage_duration_seconds: usageDurationSeconds,
+        session_date: sessionDate,
+      }),
+    });
+  },
+
+  /** Get user's tool usage statistics */
+  getToolStats: async () => {
+    return apiFetch('/rooms/tools/stats/my-stats', { method: 'GET' });
+  },
+};
+
+// ─── PARTICIPANT MANAGEMENT ────────────────────────────────────────────────────
+
+export const participants = {
+  /** Get all participants' states in a room */
+  getAllStates: async (roomId: string) => {
+    return apiFetch(`/rooms/${roomId}/participants/state`, { method: 'GET' });
+  },
+
+  /** Get a specific participant's state */
+  getState: async (roomId: string, userId: string) => {
+    return apiFetch(`/rooms/${roomId}/participants/${userId}/state`, { method: 'GET' });
+  },
+
+  /** Update current user's participant state */
+  updateState: async (roomId: string, state: {
+    isAudioEnabled?: boolean;
+    isVideoEnabled?: boolean;
+    isScreenSharing?: boolean;
+    isMuted?: boolean;
+    handRaised?: boolean;
+  }) => {
+    return apiFetch(`/rooms/${roomId}/participants/state/update`, {
+      method: 'POST',
+      body: JSON.stringify({
+        is_audio_enabled: state.isAudioEnabled,
+        is_video_enabled: state.isVideoEnabled,
+        is_screen_sharing: state.isScreenSharing,
+        is_muted: state.isMuted,
+        hand_raised: state.handRaised,
+      }),
+    });
+  },
+
+  /** Update a specific participant's state (admin only) */
+  updateParticipantState: async (roomId: string, userId: string, state: {
+    isAudioEnabled?: boolean;
+    isVideoEnabled?: boolean;
+    isScreenSharing?: boolean;
+    isMuted?: boolean;
+    handRaised?: boolean;
+  }) => {
+    return apiFetch(`/rooms/${roomId}/participants/${userId}/state`, {
+      method: 'POST',
+      body: JSON.stringify({
+        is_audio_enabled: state.isAudioEnabled,
+        is_video_enabled: state.isVideoEnabled,
+        is_screen_sharing: state.isScreenSharing,
+        is_muted: state.isMuted,
+        hand_raised: state.handRaised,
+      }),
+    });
+  },
+
+  /** Broadcast a reaction emoji */
+  sendReaction: async (roomId: string, reactionType: string) => {
+    return apiFetch(`/rooms/${roomId}/reactions`, {
+      method: 'POST',
+      body: JSON.stringify({
+        room_id: roomId,
+        user_id: (await getCurrentSessionUser())?.id,
+        reaction_type: reactionType,
+      }),
+    });
+  },
+
+  /** Get recent reactions in a room */
+  getRecentReactions: async (roomId: string, seconds?: number) => {
+    const queryParams = new URLSearchParams();
+    if (seconds !== undefined) queryParams.append('seconds', seconds.toString());
+    const url = `/rooms/${roomId}/reactions/recent${queryParams.toString() ? '?' + queryParams.toString() : ''}`;
+    return apiFetch(url, { method: 'GET' });
+  },
+};
+
 // ─── STUDY SESSIONS (focus timer) ───────────────────────────────────────────────
 
 export const studySessions = {

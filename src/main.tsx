@@ -5,6 +5,9 @@ import { BrowserRouter } from "react-router-dom";
 import App from "./app/App.tsx";
 import { ThemeProvider } from "./app/providers/ThemeProvider";
 import "./styles/index.css";
+import "./styles/responsive-dark-mode.css";
+import "./styles/auth-shell.css";
+import "./styles/dashboard.css";
 
 createRoot(document.getElementById("root")!).render(
   <ThemeProvider>

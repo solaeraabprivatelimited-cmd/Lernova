@@ -1,0 +1,402 @@
+/* ── STUDY ROOM DASHBOARD STYLES ── */
+
+/* Text sizes */
+.srd-text-11px {
+    font-size: 11px;
+}
+
+.srd-text-12px {
+    font-size: 12px;
+}
+
+.srd-text-13px {
+    font-size: 13px;
+}
+
+.srd-text-14px {
+    font-size: 14px;
+}
+
+.srd-text-20px {
+    font-size: 20px;
+}
+
+.srd-text-24px {
+    font-size: 24px;
+}
+
+.srd-text-28px {
+    font-size: 28px;
+}
+
+.srd-text-36px {
+    font-size: 36px;
+}
+
+.srd-text-40px {
+    font-size: 40px;
+}
+
+.srd-text-48px {
+    font-size: 48px;
+}
+
+.srd-text-56px {
+    font-size: 56px;
+}
+
+.srd-text-72px {
+    font-size: 72px;
+}
+
+/* Opacity utilities */
+.srd-opacity-3 {
+    opacity: 0.03;
+}
+
+.srd-opacity-4 {
+    opacity: 0.04;
+}
+
+.srd-opacity-6 {
+    opacity: 0.06;
+}
+
+.srd-opacity-7 {
+    opacity: 0.07;
+}
+
+/* Text opacity (using rgba) */
+.srd-text-white-70 {
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.srd-text-white-80 {
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.srd-text-white-25 {
+    color: rgba(255, 255, 255, 0.25);
+}
+
+/* Width/Height utilities */
+.srd-w-9 {
+    width: 36px;
+}
+
+.srd-h-9 {
+    height: 36px;
+}
+
+.srd-w-11 {
+    width: 44px;
+}
+
+.srd-h-11 {
+    height: 44px;
+}
+
+.srd-w-12 {
+    width: 48px;
+}
+
+.srd-h-12 {
+    height: 48px;
+}
+
+/* Sized avatars/icons */
+.srd-avatar-11x11 {
+    width: 44px;
+    height: 44px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.srd-avatar-9x9 {
+    width: 36px;
+    height: 36px;
+    border-radius: 11px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.srd-avatar-12x12 {
+    width: 48px;
+    height: 48px;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Padding utilities */
+.srd-px-2-5 {
+    padding-left: 10px;
+    padding-right: 10px;
+}
+
+.srd-px-3-5 {
+    padding-left: 14px;
+    padding-right: 14px;
+}
+
+.srd-px-6 {
+    padding-left: 24px;
+    padding-right: 24px;
+}
+
+.srd-py-1 {
+    padding-top: 4px;
+    padding-bottom: 4px;
+}
+
+.srd-py-1-5 {
+    padding-top: 6px;
+    padding-bottom: 6px;
+}
+
+.srd-py-2 {
+    padding-top: 8px;
+    padding-bottom: 8px;
+}
+
+.srd-py-3 {
+    padding-top: 12px;
+    padding-bottom: 12px;
+}
+
+/* Margin utilities */
+.srd-mb-1 {
+    margin-bottom: 4px;
+}
+
+.srd-mb-3 {
+    margin-bottom: 12px;
+}
+
+.srd-mb-4 {
+    margin-bottom: 16px;
+}
+
+.srd-mb-8 {
+    margin-bottom: 32px;
+}
+
+.srd--mb-3 {
+    margin-bottom: -12px;
+}
+
+.srd--mb-10 {
+    margin-bottom: -40px;
+}
+
+/* Sized decorative circles */
+.srd-circle-200 {
+    width: 200px;
+    height: 200px;
+    border-radius: 50%;
+}
+
+.srd-circle-300 {
+    width: 300px;
+    height: 300px;
+    border-radius: 50%;
+}
+
+/* Positioned decorative elements */
+.srd-deco-top-right {
+    position: absolute;
+    top: -80px;
+    right: -80px;
+}
+
+.srd-deco-bottom-left {
+    position: absolute;
+    bottom: -40px;
+    left: -40px;
+}
+
+.srd-deco-right-full {
+    position: absolute;
+    right: 0;
+    top: 0;
+    width: 200px;
+    height: 100%;
+}
+
+/* Rounded corners */
+.srd-rounded-11 {
+    border-radius: 11px;
+}
+
+.srd-rounded-12 {
+    border-radius: 12px;
+}
+
+.srd-rounded-14 {
+    border-radius: 14px;
+}
+
+.srd-rounded-16 {
+    border-radius: 16px;
+}
+
+.srd-rounded-20 {
+    border-radius: 20px;
+}
+
+.srd-rounded-24 {
+    border-radius: 24px;
+}
+
+/* Responsive sizes */
+@media (min-width: 768px) {
+    .srd-md\:text-24px {
+        font-size: 24px;
+    }
+
+    .srd-md\:text-28px {
+        font-size: 28px;
+    }
+
+    .srd-md\:text-36px {
+        font-size: 36px;
+    }
+
+    .srd-md\:text-48px {
+        font-size: 48px;
+    }
+
+    .srd-md\:text-72px {
+        font-size: 72px;
+    }
+
+    .srd-md\:mb-10 {
+        margin-bottom: 40px;
+    }
+}
+
+@media (min-width: 1024px) {
+    .srd-lg\:text-40px {
+        font-size: 40px;
+    }
+}
+
+/* Line height utilities */
+.srd-leading-tight {
+    line-height: 1.25;
+}
+
+.srd-leading-snug {
+    line-height: 1.375;
+}
+
+.srd-leading-relaxed {
+    line-height: 1.625;
+}
+
+/* Letter spacing */
+.srd-tracking-wider-2 {
+    letter-spacing: 0.15em;
+}
+
+/* Min height */
+.srd-min-h-240 {
+    min-height: 240px;
+}
+
+.srd-min-h-280 {
+    min-height: 280px;
+}
+
+/* Max width */
+.srd-max-w-90 {
+    max-width: 90%;
+}
+
+/* Font family utilities */
+.font-jakarta {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+}
+
+.font-serif-display {
+    font-family: 'DM Serif Display', serif;
+}
+
+/* Additional text color utilities */
+.srd-text-white-7 {
+    color: rgba(255, 255, 255, 0.07);
+}
+
+.srd-text-white-6 {
+    color: rgba(255, 255, 255, 0.06);
+}
+
+.srd-text-white-10 {
+    color: rgba(255, 255, 255, 0.1);
+}
+
+/* Additional width/height utilities */
+.srd-w-200 {
+    width: 200px;
+}
+
+.srd-h-200 {
+    height: 200px;
+}
+
+.srd-w-300 {
+    width: 300px;
+}
+
+.srd-h-300 {
+    height: 300px;
+}
+
+/* Max height */
+.srd-max-h-270 {
+    max-height: 270px;
+}
+
+/* Color utilities for animations */
+.srd-color-muted {
+    color: var(--muted-foreground);
+}
+
+/* Animation duration */
+.srd-duration-2s {
+    animation-duration: 2s;
+}
+
+/* Line height additional values */
+.srd-leading-1-1 {
+    line-height: 1.1;
+}
+
+/* Scrollbar utilities */
+.time-scroll-list {
+    scrollbar-width: thin;
+    scrollbar-color: rgb(37, 99, 235) rgba(0, 0, 0, 0.2);
+}
+
+.time-scroll-list::-webkit-scrollbar {
+    width: 6px;
+}
+
+.time-scroll-list::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 3px;
+}
+
+.time-scroll-list::-webkit-scrollbar-thumb {
+    background: rgb(37, 99, 235);
+    border-radius: 3px;
+}
+
+/* Animation duration utilities */
+.animate-duration-2s {
+    animation-duration: 2s;
+}

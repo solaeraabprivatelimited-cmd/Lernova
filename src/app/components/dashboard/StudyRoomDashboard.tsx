@@ -276,11 +276,11 @@ const SidebarItem = ({
       <div className={`transition-transform duration-200 ${active ? '' : 'group-hover:scale-110'}`}>
         {icon}
       </div>
-      <span className={`text-[14px] font-medium transition-colors duration-200 ${
+      <span className={`srd-text-14px font-medium transition-colors duration-200 ${
         isDark
           ? (active ? 'text-white font-semibold' : 'text-white/50 group-hover:text-white/70')
           : (active ? 'text-[#003566]' : 'text-black/60')
-      }`} style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+      }`}>
         {label}
       </span>
     </div>
@@ -352,30 +352,30 @@ const StudyModeCard = ({
         {/* Bottom content */}
         <div>
           {number && (
-            <span className="text-[48px] font-bold leading-none text-white/10 block mb-1"
+            <span className="text-4xl2 font-bold leading-none text-white/10 block mb-1"
               style={{ fontFamily: "'DM Serif Display', serif" }}>
               {number}
             </span>
           )}
           <div className="flex items-center gap-3 mb-2">
             {iconSvg && (
-              <div className="w-10 h-10 rounded-[12px] flex items-center justify-center shrink-0"
+              <div className="w-10 h-10 rounded-12 flex items-center justify-center shrink-0"
                 style={{ background: accentColor || 'rgba(255,255,255,0.15)' }}>
                 {iconSvg}
               </div>
             )}
-            <h3 className="font-semibold text-[20px] text-white leading-tight"
+            <h3 className="font-semibold text-xl2 text-white leading-tight"
               style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
               {title}
             </h3>
           </div>
-          <p className="text-[13px] text-white/70 leading-relaxed max-w-[90%]"
+          <p className="text-sm2 text-white/70 leading-relaxed max-w-90"
             style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
             {description}
           </p>
           {/* Enter button */}
           <div className="mt-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-            <span className="inline-flex items-center gap-2 px-5 py-2 rounded-full text-[13px] font-bold transition-all"
+            <span className="inline-flex items-center gap-2 px-5 py-2 rounded-full text-sm2 font-bold transition-all"
               style={{ background: accentColor || '#0967bd', color: 'white' }}>
               Enter Room
               <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -977,7 +977,7 @@ export function StudyRoomDashboard({ onLogout }: { onLogout?: () => void }) {
         }}
       >
         {/* Subtle pattern overlay */}
-        <div className="absolute inset-0 opacity-[0.03] pointer-events-none"
+        <div className="absolute inset-0 opacity-3 pointer-events-none"
           style={{ backgroundImage: 'radial-gradient(circle at 25% 25%, white 1px, transparent 1px)', backgroundSize: '24px 24px' }} />
 
         <div className="relative flex flex-col h-full p-7">
@@ -989,7 +989,7 @@ export function StudyRoomDashboard({ onLogout }: { onLogout?: () => void }) {
 
           {/* Menu Label */}
           <div className="mb-4 pl-4">
-            <p className="text-[11px] font-semibold text-white/25 uppercase tracking-[0.15em]"
+            <p className="text-xs font-semibold text-white/25 uppercase tracking-wider2"
               style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
               Main Menu
             </p>
@@ -1042,7 +1042,7 @@ export function StudyRoomDashboard({ onLogout }: { onLogout?: () => void }) {
                 <ImageWithFallback src={displayAvatar} alt={displayName} className="size-full object-cover" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-[13px] font-semibold text-white/80 truncate" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>{displayName}</p>
+                <p className="text-sm2 font-semibold text-white/80 truncate font-jakarta">{displayName}</p>
                 <p className="text-[11px] text-white/30">{displayRole}</p>
               </div>
             </div>
@@ -1066,7 +1066,7 @@ export function StudyRoomDashboard({ onLogout }: { onLogout?: () => void }) {
         
 
         {/* Dashboard Content Area */}
-        <div className="flex-1 overflow-y-auto" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+        <div className="flex-1 overflow-y-auto font-jakarta">
           {/* ── Integrated Top Bar ── */}
           <div className="sticky top-0 z-10 border-b border-border/70 dark:border-white/10 bg-white dark:bg-[#0d1117] px-6 py-4 backdrop-blur-xl md:px-10 lg:px-12">
             <div className="flex items-center justify-between max-w-[1200px] mx-auto">
@@ -1186,12 +1186,12 @@ export function StudyRoomDashboard({ onLogout }: { onLogout?: () => void }) {
             {activeSection === "Study Rooms" && (
               <>
                 {/* ── Welcome Hero Banner ── */}
-                <div className="relative rounded-[24px] overflow-hidden mb-8 md:mb-10"
+                <div className="relative rounded-24 overflow-hidden mb-8 md:mb-10"
                   style={{ background: 'linear-gradient(135deg, #001d3d 0%, #003566 50%, #0967bd 100%)' }}>
                   {/* Decorative circles */}
-                  <div className="absolute -top-20 -right-20 w-[300px] h-[300px] rounded-full opacity-[0.06]"
+                  <div className="absolute -top-20 -right-20 w-300px h-300px rounded-full opacity-6"
                     style={{ background: 'radial-gradient(circle, white, transparent 70%)' }} />
-                  <div className="absolute -bottom-10 -left-10 w-[200px] h-[200px] rounded-full opacity-[0.04]"
+                  <div className="absolute -bottom-10 -left-10 w-200px h-200px rounded-full opacity-4"
                     style={{ background: 'radial-gradient(circle, white, transparent 70%)' }} />
 
                   <div className="relative px-6 md:px-10 py-8 md:py-10 flex flex-col gap-6">
@@ -1202,7 +1202,7 @@ export function StudyRoomDashboard({ onLogout }: { onLogout?: () => void }) {
                         <span className="w-[6px] h-[6px] rounded-full bg-[#22c55e] animate-pulse" />
                         <span className="text-[12px] font-semibold text-[#f77f00]">230 learners studying now</span>
                       </div>
-                      <h1 className="text-[28px] md:text-[36px] lg:text-[40px] text-white mb-3 leading-[1.1]"
+                      <h1 className="text-xl4 md:text-2xl2 lg:text-3xl2 text-white mb-3 leading-1.1"
                         style={{ fontFamily: "'DM Serif Display', serif" }}>
                         Your Study<br className="hidden md:block" /> Command Center
                       </h1>
@@ -1221,7 +1221,7 @@ export function StudyRoomDashboard({ onLogout }: { onLogout?: () => void }) {
                         <div key={stat.label}
                           className="flex flex-col items-center px-3 md:px-5 py-3 md:py-4 rounded-[14px] md:rounded-[18px]"
                           style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.08)', backdropFilter: 'blur(10px)' }}>
-                          <span className="text-[20px] md:text-[24px] font-bold text-white leading-none mb-1"
+                          <span className="text-xl2 md:text-xl3 font-bold text-white leading-none mb-1"
                             style={{ fontFamily: "'DM Serif Display', serif" }}>
                             {stat.value}
                           </span>
@@ -1253,15 +1253,15 @@ export function StudyRoomDashboard({ onLogout }: { onLogout?: () => void }) {
                   <div className="absolute inset-0" style={{ background: modes[0].gradient }} />
 
                   {/* Content */}
-                  <div className="relative z-10 h-full flex flex-col justify-between p-7 md:p-9" style={{ minHeight: 280 }}>
+                  <div className="relative z-10 h-full flex flex-col justify-between p-7 md:p-9 srd-min-h-280">
                     {/* Top row */}
                     <div className="flex items-start justify-between">
                       <div className="flex items-center gap-2.5">
-                        <span className="px-3.5 py-1.5 rounded-full text-[11px] font-bold uppercase tracking-wider"
+                        <span className="srd-px-3-5 srd-py-1-5 rounded-full srd-text-11px font-bold uppercase srd-tracking-wider-2"
                           style={{ background: 'rgba(247,127,0,0.2)', color: '#f77f00', border: '1px solid rgba(247,127,0,0.25)', backdropFilter: 'blur(8px)' }}>
                           ★ Most Popular
                         </span>
-                        <span className="px-3 py-1.5 rounded-full text-[11px] font-semibold text-white/70"
+                        <span className="px-3.5 py-1.5 rounded-full text-xs font-semibold text-white/70"
                           style={{ background: 'rgba(255,255,255,0.1)', backdropFilter: 'blur(8px)' }}>
                           Featured
                         </span>
@@ -1276,14 +1276,14 @@ export function StudyRoomDashboard({ onLogout }: { onLogout?: () => void }) {
                     {/* Bottom content */}
                     <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
                       <div className="flex-1">
-                        <span className="text-[56px] md:text-[72px] font-bold leading-none text-white/[0.06] block -mb-3"
+                        <span className="srd-text-56px srd-md\:text-72px font-bold leading-none srd-text-white-opacity-6 block srd--mb-3"
                           style={{ fontFamily: "'DM Serif Display', serif" }}>01</span>
                         <div className="flex items-center gap-3.5 mb-2.5">
-                          <div className="w-11 h-11 rounded-[14px] flex items-center justify-center"
+                          <div className="srd-w-11 srd-h-11 srd-rounded-14 flex items-center justify-center"
                             style={{ background: modes[0].accentColor }}>
                             {modes[0].iconSvg}
                           </div>
-                          <h3 className="font-bold text-[24px] md:text-[28px] text-white leading-tight"
+                          <h3 className="font-bold srd-text-24px srd-md\:text-28px text-white srd-leading-tight"
                             style={{ fontFamily: "'DM Serif Display', serif" }}>
                             {modes[0].title}
                           </h3>
@@ -1293,7 +1293,7 @@ export function StudyRoomDashboard({ onLogout }: { onLogout?: () => void }) {
                         </p>
                       </div>
                       <div className="opacity-0 group-hover:opacity-100 transition-all duration-300 group-hover:translate-x-0 translate-x-2">
-                        <span className="inline-flex items-center gap-2.5 px-6 py-3 rounded-full text-[14px] font-bold shadow-xl transition-transform"
+                        <span className="inline-flex items-center gap-2.5 srd-px-6 srd-py-3 rounded-full srd-text-14px font-bold shadow-xl transition-transform"
                           style={{ background: modes[0].accentColor, color: 'white', boxShadow: `0 8px 30px ${modes[0].accentColor}60` }}>
                           Enter Room
                           <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -1319,10 +1319,10 @@ export function StudyRoomDashboard({ onLogout }: { onLogout?: () => void }) {
                       </div>
                       <div className="absolute inset-0" style={{ background: mode.gradient }} />
 
-                      <div className="relative z-10 h-full flex flex-col justify-between p-5" style={{ minHeight: 240 }}>
+                      <div className="relative z-10 h-full flex flex-col justify-between p-5 srd-min-h-240">
                         {/* Top */}
                         <div className="flex items-start justify-between">
-                          <span className="text-[40px] font-bold leading-none text-white/[0.07]"
+                          <span className="text-3xl2 font-bold leading-none text-white/7"
                             style={{ fontFamily: "'DM Serif Display', serif" }}>
                             {mode.number}
                           </span>
@@ -1336,7 +1336,7 @@ export function StudyRoomDashboard({ onLogout }: { onLogout?: () => void }) {
                         {/* Bottom */}
                         <div>
                           <div className="flex items-center gap-2.5 mb-2">
-                            <div className="w-9 h-9 rounded-[11px] flex items-center justify-center"
+                            <div className="w-9 h-9 rounded-11 flex items-center justify-center"
                               style={{ background: mode.accentColor }}>
                               {mode.iconSvg}
                             </div>
@@ -1348,7 +1348,7 @@ export function StudyRoomDashboard({ onLogout }: { onLogout?: () => void }) {
                             {mode.description}
                           </p>
                           <div className="opacity-0 group-hover:opacity-100 transition-all duration-300">
-                            <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-[12px] font-bold"
+                            <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs2 font-bold"
                               style={{ background: mode.accentColor, color: 'white' }}>
                               Enter Room
                               <svg viewBox="0 0 24 24" className="w-3.5 h-3.5" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round"><path d="M5 12h14M12 5l7 7-7 7" /></svg>
@@ -1361,14 +1361,14 @@ export function StudyRoomDashboard({ onLogout }: { onLogout?: () => void }) {
                 </div>
 
                 {/* ── Pro Tip Banner ── */}
-                <div className="rounded-[20px] overflow-hidden"
+                <div className="rounded-20 overflow-hidden"
                   style={{ background: 'linear-gradient(135deg, #001d3d 0%, #003566 60%, #0967bd 100%)' }}>
                   <div className="relative px-6 md:px-8 py-6 flex flex-col sm:flex-row items-start sm:items-center gap-5">
                     {/* Decorative */}
-                    <div className="absolute right-0 top-0 w-[200px] h-full opacity-[0.04]"
+                    <div className="absolute right-0 top-0 w-200px h-full opacity-4"
                       style={{ background: 'radial-gradient(ellipse at 100% 50%, white, transparent 70%)' }} />
 
-                    <div className="w-12 h-12 rounded-[16px] flex items-center justify-center shrink-0"
+                    <div className="w-12 h-12 rounded-16 flex items-center justify-center shrink-0"
                       style={{ background: 'rgba(247,127,0,0.15)', border: '1px solid rgba(247,127,0,0.2)' }}>
                       <svg viewBox="0 0 24 24" className="w-5 h-5" fill="none" stroke="#f77f00" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                         <path d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
@@ -1433,11 +1433,11 @@ export function StudyRoomDashboard({ onLogout }: { onLogout?: () => void }) {
             {activeSection !== "Study Rooms" && activeSection !== "Mentor Support" && activeSection !== "Human Mentor" && activeSection !== "Productivity Tools" && activeSection !== "Emotional Wellness" && activeSection !== "Community" && !activeSection.startsWith("AI Mentor") && (
               <div className="flex flex-col items-center justify-center h-[50vh] text-center">
                 <div className="w-16 h-16 rounded-[20px] bg-secondary flex items-center justify-center mb-4">
-                  <svg viewBox="0 0 24 24" className="w-7 h-7" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" style={{ color: 'var(--muted-foreground)' }}>
+                  <svg viewBox="0 0 24 24" className="w-7 h-7 srd-color-muted" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
                     <circle cx="12" cy="12" r="10" /><path d="M12 6v6l4 2" />
                   </svg>
                 </div>
-                <h2 className="text-[20px] font-bold text-foreground mb-2" style={{ fontFamily: "'DM Serif Display', serif" }}>Coming Soon</h2>
+                <h2 className="text-xl2 font-bold text-foreground mb-2 font-serif-display">Coming Soon</h2>
                 <p className="text-[14px] text-muted-foreground max-w-[320px]">The <span className="font-semibold">{activeSection}</span> feature is currently under development.</p>
               </div>
             )}

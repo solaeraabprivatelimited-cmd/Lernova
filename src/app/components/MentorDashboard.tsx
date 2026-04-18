@@ -709,8 +709,7 @@ function CreateSessionDateTimeModal({ title = 'Create Session', initialSlots = [
             </div>
 
             {/* Scrollable time list */}
-            <div ref={timeScrollRef} className="flex flex-col gap-3 overflow-y-auto max-h-[270px] pr-2 relative"
-              style={{ scrollbarWidth: 'thin', scrollbarColor: 'rgb(37, 99, 235) rgba(0,0,0,0.2)' }}>
+            <div ref={timeScrollRef} className="flex flex-col gap-3 overflow-y-auto max-h-270 pr-2 relative time-scroll-list\">
               {TIME_SLOTS.map(t => {
                 const active = selTime === t;
                 const isPastTime = !selDate || selectedSlotToDate({ id: 'preview', date: selDate, time: t }).getTime() <= Date.now();
@@ -1717,7 +1716,7 @@ const joinLink = `elmorbit.co.in/room/${roomId}`;
             <p className="font-['Poppins'] font-medium text-[16px] text-black">
               Launching your room.......Please wait
             </p>
-            <span className="text-3xl animate-spin" style={{ animationDuration: '2s' }}>⏳</span>
+            <span className="text-3xl animate-spin animate-duration-2s">⏳</span>
           </div>
         </div>
       </div>

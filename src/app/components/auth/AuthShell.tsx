@@ -27,12 +27,7 @@ export function AuthShell({ onBack, visual, children, contentClassName }: AuthSh
             dark:bg-[linear-gradient(160deg,#0a0f1e_0%,#0d1424_50%,#111827_100%)]">
 
             {/* Grid pattern overlay */}
-            <div className="pointer-events-none absolute inset-0 opacity-[0.04]"
-              style={{
-                backgroundImage: "linear-gradient(rgba(255,255,255,1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,1) 1px, transparent 1px)",
-                backgroundSize: "56px 56px",
-              }}
-            />
+            <div className="auth-grid-overlay" />
             {/* Radial glow */}
             <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(9,103,189,0.25),transparent_40%)]" />
 

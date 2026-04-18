@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Menu, X } from 'lucide-react';
 
 import { ThemeToggle } from '@/app/components/ThemeToggle';
@@ -181,10 +181,10 @@ export function LandingPage({ onLogin, onSignUp }: LandingPageProps) {
               Live in room
             </div>
             <div className="lp-users-avatars">
-              <div className="lp-avatar" style={{ background: '#003566' }}>A</div>
-              <div className="lp-avatar" style={{ background: '#0967bd' }}>R</div>
-              <div className="lp-avatar" style={{ background: '#1e40af' }}>P</div>
-              <div className="lp-avatar" style={{ background: '#7c3aed' }}>S</div>
+              <div className="lp-avatar lp-avatar-primary">A</div>
+              <div className="lp-avatar lp-avatar-accent">R</div>
+              <div className="lp-avatar lp-avatar-blue-700">P</div>
+              <div className="lp-avatar lp-avatar-purple">S</div>
               <div className="lp-avatar more">+12</div>
             </div>
             <div className="lp-users-count"><span>16 people</span> studying now</div>
@@ -224,16 +224,16 @@ export function LandingPage({ onLogin, onSignUp }: LandingPageProps) {
         <div className="lp-deco-circle lp-deco-2" />
         <div className="lp-study-grid">
           <div className="lp-reveal">
-            <div className="lp-section-label" style={{ color: 'rgba(183,219,255,0.8)' }}>
-              <div className="lp-icon" style={{ background: 'rgba(255,255,255,0.15)' }}>
+            <div className="lp-section-label">
+              <div className="lp-icon">
                 <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" /></svg>
               </div>
               Study Rooms
             </div>
-            <h2 className="lp-section-title" style={{ color: 'white' }}>
-              Designed to help you<br /><em style={{ fontStyle: 'italic', color: '#b7dbff' }}>focus and grow.</em>
+            <h2 className="lp-section-title">
+              Designed to help you<br /><em>focus and grow.</em>
             </h2>
-            <p className="lp-section-sub" style={{ color: 'rgba(255,255,255,0.6)' }}>
+            <p className="lp-section-sub">
               Four distinct room modes tailored to every learning style &mdash; whether you need silence, collaboration, or live instruction.
             </p>
               <button className="lp-study-cta" type="button" onClick={onSignUp}>
@@ -242,12 +242,12 @@ export function LandingPage({ onLogin, onSignUp }: LandingPageProps) {
               </svg>
               Join a Study Room
             </button>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 32 }}>
+            <div className="flex items-center gap-3 md:gap-4 mt-8">
               <div className="lp-users-avatars">
-                <div className="lp-avatar" style={{ background: '#003566', border: '2px solid rgba(255,255,255,0.3)' }}>A</div>
-                <div className="lp-avatar" style={{ background: '#0967bd', border: '2px solid rgba(255,255,255,0.3)' }}>R</div>
+                <div className="lp-avatar lp-avatar-with-border">A</div>
+                <div className="lp-avatar lp-avatar-accent-border">R</div>
               </div>
-              <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.6)' }}>Guided by experienced mentors</span>
+              <span className="lp-guided-text">Guided by experienced mentors</span>
             </div>
           </div>
 
@@ -309,13 +309,13 @@ export function LandingPage({ onLogin, onSignUp }: LandingPageProps) {
 
           <div className="lp-reveal lp-reveal-delay-2">
             <div className="lp-section-label">
-              <div className="lp-icon" style={{ background: '#f77f00' }}>
+              <div className="lp-icon lp-icon-orange">
                 <svg viewBox="0 0 24 24"><path d="M12 2L1 7l11 6 9-4.91V17h2V9L12 2zm0 12.54L4.38 11 12 6.46 19.62 11 12 15.54zM1 17v2l11 6 11-6v-2l-11 6L1 17z" /></svg>
               </div>
               Premium Mentorship
             </div>
             <h2 className="lp-section-title">
-              Empowering learners through <em style={{ fontStyle: 'italic', color: '#0967bd' }}>expert mentors.</em>
+              Empowering learners through <em className="accent-blue">expert mentors.</em>
             </h2>
             <p className="lp-section-sub">
               Web-based mentorship sessions tailored to your goals &mdash; learn at your own pace through 1:1 interactive sessions with verified professionals.
@@ -376,11 +376,11 @@ export function LandingPage({ onLogin, onSignUp }: LandingPageProps) {
               Our mentors and tools have helped thousands of students stay consistent, confident, and focused on their goals.
             </p>
 
-            <div style={{ marginTop: 28, display: 'flex', alignItems: 'center', gap: 12 }}>
-              <div style={{ fontFamily: "'DM Serif Display', serif", fontSize: 60, color: '#0967bd', lineHeight: 1 }}>
-                99<span style={{ fontSize: 36 }}>%</span>
-              </div>
-              <div style={{ fontSize: 15, color: '#5a7089', lineHeight: 1.5, maxWidth: 240 }}>
+              <div className="flex items-center gap-3 md:gap-4 mt-7">
+                <div className="lp-mentor-avatar-stat">
+                  99<span>%</span>
+                </div>
+                <div className="lp-mentor-avatar-desc">
                 Learners reported visible improvement in focus and productivity.
               </div>
             </div>
@@ -403,26 +403,26 @@ export function LandingPage({ onLogin, onSignUp }: LandingPageProps) {
 
           <div className="lp-testimonials-cards lp-reveal lp-reveal-delay-2">
             <div className="lp-t-card featured">
-              <div style={{ marginBottom: 14, fontSize: 16, letterSpacing: 2, color: '#fbbf24' }}>&#9733;&#9733;&#9733;&#9733;&#9733;</div>
-              <p className="lp-t-text" style={{ color: 'rgba(255,255,255,0.8)' }}>
+              <div className="lp-stars-row">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+              <p className="lp-t-text lp-testimonial-text">
                 &ldquo;Elm Orbit completely changed the way I study. My mentor guided me through every step, and the focus sessions helped me stay on track. I&rsquo;ve become more confident and disciplined.&rdquo;
               </p>
               <div className="lp-t-author">
-                <div className="lp-t-avatar" style={{ background: 'rgba(255,255,255,0.15)' }}>AM</div>
+                <div className="lp-t-avatar lp-testimonial-avatar">AM</div>
                 <div>
-                  <div className="lp-t-name" style={{ color: 'white' }}>Aarav Mehta</div>
-                  <div className="lp-t-role" style={{ color: 'rgba(255,255,255,0.5)' }}>Computer Science Student</div>
+                  <div className="lp-t-name lp-testimonial-name">Aarav Mehta</div>
+                  <div className="lp-t-role lp-testimonial-role">Computer Science Student</div>
                 </div>
               </div>
             </div>
 
             <div className="lp-t-card">
-              <div style={{ marginBottom: 14, fontSize: 16, letterSpacing: 2, color: '#f59e0b' }}>&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+              <div className="lp-stars-orange">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
               <p className="lp-t-text">
                 &ldquo;The collaborative rooms are amazing &mdash; I finally found a study group that keeps me accountable. The AI mentor is like having a tutor available 24/7.&rdquo;
               </p>
               <div className="lp-t-author">
-                <div className="lp-t-avatar" style={{ background: 'linear-gradient(135deg,#f77f00,#e63946)' }}>PK</div>
+                <div className="lp-t-avatar lp-testimonial-avatar lp-avatar-gradient-orange">PK</div>
                 <div>
                   <div className="lp-t-name">Priya Kumar</div>
                   <div className="lp-t-role">UPSC Aspirant</div>
@@ -431,12 +431,12 @@ export function LandingPage({ onLogin, onSignUp }: LandingPageProps) {
             </div>
 
             <div className="lp-t-card">
-              <div style={{ marginBottom: 14, fontSize: 16, letterSpacing: 2, color: '#f59e0b' }}>&#9733;&#9733;&#9733;&#9733;&#9734;</div>
+              <div className="lp-stars-orange">&#9733;&#9733;&#9733;&#9733;&#9734;</div>
               <p className="lp-t-text">
                 &ldquo;Booked my first mentor session and it was a game changer. The payment was smooth and the session quality was excellent. Highly recommend!&rdquo;
               </p>
               <div className="lp-t-author">
-                <div className="lp-t-avatar" style={{ background: 'linear-gradient(135deg,#0967bd,#003566)' }}>RS</div>
+                <div className="lp-t-avatar lp-testimonial-avatar lp-avatar-gradient-blue">RS</div>
                 <div>
                   <div className="lp-t-name">Rahul Sharma</div>
                   <div className="lp-t-role">Engineering Student</div>
@@ -501,7 +501,7 @@ export function LandingPage({ onLogin, onSignUp }: LandingPageProps) {
 
           <div className="lp-footer-col">
             <h4>Subscribe to Newsletter</h4>
-            <p style={{ fontSize: 13, color: '#5a7089', marginBottom: 12 }}>Get learning tips and platform updates.</p>
+            <p className="lp-newsletter-label">Get learning tips and platform updates.</p>
             <div className="lp-newsletter-form">
               <input type="email" placeholder="Enter your email" />
               <button type="button">Submit &rarr;</button>
