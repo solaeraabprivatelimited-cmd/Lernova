@@ -694,8 +694,8 @@ function PlannerApp({ onBack }: { onBack: () => void }) {
         {/* + Button with Popup */}
         <div className="relative">
           <button onClick={() => setShowAddPopup(!showAddPopup)}
-            className="w-[44px] h-[44px] rounded-[14px] flex items-center justify-center shadow-lg hover:shadow-xl hover:scale-[1.04] transition-all cursor-pointer shrink-0"
-            style={{ background: 'linear-gradient(135deg, #003566, #0967bd)' }}>
+            className="w-[44px] h-[44px] rounded-[14px] flex items-center justify-center shadow-lg dark:shadow-xl hover:shadow-2xl dark:hover:shadow-2xl hover:scale-[1.04] transition-all cursor-pointer shrink-0 ring-2 ring-orange-500/0 hover:ring-orange-500/20 dark:ring-orange-500/10 dark:hover:ring-orange-500/30"
+            style={{ background: 'linear-gradient(135deg, #003566, #0967bd)' }} title="Add new item">
             <Plus className="w-5 h-5 text-white" />
           </button>
 

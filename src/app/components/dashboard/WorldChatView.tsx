@@ -197,7 +197,7 @@ export function WorldChatView({ onBack }: { onBack: () => void }) {
     <div className="w-full flex flex-col h-full" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
       {/* Header */}
       <div className="shrink-0 mb-4">
-        <button onClick={onBack} className="flex items-center gap-2 text-[#5a7089] hover:text-[#003566] mb-3 transition-colors group cursor-pointer">
+        <button onClick={onBack} className="flex items-center gap-2 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 mb-3 transition-colors group cursor-pointer">
           <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
           <span className="text-[13px] font-medium">Emotional Wellness</span>
         </button>
@@ -208,14 +208,14 @@ export function WorldChatView({ onBack }: { onBack: () => void }) {
               <Globe className="w-5 h-5 text-white" />
             </div>
             <div>
-              <h1 className="text-[28px] md:text-[34px] text-[#003566]" style={{ fontFamily: "'DM Serif Display', serif" }}>
+              <h1 className="text-[28px] md:text-[34px] text-slate-900 dark:text-white" style={{ fontFamily: "'DM Serif Display', serif" }}>
                 World Chat
               </h1>
             </div>
           </div>
-          <div className="flex items-center gap-2 px-3 py-1.5 rounded-full" style={{ background: 'rgba(17,153,142,0.06)', border: '1px solid rgba(17,153,142,0.1)' }}>
-            <Users className="w-3.5 h-3.5 text-[#11998e]" />
-            <span className="text-[11px] font-semibold text-[#11998e]">{messages.length > 0 ? `${new Set(messages.map(m => m.sender)).size} online` : "Global"}</span>
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-100 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-700/50">
+            <Users className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+            <span className="text-[11px] font-semibold text-emerald-700 dark:text-emerald-300">{messages.length > 0 ? `${new Set(messages.map(m => m.sender)).size} online` : "Global"}</span>
           </div>
         </div>
       </div>

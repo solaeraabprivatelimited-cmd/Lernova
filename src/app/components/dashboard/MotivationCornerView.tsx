@@ -174,14 +174,14 @@ function ReactionButtons({ post, onLike, onDislike }: { post: MotivationPost; on
     <div className="flex items-center gap-2.5">
       <button onClick={() => onLike(post.id)}
         className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-[10px] transition-all cursor-pointer ${
-          post.userReaction === "like" ? "bg-[#f77f00]/10 text-[#f77f00]" : "hover:bg-[#f5f7fa] text-[#94a3b8]"
+          post.userReaction === "like" ? "bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400" : "hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400"
         }`}>
         <ThumbsUp className="w-3.5 h-3.5" />
         <span className="text-[11px] font-bold">{post.likes}</span>
       </button>
       <button onClick={() => onDislike(post.id)}
         className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-[10px] transition-all cursor-pointer ${
-          post.userReaction === "dislike" ? "bg-[#94a3b8]/10 text-[#5a7089]" : "hover:bg-[#f5f7fa] text-[#94a3b8]"
+          post.userReaction === "dislike" ? "bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300" : "hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400"
         }`}>
         <ThumbsDown className="w-3.5 h-3.5" />
         <span className="text-[11px] font-bold">{post.dislikes}</span>
@@ -193,28 +193,28 @@ function ReactionButtons({ post, onLike, onDislike }: { post: MotivationPost; on
 /* ── Quote Card ── */
 function QuoteCard({ post, onLike, onDislike }: { post: MotivationPost; onLike: (id: string) => void; onDislike: (id: string) => void }) {
   return (
-    <div className="bg-white rounded-[20px] border border-[#edf0f4] shadow-sm overflow-hidden hover:shadow-lg transition-all duration-300 p-6">
+    <div className="bg-white dark:bg-slate-800 rounded-[20px] border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden hover:shadow-lg transition-all duration-300 p-6">
       <div className="flex items-start gap-3 mb-4">
         <div className="w-9 h-9 rounded-[12px] flex items-center justify-center shrink-0"
           style={{ background: 'rgba(127,0,255,0.06)' }}>
-          <Quote className="w-4 h-4 text-[#7f00ff]" />
+          <Quote className="w-4 h-4 text-purple-600 dark:text-purple-400" />
         </div>
-        <span className="text-[10px] font-bold text-[#7f00ff] uppercase tracking-[0.1em] mt-2.5">{post.title}</span>
+        <span className="text-[10px] font-bold text-purple-600 dark:text-purple-400 uppercase tracking-[0.1em] mt-2.5">{post.title}</span>
       </div>
 
-      <p className="text-[18px] md:text-[20px] text-[#003566] leading-[1.6] mb-6 italic"
+      <p className="text-[18px] md:text-[20px] text-slate-900 dark:text-slate-100 leading-[1.6] mb-6 italic"
         style={{ fontFamily: "'DM Serif Display', serif" }}>
         {post.quoteText || post.title}
       </p>
 
-      <div className="flex items-center justify-between pt-4 border-t border-[#edf0f4]">
+      <div className="flex items-center justify-between pt-4 border-t border-slate-200 dark:border-slate-700">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-full overflow-hidden shrink-0 border border-[#edf0f4]">
+          <div className="w-9 h-9 rounded-full overflow-hidden shrink-0 border border-slate-200 dark:border-slate-700">
             <ImageWithFallback src={post.authorAvatar} alt={post.author} className="w-full h-full object-cover" />
           </div>
           <div>
-            <p className="text-[12px] font-semibold text-[#1e293b]">{post.author}</p>
-            <p className="text-[10px] text-[#94a3b8]">{post.date}</p>
+            <p className="text-[12px] font-semibold text-slate-900 dark:text-slate-100">{post.author}</p>
+            <p className="text-[10px] text-slate-500 dark:text-slate-400">{post.date}</p>
           </div>
         </div>
         <ReactionButtons post={post} onLike={onLike} onDislike={onDislike} />
@@ -226,33 +226,33 @@ function QuoteCard({ post, onLike, onDislike }: { post: MotivationPost; onLike: 
 /* ── Story Card ── */
 function StoryCard({ post, onLike, onDislike }: { post: MotivationPost; onLike: (id: string) => void; onDislike: (id: string) => void }) {
   return (
-    <div className="bg-white rounded-[20px] border border-[#edf0f4] shadow-sm overflow-hidden hover:shadow-lg transition-all duration-300 group">
+    <div className="bg-white dark:bg-slate-800 rounded-[20px] border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden hover:shadow-lg transition-all duration-300 group">
       <div className="flex flex-col md:flex-row">
         {post.thumbnail && (
           <div className="relative md:w-[220px] h-[160px] md:h-auto shrink-0 overflow-hidden">
             <ImageWithFallback src={post.thumbnail} alt={post.title}
               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-            <span className="absolute top-3 left-3 px-2.5 py-1 rounded-full text-[10px] font-bold text-white uppercase bg-[#7f00ff]">Story</span>
+            <span className="absolute top-3 left-3 px-2.5 py-1 rounded-full text-[10px] font-bold text-white uppercase bg-purple-600 dark:bg-purple-700">Story</span>
           </div>
         )}
         <div className="flex-1 p-5 md:p-6 flex flex-col justify-between">
           <div>
-            <h3 className="text-[18px] font-bold text-[#003566] mb-2 leading-tight group-hover:text-[#7f00ff] transition-colors"
+            <h3 className="text-[18px] font-bold text-slate-900 dark:text-slate-100 mb-2 leading-tight group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors"
               style={{ fontFamily: "'DM Serif Display', serif" }}>
               {post.title}
             </h3>
             {post.description && (
-              <p className="text-[13px] text-[#5a7089] leading-relaxed line-clamp-3 mb-4">{post.description}</p>
+              <p className="text-[13px] text-slate-600 dark:text-slate-400 leading-relaxed line-clamp-3 mb-4">{post.description}</p>
             )}
           </div>
-          <div className="flex items-center justify-between pt-4 border-t border-[#edf0f4]">
+          <div className="flex items-center justify-between pt-4 border-t border-slate-200 dark:border-slate-700">
             <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-full overflow-hidden shrink-0 border border-[#edf0f4]">
+              <div className="w-9 h-9 rounded-full overflow-hidden shrink-0 border border-slate-200 dark:border-slate-700">
                 <ImageWithFallback src={post.authorAvatar} alt={post.author} className="w-full h-full object-cover" />
               </div>
               <div>
-                <p className="text-[12px] font-semibold text-[#1e293b]">{post.author}</p>
-                <p className="text-[10px] text-[#94a3b8]">{post.date}</p>
+                <p className="text-[12px] font-semibold text-slate-900 dark:text-slate-100">{post.author}</p>
+                <p className="text-[10px] text-slate-500 dark:text-slate-400">{post.date}</p>
               </div>
             </div>
             <ReactionButtons post={post} onLike={onLike} onDislike={onDislike} />

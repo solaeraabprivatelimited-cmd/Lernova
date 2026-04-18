@@ -222,7 +222,7 @@ export function WellnessResourcesView({ onBack }: { onBack: () => void }) {
       {/* Header */}
       <div className="flex items-center justify-between mb-6 shrink-0">
         <div>
-          <button onClick={onBack} className="flex items-center gap-2 text-[#5a7089] hover:text-[#003566] mb-3 transition-colors group cursor-pointer">
+          <button onClick={onBack} className="flex items-center gap-2 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 mb-3 transition-colors group cursor-pointer">
             <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
             <span className="text-[13px] font-medium">Emotional Wellness</span>
           </button>
@@ -231,7 +231,7 @@ export function WellnessResourcesView({ onBack }: { onBack: () => void }) {
               style={{ background: 'linear-gradient(135deg, #0052d4, #6fb1fc)' }}>
               <BookOpen className="w-5 h-5 text-white" />
             </div>
-            <h1 className="text-[28px] md:text-[34px] text-[#003566]" style={{ fontFamily: "'DM Serif Display', serif" }}>
+            <h1 className="text-[28px] md:text-[34px] text-slate-900 dark:text-white" style={{ fontFamily: "'DM Serif Display', serif" }}>
               Wellness Resources
             </h1>
           </div>

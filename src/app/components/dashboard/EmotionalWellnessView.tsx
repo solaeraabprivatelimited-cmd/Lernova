@@ -98,8 +98,8 @@ export function EmotionalWellnessView() {
 
       {/* Section Label */}
       <div className="flex items-center gap-3 mb-6">
-        <div className="w-1 h-5 rounded-full bg-[#f77f00]" />
-        <h2 className="text-[16px] font-bold text-[#003566]">Explore Wellness</h2>
+        <div className="w-1 h-5 rounded-full bg-orange-500" />
+        <h2 className="text-[16px] font-bold text-slate-900 dark:text-white">Explore Wellness</h2>
       </div>
 
       {/* Cards Grid */}
@@ -200,11 +200,11 @@ function AIWellnessAdvisor({ onBack }: AIWellnessAdvisorProps) {
   const [moodTrend] = React.useState("improving");
 
   return (
-    <div className="w-full" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+    <div className="w-full bg-white dark:bg-slate-950" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
       {/* Header */}
       <button
         onClick={onBack}
-        className="flex items-center gap-2 text-[#5a7089] hover:text-[#003566] mb-6 transition-colors group cursor-pointer"
+        className="flex items-center gap-2 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 mb-6 transition-colors group cursor-pointer"
       >
         <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
         <span className="text-[13px] font-medium">Emotional Wellness</span>
@@ -216,20 +216,20 @@ function AIWellnessAdvisor({ onBack }: AIWellnessAdvisorProps) {
           <Brain className="w-5 h-5 text-white" />
         </div>
         <div>
-          <h1 className="text-[28px] md:text-[34px] text-[#003566]" style={{ fontFamily: "'DM Serif Display', serif" }}>
+          <h1 className="text-[28px] md:text-[34px] text-slate-900 dark:text-white" style={{ fontFamily: "'DM Serif Display', serif" }}>
             AI Wellness Advisor
           </h1>
-          <p className="text-[13px] text-[#7a8ea3]">Personalized recommendations based on your wellness data</p>
+          <p className="text-[13px] text-slate-600 dark:text-slate-400">Personalized recommendations based on your wellness data</p>
         </div>
       </div>
 
       {/* Wellness Score Card */}
-      <div className="bg-white rounded-[20px] border border-[#edf0f4] p-6 mb-8 shadow-sm">
+      <div className="bg-white dark:bg-slate-800 rounded-[20px] border border-slate-200 dark:border-slate-700 p-6 mb-8 shadow-sm">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="flex items-center gap-4">
             <div className="relative w-24 h-24">
               <svg className="w-full h-full" style={{ transform: 'rotate(-90deg)' }}>
-                <circle cx="48" cy="48" r="40" fill="none" stroke="#edf0f4" strokeWidth="4" />
+                <circle cx="48" cy="48" r="40" fill="none" stroke="currentColor" strokeWidth="4" className="text-slate-200 dark:text-slate-700" />
                 <circle
                   cx="48" cy="48" r="40" fill="none" stroke="#667eea"
                   strokeWidth="4" strokeDasharray={`${(wellnessScore / 100) * 251} 251`}
@@ -238,34 +238,34 @@ function AIWellnessAdvisor({ onBack }: AIWellnessAdvisorProps) {
               </svg>
               <div className="absolute inset-0 flex items-center justify-center">
                 <div className="text-center">
-                  <p className="text-[20px] font-bold text-[#003566]">{wellnessScore}</p>
-                  <p className="text-[10px] text-[#7a8ea3]">Score</p>
+                  <p className="text-[20px] font-bold text-slate-900 dark:text-white">{wellnessScore}</p>
+                  <p className="text-[10px] text-slate-500 dark:text-slate-400">Score</p>
                 </div>
               </div>
             </div>
             <div>
-              <p className="text-[11px] text-[#7a8ea3] uppercase font-semibold">Wellness Index</p>
-              <p className="text-[13px] font-semibold text-[#003566] mt-1">Good</p>
-              <p className="text-[11px] text-[#7a8ea3] mt-2">Keep up the momentum!</p>
+              <p className="text-[11px] text-slate-600 dark:text-slate-400 uppercase font-semibold">Wellness Index</p>
+              <p className="text-[13px] font-semibold text-slate-900 dark:text-white mt-1">Good</p>
+              <p className="text-[11px] text-slate-600 dark:text-slate-400 mt-2">Keep up the momentum!</p>
             </div>
           </div>
 
           <div className="flex items-center gap-4">
             <div className="w-full">
-              <p className="text-[11px] text-[#7a8ea3] uppercase font-semibold mb-3">Mood Trend</p>
+              <p className="text-[11px] text-slate-600 dark:text-slate-400 uppercase font-semibold mb-3">Mood Trend</p>
               <div className="flex items-center gap-2">
-                <TrendingUp className="w-5 h-5 text-[#22c55e]" />
-                <span className="text-[15px] font-bold text-[#003566] capitalize">{moodTrend}</span>
+                <TrendingUp className="w-5 h-5 text-green-500" />
+                <span className="text-[15px] font-bold text-slate-900 dark:text-white capitalize">{moodTrend}</span>
               </div>
-              <p className="text-[11px] text-[#7a8ea3] mt-2">Your mood has been improving over the last 7 days</p>
+              <p className="text-[11px] text-slate-600 dark:text-slate-400 mt-2">Your mood has been improving over the last 7 days</p>
             </div>
           </div>
 
           <div className="flex items-center gap-4">
             <div className="w-full">
-              <p className="text-[11px] text-[#7a8ea3] uppercase font-semibold mb-3">Recent Check-ins</p>
-              <p className="text-[24px] font-bold text-[#003566]">12</p>
-              <p className="text-[11px] text-[#7a8ea3] mt-2">This month</p>
+              <p className="text-[11px] text-slate-600 dark:text-slate-400 uppercase font-semibold mb-3">Recent Check-ins</p>
+              <p className="text-[24px] font-bold text-slate-900 dark:text-white">12</p>
+              <p className="text-[11px] text-slate-600 dark:text-slate-400 mt-2">This month</p>
             </div>
           </div>
         </div>
@@ -274,15 +274,15 @@ function AIWellnessAdvisor({ onBack }: AIWellnessAdvisorProps) {
       {/* Recommendations Section */}
       <div className="mb-8">
         <div className="flex items-center gap-3 mb-6">
-          <div className="w-1 h-5 rounded-full bg-[#667eea]" />
-          <h2 className="text-[16px] font-bold text-[#003566]">AI-Powered Recommendations</h2>
+          <div className="w-1 h-5 rounded-full bg-indigo-500" />
+          <h2 className="text-[16px] font-bold text-slate-900 dark:text-white">AI-Powered Recommendations</h2>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           {recommendations.map((rec) => (
             <div
               key={rec.id}
-              className="bg-white rounded-[18px] border border-[#edf0f4] p-6 shadow-sm hover:shadow-md transition-all hover:-translate-y-1"
+              className="bg-white dark:bg-slate-800 rounded-[18px] border border-slate-200 dark:border-slate-700 p-6 shadow-sm hover:shadow-md transition-all hover:-translate-y-1"
             >
               <div className="flex items-start gap-4 mb-4">
                 <div
@@ -292,17 +292,12 @@ function AIWellnessAdvisor({ onBack }: AIWellnessAdvisorProps) {
                   <div className="text-white">{rec.icon}</div>
                 </div>
                 <div className="flex-1">
-                  <h3 className="text-[15px] font-bold text-[#003566] mb-1">{rec.title}</h3>
-                  <p className="text-[12px] text-[#7a8ea3] leading-relaxed">{rec.description}</p>
+                  <h3 className="text-[15px] font-bold text-slate-900 dark:text-white mb-1">{rec.title}</h3>
+                  <p className="text-[12px] text-slate-600 dark:text-slate-400 leading-relaxed">{rec.description}</p>
                 </div>
               </div>
               <button
-                className="w-full px-4 py-2.5 rounded-[12px] text-[12px] font-semibold transition-all cursor-pointer"
-                style={{
-                  background: 'rgba(102, 126, 234, 0.1)',
-                  color: '#667eea',
-                  border: '1px solid rgba(102, 126, 234, 0.2)'
-                }}
+                className="w-full px-4 py-2.5 rounded-[12px] text-[12px] font-semibold transition-all cursor-pointer bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-700/50 hover:bg-indigo-100 dark:hover:bg-indigo-900/30"
               >
                 {rec.actionText}
               </button>
@@ -312,23 +307,23 @@ function AIWellnessAdvisor({ onBack }: AIWellnessAdvisorProps) {
       </div>
 
       {/* Quick Tips */}
-      <div className="bg-[#f8fafc] rounded-[20px] border border-[#edf0f4] p-6">
+      <div className="bg-slate-50 dark:bg-slate-800 rounded-[20px] border border-slate-200 dark:border-slate-700 p-6">
         <div className="flex items-center gap-3 mb-4">
-          <Lightbulb className="w-5 h-5 text-[#f77f00]" />
-          <h3 className="text-[15px] font-bold text-[#003566]">Quick Wellness Tips</h3>
+          <Lightbulb className="w-5 h-5 text-orange-500" />
+          <h3 className="text-[15px] font-bold text-slate-900 dark:text-white">Quick Wellness Tips</h3>
         </div>
         <div className="space-y-3">
-          <div className="flex items-start gap-3 p-3 bg-white rounded-[12px] border border-[#edf0f4]">
-            <span className="text-[12px] font-bold text-[#667eea] flex-shrink-0">1</span>
-            <p className="text-[12px] text-[#5a7089]">Start your day with 5 minutes of deep breathing to calm your nervous system.</p>
+          <div className="flex items-start gap-3 p-3 bg-white dark:bg-slate-700 rounded-[12px] border border-slate-200 dark:border-slate-600">
+            <span className="text-[12px] font-bold text-indigo-600 dark:text-indigo-400 flex-shrink-0">1</span>
+            <p className="text-[12px] text-slate-700 dark:text-slate-300">Start your day with 5 minutes of deep breathing to calm your nervous system.</p>
           </div>
-          <div className="flex items-start gap-3 p-3 bg-white rounded-[12px] border border-[#edf0f4]">
-            <span className="text-[12px] font-bold text-[#667eea] flex-shrink-0">2</span>
-            <p className="text-[12px] text-[#5a7089]">Take regular breaks during study sessions (5 min per 25 min) to maintain focus and mood.</p>
+          <div className="flex items-start gap-3 p-3 bg-white dark:bg-slate-700 rounded-[12px] border border-slate-200 dark:border-slate-600">
+            <span className="text-[12px] font-bold text-indigo-600 dark:text-indigo-400 flex-shrink-0">2</span>
+            <p className="text-[12px] text-slate-700 dark:text-slate-300">Take regular breaks during study sessions (5 min per 25 min) to maintain focus and mood.</p>
           </div>
-          <div className="flex items-start gap-3 p-3 bg-white rounded-[12px] border border-[#edf0f4]">
-            <span className="text-[12px] font-bold text-[#667eea] flex-shrink-0">3</span>
-            <p className="text-[12px] text-[#5a7089]">Connect with someone daily. Share your feelings and listen to others - it improves well-being.</p>
+          <div className="flex items-start gap-3 p-3 bg-white dark:bg-slate-700 rounded-[12px] border border-slate-200 dark:border-slate-600">
+            <span className="text-[12px] font-bold text-indigo-600 dark:text-indigo-400 flex-shrink-0">3</span>
+            <p className="text-[12px] text-slate-700 dark:text-slate-300">Connect with someone daily. Share your feelings and listen to others - it improves well-being.</p>
           </div>
         </div>
       </div>
