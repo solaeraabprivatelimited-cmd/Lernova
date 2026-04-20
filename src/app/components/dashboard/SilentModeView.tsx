@@ -16,6 +16,7 @@ import { PeoplePanel } from "./PeoplePanel";
 import { ReactionBar } from "./ReactionBar";
 import { FloatingReactions } from "./FloatingReactions";
 import { ModeConfigurationPanel } from "./ModeConfigurationPanel";
+import { useRoom } from "../../providers/RoomContext";
 
 // Pin Icon Component
 function PinIcon() {
@@ -205,6 +206,8 @@ interface SilentModeViewProps {
 }
 
 export function SilentModeView({ onLeave, onBackToFocus, onReportSubmitted }: SilentModeViewProps) {
+  const roomContext = useRoom();
+  
   const [timeElapsed, setTimeElapsed] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
   const totalPages = 20;
@@ -229,15 +232,14 @@ export function SilentModeView({ onLeave, onBackToFocus, onReportSubmitted }: Si
   });
   const [showSettings, setShowSettings] = useState(false);
 
-  // Participant images and names (populated from room data)
-  const participants: Array<{
-    id: number;
-    image: string;
-    name: string;
-    isMuted: boolean;
-    isVideoOff: boolean;
-  }> = [];
-  // TODO: Fetch actual participants from room data via context/props
+  // Get participants from room context
+  const participants = (roomContext.participants || []).map(p => ({
+    id: p.id,
+    image: p.avatar || imgFrame427318269,
+    name: p.name,
+    isMuted: p.isMuted,
+    isVideoOff: p.isVideoOff
+  }));
 
   // Timer for elapsed time
   useEffect(() => {

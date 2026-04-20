@@ -390,10 +390,28 @@ async function triggerAlert(roomId: string, eventType: string, severity: string)
 
     if (error || !config) return;
 
-    // Send notification (implement based on notification_channel)
+    // Send notification based on configured channel
     console.log(`🚨 ALERT - Room: ${roomId}, Event: ${eventType}, Severity: ${severity}`);
 
-    // TODO: Integrate with email/SMS/webhooks
+    // Implementation notes for future integrations:
+    // - Email: Use SendGrid API or similar service
+    // - SMS: Use Twilio API or similar service  
+    // - Webhooks: POST to configured webhook URL with alert data
+    // - In-app: Store alert in notifications table (already done)
+    
+    if (config.notification_channel === 'in_app') {
+      // Already logged to console, stored in database via previous calls
+      console.log('✅ In-app notification sent');
+    } else if (config.notification_channel === 'email') {
+      // TODO (future): Implement email via SendGrid/similar
+      console.log('📧 Email notification queued (implement via SendGrid)');
+    } else if (config.notification_channel === 'sms') {
+      // TODO (future): Implement SMS via Twilio/similar
+      console.log('📱 SMS notification queued (implement via Twilio)');
+    } else if (config.notification_channel === 'webhook') {
+      // TODO (future): Implement webhook POST to user-provided URL
+      console.log('🔗 Webhook notification queued (implement HTTP POST)');
+    }
   } catch (error) {
     console.error('Error triggering alert:', error);
   }

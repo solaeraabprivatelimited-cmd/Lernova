@@ -16,6 +16,8 @@ import { ReactionPicker } from "./ReactionPicker";
 import { ReactionBurst } from "./ReactionBurst";
 import { MessagesPanel } from "./MessagesPanel";
 import { ModeConfigurationPanel } from "./ModeConfigurationPanel";
+import { useRoom } from "../../providers/RoomContext";
+import { useAuth } from "../../hooks/useAuth";
 
 interface LiveModeRoomProps {
   roomName?: string;
@@ -39,19 +41,19 @@ interface TimerNotification {
   duration: string;
 }
 
-// Participants data - populated from room API (currently empty for placeholder)
-const participants: Participant[] = [];
-// TODO: Fetch actual participants from livMode room data
-
-const isHost = false; // TODO: Get from room context
-const currentUserId: number | null = null; // TODO: Get from current user context
-
 export function LiveModeRoom({ 
   roomName = '', 
   roomId,
   subject = 'General',
   onLeaveRoom 
 }: LiveModeRoomProps) {
+  // Get room context data
+  const roomContext = useRoom();
+  const { user } = useAuth();
+  
+  const participants = roomContext.participants || [];
+  const isHost = roomContext.isHost;
+  const currentUserId = user?.id ? String(user.id) : null;
   const [isMicOn, setIsMicOn] = useState(true);
   const [isVideoOn, setIsVideoOn] = useState(true);
   const [elapsedTime, setElapsedTime] = useState(89); // Start at 1:29 as shown in design
