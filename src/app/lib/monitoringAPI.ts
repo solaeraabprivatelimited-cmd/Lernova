@@ -34,6 +34,7 @@
 
 import { createClient } from '@supabase/supabase-js';
 import { NextApiRequest, NextApiResponse } from 'next';
+import { sendMultiChannelAlert, createAlertPayload } from './notificationService';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL || '',
@@ -390,27 +391,53 @@ async function triggerAlert(roomId: string, eventType: string, severity: string)
 
     if (error || !config) return;
 
-    // Send notification based on configured channel
     console.log(`🚨 ALERT - Room: ${roomId}, Event: ${eventType}, Severity: ${severity}`);
 
-    // Implementation notes for future integrations:
-    // - Email: Use SendGrid API or similar service
-    // - SMS: Use Twilio API or similar service  
-    // - Webhooks: POST to configured webhook URL with alert data
-    // - In-app: Store alert in notifications table (already done)
-    
+    // Create alert payload
+    const alertPayload = createAlertPayload(roomId, eventType, severity as any);
+
+    // Send notifications based on configured channels
     if (config.notification_channel === 'in_app') {
-      // Already logged to console, stored in database via previous calls
       console.log('✅ In-app notification sent');
     } else if (config.notification_channel === 'email') {
-      // TODO (future): Implement email via SendGrid/similar
-      console.log('📧 Email notification queued (implement via SendGrid)');
+      if (config.email_recipient) {
+        await sendMultiChannelAlert(alertPayload, ['email'], {
+          email: config.email_recipient,
+        });
+      }
     } else if (config.notification_channel === 'sms') {
-      // TODO (future): Implement SMS via Twilio/similar
-      console.log('📱 SMS notification queued (implement via Twilio)');
+      if (config.sms_recipient) {
+        await sendMultiChannelAlert(alertPayload, ['sms'], {
+          phone: config.sms_recipient,
+        });
+      }
     } else if (config.notification_channel === 'webhook') {
-      // TODO (future): Implement webhook POST to user-provided URL
-      console.log('🔗 Webhook notification queued (implement HTTP POST)');
+      if (config.webhook_url) {
+        await sendMultiChannelAlert(alertPayload, ['webhook'], {
+          webhook: config.webhook_url,
+        });
+      }
+    } else if (config.notification_channel === 'multi') {
+      // Send to all configured channels
+      const channels: Array<'email' | 'sms' | 'webhook'> = [];
+      const contacts: any = {};
+
+      if (config.email_recipient) {
+        channels.push('email');
+        contacts.email = config.email_recipient;
+      }
+      if (config.sms_recipient) {
+        channels.push('sms');
+        contacts.phone = config.sms_recipient;
+      }
+      if (config.webhook_url) {
+        channels.push('webhook');
+        contacts.webhook = config.webhook_url;
+      }
+
+      if (channels.length > 0) {
+        await sendMultiChannelAlert(alertPayload, channels, contacts);
+      }
     }
   } catch (error) {
     console.error('Error triggering alert:', error);
