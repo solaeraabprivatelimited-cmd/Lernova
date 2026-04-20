@@ -1,12 +1,10 @@
 import React, { useState } from "react";
-import { MoodCheckInView } from "./MoodCheckInView";
 import { WellnessResourcesView } from "./WellnessResourcesView";
 import { WorldChatView } from "./WorldChatView";
-import { MotivationCornerView } from "./MotivationCornerView";
 import { SkeletonWellnessResources } from "../skeletons/PageSkeletons";
-import { Heart, BookOpen, MessageCircle, Sparkles, ArrowRight, Shield, Brain, Lightbulb, TrendingUp } from "lucide-react";
+import { Heart, BookOpen, MessageCircle, ArrowRight, Shield, Brain, Lightbulb, TrendingUp } from "lucide-react";
 
-type SubView = "home" | "mood-check-in" | "wellness-resources" | "world-chat" | "motivation-corner" | "ai-advisor";
+type SubView = "home" | "wellness-resources" | "world-chat" | "ai-mentor";
 
 interface WellnessCardProps {
   icon: React.ReactNode;
@@ -64,11 +62,9 @@ export function EmotionalWellnessView() {
     return <SkeletonWellnessResources />;
   }
 
-  if (subView === "mood-check-in") return <MoodCheckInView onBack={() => setSubView("home")} />;
   if (subView === "wellness-resources") return <WellnessResourcesView onBack={() => setSubView("home")} />;
   if (subView === "world-chat") return <WorldChatView onBack={() => setSubView("home")} />;
-  if (subView === "motivation-corner") return <MotivationCornerView onBack={() => setSubView("home")} />;
-  if (subView === "ai-advisor") return <AIWellnessAdvisor onBack={() => setSubView("home")} />;
+  if (subView === "ai-mentor") return <AIMentorAdvisor onBack={() => setSubView("home")} />;
 
   return (
     <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }} className="animate-in fade-in duration-300">
@@ -105,22 +101,13 @@ export function EmotionalWellnessView() {
       {/* Cards Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
         <WellnessCard
-          icon={<Heart className="w-5 h-5 text-white" />}
-          title="Mood Check-In"
-          description="Share your feelings and let AI organize, track, and understand your mood journey."
-          cta="Start Check-In"
-          gradient="linear-gradient(135deg, #b91d73 0%, #f953c6 50%, #ff5858 100%)"
-          iconBg="rgba(255,255,255,0.2)"
-          onClick={() => setSubView("mood-check-in")}
-        />
-        <WellnessCard
           icon={<Brain className="w-5 h-5 text-white" />}
-          title="AI Wellness Advisor"
-          description="Get personalized wellness recommendations powered by AI based on your mood patterns."
-          cta="Consult AI Advisor"
+          title="AI Mentor"
+          description="Get personalized wellness guidance and support powered by AI based on your learning journey."
+          cta="Chat with Mentor"
           gradient="linear-gradient(135deg, #667eea 0%, #764ba2 100%)"
           iconBg="rgba(255,255,255,0.2)"
-          onClick={() => setSubView("ai-advisor")}
+          onClick={() => setSubView("ai-mentor")}
         />
         <WellnessCard
           icon={<BookOpen className="w-5 h-5 text-white" />}
@@ -134,33 +121,24 @@ export function EmotionalWellnessView() {
         <WellnessCard
           icon={<MessageCircle className="w-5 h-5 text-white" />}
           title="World Chat"
-          description="Connect, share, and support each other in a global community."
+          description="Connect, share, and support each other in a global community of learners."
           cta="Join Conversation"
           gradient="linear-gradient(135deg, #11998e 0%, #38ef7d 100%)"
           iconBg="rgba(255,255,255,0.2)"
           onClick={() => setSubView("world-chat")}
-        />
-        <WellnessCard
-          icon={<Sparkles className="w-5 h-5 text-white" />}
-          title="Motivation Corner"
-          description="Get inspired with uplifting quotes and real success stories from the community."
-          cta="Find Inspiration"
-          gradient="linear-gradient(135deg, #7f00ff 0%, #e100ff 100%)"
-          iconBg="rgba(255,255,255,0.2)"
-          onClick={() => setSubView("motivation-corner")}
         />
       </div>
     </div>
   );
 }
 
-interface AIWellnessAdvisorProps {
+interface AIMentorAdvisorProps {
   onBack: () => void;
 }
 
 import { ArrowLeft } from 'lucide-react';
 
-function AIWellnessAdvisor({ onBack }: AIWellnessAdvisorProps) {
+function AIMentorAdvisor({ onBack }: AIMentorAdvisorProps) {
   const [recommendations] = React.useState([
     {
       id: 1,
