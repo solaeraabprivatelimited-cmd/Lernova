@@ -318,7 +318,7 @@ export function AiMentorChat({ onBack, onVoiceMode }: AiMentorChatProps) {
 
     try {
       // Save user message to database
-      await aiChat.addMessage(currentSessionId, {
+      await aiChat.addMessage(currentSessionId!, {
         role: 'user',
         content: userMessage,
         attachmentType: attachment?.type,
@@ -340,7 +340,7 @@ export function AiMentorChat({ onBack, onVoiceMode }: AiMentorChatProps) {
       setMessages(prev => [...prev, aiMsg]);
 
       // Save AI message to database
-      await aiChat.addMessage(currentSessionId, {
+      await aiChat.addMessage(currentSessionId!, {
         role: 'ai',
         content: aiResponse
       });
@@ -480,7 +480,7 @@ export function AiMentorChat({ onBack, onVoiceMode }: AiMentorChatProps) {
       setMessages(updatedMessages);
       
       // Update in database
-      await aiChat.addMessage(currentSessionId, {
+      await aiChat.addMessage(currentSessionId!, {
         role: 'ai',
         content: newAiResponse
       });

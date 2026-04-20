@@ -264,6 +264,70 @@ export function isAuthenticated(): boolean {
   return !!getAccessToken();
 }
 
+// ─── Fetch-based API Client ───────────────────────────────────────────────────────
+/**
+ * Simple fetch-based API client for making authenticated requests to the backend
+ */
+export const apiClient = {
+  async get<T = any>(path: string): Promise<{ data: T }> {
+    const token = getAccessToken();
+    const response = await fetch(`${API_URL}${path}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+      },
+    });
+    if (!response.ok) throw new Error(`API error: ${response.status}`);
+    const data = await response.json();
+    return { data };
+  },
+
+  async post<T = any>(path: string, body?: any): Promise<{ data: T }> {
+    const token = getAccessToken();
+    const response = await fetch(`${API_URL}${path}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+      },
+      body: body ? JSON.stringify(body) : undefined,
+    });
+    if (!response.ok) throw new Error(`API error: ${response.status}`);
+    const data = await response.json();
+    return { data };
+  },
+
+  async put<T = any>(path: string, body?: any): Promise<{ data: T }> {
+    const token = getAccessToken();
+    const response = await fetch(`${API_URL}${path}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+      },
+      body: body ? JSON.stringify(body) : undefined,
+    });
+    if (!response.ok) throw new Error(`API error: ${response.status}`);
+    const data = await response.json();
+    return { data };
+  },
+
+  async delete<T = any>(path: string): Promise<{ data: T }> {
+    const token = getAccessToken();
+    const response = await fetch(`${API_URL}${path}`, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+      },
+    });
+    if (!response.ok) throw new Error(`API error: ${response.status}`);
+    const data = await response.json();
+    return { data };
+  },
+};
+
 function toDatabaseLocalTimestamp(date: Date): string {
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, '0');
