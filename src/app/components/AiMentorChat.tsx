@@ -131,7 +131,7 @@ export function AiMentorChat({ onBack, onVoiceMode }: AiMentorChatProps) {
 
   // Chat UI State
   const [showAttachMenu, setShowAttachMenu] = React.useState(false);
-  const [attachment, setAttachment] = React.useState<Attachment | null>(null);
+  const [attachment, setAttachment] = React.useState<Attachment | undefined>(undefined);
   const [inputText, setInputText] = React.useState("");
   const [isLoading, setIsLoading] = React.useState(false);
   const [messages, setMessages] = React.useState<Message[]>([]);
@@ -289,7 +289,7 @@ export function AiMentorChat({ onBack, onVoiceMode }: AiMentorChatProps) {
   };
 
   const clearAttachment = () => {
-    setAttachment(null);
+    setAttachment(undefined);
     setInputText("");
   };
 
@@ -313,7 +313,7 @@ export function AiMentorChat({ onBack, onVoiceMode }: AiMentorChatProps) {
     };
     setMessages(prev => [...prev, userMsg]);
     setInputText("");
-    setAttachment(null);
+    setAttachment(undefined);
     setIsLoading(true);
 
     try {
