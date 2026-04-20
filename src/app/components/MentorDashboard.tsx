@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { getCurrentUser, mentorDashboard, profile as profileApi, notifications as notificationsApi, setCurrentUser } from '../lib/api';
 import { roomAPI } from '../../utils/api/roomAPI';
 import { completePendingOnboarding, shouldShowPendingOnboarding } from '../lib/onboarding';
@@ -46,9 +47,14 @@ interface MentorDashboardProps {
 // SVG Icon helpers
 // ────────────────────────────────────────────────────────────────────────────────
 
-function ElmOrbitLogo() {
+function ElmOrbitLogo({ onClick }: { onClick?: () => void }) {
   return (
-    <div className="flex items-center gap-2">
+    <button 
+      onClick={onClick} 
+      className="flex items-center gap-2 hover:opacity-80 transition-opacity"
+      type="button"
+      aria-label="Go to homepage"
+    >
       <div className="size-[35px] shrink-0">
         <svg className="block size-full" fill="none" viewBox="0 0 35 35">
           <path d={svgPaths.p3781200} fill="#003566" />
@@ -73,7 +79,7 @@ function ElmOrbitLogo() {
         </svg>
       </div>
       <span className="font-['Righteous'] text-blue-600 dark:text-blue-400 text-[20px]">Elm Orbit</span>
-    </div>
+    </button>
   );
 }
 
@@ -2841,6 +2847,7 @@ function ComingSoon({ title }: { title: string }) {
 interface SidebarProps {
   active: NavItem;
   onNav: (item: NavItem) => void;
+  onLogoClick?: () => void;
 }
 
 const NAV_ITEMS: { id: NavItem; label: string; icon: React.ReactNode }[] = [
@@ -2850,12 +2857,12 @@ const NAV_ITEMS: { id: NavItem; label: string; icon: React.ReactNode }[] = [
   { id: 'community', label: 'Community', icon: <CommunityIcon /> },
 ];
 
-function Sidebar({ active, onNav }: SidebarProps) {
+function Sidebar({ active, onNav, onLogoClick }: SidebarProps) {
   return (
     <div className="flex h-full flex-col border-r border-border/70 bg-card pt-[32px] pb-6 shadow-sm">
       {/* Logo */}
       <div className="px-[32px] mb-[36px]">
-        <ElmOrbitLogo />
+        <ElmOrbitLogo onClick={onLogoClick} />
       </div>
 
       {/* Menu label */}
@@ -2939,6 +2946,7 @@ function ProfileDropdown({ onLogout, onClose, onNavigate }: ProfileDropdownProps
 // ────────────────────────────────────────────────────────────────────────────────
 
 export function MentorDashboard({ onLogout }: MentorDashboardProps) {
+  const navigate = useNavigate();
   const cachedUser = React.useMemo(() => getCurrentUser(), []);
   const [activeNav, setActiveNav] = useState<NavItem>('create-session');
   const [showProfile, setShowProfile] = useState(false);
@@ -3055,6 +3063,10 @@ export function MentorDashboard({ onLogout }: MentorDashboardProps) {
     setActiveNav('profile');
   }, []);
 
+  const handleLogoClick = React.useCallback(() => {
+    navigate('/');
+  }, [navigate]);
+
   const handleToggleNotifications = async () => {
     if (!showNotifications) {
       try {
@@ -3111,7 +3123,7 @@ export function MentorDashboard({ onLogout }: MentorDashboardProps) {
       {/* Sidebar — hidden when profile settings is open (it has its own sidebar) */}
       {activeNav !== 'profile' && (
         <div className="w-[278px] shrink-0 h-full overflow-y-auto hidden md:block">
-          <Sidebar active={activeNav} onNav={setActiveNav} />
+          <Sidebar active={activeNav} onNav={setActiveNav} onLogoClick={handleLogoClick} />
         </div>
       )}
 
