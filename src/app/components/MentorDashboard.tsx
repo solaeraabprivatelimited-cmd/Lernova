@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { getCurrentUser, mentorDashboard, profile as profileApi, notifications as notificationsApi, setCurrentUser } from '../lib/api';
+import { roomAPI } from '../../utils/api/roomAPI';
 import { completePendingOnboarding, shouldShowPendingOnboarding } from '../lib/onboarding';
 import svgPaths from '../../imports/svg-awezib197y';
 import svgWellness from '../../imports/svg-fui5khiao7';
@@ -156,7 +157,7 @@ function UserIcon() {
 // Types
 // ────────────────────────────────────────────────────────────────────────────────
 
-type NavItem = 'create-session' | 'session-requests' | 'study-room' | 'wellness' | 'community' | 'profile';
+type NavItem = 'create-session' | 'study-room' | 'wellness' | 'community' | 'profile';
 
 interface TimeSlot {
   id: string;
@@ -1676,12 +1677,57 @@ function CreateStudyRoomView() {
   const [maxParticipants, setMaxParticipants] = useState(8);
   const [roomId] = useState(() => Math.floor(1000 + Math.random() * 9000).toString());
   const [copied, setCopied] = useState(false);
+  const [isLaunching, setIsLaunching] = useState(false);
+  const [launchError, setLaunchError] = useState('');
 
 const joinLink = `elmorbit.co.in/room/${roomId}`;
 
-  const handleLaunch = () => {
+  const handleLaunch = async () => {
+    // Validation
+    setLaunchError('');
+    if (!roomName.trim()) {
+      setLaunchError('Please enter a room name');
+      toast.error('Room name is required');
+      return;
+    }
+    if (!subject.trim()) {
+      setLaunchError('Please enter a subject/topic');
+      toast.error('Subject/topic is required');
+      return;
+    }
+    if (maxParticipants < 2 || maxParticipants > 50) {
+      setLaunchError('Participants must be between 2 and 50');
+      toast.error('Invalid participant count');
+      return;
+    }
+
+    // Launch room via API
     setStep('launching');
-    setTimeout(() => setStep('launched'), 2500);
+    setIsLaunching(true);
+    
+    try {
+      const roomData = await roomAPI.createRoom({
+        name: roomName.trim(),
+        subject: subject.trim(),
+        type: roomType,
+        maxParticipants: maxParticipants,
+        isPublic: roomType === 'public',
+        mentorId: (await getCurrentUser())?.id || '',
+      });
+      
+      if (roomData && roomData.id) {
+        toast.success(`Room "${roomName}" created successfully!`);
+        setTimeout(() => setStep('launched'), 1500);
+      } else {
+        throw new Error('Invalid response from server');
+      }
+    } catch (error: any) {
+      const errorMsg = error?.message || 'Failed to create room. Please try again.';
+      setLaunchError(errorMsg);
+      toast.error(errorMsg);
+      setStep('share');
+      setIsLaunching(false);
+    }
   };
 
   const handleCopyLink = () => {
@@ -1696,13 +1742,14 @@ const joinLink = `elmorbit.co.in/room/${roomId}`;
     setSubject('');
     setRoomType('private');
     setMaxParticipants(8);
+    setLaunchError('');
   };
 
   /* ── Shared page header ── */
   const PageHeader = () => (
     <div>
-      <p className="font-['Poppins'] font-medium text-[40px] text-black leading-tight">Create Study Room</p>
-      <p className="font-['Poppins'] text-[14px] text-[rgba(0,0,0,0.6)]">Build your own space to learn your way.</p>
+      <p className="font-['Poppins'] font-medium text-[40px] text-foreground leading-tight">Create Study Room</p>
+      <p className="font-['Poppins'] text-[14px] text-muted-foreground">Build your own space to learn your way.</p>
     </div>
   );
 
@@ -1712,11 +1759,16 @@ const joinLink = `elmorbit.co.in/room/${roomId}`;
       <div className="flex flex-col gap-6">
         <PageHeader />
         <div className="flex items-center justify-center py-32">
-          <div className="flex items-center gap-3">
-            <p className="font-['Poppins'] font-medium text-[16px] text-black">
-              Launching your room.......Please wait
-            </p>
-            <span className="text-3xl animate-spin animate-duration-2s">⏳</span>
+          <div className="flex flex-col items-center gap-4">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin"></div>
+              <p className="font-['Poppins'] font-medium text-[16px] text-foreground">
+                Creating your room...
+              </p>
+            </div>
+            {launchError && (
+              <p className="font-['Poppins'] text-[14px] text-red-500 text-center">{launchError}</p>
+            )}
           </div>
         </div>
       </div>
@@ -1734,13 +1786,13 @@ const joinLink = `elmorbit.co.in/room/${roomId}`;
               <path d="M20 6L9 17l-5-5" />
             </svg>
           </div>
-          <p className="font-['Poppins'] font-medium text-[20px] text-black">Room Launched!</p>
-          <p className="font-['Poppins'] text-[14px] text-[rgba(0,0,0,0.5)]">
+          <p className="font-['Poppins'] font-medium text-[20px] text-foreground">Room Launched!</p>
+          <p className="font-['Poppins'] text-[14px] text-muted-foreground">
             Your study room <span className="text-blue-600 dark:text-blue-400 font-medium">"{roomName || 'Untitled Room'}"</span> is now live.
           </p>
           <button
             onClick={handleReset}
-            className="mt-2 font-['Poppins'] font-medium text-[14px] text-blue-600 dark:text-blue-400 underline hover:opacity-70 transition-opacity"
+            className="mt-4 font-['Poppins'] font-medium text-[14px] px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-[20px] transition-colors"
           >
             Create another room
           </button>
@@ -1755,41 +1807,41 @@ const joinLink = `elmorbit.co.in/room/${roomId}`;
       <div className="flex flex-col gap-6">
         <PageHeader />
         <div className="flex justify-center">
-          <div className="dark:bg-[#2b2c2f] light:bg-white rounded-[20px] shadow-[0px_4px_50px_5px_rgba(0,0,0,0.1)] p-4 sm:p-6 w-full max-w-[515px] flex flex-col gap-6">
+          <div className="dark:bg-slate-800 bg-white rounded-[20px] shadow-[0px_4px_50px_5px_rgba(0,0,0,0.1)] p-4 sm:p-6 w-full max-w-[515px] flex flex-col gap-6">
             {/* Back + title inside card */}
             <div className="flex flex-col gap-[5px]">
               <button
                 onClick={() => setStep('form')}
-                className="font-['Poppins'] text-[16px] dark:text-white light:text-black text-left hover:opacity-60 transition-opacity"
+                className="font-['Poppins'] text-[16px] text-foreground text-left hover:opacity-60 transition-opacity"
               >
                 &lt;Back
               </button>
-              <p className="font-['Poppins'] font-medium text-[24px] text-black">Share Your Room</p>
+              <p className="font-['Poppins'] font-medium text-[24px] text-foreground">Share Your Room</p>
             </div>
 
             {/* Room Name (read-only) */}
             <div className="flex flex-col gap-2.5">
-              <p className="font-['Poppins'] text-[16px] text-black">Room Name</p>
-              <div className="h-[39px] rounded-[10px] border border-[rgba(0,0,0,0.4)] flex items-center gap-2.5 px-2.5">
-                <Building2 className="w-[24px] h-[24px] shrink-0 text-black" strokeWidth={1.4} />
-                <p className="font-['Poppins'] text-[14px] text-black">{roomName || 'Maths Room'}</p>
+              <p className="font-['Poppins'] text-[16px] text-foreground">Room Name</p>
+              <div className="h-[39px] rounded-[10px] border dark:border-slate-700 border-slate-300 flex items-center gap-2.5 px-2.5 dark:bg-slate-800 bg-slate-50">
+                <Building2 className="w-[24px] h-[24px] shrink-0 dark:text-white/60 text-slate-600" strokeWidth={1.4} />
+                <p className="font-['Poppins'] text-[14px] text-foreground">{roomName || 'Maths Room'}</p>
               </div>
             </div>
 
             {/* Room ID */}
             <div className="flex flex-col gap-2.5">
-              <p className="font-['Poppins'] text-[16px] text-black">Room ID</p>
-              <div className="h-[39px] rounded-[10px] border border-[rgba(0,0,0,0.4)] flex items-center gap-2.5 px-2.5">
-                <Hash className="w-[20px] h-[20px] shrink-0 text-black" strokeWidth={1.6} />
-                <p className="font-['Poppins'] font-medium text-[14px] text-black">{roomId}</p>
+              <p className="font-['Poppins'] text-[16px] text-foreground">Room ID</p>
+              <div className="h-[39px] rounded-[10px] border dark:border-slate-700 border-slate-300 flex items-center gap-2.5 px-2.5 dark:bg-slate-800 bg-slate-50">
+                <Hash className="w-[20px] h-[20px] shrink-0 dark:text-white/60 text-slate-600" strokeWidth={1.6} />
+                <p className="font-['Poppins'] font-medium text-[14px] text-foreground">{roomId}</p>
               </div>
             </div>
 
             {/* Join Link */}
             <div className="flex flex-col gap-2.5">
-              <p className="font-['Poppins'] text-[16px] text-black">Join Link</p>
-              <div className="h-[39px] rounded-[10px] border border-[rgba(0,0,0,0.4)] flex items-center gap-2.5 px-2.5">
-                <Link2 className="w-[24px] h-[24px] shrink-0 text-black" strokeWidth={1.6} />
+              <p className="font-['Poppins'] text-[16px] text-foreground">Join Link</p>
+              <div className="h-[39px] rounded-[10px] border dark:border-slate-700 border-slate-300 flex items-center gap-2.5 px-2.5 dark:bg-slate-800 bg-slate-50">
+                <Link2 className="w-[24px] h-[24px] shrink-0 dark:text-white/60 text-slate-600" strokeWidth={1.6} />
                 <p className="font-['Poppins'] font-medium text-[14px] text-blue-600 dark:text-blue-400">{joinLink}</p>
               </div>
             </div>
@@ -1818,35 +1870,35 @@ const joinLink = `elmorbit.co.in/room/${roomId}`;
 
           {/* Room Name */}
           <div className="flex flex-col gap-2.5">
-            <p className="font-['Poppins'] text-[16px] dark:text-white light:text-black">Room Name</p>
-            <div className="h-[39px] rounded-[10px] border dark:border-white/10 light:border-[rgba(0,0,0,0.4)] flex items-center gap-2.5 px-2.5 dark:bg-[#3a3b3f] light:bg-white">
-              <Building2 className="w-[24px] h-[24px] shrink-0 dark:text-white/60 light:text-[rgba(0,0,0,0.6)]" strokeWidth={1.4} />
+            <p className="font-['Poppins'] text-[16px] text-foreground">Room Name</p>
+            <div className="h-[39px] rounded-[10px] border dark:border-white/10 border-slate-300 flex items-center gap-2.5 px-2.5 dark:bg-slate-800 bg-slate-50">
+              <Building2 className="w-[24px] h-[24px] shrink-0 dark:text-white/60 text-slate-600" strokeWidth={1.4} />
               <input
                 value={roomName}
                 onChange={e => setRoomName(e.target.value)}
                 placeholder="Name your study space"
-                className="flex-1 bg-transparent outline-none font-['Poppins'] text-[14px] text-black placeholder:text-[rgba(0,0,0,0.4)]"
+                className="flex-1 bg-transparent outline-none font-['Poppins'] text-[14px] text-foreground placeholder:text-muted-foreground"
               />
             </div>
           </div>
 
           {/* Subject/Topic */}
           <div className="flex flex-col gap-2.5">
-            <p className="font-['Poppins'] text-[16px] text-black">Subject/Topic</p>
-            <div className="h-[39px] rounded-[10px] border border-[rgba(0,0,0,0.4)] flex items-center gap-2.5 px-2.5">
-              <AlignLeft className="w-[24px] h-[24px] shrink-0 text-[rgba(0,0,0,0.6)]" strokeWidth={1.4} />
+            <p className="font-['Poppins'] text-[16px] text-foreground">Subject/Topic</p>
+            <div className="h-[39px] rounded-[10px] border dark:border-white/10 border-slate-300 flex items-center gap-2.5 px-2.5 dark:bg-slate-800 bg-slate-50">
+              <AlignLeft className="w-[24px] h-[24px] shrink-0 dark:text-white/60 text-slate-600" strokeWidth={1.4} />
               <input
                 value={subject}
                 onChange={e => setSubject(e.target.value)}
                 placeholder="Enter Subject/Topic"
-                className="flex-1 bg-transparent outline-none font-['Poppins'] text-[14px] text-black placeholder:text-[rgba(0,0,0,0.4)]"
+                className="flex-1 bg-transparent outline-none font-['Poppins'] text-[14px] text-foreground placeholder:text-muted-foreground"
               />
             </div>
           </div>
 
           {/* Max Participants */}
           <div className="flex flex-col gap-2.5">
-            <p className="font-['Poppins'] text-[16px] text-black">Max Participants</p>
+            <p className="font-['Poppins'] text-[16px] text-foreground">Max Participants</p>
             <div className="flex gap-2.5 items-center">
               <input
                 type="range"
@@ -1860,27 +1912,27 @@ const joinLink = `elmorbit.co.in/room/${roomId}`;
                 {maxParticipants}
               </div>
             </div>
-            <p className="font-['Poppins'] text-[12px] text-[rgba(0,0,0,0.6)]">2–50 participants (recommended: 4–8)</p>
+            <p className="font-['Poppins'] text-[12px] text-muted-foreground">2–50 participants (recommended: 4–8)</p>
           </div>
 
           {/* Room Type */}
           <div className="flex flex-col gap-2.5">
-            <p className="font-['Poppins'] text-[16px] text-black">Select Room Type</p>
+            <p className="font-['Poppins'] text-[16px] text-foreground">Select Room Type</p>
             <div className="flex gap-2.5">
               {/* Private */}
               <button
                 onClick={() => setRoomType('private')}
                 className={`flex-1 rounded-[10px] p-2.5 text-left transition-colors ${
                   roomType === 'private'
-                    ? 'bg-[#c9e5ff]'
-                    : 'border border-[rgba(0,0,0,0.4)] hover:bg-gray-50'
+                    ? 'bg-blue-100 dark:bg-blue-950'
+                    : 'border dark:border-slate-700 border-slate-300 dark:hover:bg-slate-800 hover:bg-slate-100'
                 }`}
               >
                 <div className="flex items-center gap-2.5 mb-2.5">
-                  <Lock className="w-[20px] h-[20px] shrink-0 text-[rgba(0,0,0,0.8)]" strokeWidth={1.6} />
-                  <span className="font-['Poppins'] font-medium text-[14px] text-[rgba(0,0,0,0.8)]">Private</span>
+                  <Lock className="w-[20px] h-[20px] shrink-0 text-foreground" strokeWidth={1.6} />
+                  <span className="font-['Poppins'] font-medium text-[14px] text-foreground">Private</span>
                 </div>
-                <div className="font-['Poppins'] text-[12px] text-[rgba(0,0,0,0.6)] leading-snug">
+                <div className="font-['Poppins'] text-[12px] text-muted-foreground leading-snug">
                   <p>Accessible only through a</p>
                   <p>Room ID or invitation link.</p>
                 </div>
@@ -1891,15 +1943,15 @@ const joinLink = `elmorbit.co.in/room/${roomId}`;
                 onClick={() => setRoomType('public')}
                 className={`flex-1 rounded-[10px] p-2.5 text-left transition-colors ${
                   roomType === 'public'
-                    ? 'bg-[#c9e5ff]'
-                    : 'border border-[rgba(0,0,0,0.4)] hover:bg-gray-50'
+                    ? 'bg-blue-100 dark:bg-blue-950'
+                    : 'border dark:border-slate-700 border-slate-300 dark:hover:bg-slate-800 hover:bg-slate-100'
                 }`}
               >
                 <div className="flex items-center gap-2.5 mb-2.5">
-                  <Globe className="w-[20px] h-[20px] shrink-0 text-[rgba(0,0,0,0.8)]" strokeWidth={1.6} />
-                  <span className="font-['Poppins'] font-medium text-[14px] text-[rgba(0,0,0,0.8)]">Public</span>
+                  <Globe className="w-[20px] h-[20px] shrink-0 text-foreground" strokeWidth={1.6} />
+                  <span className="font-['Poppins'] font-medium text-[14px] text-foreground">Public</span>
                 </div>
-                <div className="font-['Poppins'] text-[12px] text-[rgba(0,0,0,0.6)] leading-snug">
+                <div className="font-['Poppins'] text-[12px] text-muted-foreground leading-snug">
                   <p>Open to all learners and listed</p>
                   <p>in Join Random Room Page.</p>
                 </div>
@@ -1911,15 +1963,24 @@ const joinLink = `elmorbit.co.in/room/${roomId}`;
           <div className="flex gap-6 items-center">
             <button
               onClick={() => setStep('share')}
-              className="flex-1 h-[42px] rounded-[20px] border-2 border-blue-600 dark:border-blue-500 text-blue-600 dark:text-blue-400 font-['Poppins'] font-medium text-[14px] dark:hover:bg-blue-600 dark:hover:text-white light:hover:bg-blue-600 light:hover:text-white transition-colors"
+              disabled={isLaunching}
+              className="flex-1 h-[42px] rounded-[20px] border-2 border-blue-600 dark:border-blue-500 text-blue-600 dark:text-blue-400 font-['Poppins'] font-medium text-[14px] hover:bg-blue-600/10 dark:hover:bg-blue-600/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Share Room
             </button>
             <button
               onClick={handleLaunch}
-              className="flex-1 h-[42px] rounded-[20px] bg-blue-600 text-white font-['Poppins'] font-medium text-[14px] dark:hover:bg-blue-700 light:hover:bg-blue-700 transition-colors"
+              disabled={isLaunching || !roomName.trim() || !subject.trim()}
+              className="flex-1 h-[42px] rounded-[20px] bg-blue-600 text-white font-['Poppins'] font-medium text-[14px] hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-blue-600 flex items-center justify-center gap-2"
             >
-              Launch Room
+              {isLaunching ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  Launching...
+                </>
+              ) : (
+                'Launch Room'
+              )}
             </button>
           </div>
         </div>
@@ -2624,7 +2685,7 @@ function EmotionalWellnessView() {
 
                 {/* Dropdown panel */}
                 {mcTypeDropOpen && (
-                  <div className="absolute top-[calc(100%+4px)] left-0 right-0 dark:bg-[#3a3b3f] light:bg-white rounded-[10px] shadow-[0px_4px_30px_0px_rgba(0,0,0,0.1)] z-10 flex flex-col gap-[4px]">
+                  <div className="absolute top-[calc(100%+4px)] left-0 right-0 dark:bg-[#3a3b3f] light:bg-white rounded-[10px] shadow-[0px_4px_30px_0px_rgba(0,0,0,0.1)] z-40 flex flex-col gap-[4px]">
                     {(['Quote', 'Story'] as const).map(opt => (
                       <button
                         key={opt}
@@ -2786,10 +2847,9 @@ interface SidebarProps {
 }
 
 const NAV_ITEMS: { id: NavItem; label: string; icon: React.ReactNode }[] = [
-  { id: 'create-session', label: 'Create Session', icon: <CreateSessionIcon /> },
-  { id: 'session-requests', label: 'Session Requests', icon: <SessionRequestsIcon /> },
-  { id: 'study-room', label: 'Create Study Room', icon: <StudyRoomIcon /> },
-  { id: 'wellness', label: 'Emotional Wellness', icon: <WellnessIcon /> },
+  { id: 'create-session', label: 'AI Mentor', icon: <CreateSessionIcon /> },
+  { id: 'study-room', label: 'Study Rooms', icon: <StudyRoomIcon /> },
+  { id: 'wellness', label: 'World Chat', icon: <WellnessIcon /> },
   { id: 'community', label: 'Community', icon: <CommunityIcon /> },
 ];
 
@@ -2857,8 +2917,8 @@ interface ProfileDropdownProps {
 function ProfileDropdown({ onLogout, onClose, onNavigate }: ProfileDropdownProps) {
   return (
     <>
-      <div className="fixed inset-0 z-10" onClick={onClose} />
-      <div className="absolute top-[52px] right-0 z-20 w-[180px] overflow-hidden rounded-[12px] border border-border/70 dark:bg-[#3a3b3f] light:bg-card py-2 shadow-[0px_4px_20px_rgba(0,0,0,0.15)]">
+      <div className="fixed inset-0 z-30" onClick={onClose} />
+      <div className="absolute top-[52px] right-0 z-40 w-[180px] overflow-hidden rounded-[12px] border border-border/70 dark:bg-[#3a3b3f] light:bg-card py-2 shadow-[0px_4px_20px_rgba(0,0,0,0.15)]">
         <button
           className="w-full px-4 py-2.5 text-left font-['Poppins'] text-[14px] dark:text-white light:text-foreground transition-colors dark:hover:bg-[#444649] light:hover:bg-muted"
           onClick={() => { onNavigate('profile'); onClose(); }}
@@ -2992,7 +3052,7 @@ export function MentorDashboard({ onLogout }: MentorDashboardProps) {
       return;
     }
     if (index === 1) {
-      setActiveNav('session-requests');
+      setActiveNav('wellness');
       return;
     }
     setActiveNav('profile');
@@ -3016,7 +3076,6 @@ export function MentorDashboard({ onLogout }: MentorDashboardProps) {
   const renderContent = () => {
     switch (activeNav) {
       case 'create-session': return <CreateSessionView stats={mentorStats} loadingStats={mentorStatsLoading} mentorName={displayName} />;
-      case 'session-requests': return <SessionRequestsView />;
       case 'study-room': return <CreateStudyRoomView />;
       case 'wellness': return <EmotionalWellnessView />;
       case 'community':
@@ -3078,7 +3137,7 @@ export function MentorDashboard({ onLogout }: MentorDashboardProps) {
             )}
             {showNotifications && (
               <div
-                className="absolute top-[44px] right-0 z-30 flex w-[380px] flex-col gap-[24px] rounded-[20px] border border-border/70 dark:bg-[#3a3b3f] light:bg-card p-[32px] shadow-[0px_4px_50px_5px_rgba(0,0,0,0.1)]"
+                className="absolute top-[44px] right-0 z-40 flex w-[380px] flex-col gap-[24px] rounded-[20px] border border-border/70 dark:bg-[#3a3b3f] light:bg-card p-[32px] shadow-[0px_4px_50px_5px_rgba(0,0,0,0.1)]"
                 onClick={(e) => e.stopPropagation()}
               >
                 {/* Header */}

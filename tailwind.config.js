@@ -8,8 +8,18 @@ export default {
         xs: "375px", // Extra small devices (mobile phones)
       },
       fontSize: {
-        // Custom sizes for dashboard
-        xs: "11px",
+        // Semantic typography scale
+        // Labels & Captions
+        xs: ["0.75rem", { lineHeight: "1rem" }], // 12px - Labels, small text
+        sm: ["0.875rem", { lineHeight: "1.25rem" }], // 14px - Body text, descriptions
+        base: ["1rem", { lineHeight: "1.5rem" }], // 16px - Body, standard text
+        // Headings
+        lg: ["1.125rem", { lineHeight: "1.75rem" }], // 18px - Subheadings
+        xl: ["1.5rem", { lineHeight: "2rem" }], // 24px - Section headings
+        "2xl": ["2rem", { lineHeight: "2.5rem" }], // 32px - Page headings
+        "3xl": ["2.5rem", { lineHeight: "3rem" }], // 40px - Large titles
+        "4xl": ["3rem", { lineHeight: "3.5rem" }], // 48px - Extra large headings
+        // Legacy custom sizes (kept for backward compatibility during migration)
         xs2: "12px",
         sm2: "13px",
         base2: "14px",
@@ -62,7 +72,18 @@ export default {
         280: "280px",
       },
       zIndex: {
+        0: "0",
+        10: "10",
+        20: "20",
+        30: "30",
+        40: "40",
+        50: "50",
         60: "60",
+        70: "70",
+        80: "80",
+        90: "90",
+        100: "100",
+        auto: "auto",
       },
       maxHeight: {
         270: "270px",

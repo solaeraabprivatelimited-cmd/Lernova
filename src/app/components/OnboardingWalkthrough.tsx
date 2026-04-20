@@ -47,10 +47,10 @@ const STEP_COPY: Record<OnboardingRole, OnboardingStep[]> = {
       ctaLabel: 'Open Create Session',
     },
     {
-      eyebrow: 'Stay Responsive',
-      title: 'Keep an eye on incoming requests',
-      description: 'Session requests are where you can accept, postpone, and manage the learner experience without losing context.',
-      ctaLabel: 'Open Requests',
+      eyebrow: 'Take Care',
+      title: 'Connect with others in World Chat',
+      description: 'Join our supportive community in World Chat to share experiences, get inspired, and support fellow learners on their journey.',
+      ctaLabel: 'Open World Chat',
     },
     {
       eyebrow: 'Build Trust',

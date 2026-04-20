@@ -506,12 +506,12 @@ export function AiMentorChat({ onBack, onVoiceMode }: AiMentorChatProps) {
   return (
     <div className="flex h-screen w-full overflow-hidden bg-slate-50 dark:bg-slate-950" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }} onClick={() => setShowAttachMenu(false)}>
       {/* Left Sidebar Panel */}
-      <div className="w-[280px] shrink-0 flex-col h-full z-10 relative hidden lg:flex overflow-hidden bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950"
+      <div className="w-[280px] shrink-0 flex flex-col h-full z-10 relative hidden lg:flex overflow-hidden bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 border-r border-white/10"
         onClick={(e) => e.stopPropagation()}>
         <div className="absolute inset-0 opacity-[0.03] pointer-events-none"
           style={{ backgroundImage: 'radial-gradient(circle at 25% 25%, white 1px, transparent 1px)', backgroundSize: '24px 24px' }} />
 
-        <div className="relative flex flex-col h-full p-6">
+        <div className="relative flex flex-col h-full p-6 overflow-hidden">
           <button onClick={onBack}
             className="flex items-center gap-2 text-white/40 hover:text-white mb-8 transition-colors group cursor-pointer">
             <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
@@ -555,14 +555,14 @@ export function AiMentorChat({ onBack, onVoiceMode }: AiMentorChatProps) {
 
           <div className="h-px bg-white/[0.06] mb-4" />
 
-          <div className="flex-1 overflow-y-auto">
+          <div className="flex-1 overflow-y-auto overflow-x-hidden scrollbar-thin scrollbar-thumb-white/20 scrollbar-track-transparent hover:scrollbar-thumb-white/40">
             <p className="text-[10px] font-bold text-white/20 uppercase tracking-[0.18em] pl-4 mb-3">Your Chats</p>
             {isLoadingChats ? (
               <p className="text-[12px] text-white/30 pl-4">Loading chats...</p>
             ) : chatSessions.length === 0 ? (
               <p className="text-[12px] text-white/30 pl-4">No chats yet. Create one to start!</p>
             ) : (
-              <div className="flex flex-col gap-0.5">
+              <div className="flex flex-col gap-0.5 pr-2">
                 {chatSessions.map((session) => (
                   <div
                     key={session.id}
