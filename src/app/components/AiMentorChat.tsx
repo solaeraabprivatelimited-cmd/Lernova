@@ -142,18 +142,28 @@ export function AiMentorChat({ onBack, onVoiceMode }: AiMentorChatProps) {
     const loadChats = async () => {
       try {
         setIsLoadingChats(true);
-        const sessions = await aiChat.listSessions();
-        setChatSessions(sessions);
-        
-        // Auto-select first chat if available
-        if (sessions.length > 0 && !currentSessionId) {
-          const firstSessionId = sessions[0].id;
-          setCurrentSessionId(firstSessionId);
-          await loadChatMessages(firstSessionId);
+        try {
+          const sessions = await aiChat.listSessions();
+          setChatSessions(sessions);
+          
+          // Auto-select first chat if available
+          if (sessions.length > 0 && !currentSessionId) {
+            const firstSessionId = sessions[0].id;
+            setCurrentSessionId(firstSessionId);
+            await loadChatMessages(firstSessionId);
+          }
+        } catch (authError: any) {
+          // User not authenticated or session expired
+          if (authError.message?.includes('Authentication') || authError.message?.includes('unauthorized')) {
+            console.warn('User not authenticated for chat history. Starting fresh session.');
+            // Don't show error - just start with empty chat
+            setChatSessions([]);
+          } else {
+            // Other errors - show to user
+            console.error('Failed to load chat sessions:', authError);
+            toast.error('Failed to load chat history');
+          }
         }
-      } catch (error) {
-        console.error('Failed to load chat sessions:', error);
-        toast.error('Failed to load chat history');
       } finally {
         setIsLoadingChats(false);
       }
@@ -170,24 +180,35 @@ export function AiMentorChat({ onBack, onVoiceMode }: AiMentorChatProps) {
 
   const loadChatMessages = async (sessionId: string) => {
     try {
-      const { session, messages: dbMessages } = await aiChat.getSession(sessionId);
-      
-      // Convert DB messages to UI format
-      const uiMessages: Message[] = dbMessages.map((msg: any) => ({
-        id: msg.id,
-        role: msg.role,
-        text: msg.content,
-        time: new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        attachment: msg.attachmentUrl ? {
-          type: msg.attachmentType as 'image' | 'file',
-          content: msg.attachmentUrl
-        } : undefined,
-      }));
-      
-      setMessages(uiMessages);
+      try {
+        const { session, messages: dbMessages } = await aiChat.getSession(sessionId);
+        
+        // Convert DB messages to UI format
+        const uiMessages: Message[] = dbMessages.map((msg: any) => ({
+          id: msg.id,
+          role: msg.role,
+          text: msg.content,
+          time: new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          attachment: msg.attachmentUrl ? {
+            type: msg.attachmentType as 'image' | 'file',
+            content: msg.attachmentUrl
+          } : undefined,
+        }));
+        
+        setMessages(uiMessages);
+      } catch (authError: any) {
+        // User not authenticated - start with empty chat
+        if (authError.message?.includes('Authentication') || authError.message?.includes('unauthorized')) {
+          console.warn('Not authenticated for chat history. Starting fresh session.');
+          setMessages([]);
+        } else {
+          throw authError;
+        }
+      }
     } catch (error) {
       console.error('Failed to load chat messages:', error);
       toast.error('Failed to load chat messages');
+      setMessages([]);
     }
   };
 
@@ -295,10 +316,6 @@ export function AiMentorChat({ onBack, onVoiceMode }: AiMentorChatProps) {
 
   const handleSend = async () => {
     if (!inputText.trim() && !attachment) return;
-    if (!currentSessionId) {
-      toast.error('Please create or select a chat first');
-      return;
-    }
 
     const userMessage = inputText;
     const timestamp = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
@@ -317,15 +334,22 @@ export function AiMentorChat({ onBack, onVoiceMode }: AiMentorChatProps) {
     setIsLoading(true);
 
     try {
-      // Save user message to database
-      await aiChat.addMessage(currentSessionId!, {
-        role: 'user',
-        content: userMessage,
-        attachmentType: attachment?.type,
-        attachmentUrl: attachment?.content
-      });
+      // Try to save user message to database (if authenticated and have sessionId)
+      if (currentSessionId) {
+        try {
+          await aiChat.addMessage(currentSessionId, {
+            role: 'user',
+            content: userMessage,
+            attachmentType: attachment?.type,
+            attachmentUrl: attachment?.content
+          });
+        } catch (dbError) {
+          console.warn('Could not save to database, continuing with in-memory chat:', dbError);
+          // Continue anyway - user can still chat without saving
+        }
+      }
 
-      // Get AI response from Groq
+      // Get AI response from Groq (always works via backend proxy)
       const chatHistory = formatChatHistory(messages.map(m => ({ role: m.role, text: m.text })));
       const aiResponse = await getAiMentorResponse(userMessage, chatHistory);
 
@@ -339,11 +363,18 @@ export function AiMentorChat({ onBack, onVoiceMode }: AiMentorChatProps) {
       };
       setMessages(prev => [...prev, aiMsg]);
 
-      // Save AI message to database
-      await aiChat.addMessage(currentSessionId!, {
-        role: 'ai',
-        content: aiResponse
-      });
+      // Try to save AI message to database (if authenticated and have sessionId)
+      if (currentSessionId) {
+        try {
+          await aiChat.addMessage(currentSessionId, {
+            role: 'ai',
+            content: aiResponse
+          });
+        } catch (dbError) {
+          console.warn('Could not save to database, continuing with in-memory chat:', dbError);
+          // Continue anyway - message already in UI
+        }
+      }
     } catch (error) {
       console.error('Error getting AI response:', error);
       toast.error(error instanceof Error ? error.message : "Failed to get AI response");
