@@ -2672,9 +2672,15 @@ function SecurityView({ onAccountDeleted }: { onAccountDeleted?: () => void }) {
   );
 }
 
-function MentorEarningsView() {
+export function MentorProfileSettings({ onBack }: MentorProfileSettingsProps) {
   const [activeNav, setActiveNav] = useState<ProfileSubNav>("basic");
   const [menuOpen, setMenuOpen] = useState(false);
+  
+  // Get current user
+  const currentUser = getCurrentUser();
+  
+  // Dark mode
+  const isDark = useDarkMode();
 
   /* ── Form state ── */
   const [fullName,   setFullName]   = useState("");
@@ -2811,10 +2817,28 @@ function MentorEarningsView() {
         return;
       }
 
+      toast.success('Profile saved!');
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to save profile');
+    } finally {
+      setIsSaving(false);
+    }
+  }
+
+  // Save notification preferences
+  async function handleSaveNotifications() {
+    try {
+      setNotifSaving(true);
+      const supabase = getSupabaseClient();
+      if (!currentUser) {
+        toast.error("Not authenticated");
+        return;
+      }
+
       const { error } = await supabase
         .from('profiles')
         .upsert(
-          { id: sessionUser.id, notification_preferences: notifEnabled },
+          { id: currentUser.id, notification_preferences: notifEnabled },
           { onConflict: 'id' },
         );
 

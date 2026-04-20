@@ -1709,10 +1709,7 @@ const joinLink = `elmorbit.co.in/room/${roomId}`;
       const roomData = await roomAPI.createRoom({
         name: roomName.trim(),
         subject: subject.trim(),
-        type: roomType,
         maxParticipants: maxParticipants,
-        isPublic: roomType === 'public',
-        mentorId: (await getCurrentUser())?.id || '',
       });
       
       if (roomData && roomData.id) {

@@ -120,11 +120,9 @@ function MentorCard({
 /* ── Main Component ── */
 
 export function MentorDiscoveryView({ 
-  onBack, 
-  onBookSession 
+  onBack
 }: { 
   onBack: () => void;
-  onBookSession?: (mentorId: string, sessionData: any) => void;
 }) {
   const [mentors, setMentors] = useState<Mentor[]>([]);
   const [filteredMentors, setFilteredMentors] = useState<Mentor[]>([]);
