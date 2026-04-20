@@ -11,7 +11,6 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { BASE_URL, getSupabaseClient } from '../../app/lib/api';
-import { publicAnonKey } from '../../../utils/supabase/info';
 import { roomAPI } from '../api/roomAPI';
 import WebRTCManager, { WebRTCDiagnosticsReport } from './WebRTCManager';
 
@@ -130,7 +129,6 @@ export function useWebRTC({
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
-          apikey: publicAnonKey,
         },
         body: JSON.stringify({
           type: signal.signalType,
@@ -443,7 +441,6 @@ export function useWebRTC({
         const response = await fetch(`${BASE_URL}/webrtc/signal/${userId}?roomId=${roomId}`, {
           headers: { 
             Authorization: `Bearer ${token}`,
-            apikey: publicAnonKey,
           },
         });
 

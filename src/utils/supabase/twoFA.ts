@@ -1,20 +1,4 @@
-import { getSupabaseClient } from '../../app/lib/api';
-
-function createPublicFunctionHeaders(): Record<string, string> {
-  // ✅ SECURE: Use environment variables instead of hardcoded keys
-  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-  const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-
-  if (!supabaseUrl || !anonKey) {
-    throw new Error('Supabase configuration is missing. Please ensure VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY are set.');
-  }
-
-  return {
-    'Content-Type': 'application/json',
-    apikey: anonKey,
-    Authorization: `Bearer ${anonKey}`,
-  };
-}
+import { API_URL, getSupabaseClient } from '../../app/lib/api';
 
 export interface TwoFAConfig {
   isEnabled: boolean;
@@ -49,15 +33,9 @@ export async function sendOTP(email: string, userID: string): Promise<SendOTPRes
     const otp = generateOTP();
     const expirationMinutes = 10;
 
-    // ✅ SECURE: Use environment variable for base URL
-    const serverUrl = import.meta.env.VITE_SUPABASE_URL || '';
-    if (!serverUrl) {
-      throw new Error('Supabase URL is not configured');
-    }
-    
-    const response = await fetch(`${serverUrl}/functions/v1/send-2fa-otp`, {
+    const response = await fetch(`${API_URL}/auth/send-2fa-otp`, {
       method: 'POST',
-      headers: createPublicFunctionHeaders(),
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         email,
         userId: userID,

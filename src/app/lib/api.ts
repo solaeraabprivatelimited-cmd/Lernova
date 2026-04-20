@@ -1,7 +1,7 @@
 /**
  * Elm Orbit API Client
  * Central place for all backend API calls.
- * Reads project info from /utils/supabase/info.tsx and attaches auth tokens.
+ * Attaches Supabase auth tokens to requests sent to the Lernova_API service.
  * 
  * API_URL Configuration:
  * - Development: http://localhost:8000
@@ -16,17 +16,9 @@
 import { projectId, publicAnonKey } from '../../../utils/supabase/info';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
-// ✅ SECURE: API_URL from environment, fallback to Supabase Edge Functions
-export const API_URL = import.meta.env.VITE_API_URL || `https://${projectId}.supabase.co/functions/v1/server`;
+// API_URL must point at Lernova_API. Set VITE_API_URL in deployed frontend envs.
+export const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 export const BASE_URL = API_URL;
-
-function createPublicFunctionHeaders(): Record<string, string> {
-  return {
-    'Content-Type': 'application/json',
-    apikey: publicAnonKey,
-    Authorization: `Bearer ${publicAnonKey}`,
-  };
-}
 
 // ─── Supabase Auth client (true singleton) ──────────────────────────────────────
 //
@@ -481,9 +473,9 @@ async function apiFetch<T = any>(
 export const auth = {
   /** Step 1: Send OTP for signup */
   async requestSignupOtp(name: string, email: string, role: 'student' | 'mentor') {
-    const response = await fetch('https://evtvzmherkrahjsxdddi.supabase.co/functions/v1/send-signup-otp', {
+    const response = await fetch(`${API_URL}/auth/request-signup-otp`, {
       method: 'POST',
-      headers: createPublicFunctionHeaders(),
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, name, role }),
     });
     
@@ -497,9 +489,9 @@ export const auth = {
 
   /** Step 2: Verify OTP and create account */
   async verifySignupOtp(email: string, otp: string, password: string) {
-    const response = await fetch('https://evtvzmherkrahjsxdddi.supabase.co/functions/v1/verify-auth-otp', {
+    const response = await fetch(`${API_URL}/auth/verify-auth-otp`, {
       method: 'POST',
-      headers: createPublicFunctionHeaders(),
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, otp, password, type: 'signup' }),
     });
     
@@ -640,9 +632,9 @@ export const auth = {
 
   /** Step 1: Request password reset (send code) */
   async requestPasswordResetCode(email: string) {
-    const response = await fetch('https://evtvzmherkrahjsxdddi.supabase.co/functions/v1/send-password-reset-code', {
+    const response = await fetch(`${API_URL}/auth/request-password-reset-code`, {
       method: 'POST',
-      headers: createPublicFunctionHeaders(),
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email }),
     });
     
@@ -656,9 +648,9 @@ export const auth = {
 
   /** Step 2: Verify reset code and update password */
   async verifyPasswordResetCode(email: string, code: string, newPassword: string) {
-    const response = await fetch('https://evtvzmherkrahjsxdddi.supabase.co/functions/v1/verify-auth-otp', {
+    const response = await fetch(`${API_URL}/auth/verify-auth-otp`, {
       method: 'POST',
-      headers: createPublicFunctionHeaders(),
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, otp: code, newPassword, type: 'password_reset' }),
     });
     
