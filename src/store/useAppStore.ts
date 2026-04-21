@@ -55,24 +55,21 @@ export const useAppStore = create<AppState>((set) => ({
     })),
 }));
 
-// Derived hooks for easier access to specific domains
-export const useNetwork = () =>
-  useAppStore((state) => ({
-    isOnline: state.isOnline,
-    setOnline: state.setOnline,
-  }));
+// Derived hooks — select primitives individually, never return new objects
+export const useNetwork = () => ({
+  isOnline: useAppStore((s) => s.isOnline),
+  setOnline: useAppStore((s) => s.setOnline),
+});
 
-export const useAppStatus = () =>
-  useAppStore((state) => ({
-    globalError: state.globalError,
-    setGlobalError: state.setGlobalError,
-    isAppLoading: state.isAppLoading,
-    setAppLoading: state.setAppLoading,
-  }));
+export const useAppStatus = () => ({
+  globalError: useAppStore((s) => s.globalError),
+  setGlobalError: useAppStore((s) => s.setGlobalError),
+  isAppLoading: useAppStore((s) => s.isAppLoading),
+  setAppLoading: useAppStore((s) => s.setAppLoading),
+});
 
-export const useNotifications = () =>
-  useAppStore((state) => ({
-    notifications: state.notifications,
-    addNotification: state.addNotification,
-    removeNotification: state.removeNotification,
-  }));
+export const useNotifications = () => ({
+  notifications: useAppStore((s) => s.notifications),
+  addNotification: useAppStore((s) => s.addNotification),
+  removeNotification: useAppStore((s) => s.removeNotification),
+});

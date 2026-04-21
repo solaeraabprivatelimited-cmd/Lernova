@@ -23,13 +23,11 @@ const Toast: React.FC<{
   onClose: (id: string) => void;
 }> = ({ toast, onClose }) => {
   useEffect(() => {
-    if (toast.duration) {
-      const timer = setTimeout(() => {
-        onClose(toast.id);
-      }, toast.duration);
-      return () => clearTimeout(timer);
-    }
-  }, [toast, onClose]);
+    if (!toast.duration) return;
+    const timer = setTimeout(() => onClose(toast.id), toast.duration);
+    return () => clearTimeout(timer);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [toast.id, toast.duration]); // intentionally omit onClose — stable enough via id
 
   const bgColor = {
     success: 'bg-green-50 dark:bg-green-950',
