@@ -3,7 +3,6 @@ import React, { useState } from 'react';
 import { Bell, Search } from 'lucide-react';
 import imgEllipse1 from "figma:asset/798eac6e288222603807db12d070c52d1a145785.png";
 import svgPaths from "../../../imports/svg-h22dxe978i";
-import { JoiningRoomLoader } from "./JoiningRoomLoader";
 
 interface JoinRandomRoomViewProps {
   onBack: () => void;
@@ -37,17 +36,8 @@ export function JoinRandomRoomView({ onBack, onJoinRoom }: JoinRandomRoomViewPro
 
   const handleJoinRoom = (room: Room) => {
     setIsJoining(true);
-    
-    // Show loading for 3 seconds, then join room
-    setTimeout(() => {
-      onJoinRoom(room.roomId, room.name, room.subject);
-    }, 3000);
+    onJoinRoom(room.roomId, room.name, room.subject);
   };
-
-  // Show joining loader
-  if (isJoining) {
-    return <JoiningRoomLoader />;
-  }
 
   return (
     <>

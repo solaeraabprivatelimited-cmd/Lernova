@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { Bell } from 'lucide-react';
 import imgEllipse1 from "figma:asset/798eac6e288222603807db12d070c52d1a145785.png";
 import svgPaths from "../../../imports/svg-r9h2tu6cre";
-import { LaunchingRoomLoader } from "./LaunchingRoomLoader";
 import { roomAPI } from '@/utils/api/roomAPI';
 
 interface CreateCustomRoomProps {
@@ -24,13 +23,10 @@ export function CreateCustomRoom({ onBack, onLaunchRoom }: CreateCustomRoomProps
   const [subject, setSubject] = useState('');
   const [roomType, setRoomType] = useState<'private' | 'public'>('private');
   const [maxParticipants, setMaxParticipants] = useState(6);
-  const [isLaunching, setIsLaunching] = useState(false);
   const roomCodePreview = 'STUDY-XXXXXX';
 
   const handleLaunchRoom = async () => {
     if (roomName.trim() && subject.trim()) {
-      setIsLaunching(true);
-      
       try {
         // Create room in database
         const createdRoom = await roomAPI.createRoom({
@@ -54,15 +50,9 @@ export function CreateCustomRoom({ onBack, onLaunchRoom }: CreateCustomRoomProps
         console.error('Failed to create room:', error);
         const message = error instanceof Error ? error.message : 'Unknown error';
         alert(`Failed to create room: ${message}`);
-        setIsLaunching(false);
       }
     }
   };
-
-  // Show launching loader
-  if (isLaunching) {
-    return <LaunchingRoomLoader />;
-  }
 
   return (
     <>

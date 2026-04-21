@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { Bell } from 'lucide-react';
 import imgEllipse1 from "figma:asset/798eac6e288222603807db12d070c52d1a145785.png";
 import svgPaths from "../../../imports/svg-vn7uxip5s8";
-import { JoiningRoomLoader } from "./JoiningRoomLoader";
 
 interface JoinCustomRoomProps {
   onBack: () => void;
@@ -16,14 +15,9 @@ export function JoinCustomRoom({ onBack, onEnterRoom }: JoinCustomRoomProps) {
   const handleEnterRoom = () => {
     if (roomInput.trim()) {
       setIsJoining(true);
-      
-      setTimeout(async () => {
-        try {
-          await onEnterRoom(roomInput.trim());
-        } finally {
-          setIsJoining(false);
-        }
-      }, 1500);
+      onEnterRoom(roomInput.trim()).finally(() => {
+        setIsJoining(false);
+      });
     }
   };
 
@@ -32,11 +26,6 @@ export function JoinCustomRoom({ onBack, onEnterRoom }: JoinCustomRoomProps) {
       handleEnterRoom();
     }
   };
-
-  // Show joining loader
-  if (isJoining) {
-    return <JoiningRoomLoader />;
-  }
 
   return (
     <>
