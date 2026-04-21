@@ -1,20 +1,19 @@
 /**
- * ControlBar - Primary interaction zone for media controls
- * Center-aligned with mic, camera, screen share, chat, participants, and leave buttons
+ * ControlBar — Bottom control bar, Google Meet-style
+ * Circular icon buttons, tooltips, keyboard shortcut hints, leave button
  */
 
-import React from 'react';
+import { type ComponentType } from 'react';
 import {
-  Mic,
-  MicOff,
-  Video,
-  VideoOff,
-  Monitor,
-  MessageCircle,
-  Users,
+  Mic, MicOff,
+  Video, VideoOff,
+  Monitor, MonitorOff,
   Hand,
-  Phone,
+  MessageSquare,
+  Users,
   Settings,
+  PhoneOff,
+  MoreHorizontal,
 } from 'lucide-react';
 
 interface ControlBarProps {
@@ -23,6 +22,8 @@ interface ControlBarProps {
   isScreenSharing: boolean;
   isHandRaised: boolean;
   unreadChatCount?: number;
+  showChat?: boolean;
+  showParticipants?: boolean;
   onToggleAudio: () => void;
   onToggleVideo: () => void;
   onScreenShare: () => void;
@@ -33,49 +34,50 @@ interface ControlBarProps {
   onLeaveCall: () => void;
 }
 
-/**
- * Control Button Component
- */
-function ControlButton({
-  icon: Icon,
-  label,
-  isActive = false,
-  isDanger = false,
-  onClick,
-  badge,
-  disabled = false,
-}: {
-  icon: React.ComponentType<{ className: string }>;
+interface BtnProps {
+  icon: ComponentType<{ className?: string }>;
   label: string;
-  isActive?: boolean;
-  isDanger?: boolean;
   onClick: () => void;
+  active?: boolean;
+  danger?: boolean;
   badge?: number;
+  pressed?: boolean;
   disabled?: boolean;
-}) {
+}
+
+function Btn({ icon: Icon, label, onClick, active, danger, badge, pressed, disabled }: BtnProps) {
+  const base =
+    'relative flex flex-col items-center gap-1.5 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1a73e8] rounded-xl';
+
+  const btnCls = [
+    'w-12 h-12 rounded-full flex items-center justify-center transition-all duration-150',
+    'focus-visible:outline-none',
+    danger
+      ? 'bg-[#ea4335] hover:bg-[#d93025] text-white shadow-lg shadow-red-900/30'
+      : active || pressed
+        ? 'bg-[#1a73e8] hover:bg-[#1765cc] text-white'
+        : 'bg-[#3c4043] hover:bg-[#4a4d51] text-white',
+    disabled ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer active:scale-95',
+  ].join(' ');
+
   return (
-    <div className="flex flex-col items-center gap-2">
+    <div className={base}>
       <button
+        className={btnCls}
         onClick={onClick}
         disabled={disabled}
-        className={`relative w-12 h-12 rounded-full flex items-center justify-center transition-all duration-200 ${
-          isDanger
-            ? 'bg-red-600 hover:bg-red-700 text-white'
-            : isActive
-              ? 'bg-blue-600 hover:bg-blue-700 text-white'
-              : 'bg-gray-200 dark:bg-gray-700 text-black dark:text-white hover:bg-gray-300 dark:hover:bg-gray-600'
-        } ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
-        title={label}
         aria-label={label}
+        aria-pressed={pressed}
+        title={label}
       >
         <Icon className="w-5 h-5" />
         {badge !== undefined && badge > 0 && (
-          <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center">
+          <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] bg-[#ea4335] text-white text-[10px] font-bold rounded-full flex items-center justify-center px-1 leading-none">
             {badge > 9 ? '9+' : badge}
           </span>
         )}
       </button>
-      <span className="text-xs text-black/70 dark:text-white/70 hidden sm:block">
+      <span className="text-[10px] text-white/50 group-hover:text-white/80 transition-colors hidden sm:block leading-none">
         {label}
       </span>
     </div>
@@ -88,6 +90,8 @@ export function ControlBar({
   isScreenSharing,
   isHandRaised,
   unreadChatCount = 0,
+  showChat,
+  showParticipants,
   onToggleAudio,
   onToggleVideo,
   onScreenShare,
@@ -98,75 +102,90 @@ export function ControlBar({
   onLeaveCall,
 }: ControlBarProps) {
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-white dark:bg-[#202124] border-t border-black/5 dark:border-white/10 px-4 py-4 sm:py-6">
-      <div className="max-w-6xl mx-auto flex items-center justify-center gap-4 sm:gap-6">
-        {/* Left Group - Media Controls */}
-        <div className="flex items-end gap-4 sm:gap-6">
-          <ControlButton
+    <div
+      className="fixed bottom-0 inset-x-0 z-50 bg-[#202124]/95 backdrop-blur-md border-t border-white/[0.06]"
+      role="toolbar"
+      aria-label="Meeting controls"
+    >
+      <div className="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between gap-2">
+
+        {/* Left group — media */}
+        <div className="flex items-end gap-3 sm:gap-4">
+          <Btn
             icon={audioEnabled ? Mic : MicOff}
             label={audioEnabled ? 'Mute' : 'Unmute'}
-            isActive={audioEnabled}
             onClick={onToggleAudio}
+            active={audioEnabled}
           />
-
-          <ControlButton
+          <Btn
             icon={videoEnabled ? Video : VideoOff}
-            label={videoEnabled ? 'Stop Video' : 'Start Video'}
-            isActive={videoEnabled}
+            label={videoEnabled ? 'Stop video' : 'Start video'}
             onClick={onToggleVideo}
+            active={videoEnabled}
           />
-
-          <ControlButton
-            icon={Monitor}
-            label="Share Screen"
-            isActive={isScreenSharing}
+          <Btn
+            icon={isScreenSharing ? MonitorOff : Monitor}
+            label={isScreenSharing ? 'Stop sharing' : 'Present'}
             onClick={onScreenShare}
+            pressed={isScreenSharing}
           />
         </div>
 
-        {/* Right Group - Interaction Controls */}
-        <div className="flex items-end gap-4 sm:gap-6">
-          <ControlButton
+        {/* Center group — interactions */}
+        <div className="flex items-end gap-3 sm:gap-4">
+          <Btn
             icon={Hand}
-            label={isHandRaised ? 'Lower Hand' : 'Raise Hand'}
-            isActive={isHandRaised}
+            label={isHandRaised ? 'Lower hand' : 'Raise hand'}
             onClick={onRaiseHand}
+            pressed={isHandRaised}
           />
-
-          <ControlButton
-            icon={MessageCircle}
+          <Btn
+            icon={MessageSquare}
             label="Chat"
             onClick={onToggleChat}
+            pressed={showChat}
             badge={unreadChatCount}
           />
-
-          <ControlButton
+          <Btn
             icon={Users}
-            label="Participants"
+            label="People"
             onClick={onToggleParticipants}
+            pressed={showParticipants}
           />
-
-          <ControlButton
+          <Btn
             icon={Settings}
             label="Settings"
             onClick={onToggleSettings}
           />
+          <Btn
+            icon={MoreHorizontal}
+            label="More"
+            onClick={() => {}}
+          />
         </div>
 
-        {/* Leave Call - Danger Zone */}
+        {/* Right — leave */}
         <div className="flex items-end">
-          <ControlButton
-            icon={Phone}
+          <Btn
+            icon={PhoneOff}
             label="Leave"
-            isDanger={true}
             onClick={onLeaveCall}
+            danger
           />
         </div>
       </div>
 
-      {/* Keyboard Shortcuts Hint */}
-      <div className="text-center mt-3 text-xs text-black/50 dark:text-white/50 hidden md:block">
-        <p>Tip: Press <kbd className="bg-gray-200 dark:bg-gray-700 px-1.5 py-0.5 rounded">M</kbd> for mic, <kbd className="bg-gray-200 dark:bg-gray-700 px-1.5 py-0.5 rounded">V</kbd> for video</p>
+      {/* Keyboard hint */}
+      <div className="hidden md:flex justify-center pb-2 gap-4 text-[10px] text-white/25">
+        <span>
+          <kbd className="bg-white/10 px-1.5 py-0.5 rounded text-[10px]">M</kbd> mic
+        </span>
+        <span>
+          <kbd className="bg-white/10 px-1.5 py-0.5 rounded text-[10px]">V</kbd> video
+        </span>
+        <span>
+          <kbd className="bg-white/10 px-1.5 py-0.5 rounded text-[10px]">C</kbd> chat
+        </span>
       </div>
     </div>
   );

@@ -1,53 +1,35 @@
 /**
- * VideoGrid - Responsive grid for participant videos
- * Automatically adjusts layout based on participant count
+ * VideoGrid — Responsive participant grid
+ * Auto-adjusts layout for 1–16 participants, screen-share filmstrip mode
  */
 
-import React, { useMemo } from 'react';
+import { useMemo } from 'react';
 import { VideoTile } from './VideoTile';
 
 interface Participant {
   peerId: string;
   name: string;
-  stream?: MediaStream;
+  stream?: MediaStream | null;
   audioEnabled: boolean;
   videoEnabled: boolean;
 }
 
 interface VideoGridProps {
-  localParticipant: {
-    peerId: string;
-    name: string;
-    stream?: MediaStream;
-    audioEnabled: boolean;
-    videoEnabled: boolean;
-  };
+  localParticipant: Participant;
   remoteParticipants: Participant[];
-  activeSpeakerId?: string;
+  activeSpeakerId?: string | null;
   isScreenSharing?: boolean;
+  screenShareStream?: MediaStream | null;
 }
 
-/**
- * Calculate grid layout based on participant count
- */
-function calculateGridLayout(count: number): string {
-  // Grid templates for different participant counts
-  const templates: Record<number, string> = {
-    1: 'grid-cols-1',
-    2: 'grid-cols-2',
-    3: 'grid-cols-3',
-    4: 'grid-cols-2 grid-rows-2',
-    5: 'grid-cols-3 grid-rows-2',
-    6: 'grid-cols-3 grid-rows-2',
-    7: 'grid-cols-4 grid-rows-2',
-    8: 'grid-cols-4 grid-rows-2',
-    9: 'grid-cols-3 grid-rows-3',
-  };
-
-  if (count <= 1) return templates[1];
-  if (count > 9) return 'grid-cols-4 grid-rows-auto'; // Fallback for large meetings
-
-  return templates[Math.min(count, 9)] || templates[9];
+function gridClass(count: number): string {
+  if (count === 1) return 'grid-cols-1';
+  if (count === 2) return 'grid-cols-2';
+  if (count <= 4) return 'grid-cols-2 grid-rows-2';
+  if (count <= 6) return 'grid-cols-3 grid-rows-2';
+  if (count <= 9) return 'grid-cols-3 grid-rows-3';
+  if (count <= 12) return 'grid-cols-4 grid-rows-3';
+  return 'grid-cols-4 grid-rows-4';
 }
 
 export function VideoGrid({
@@ -55,49 +37,72 @@ export function VideoGrid({
   remoteParticipants,
   activeSpeakerId,
   isScreenSharing = false,
+  screenShareStream,
 }: VideoGridProps) {
-  const allParticipants = [localParticipant, ...remoteParticipants];
-  const gridLayout = useMemo(() => calculateGridLayout(allParticipants.length), [allParticipants.length]);
-
-  // Reorder participants: active speaker first, then local, then others
-  const orderedParticipants = useMemo(() => {
-    const sorted = [...allParticipants];
-
-    // Sort: active speaker first
-    if (activeSpeakerId) {
-      const activeSpeaker = sorted.find((p) => p.peerId === activeSpeakerId);
-      if (activeSpeaker) {
-        sorted.splice(sorted.indexOf(activeSpeaker), 1);
-        sorted.unshift(activeSpeaker);
-      }
-    }
-
+  const all = useMemo(() => {
+    const list = [localParticipant, ...remoteParticipants];
+    if (!activeSpeakerId) return list;
+    const idx = list.findIndex((p) => p.peerId === activeSpeakerId);
+    if (idx <= 0) return list;
+    const sorted = [...list];
+    const [speaker] = sorted.splice(idx, 1);
+    sorted.unshift(speaker);
     return sorted;
-  }, [allParticipants, activeSpeakerId]);
+  }, [localParticipant, remoteParticipants, activeSpeakerId]);
 
+  /* ── Screen-share layout ── */
   if (isScreenSharing) {
-    // Screen share mode: show shared content with participant filmstrip
     return (
-      <div className="w-full h-full flex flex-col bg-black">
-        {/* Shared Content Area (would be populated by screen share stream) */}
-        <div className="flex-1 flex items-center justify-center bg-gray-900">
-          <p className="text-white/50">Screen sharing content</p>
+      <div className="flex flex-col w-full h-full bg-[#111112]">
+        {/* Main shared content */}
+        <div className="flex-1 flex items-center justify-center relative overflow-hidden">
+          {screenShareStream ? (
+            <video
+              autoPlay
+              playsInline
+              muted
+              className="max-w-full max-h-full object-contain rounded-lg"
+              ref={(v) => {
+                if (v && v.srcObject !== screenShareStream) v.srcObject = screenShareStream;
+              }}
+            />
+          ) : (
+            <div className="flex flex-col items-center gap-3 text-white/40">
+              <div className="w-16 h-16 rounded-2xl bg-white/5 flex items-center justify-center">
+                <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
+                    d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                </svg>
+              </div>
+              <p className="text-sm font-medium">Waiting for screen share…</p>
+            </div>
+          )}
+
+          {/* "You are presenting" badge */}
+          {localParticipant.peerId === activeSpeakerId && (
+            <div className="absolute top-4 left-1/2 -translate-x-1/2 bg-[#1a73e8] text-white text-xs font-semibold px-4 py-1.5 rounded-full shadow-lg">
+              You are presenting
+            </div>
+          )}
         </div>
 
-        {/* Filmstrip Bottom */}
-        <div className="h-24 bg-gray-950 border-t border-white/10 overflow-x-auto flex gap-2 p-2">
-          {orderedParticipants.map((participant) => (
+        {/* Filmstrip */}
+        <div className="h-[88px] bg-[#1c1c1e] border-t border-white/5 flex items-center gap-2 px-3 overflow-x-auto shrink-0">
+          {all.map((p) => (
             <div
-              key={participant.peerId}
-              className="h-full aspect-video flex-shrink-0 rounded-lg overflow-hidden bg-gray-800"
+              key={p.peerId}
+              className="h-[68px] aspect-video shrink-0 rounded-lg overflow-hidden"
             >
               <VideoTile
-                peerId={participant.peerId}
-                name={participant.name}
-                stream={participant.stream}
-                isLocal={participant.peerId === localParticipant.peerId}
-                audioEnabled={participant.audioEnabled}
-                videoEnabled={participant.videoEnabled}
+                peerId={p.peerId}
+                name={p.name}
+                stream={p.stream}
+                isLocal={p.peerId === localParticipant.peerId}
+                audioEnabled={p.audioEnabled}
+                videoEnabled={p.videoEnabled}
+                isActiveSpeaker={p.peerId === activeSpeakerId}
+                isMirrored={p.peerId === localParticipant.peerId}
+                compact
               />
             </div>
           ))}
@@ -106,22 +111,27 @@ export function VideoGrid({
     );
   }
 
+  /* ── Normal grid layout ── */
   return (
-    <div className={`grid ${gridLayout} gap-3 w-full h-full auto-rows-fr p-3`}>
-      {orderedParticipants.map((participant) => (
+    <div
+      className={`grid ${gridClass(all.length)} gap-2 w-full h-full p-2 auto-rows-fr`}
+      style={{ minHeight: 0 }}
+    >
+      {all.map((p) => (
         <div
-          key={participant.peerId}
-          className="relative bg-black rounded-xl overflow-hidden min-h-0"
+          key={p.peerId}
+          className="relative min-h-0 rounded-xl overflow-hidden"
+          style={{ aspectRatio: all.length === 1 ? undefined : '16/9' }}
         >
           <VideoTile
-            peerId={participant.peerId}
-            name={participant.name}
-            stream={participant.stream}
-            isLocal={participant.peerId === localParticipant.peerId}
-            audioEnabled={participant.audioEnabled}
-            videoEnabled={participant.videoEnabled}
-            isActiveSpeaker={participant.peerId === activeSpeakerId}
-            isMirrored={participant.peerId === localParticipant.peerId}
+            peerId={p.peerId}
+            name={p.name}
+            stream={p.stream}
+            isLocal={p.peerId === localParticipant.peerId}
+            audioEnabled={p.audioEnabled}
+            videoEnabled={p.videoEnabled}
+            isActiveSpeaker={p.peerId === activeSpeakerId}
+            isMirrored={p.peerId === localParticipant.peerId}
           />
         </div>
       ))}

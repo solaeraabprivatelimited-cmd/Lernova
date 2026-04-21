@@ -1,79 +1,101 @@
 /**
- * MeetHeader - Top header bar for collaborative room
- * Displays: meeting title, timer, connection status
+ * MeetHeader — Top bar: room name, meeting timer, connection status
  */
 
-import React, { useState, useEffect } from 'react';
-import { Clock, Wifi, WifiOff, MoreVertical } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Wifi, WifiOff, Clock, Shield } from 'lucide-react';
 
 interface MeetHeaderProps {
   roomName: string;
+  subject?: string;
   participantCount: number;
   isConnected: boolean;
+  roomCode?: string;
 }
 
-export function MeetHeader({ roomName, participantCount, isConnected }: MeetHeaderProps) {
-  const [elapsedTime, setElapsedTime] = useState(0);
-
+function useMeetingTimer() {
+  const [elapsed, setElapsed] = useState(0);
   useEffect(() => {
-    const interval = setInterval(() => {
-      setElapsedTime((prev) => prev + 1);
-    }, 1000);
-
-    return () => clearInterval(interval);
+    const id = setInterval(() => setElapsed((s) => s + 1), 1000);
+    return () => clearInterval(id);
   }, []);
+  const h = Math.floor(elapsed / 3600);
+  const m = Math.floor((elapsed % 3600) / 60);
+  const s = elapsed % 60;
+  return h > 0
+    ? `${h}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`
+    : `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+}
 
-  const formatTime = (seconds: number) => {
-    const hours = Math.floor(seconds / 3600);
-    const minutes = Math.floor((seconds % 3600) / 60);
-    const secs = seconds % 60;
-
-    if (hours > 0) {
-      return `${hours}:${String(minutes).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
-    }
-    return `${minutes}:${String(secs).padStart(2, '0')}`;
-  };
+export function MeetHeader({
+  roomName,
+  subject,
+  participantCount,
+  isConnected,
+  roomCode,
+}: MeetHeaderProps) {
+  const timer = useMeetingTimer();
 
   return (
-    <header className="h-16 bg-white dark:bg-[#202124] border-b border-black/5 dark:border-white/5 px-6 flex items-center justify-between sticky top-0 z-40">
-      {/* Left: Room Info */}
-      <div className="flex items-center gap-4 min-w-0">
-        <div className="flex-1 min-w-0">
-          <h1 className="text-lg font-medium text-black dark:text-white truncate">
+    <header
+      className="h-14 shrink-0 bg-[#202124]/95 backdrop-blur-md border-b border-white/[0.06] px-4 flex items-center justify-between z-40"
+      role="banner"
+    >
+      {/* Left — room info */}
+      <div className="flex items-center gap-3 min-w-0">
+        <div className="min-w-0">
+          <h1 className="text-[15px] font-semibold text-white truncate leading-tight">
             {roomName}
           </h1>
-          <p className="text-sm text-black/60 dark:text-white/60">
-            {participantCount} {participantCount === 1 ? 'participant' : 'participants'}
-          </p>
-        </div>
-      </div>
-
-      {/* Center: Timer & Status */}
-      <div className="flex items-center gap-6 text-sm">
-        <div className="flex items-center gap-2 text-black/70 dark:text-white/70">
-          <Clock className="w-4 h-4" />
-          <span className="font-medium">{formatTime(elapsedTime)}</span>
-        </div>
-
-        <div className="flex items-center gap-2">
-          {isConnected ? (
-            <div className="flex items-center gap-1 text-green-600 dark:text-green-400">
-              <Wifi className="w-4 h-4" />
-              <span className="text-xs font-medium">Connected</span>
-            </div>
-          ) : (
-            <div className="flex items-center gap-1 text-red-600 dark:text-red-400">
-              <WifiOff className="w-4 h-4" />
-              <span className="text-xs font-medium">Connecting...</span>
-            </div>
+          {subject && (
+            <p className="text-[11px] text-white/50 truncate leading-tight mt-0.5">{subject}</p>
           )}
         </div>
+
+        {roomCode && (
+          <span className="hidden sm:inline-flex items-center gap-1 text-[11px] text-white/40 bg-white/5 border border-white/10 rounded-full px-2.5 py-0.5 font-mono shrink-0">
+            {roomCode}
+          </span>
+        )}
       </div>
 
-      {/* Right: Menu */}
-      <button className="ml-6 p-2 rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition-colors">
-        <MoreVertical className="w-5 h-5 text-black/60 dark:text-white/60" />
-      </button>
+      {/* Center — timer + status */}
+      <div className="flex items-center gap-4 text-sm">
+        <div className="flex items-center gap-1.5 text-white/60">
+          <Clock className="w-3.5 h-3.5" aria-hidden />
+          <span className="font-mono text-[13px] tabular-nums">{timer}</span>
+        </div>
+
+        <div
+          className={[
+            'flex items-center gap-1.5 text-[12px] font-medium',
+            isConnected ? 'text-emerald-400' : 'text-amber-400',
+          ].join(' ')}
+          aria-live="polite"
+          aria-label={isConnected ? 'Connected' : 'Connecting'}
+        >
+          {isConnected ? (
+            <Wifi className="w-3.5 h-3.5" aria-hidden />
+          ) : (
+            <WifiOff className="w-3.5 h-3.5 animate-pulse" aria-hidden />
+          )}
+          <span className="hidden sm:inline">
+            {isConnected ? 'Connected' : 'Connecting…'}
+          </span>
+        </div>
+
+        <div className="hidden md:flex items-center gap-1.5 text-white/30 text-[12px]">
+          <Shield className="w-3.5 h-3.5" aria-hidden />
+          <span>Encrypted</span>
+        </div>
+      </div>
+
+      {/* Right — participant count */}
+      <div className="flex items-center gap-2">
+        <span className="text-[12px] text-white/50 tabular-nums">
+          {participantCount} {participantCount === 1 ? 'person' : 'people'}
+        </span>
+      </div>
     </header>
   );
 }
