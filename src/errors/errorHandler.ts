@@ -104,6 +104,26 @@ export function isAuthError(err: AppError): boolean {
   return err.code === ErrorCode.AUTH_EXPIRED || err.code === ErrorCode.AUTH_REQUIRED;
 }
 
+/**
+ * Factory function to create an AppError object
+ * Useful for throwing structured errors with retryability info
+ */
+export function createAppError(
+  code: ErrorCode,
+  message?: string,
+  details?: Record<string, unknown>,
+  status?: number
+): AppError {
+  return {
+    code,
+    message: message || USER_MESSAGES[code] || 'An error occurred',
+    details,
+    timestamp: new Date().toISOString(),
+    retryable: RETRYABLE_CODES.has(code),
+    status,
+  };
+}
+
 /** Build a standardized error response for logging/display */
 export function toErrorResponse(err: unknown, status?: number) {
   const parsed = parseError(err, status);

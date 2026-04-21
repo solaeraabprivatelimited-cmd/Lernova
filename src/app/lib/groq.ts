@@ -7,7 +7,7 @@
  * All actual Groq API interactions happen server-side in Lernova_API/main.py
  */
 
-import { AppError, ERROR_CODES } from '@/errors';
+import { createAppError, ERROR_CODES, type AppError } from '@/errors';
 
 // Backend endpoint for AI mentor chat - uses VITE_API_URL environment variable
 // Falls back to relative path for same-domain deployments
@@ -46,23 +46,23 @@ export async function getAiMentorResponse(
 
     if (!response.ok) {
       const error = await response.json().catch(() => ({}));
-      throw new AppError(
-        ERROR_CODES.API_ERROR,
+      throw createAppError(
+        ERROR_CODES.NETWORK_ERROR,
         error.detail || `AI mentor service error: ${response.status}`,
-        response.status,
-        { endpoint: 'ai-mentor/chat', status: response.status }
+        { endpoint: 'ai-mentor/chat', status: response.status },
+        response.status
       );
     }
 
     const data = await response.json();
     return data.response;
   } catch (error: any) {
-    if (error instanceof AppError) throw error;
+    // If already an AppError, rethrow it
+    if (error.code) throw error;
     
-    throw new AppError(
+    throw createAppError(
       ERROR_CODES.NETWORK_ERROR,
       'Failed to get AI response. Please check your connection and try again.',
-      undefined,
       { originalError: error.message }
     );
   }
@@ -88,23 +88,22 @@ export async function getAiTutoringExplanation(
     });
 
     if (!response.ok) {
-      throw new AppError(
-        ERROR_CODES.API_ERROR,
+      throw createAppError(
+        ERROR_CODES.NETWORK_ERROR,
         `Failed to generate explanation for "${topic}". Please try again.`,
-        response.status,
-        { endpoint: 'ai-mentor/chat?type=explanation', topic, level }
+        { endpoint: 'ai-mentor/chat?type=explanation', topic, level },
+        response.status
       );
     }
 
     const data = await response.json();
     return data.response;
   } catch (error: any) {
-    if (error instanceof AppError) throw error;
+    if (error.code) throw error;
     
-    throw new AppError(
+    throw createAppError(
       ERROR_CODES.NETWORK_ERROR,
       'Failed to get explanation. Please check your connection and try again.',
-      undefined,
       { originalError: error.message }
     );
   }
@@ -130,20 +129,19 @@ export async function *streamAiMentorResponse(
     });
 
     if (!response.ok) {
-      throw new AppError(
-        ERROR_CODES.API_ERROR,
+      throw createAppError(
+        ERROR_CODES.NETWORK_ERROR,
         'Failed to stream AI response. Please try again.',
-        response.status,
-        { endpoint: 'ai-mentor/chat?stream=true', status: response.status }
+        { endpoint: 'ai-mentor/chat?stream=true', status: response.status },
+        response.status
       );
     }
 
     const reader = response.body?.getReader();
     if (!reader) {
-      throw new AppError(
+      throw createAppError(
         ERROR_CODES.NETWORK_ERROR,
         'No response body from AI mentor service.',
-        undefined,
         { endpoint: 'ai-mentor/chat?stream=true' }
       );
     }
@@ -157,12 +155,11 @@ export async function *streamAiMentorResponse(
       yield chunk;
     }
   } catch (error: any) {
-    if (error instanceof AppError) throw error;
+    if (error.code) throw error;
     
-    throw new AppError(
+    throw createAppError(
       ERROR_CODES.NETWORK_ERROR,
       'Failed to stream AI response. Please check your connection and try again.',
-      undefined,
       { originalError: error.message }
     );
   }
@@ -198,23 +195,22 @@ export async function getMoodCheckInResponse(
     });
 
     if (!response.ok) {
-      throw new AppError(
-        ERROR_CODES.API_ERROR,
+      throw createAppError(
+        ERROR_CODES.NETWORK_ERROR,
         'Failed to get mood check-in support. Please try again.',
-        response.status,
-        { endpoint: 'ai-mentor/chat?type=mood-checkin', status: response.status }
+        { endpoint: 'ai-mentor/chat?type=mood-checkin', status: response.status },
+        response.status
       );
     }
 
     const data = await response.json();
     return data.response;
   } catch (error: any) {
-    if (error instanceof AppError) throw error;
+    if (error.code) throw error;
     
-    throw new AppError(
+    throw createAppError(
       ERROR_CODES.NETWORK_ERROR,
       'Failed to get mood check-in response. Please check your connection and try again.',
-      undefined,
       { originalError: error.message }
     );
   }
@@ -240,20 +236,19 @@ export async function *streamMoodCheckInResponse(
     });
 
     if (!response.ok) {
-      throw new AppError(
-        ERROR_CODES.API_ERROR,
+      throw createAppError(
+        ERROR_CODES.NETWORK_ERROR,
         'Failed to stream mood check-in response. Please try again.',
-        response.status,
-        { endpoint: 'ai-mentor/chat?type=mood-checkin&stream=true', status: response.status }
+        { endpoint: 'ai-mentor/chat?type=mood-checkin&stream=true', status: response.status },
+        response.status
       );
     }
 
     const reader = response.body?.getReader();
     if (!reader) {
-      throw new AppError(
+      throw createAppError(
         ERROR_CODES.NETWORK_ERROR,
         'No response body from mood check-in service.',
-        undefined,
         { endpoint: 'ai-mentor/chat?type=mood-checkin&stream=true' }
       );
     }
@@ -267,12 +262,11 @@ export async function *streamMoodCheckInResponse(
       yield chunk;
     }
   } catch (error: any) {
-    if (error instanceof AppError) throw error;
+    if (error.code) throw error;
     
-    throw new AppError(
+    throw createAppError(
       ERROR_CODES.NETWORK_ERROR,
       'Failed to stream mood check-in response. Please check your connection and try again.',
-      undefined,
       { originalError: error.message }
     );
   }
