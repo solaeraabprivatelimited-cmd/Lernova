@@ -65,7 +65,7 @@ async function getValidAccessToken(): Promise<string | null> {
     // Check if token is near expiry (less than 30 seconds left)
     const expiresAtMs = (session?.expires_at ?? 0) * 1000;
     if (expiresAtMs <= Date.now() + 30_000) {
-      console.log('[useWebRTC] Token near expiry, refreshing...');
+      console.log('[useWebRTC] Token refreshing...');
       const { data: refreshed, error } = await supabase.auth.refreshSession();
       if (error || !refreshed.session) {
         console.error('[useWebRTC] Token refresh failed:', error?.message);
@@ -79,7 +79,7 @@ async function getValidAccessToken(): Promise<string | null> {
       return null;
     }
 
-    console.log('[useWebRTC] Token obtained, user:', session.user?.id);
+    console.log('[useWebRTC] Ready');
     return session.access_token;
   } catch (err) {
     console.error('[useWebRTC] Error getting token:', err);
@@ -198,7 +198,7 @@ export function useWebRTC({
 
         // Setup event handlers
         manager.on('stream-received', (peerId: string, stream: MediaStream) => {
-          console.log('[useWebRTC] Stream received from', peerId);
+          // Stream from peer
           peerConnectionStateRef.current.set(peerId, 'connected');
           setPeers((prev) => {
             const updated = new Map(prev);
@@ -212,7 +212,7 @@ export function useWebRTC({
         });
 
         manager.on('peer-connected', (peerId: string) => {
-          console.log('[useWebRTC] Peer connected:', peerId);
+          // Peer connected
           peerConnectionStateRef.current.set(peerId, 'connected');
           setPeers((prev) => {
             const updated = new Map(prev);
@@ -224,7 +224,7 @@ export function useWebRTC({
         });
 
         manager.on('peer-disconnected', (peerId: string) => {
-          console.log('[useWebRTC] Peer disconnected:', peerId);
+          // Peer disconnected
           initiatedPeersRef.current.delete(peerId);
           initiatedPeerTimestampsRef.current.delete(peerId);
           knownPeersRef.current.delete(peerId);
@@ -266,7 +266,7 @@ export function useWebRTC({
         });
 
         manager.on('local-track-state-changed', async (trackKind: 'audio' | 'video', enabled: boolean) => {
-          console.log(`[useWebRTC] Local ${trackKind} track ${enabled ? 'enabled' : 'disabled'}, sending renegotiation offers...`);
+          // Track state changed, updating UI
           // Send new offers to all connected peers to notify them of track state changes
           const peersMap = new Map(peers);
           for (const [peerId] of peersMap) {
@@ -312,7 +312,7 @@ export function useWebRTC({
         setInitialized(true);
         setError(null);
 
-        console.log('[useWebRTC] Initialized successfully');
+        console.log('[useWebRTC] Initialized');
       } catch (err) {
         if (cancelled) return;
         const error = err instanceof Error ? err : new Error(String(err));
@@ -373,7 +373,7 @@ export function useWebRTC({
           // Remove peers that are no longer in the room (regardless of connection state)
           Array.from(updated.keys()).forEach((peerId) => {
             if (!remotePeerIds.includes(peerId)) {
-              console.log('[useWebRTC] Peer left room, removing:', peerId);
+              // Peer left room
               updated.delete(peerId);
               initiatedPeersRef.current.delete(peerId);
               initiatedPeerTimestampsRef.current.delete(peerId);
@@ -402,7 +402,7 @@ export function useWebRTC({
 
           try {
             if (!initiatedPeersRef.current.has(peerId)) {
-              console.log('[useWebRTC] Creating peer offer for room member:', peerId);
+              // Creating offer
               await createAndSendOffer(peerId);
             }
           } catch (err) {
@@ -443,7 +443,7 @@ export function useWebRTC({
       try {
         const token = await getValidAccessToken();
         if (!token) {
-          console.log('[useWebRTC] Waiting for valid auth token...');
+          // Waiting for token
           consecutiveErrors++;
           if (consecutiveErrors <= 3) {
             pollTimer = setTimeout(pollForSignals, pollInterval);
@@ -467,14 +467,14 @@ export function useWebRTC({
             return;
           }
           if (response.status === 404) {
-            console.log('[useWebRTC] Signal endpoint not found (404), stopping signaling');
+            console.log('[useWebRTC] Signaling stopped (404)');
             isPolling = false;
             return;
           }
           console.warn('[useWebRTC] Failed to fetch signals:', response.statusText);
           consecutiveErrors++;
           if (consecutiveErrors > 5) {
-            console.log('[useWebRTC] Too many signal errors, stopping polling');
+            console.log('[useWebRTC] Too many errors, stopping');
             isPolling = false;
             return;
           }
@@ -506,7 +506,7 @@ export function useWebRTC({
           try {
             switch (signal_type) {
               case 'offer':
-                console.log('[useWebRTC] Received offer from', from_user_id);
+                // Offer received
                 knownPeersRef.current.add(from_user_id);
                 const answer = await managerRef.current!.handleOffer(from_user_id, signalPayload);
                 await sendSignal({
@@ -517,12 +517,12 @@ export function useWebRTC({
                 break;
 
               case 'answer':
-                console.log('[useWebRTC] Received answer from', from_user_id);
+                // Answer received
                 await managerRef.current!.handleAnswer(from_user_id, signalPayload);
                 break;
 
               case 'candidate':
-                console.log('[useWebRTC] Received ICE candidate from', from_user_id);
+                // ICE candidate received
                 await managerRef.current!.addICECandidate(from_user_id, signalPayload);
                 break;
 
@@ -562,7 +562,7 @@ export function useWebRTC({
 
       try {
         setIsConnecting(true);
-        console.log('[useWebRTC] Connecting to peer:', peerId);
+        // Connecting to peer
         await createAndSendOffer(peerId);
 
         setIsConnecting(false);

@@ -61,8 +61,7 @@ export function VideoTile({
       // Wait for loadedmetadata before playing
       const handleLoadedMetadata = () => {
         setVideoReady(true);
-        video.play().catch((err) => {
-          console.warn('[VideoTile] Play failed:', err);
+        video.play().catch(() => {
           setVideoError(true);
         });
       };
@@ -74,8 +73,7 @@ export function VideoTile({
       // Timeout fallback in case loadedmetadata doesn't fire
       const timeout = setTimeout(() => {
         setVideoReady(true);
-        video.play().catch((err) => {
-          console.warn('[VideoTile] Play failed after timeout:', err);
+        video.play().catch(() => {
           setVideoError(true);
         });
       }, 2000);
@@ -118,10 +116,7 @@ export function VideoTile({
           console.warn('[VideoTile] Video error for', name);
           setVideoError(true);
         }}
-        onEnded={() => {
-          console.log('[VideoTile] Video stream ended for', name);
-          setVideoReady(false);
-        }}
+        onEnded={() => setVideoReady(false)}
         className={[
           'absolute inset-0 w-full h-full object-cover',
           isMirrored ? 'scale-x-[-1]' : '',

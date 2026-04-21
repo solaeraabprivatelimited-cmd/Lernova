@@ -64,9 +64,7 @@ export function VideoGrid({
               ref={(v) => {
                 if (v && v.srcObject !== screenShareStream) {
                   v.srcObject = screenShareStream;
-                  v.play().catch((err) => {
-                    console.warn('[ScreenShare] Play failed:', err);
-                  });
+                  v.play().catch(() => {});
                 }
               }}
             />

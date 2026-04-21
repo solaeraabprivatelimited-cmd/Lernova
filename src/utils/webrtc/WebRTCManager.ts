@@ -122,7 +122,7 @@ export class WebRTCManager {
       ...config,
     };
 
-    console.log('[WebRTC] Manager initialized with config:', this.config);
+    // Manager initialized silently to reduce console noise
   }
 
   /**
@@ -263,7 +263,7 @@ export class WebRTCManager {
         });
 
         await sender.setParameters(parameters);
-        console.log('[WebRTC] Audio sender tuned for continuous streaming');
+        // Audio sender tuned
       } catch (error) {
         console.warn('[WebRTC] Unable to tune audio sender parameters:', error);
       }
@@ -435,7 +435,7 @@ export class WebRTCManager {
    */
   async initializeLocalMedia(audioDeviceId?: string, videoDeviceId?: string): Promise<MediaStream> {
     try {
-      console.log('[WebRTC] Initializing local media...');
+      // Initialize local media
 
       const constraints = this.buildMediaConstraints(audioDeviceId, videoDeviceId);
 
@@ -446,7 +446,7 @@ export class WebRTCManager {
         this.localStream.getVideoTracks()[0]?.getSettings().deviceId ?? videoDeviceId ?? null;
       this.isAudioCaptureEnabled = this.localStream.getAudioTracks().length > 0;
       this.isVideoCaptureEnabled = this.localStream.getVideoTracks().length > 0;
-      console.log('[WebRTC] Local media acquired:', this.localStream.getTracks().length, 'tracks');
+      console.log('[WebRTC] Local media ready:', this.localStream.getTracks().length, 'tracks');
       return this.localStream;
     } catch (error) {
       const err = new Error(`Failed to get local media: ${(error as any).message}`);
@@ -460,7 +460,7 @@ export class WebRTCManager {
    */
   async createConnection(peerId: string): Promise<RTCPeerConnection> {
     try {
-      console.log(`[WebRTC] Creating peer connection for: ${peerId}`);
+      // Creating peer connection
 
       // Check if connection already exists
       if (this.peerConnections.has(peerId)) {
@@ -470,7 +470,7 @@ export class WebRTCManager {
 
       // Ensure local media is initialized before creating peer connection
       if (!this.localStream) {
-        console.log(`[WebRTC] Local media not initialized, initializing now for ${peerId}`);
+        // Local media not initialized, initializing
         await this.initializeLocalMedia();
       }
 
@@ -485,7 +485,7 @@ export class WebRTCManager {
       if (this.localStream) {
         this.localStream.getTracks().forEach((track) => {
           peerConnection.addTrack(track, this.localStream!);
-          console.log(`[WebRTC] Added ${track.kind} track to peer connection for ${peerId}`);
+          // Track added
         });
 
         const hasAudioTrack = this.localStream.getAudioTracks().length > 0;
@@ -516,7 +516,7 @@ export class WebRTCManager {
       this.peerConnections.set(peerId, peerConnection);
       this.retryAttempts.set(peerId, 0);
 
-      console.log(`[WebRTC] Peer connection created for ${peerId}`);
+      // Peer connection created
       return peerConnection;
     } catch (error) {
       const err = new Error(`Failed to create connection for ${peerId}: ${(error as any).message}`);
@@ -540,7 +540,7 @@ export class WebRTCManager {
       const optimizedOffer = this.optimizeAudioSdp(offer);
 
       await peerConnection.setLocalDescription(optimizedOffer);
-      console.log(`[WebRTC] Offer created for ${peerId}`);
+      // Offer created
 
       return optimizedOffer;
     } catch (error) {
@@ -559,7 +559,7 @@ export class WebRTCManager {
 
       await peerConnection.setRemoteDescription(new RTCSessionDescription(offer));
       await this.flushPendingICECandidates(peerId);
-      console.log(`[WebRTC] Offer received from ${peerId}, creating answer`);
+      // Offer received, creating answer
 
       const answer = await peerConnection.createAnswer();
       const optimizedAnswer = this.optimizeAudioSdp(answer);
@@ -640,7 +640,7 @@ export class WebRTCManager {
 
   async switchMediaDevices(audioDeviceId?: string, videoDeviceId?: string): Promise<MediaStream> {
     try {
-      console.log('[WebRTC] Switching media devices', { audioDeviceId, videoDeviceId });
+      // Switching media devices
 
       const nextAudioDeviceId = audioDeviceId ?? this.selectedAudioDeviceId ?? undefined;
       const nextVideoDeviceId = videoDeviceId ?? this.selectedVideoDeviceId ?? undefined;
@@ -755,7 +755,7 @@ export class WebRTCManager {
     if (displayAudioTrack) {
       this.screenShareAudioTrack = displayAudioTrack;
       stream.addTrack(displayAudioTrack);
-      console.log('[WebRTC] Screen share audio track added');
+      // Screen share audio track added
     }
 
     await this.replaceOutgoingTrackAcrossPeers('video', displayTrack);
@@ -789,7 +789,7 @@ export class WebRTCManager {
       stream.removeTrack(this.screenShareAudioTrack);
       this.screenShareAudioTrack.stop();
       this.screenShareAudioTrack = null;
-      console.log('[WebRTC] Screen share audio track stopped');
+      // Screen share audio track stopped
     }
 
     let nextVideoTrack: MediaStreamTrack | null = null;
@@ -845,7 +845,7 @@ export class WebRTCManager {
       return;
     }
 
-    console.log(`[WebRTC] Flushing ${queued.length} queued ICE candidates for ${peerId}`);
+    // Flushing queued ICE candidates
 
     for (const candidate of queued) {
       if (candidate.candidate) {
@@ -866,7 +866,7 @@ export class WebRTCManager {
     peerConnection.onconnectionstatechange = () => {
       const state = peerConnection.connectionState as PeerConnectionState;
       if (!stateLogged) {
-        console.log(`[WebRTC] Connection state for ${peerId}: ${state}`);
+        // Connection state logged once
         stateLogged = true;
       }
 
@@ -903,12 +903,12 @@ export class WebRTCManager {
 
     // ICE Connection state
     peerConnection.oniceconnectionstatechange = () => {
-      console.log(`[WebRTC] ICE connection state for ${peerId}: ${peerConnection.iceConnectionState}`);
+      // ICE connection state updated
     };
 
     // Receiving remote stream
     peerConnection.ontrack = (event) => {
-      console.log(`[WebRTC] Received remote track from ${peerId}:`, event.track.kind);
+      // Remote track received
       let remoteStream = this.remoteStreams.get(peerId);
       if (!remoteStream) {
         remoteStream = event.streams[0] ?? new MediaStream();
@@ -922,19 +922,19 @@ export class WebRTCManager {
 
       // Listen for track state changes (mute/unmute) to trigger UI updates
       event.track.onmute = () => {
-        console.log(`[WebRTC] Track muted from ${peerId}:`, event.track.kind);
+        // Track muted
         // Emit stream update to force UI re-render
         this.onStreamReceived?.(peerId, remoteStream);
       };
 
       event.track.onunmute = () => {
-        console.log(`[WebRTC] Track unmuted from ${peerId}:`, event.track.kind);
+        // Track unmuted
         // Emit stream update to force UI re-render
         this.onStreamReceived?.(peerId, remoteStream);
       };
 
       event.track.onended = () => {
-        console.log(`[WebRTC] Track ended from ${peerId}:`, event.track.kind);
+        // Track ended
         // Remove ended track from stream
         remoteStream.removeTrack(event.track);
         // Emit stream update to reflect track removal
@@ -947,7 +947,7 @@ export class WebRTCManager {
     // ICE candidates
     peerConnection.onicecandidate = (event) => {
       if (event.candidate) {
-        console.log(`[WebRTC] New ICE candidate for ${peerId}`);
+        // ICE candidate generated
         // Emit event so hook can send candidate through signaling channel
         this.onICECandidate?.(peerId, {
           candidate: event.candidate.candidate,
@@ -959,7 +959,7 @@ export class WebRTCManager {
 
     // Data channel
     peerConnection.ondatachannel = (event) => {
-      console.log(`[WebRTC] Data channel received from ${peerId}`);
+      // Data channel received
       this.setupDataChannel(event.channel, peerId);
     };
   }
@@ -983,7 +983,7 @@ export class WebRTCManager {
    */
   private setupDataChannel(dataChannel: RTCDataChannel, peerId: string) {
     dataChannel.onopen = () => {
-      console.log(`[WebRTC] Data channel opened with ${peerId}`);
+      // Data channel opened
       this.dataChannels.set(peerId, dataChannel);
     };
 
@@ -1002,7 +1002,7 @@ export class WebRTCManager {
     };
 
     dataChannel.onclose = () => {
-      console.log(`[WebRTC] Data channel closed with ${peerId}`);
+      // Data channel closed
       this.dataChannels.delete(peerId);
     };
   }
@@ -1114,7 +1114,7 @@ export class WebRTCManager {
     }
 
     const delay = Math.min(this.config.retryDelayMs * Math.pow(2, attempts), 30000);
-    console.log(`[WebRTC] Recovery attempt ${attempts + 1}/${this.config.maxRetries} for ${peerId} in ${delay}ms`);
+    // Recovery attempt scheduled
 
     this.retryAttempts.set(peerId, attempts + 1);
 

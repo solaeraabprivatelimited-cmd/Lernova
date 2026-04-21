@@ -6,6 +6,8 @@ import { ProtectedRoute, AppUser } from '@/app/components/ProtectedRoute';
 import { RouteLoader } from '@/app/components/RouteLoader';
 import { ThemeToggle } from '@/app/components/ThemeToggle';
 import { Toaster } from '@/app/components/ui/sonner';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
+import { NotificationsContainer } from '@/components/NotificationsContainer';
 import { auth, getCurrentUser, setCurrentUser, profile as profileApi } from '@/app/lib/api';
 
 const StudyRoomDashboard = React.lazy(async () => {
@@ -141,15 +143,17 @@ export default function App() {
   const showFloatingThemeToggle = /^(\/dashboard|\/mentor-dashboard|\/room\/)/.test(location.pathname);
 
   return (
-    <>
-      {showFloatingThemeToggle ? (
-        <ThemeToggle
-          className="fixed right-5 bottom-5 z-[70] rounded-full shadow-lg shadow-black/10 dark:shadow-black/40"
-        />
-      ) : null}
-      <Toaster closeButton position="top-right" richColors />
+    <ErrorBoundary>
+      <>
+        {showFloatingThemeToggle ? (
+          <ThemeToggle
+            className="fixed right-5 bottom-5 z-[70] rounded-full shadow-lg shadow-black/10 dark:shadow-black/40"
+          />
+        ) : null}
+        <Toaster closeButton position="top-right" richColors />
+        <NotificationsContainer />
 
-      <Suspense fallback={<RouteLoader />}>
+        <Suspense fallback={<RouteLoader />}>
         <Routes>
           <Route
             path="/"
@@ -257,6 +261,7 @@ export default function App() {
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Suspense>
-    </>
+      </>
+    </ErrorBoundary>
   );
 }

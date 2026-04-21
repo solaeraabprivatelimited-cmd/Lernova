@@ -173,6 +173,10 @@ export function CollaborativeModeRoomGoogleMeet({
         videoEnabled: p.videoEnabled ?? true,
       }))
     );
+    // Update connection status when peers are found
+    if (peers.length > 0) {
+      setIsConnected(true);
+    }
   }, [peers, participantDirectory]);
 
   /* ── Join room roster ── */
@@ -224,7 +228,7 @@ export function CollaborativeModeRoomGoogleMeet({
         if (userId && !dir[userId]) dir[userId] = userName;
         setParticipantDirectory(dir);
       } catch { /* silent */ }
-      if (active) timer = setTimeout(sync, 4000);
+      if (active) timer = setTimeout(sync, 1500); // Increased from 4000ms for faster updates
     };
 
     sync();
@@ -577,9 +581,7 @@ export function CollaborativeModeRoomGoogleMeet({
             ref={(v) => {
               if (v && v.srcObject !== localStream) {
                 v.srcObject = localStream;
-                v.play().catch((err) => {
-                  console.warn('[SelfView] Play failed:', err);
-                });
+                v.play().catch(() => {});
               }
             }}
           />
