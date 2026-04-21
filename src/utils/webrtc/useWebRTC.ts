@@ -345,7 +345,7 @@ export function useWebRTC({
   useEffect(() => {
     if (!initialized || !managerRef.current || !userId || !roomId) return;
 
-    const rosterInterval = 3000;
+    const rosterInterval = 2000; // Reduced from 3000 for faster peer discovery
     let timer: NodeJS.Timeout | null = null;
     let active = true;
 
@@ -397,13 +397,14 @@ export function useWebRTC({
           const initiatedAt = initiatedPeerTimestampsRef.current.get(peerId) ?? 0;
           const recentlyInitiated =
             initiatedPeersRef.current.has(peerId) &&
-            Date.now() - initiatedAt < 12_000;
+            Date.now() - initiatedAt < 15_000; // Increased from 12s to 15s for better stability
           if (currentState === 'connecting' && recentlyInitiated) continue;
 
           try {
-            initiatedPeersRef.current.delete(peerId);
-            console.log('[useWebRTC] Creating peer offer for room member:', peerId);
-            await createAndSendOffer(peerId);
+            if (!initiatedPeersRef.current.has(peerId)) {
+              console.log('[useWebRTC] Creating peer offer for room member:', peerId);
+              await createAndSendOffer(peerId);
+            }
           } catch (err) {
             initiatedPeersRef.current.delete(peerId);
             initiatedPeerTimestampsRef.current.delete(peerId);
@@ -431,7 +432,7 @@ export function useWebRTC({
   useEffect(() => {
     if (!initialized || !managerRef.current || !userId) return;
 
-    const pollInterval = 2000; // Poll every 2 seconds
+    const pollInterval = 1500; // Poll every 1.5 seconds (faster for better responsiveness)
     let pollTimer: NodeJS.Timeout | null = null;
     let isPolling = true;
     let consecutiveErrors = 0;

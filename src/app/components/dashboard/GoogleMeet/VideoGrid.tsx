@@ -58,12 +58,16 @@ export function VideoGrid({
         <div className="flex-1 flex items-center justify-center relative overflow-hidden">
           {screenShareStream ? (
             <video
-              autoPlay
-              playsInline
               muted
+              playsInline
               className="max-w-full max-h-full object-contain rounded-lg"
               ref={(v) => {
-                if (v && v.srcObject !== screenShareStream) v.srcObject = screenShareStream;
+                if (v && v.srcObject !== screenShareStream) {
+                  v.srcObject = screenShareStream;
+                  v.play().catch((err) => {
+                    console.warn('[ScreenShare] Play failed:', err);
+                  });
+                }
               }}
             />
           ) : (

@@ -273,30 +273,70 @@ export function CollaborativeModeRoomGoogleMeet({
 
   /* ── Audio elements for peers ── */
   useEffect(() => {
+    const audioContainerId = 'webrtc-audio-container';
+    let container = document.getElementById(audioContainerId) as HTMLDivElement | null;
+    
+    // Create container if it doesn't exist
+    if (!container) {
+      container = document.createElement('div');
+      container.id = audioContainerId;
+      container.style.display = 'none';
+      document.body.appendChild(container);
+    }
+    
+    // Track which peers currently have audio elements
+    const peerIds = new Set(peers.map((p) => p.peerId));
+    const existingAudioIds = Array.from(container.querySelectorAll('audio')).map((el) => el.id);
+    
+    // Remove audio elements for peers no longer in the room
+    existingAudioIds.forEach((id) => {
+      const peerId = id.replace('audio-peer-', '');
+      if (!peerIds.has(peerId)) {
+        const el = document.getElementById(id);
+        if (el) {
+          el.pause();
+          el.srcObject = null;
+          el.remove();
+        }
+      }
+    });
+    
+    // Add or update audio elements for current peers
     peers.forEach((peer) => {
-      if (!peer.stream) return;
+      if (!peer.stream || !peer.stream.getAudioTracks().length) return;
+      
       const id = `audio-peer-${peer.peerId}`;
       let el = document.getElementById(id) as HTMLAudioElement | null;
+      
       if (!el) {
         el = document.createElement('audio');
         el.id = id;
         el.autoplay = true;
+        el.controls = false;
         el.style.display = 'none';
-        document.body.appendChild(el);
+        container!.appendChild(el);
       }
-      if (el.srcObject !== peer.stream) el.srcObject = peer.stream;
+      
+      // Only update srcObject if it has changed
+      if (el.srcObject !== peer.stream) {
+        el.srcObject = peer.stream;
+      }
     });
   }, [peers]);
 
   /* ── Cleanup audio elements on unmount ── */
   useEffect(() => {
     return () => {
-      peers.forEach((peer) => {
-        const el = document.getElementById(`audio-peer-${peer.peerId}`);
-        el?.remove();
-      });
+      const container = document.getElementById('webrtc-audio-container');
+      if (container) {
+        Array.from(container.querySelectorAll('audio')).forEach((el) => {
+          el.pause();
+          el.srcObject = null;
+          el.remove();
+        });
+        container.remove();
+      }
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   /* ── Beforeunload ── */
@@ -526,18 +566,21 @@ export function CollaborativeModeRoomGoogleMeet({
       <div
         ref={selfViewRef}
         onMouseDown={handleDragStart}
-        className="fixed bottom-20 right-4 z-40 w-[160px] aspect-video rounded-xl overflow-hidden shadow-2xl border border-white/10 cursor-grab active:cursor-grabbing select-none"
-        style={{ touchAction: 'none' }}
+        className="fixed bottom-20 right-4 z-40 w-[160px] aspect-video rounded-xl overflow-hidden shadow-2xl border border-white/10 cursor-grab active:cursor-grabbing select-none touch-none"
         aria-label="Your video (self-view)"
       >
         {localStream && videoEnabled ? (
           <video
-            autoPlay
             muted
             playsInline
             className="w-full h-full object-cover scale-x-[-1]"
             ref={(v) => {
-              if (v && v.srcObject !== localStream) v.srcObject = localStream;
+              if (v && v.srcObject !== localStream) {
+                v.srcObject = localStream;
+                v.play().catch((err) => {
+                  console.warn('[SelfView] Play failed:', err);
+                });
+              }
             }}
           />
         ) : (

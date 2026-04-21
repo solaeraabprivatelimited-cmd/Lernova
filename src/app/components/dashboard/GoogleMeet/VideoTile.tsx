@@ -57,7 +57,33 @@ export function VideoTile({
 
     if (stream && videoEnabled) {
       video.srcObject = stream;
-      video.play().catch(() => setVideoError(true));
+      
+      // Wait for loadedmetadata before playing
+      const handleLoadedMetadata = () => {
+        setVideoReady(true);
+        video.play().catch((err) => {
+          console.warn('[VideoTile] Play failed:', err);
+          setVideoError(true);
+        });
+      };
+      
+      // Use 'loadedmetadata' event instead of calling play immediately
+      const metadataListener = () => handleLoadedMetadata();
+      video.addEventListener('loadedmetadata', metadataListener, { once: true });
+      
+      // Timeout fallback in case loadedmetadata doesn't fire
+      const timeout = setTimeout(() => {
+        setVideoReady(true);
+        video.play().catch((err) => {
+          console.warn('[VideoTile] Play failed after timeout:', err);
+          setVideoError(true);
+        });
+      }, 2000);
+      
+      return () => {
+        video.removeEventListener('loadedmetadata', metadataListener);
+        clearTimeout(timeout);
+      };
     } else {
       video.srcObject = null;
     }
@@ -86,11 +112,16 @@ export function VideoTile({
       {/* Video element — always mounted, hidden when no video */}
       <video
         ref={videoRef}
-        autoPlay
         muted={isLocal}
         playsInline
-        onLoadedMetadata={() => setVideoReady(true)}
-        onError={() => setVideoError(true)}
+        onError={() => {
+          console.warn('[VideoTile] Video error for', name);
+          setVideoError(true);
+        }}
+        onEnded={() => {
+          console.log('[VideoTile] Video stream ended for', name);
+          setVideoReady(false);
+        }}
         className={[
           'absolute inset-0 w-full h-full object-cover',
           isMirrored ? 'scale-x-[-1]' : '',
