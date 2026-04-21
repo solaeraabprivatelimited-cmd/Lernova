@@ -1,14 +1,19 @@
-import React, { useState } from 'react';
-import { Bell, Plus, Users, Zap, X } from 'lucide-react';
+import React, { Suspense, useState } from 'react';
+import { Bell, Plus, Users, Zap } from 'lucide-react';
 import imgImage17 from "figma:asset/1dab6d19afb3878b8ebec0d7a0fc2a196c946a7c.png";
 import imgImage18 from "figma:asset/4c03b875da24497740f219b6c1322d1ce76023cb.png";
 import imgImage19 from "figma:asset/97aed589e8ee3b4f317112befff4385af448de2f.png";
 import imgEllipse1 from "figma:asset/798eac6e288222603807db12d070c52d1a145785.png";
 import { roomAPI } from "@/utils/api/roomAPI";
+import { RouteLoader } from "@/app/components/RouteLoader";
 import { CreateCustomRoom } from "./CreateCustomRoom";
 import { JoinCustomRoom } from "./JoinCustomRoom";
 import { JoinRandomRoomView } from "./JoinRandomRoomView";
-import { CollaborativeModeRoom } from "./CollaborativeModeRoom";
+
+const CollaborativeModeRoomGoogleMeet = React.lazy(async () => {
+  const module = await import("./GoogleMeet/CollaborativeModeRoomGoogleMeet");
+  return { default: module.CollaborativeModeRoomGoogleMeet };
+});
 
 interface CollaborativeModeViewProps {
   onCreateRoom?: () => void;
@@ -33,7 +38,6 @@ export function CollaborativeModeView({}: CollaborativeModeViewProps) {
   const [currentRoom, setCurrentRoom] = useState<RoomData | null>(null);
 
   const handleLaunchRoom = (roomData: RoomData) => {
-    console.log('Launching room:', roomData);
     setCurrentRoom(roomData);
     setView('in-room');
   };
@@ -57,7 +61,6 @@ export function CollaborativeModeView({}: CollaborativeModeViewProps) {
   };
 
   const handleJoinRandomRoom = (roomId: string, roomName: string, subject: string) => {
-    console.log('Joining random room:', { roomId, roomName, subject });
     setCurrentRoom({
       roomName,
       subject,
@@ -112,14 +115,16 @@ export function CollaborativeModeView({}: CollaborativeModeViewProps) {
 
   if (view === 'in-room' && currentRoom) {
     return (
-      <CollaborativeModeRoom
-        roomName={currentRoom.roomName}
-        roomId={currentRoom.roomId}
-        roomCode={currentRoom.roomCode}
-        maxParticipants={currentRoom.maxParticipants}
-        subject={currentRoom.subject}
-        onLeaveRoom={handleLeaveRoom}
-      />
+      <Suspense fallback={<RouteLoader label="Loading collaborative room..." />}>
+        <CollaborativeModeRoomGoogleMeet
+          roomName={currentRoom.roomName}
+          roomId={currentRoom.roomId}
+          roomCode={currentRoom.roomCode}
+          maxParticipants={currentRoom.maxParticipants}
+          subject={currentRoom.subject}
+          onLeaveRoom={handleLeaveRoom}
+        />
+      </Suspense>
     );
   }
 
