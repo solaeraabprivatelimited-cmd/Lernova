@@ -289,12 +289,24 @@ export function useWebRTC({
         });
 
         // Initialize local media
-        const stream = await manager.initializeLocalMedia();
-        if (cancelled) {
-          manager.closeAll();
-          return;
+        try {
+          const stream = await manager.initializeLocalMedia();
+          if (cancelled) {
+            manager.closeAll();
+            return;
+          }
+          setLocalStream(stream);
+        } catch (mediaErr) {
+          // Camera/mic denied or unavailable — continue without local media
+          console.warn('[useWebRTC] Media access failed, continuing without local stream:', mediaErr);
+          if (cancelled) {
+            manager.closeAll();
+            return;
+          }
+          setLocalStream(null);
+          const err = mediaErr instanceof Error ? mediaErr : new Error(String(mediaErr));
+          onError?.(err);
         }
-        setLocalStream(stream);
 
         managerRef.current = manager;
         setInitialized(true);

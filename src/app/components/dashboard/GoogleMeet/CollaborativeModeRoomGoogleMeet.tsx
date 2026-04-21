@@ -426,8 +426,15 @@ export function CollaborativeModeRoomGoogleMeet({
     })),
   ];
 
+  /* ── Escape hatch: stop blocking UI after 8 s even if WebRTC never initialises ── */
+  const [initTimeout, setInitTimeout] = useState(false);
+  useEffect(() => {
+    const id = setTimeout(() => setInitTimeout(true), 8000);
+    return () => clearTimeout(id);
+  }, []);
+
   /* ── Loading screen ── */
-  if (!userId || !initialized) {
+  if (!userId || (!initialized && !initTimeout)) {
     return (
       <div className="flex h-screen w-full items-center justify-center bg-[#111112]">
         <div className="text-center space-y-4">
