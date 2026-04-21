@@ -143,6 +143,10 @@ export function CollaborativeModeRoomGoogleMeet({
     }).catch(() => {});
   }, []);
 
+  const onWebRTCError = useCallback(() => {
+    setJoinError('A connection issue occurred. Please try reconnecting.');
+  }, []);
+
   /* ── WebRTC ── */
   const {
     initialized,
@@ -158,7 +162,7 @@ export function CollaborativeModeRoomGoogleMeet({
     userId,
     enableVideo: true,
     enableAudio: true,
-    onError: () => setJoinError('A connection issue occurred. Please try reconnecting.'),
+    onError: onWebRTCError,
   });
 
   /* ── Sync remote participants ── */

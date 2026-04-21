@@ -113,36 +113,59 @@ export function useWebRTC({
   const [isConnecting, setIsConnecting] = useState(false);
   const [isScreenSharing, setIsScreenSharing] = useState(false);
 
-  const sendSignal = useCallback(
-    async (signal: {
-      toUserId: string;
-      signalType: SignalType;
-      payload: unknown;
-    }) => {
-      const token = await getValidAccessToken();
-      if (!token) {
-        throw new Error('Authentication required for WebRTC signaling');
-      }
+  // Stable refs for callbacks and config — never trigger effect re-runs
+  const roomIdRef = useRef(roomId);
+  const onErrorRef = useRef(onError);
+  const onTrackStateChangeRef = useRef(onTrackStateChange);
+  useEffect(() => { roomIdRef.current = roomId; }, [roomId]);
+  useEffect(() => { onErrorRef.current = onError; }, [onError]);
+  useEffect(() => { onTrackStateChangeRef.current = onTrackStateChange; }, [onTrackStateChange]);
 
+  // sendSignal as a ref so it never appears in effect dep arrays
+  const sendSignalRef = useRef(async (signal: {
+    toUserId: string;
+    signalType: SignalType;
+    payload: unknown;
+  }) => {
+    const token = await getValidAccessToken();
+    if (!token) throw new Error('Authentication required for WebRTC signaling');
+
+    const response = await fetch(`${BASE_URL}/webrtc/signal/${signal.toUserId}?roomId=${roomIdRef.current}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ type: signal.signalType, data: signal.payload }),
+    });
+
+    if (!response.ok) {
+      const details = await response.text().catch(() => response.statusText);
+      throw new Error(`Signal ${signal.signalType} failed (${response.status}): ${details}`);
+    }
+  });
+
+  // Keep sendSignalRef body up to date when roomId changes
+  useEffect(() => {
+    sendSignalRef.current = async (signal) => {
+      const token = await getValidAccessToken();
+      if (!token) throw new Error('Authentication required for WebRTC signaling');
       const response = await fetch(`${BASE_URL}/webrtc/signal/${signal.toUserId}?roomId=${roomId}`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          type: signal.signalType,
-          data: signal.payload,
-        }),
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ type: signal.signalType, data: signal.payload }),
       });
-
       if (!response.ok) {
         const details = await response.text().catch(() => response.statusText);
         throw new Error(`Signal ${signal.signalType} failed (${response.status}): ${details}`);
       }
-    },
-    [roomId, userId]
-  );
+    };
+  }, [roomId]);
+
+  // Stable wrapper — identity never changes, so safe in any dep array
+  const sendSignal = useCallback((signal: { toUserId: string; signalType: SignalType; payload: unknown }) => {
+    return sendSignalRef.current(signal);
+  }, []);
 
   const createAndSendOffer = useCallback(
     async (peerId: string) => {
@@ -159,13 +182,9 @@ export function useWebRTC({
       });
 
       const offer = await managerRef.current.createOffer(peerId);
-      await sendSignal({
-        toUserId: peerId,
-        signalType: 'offer',
-        payload: offer,
-      });
+      await sendSignal({ toUserId: peerId, signalType: 'offer', payload: offer });
     },
-    [initialized, sendSignal]
+    [initialized, sendSignal]  // sendSignal is now stable — won't cause re-runs
   );
 
   // Initialize WebRTC manager
@@ -198,7 +217,6 @@ export function useWebRTC({
 
         // Setup event handlers
         manager.on('stream-received', (peerId: string, stream: MediaStream) => {
-          // Stream from peer
           peerConnectionStateRef.current.set(peerId, 'connected');
           setPeers((prev) => {
             const updated = new Map(prev);
@@ -207,8 +225,7 @@ export function useWebRTC({
             updated.set(peerId, peerState);
             return updated;
           });
-          // Notify component of track state change (for mute/unmute UI updates)
-          onTrackStateChange?.();
+          onTrackStateChangeRef.current?.();
         });
 
         manager.on('peer-connected', (peerId: string) => {
@@ -285,7 +302,7 @@ export function useWebRTC({
         manager.on('error', (error: Error, context?: string) => {
           console.error('[useWebRTC] Error:', context, error);
           setError(error);
-          onError?.(error);
+          onErrorRef.current?.(error);
         });
 
         // Initialize local media
@@ -305,7 +322,7 @@ export function useWebRTC({
           }
           setLocalStream(null);
           const err = mediaErr instanceof Error ? mediaErr : new Error(String(mediaErr));
-          onError?.(err);
+          onErrorRef.current?.(err);
         }
 
         managerRef.current = manager;
@@ -340,7 +357,8 @@ export function useWebRTC({
       peerConnectionStateRef.current.clear();
       processedSignalIdsRef.current.clear();
     };
-  }, [enableVideo, enableAudio, onError, onTrackStateChange, roomId, userId, sendSignal]);
+  // Only primitive/stable values — onError and onTrackStateChange accessed via refs
+  }, [enableVideo, enableAudio, roomId, userId]);
 
   useEffect(() => {
     if (!initialized || !managerRef.current || !userId || !roomId) return;
