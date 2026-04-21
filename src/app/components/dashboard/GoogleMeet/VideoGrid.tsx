@@ -1,6 +1,5 @@
 /**
- * VideoGrid — Responsive participant grid
- * Auto-adjusts layout for 1–16 participants, screen-share filmstrip mode
+ * VideoGrid — Responsive participant grid with correct sizing
  */
 
 import { useMemo } from 'react';
@@ -22,14 +21,13 @@ interface VideoGridProps {
   screenShareStream?: MediaStream | null;
 }
 
-function gridClass(count: number): string {
-  if (count === 1) return 'grid-cols-1';
-  if (count === 2) return 'grid-cols-2';
-  if (count <= 4) return 'grid-cols-2 grid-rows-2';
-  if (count <= 6) return 'grid-cols-3 grid-rows-2';
-  if (count <= 9) return 'grid-cols-3 grid-rows-3';
-  if (count <= 12) return 'grid-cols-4 grid-rows-3';
-  return 'grid-cols-4 grid-rows-4';
+function getGridStyle(count: number): React.CSSProperties {
+  if (count === 1) return { gridTemplateColumns: '1fr', gridTemplateRows: '1fr' };
+  if (count === 2) return { gridTemplateColumns: '1fr 1fr', gridTemplateRows: '1fr' };
+  if (count <= 4) return { gridTemplateColumns: '1fr 1fr', gridTemplateRows: '1fr 1fr' };
+  if (count <= 6) return { gridTemplateColumns: '1fr 1fr 1fr', gridTemplateRows: '1fr 1fr' };
+  if (count <= 9) return { gridTemplateColumns: '1fr 1fr 1fr', gridTemplateRows: '1fr 1fr 1fr' };
+  return { gridTemplateColumns: '1fr 1fr 1fr 1fr', gridTemplateRows: 'auto' };
 }
 
 export function VideoGrid({
@@ -53,14 +51,14 @@ export function VideoGrid({
   /* ── Screen-share layout ── */
   if (isScreenSharing) {
     return (
-      <div className="flex flex-col w-full h-full bg-[#111112]">
-        {/* Main shared content */}
-        <div className="flex-1 flex items-center justify-center relative overflow-hidden">
+      <div style={{ display: 'flex', flexDirection: 'column', width: '100%', height: '100%', background: '#111112' }}>
+        {/* Main content */}
+        <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', overflow: 'hidden', padding: 8 }}>
           {screenShareStream ? (
             <video
               muted
               playsInline
-              className="max-w-full max-h-full object-contain rounded-lg"
+              style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain', borderRadius: 8 }}
               ref={(v) => {
                 if (v && v.srcObject !== screenShareStream) {
                   v.srcObject = screenShareStream;
@@ -69,32 +67,30 @@ export function VideoGrid({
               }}
             />
           ) : (
-            <div className="flex flex-col items-center gap-3 text-white/40">
-              <div className="w-16 h-16 rounded-2xl bg-white/5 flex items-center justify-center">
-                <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
-                    d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                </svg>
-              </div>
-              <p className="text-sm font-medium">Waiting for screen share…</p>
-            </div>
-          )}
-
-          {/* "You are presenting" badge */}
-          {localParticipant.peerId === activeSpeakerId && (
-            <div className="absolute top-4 left-1/2 -translate-x-1/2 bg-[#1a73e8] text-white text-xs font-semibold px-4 py-1.5 rounded-full shadow-lg">
-              You are presenting
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12, color: 'rgba(255,255,255,0.3)' }}>
+              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="2" y="3" width="20" height="14" rx="2" />
+                <path d="M8 21h8M12 17v4" />
+              </svg>
+              <span style={{ fontSize: 13, fontFamily: 'Inter, system-ui, sans-serif' }}>Waiting for screen share…</span>
             </div>
           )}
         </div>
 
         {/* Filmstrip */}
-        <div className="h-[88px] bg-[#1c1c1e] border-t border-white/5 flex items-center gap-2 px-3 overflow-x-auto shrink-0">
+        <div style={{
+          height: 88,
+          background: '#1c1c1e',
+          borderTop: '1px solid rgba(255,255,255,0.06)',
+          display: 'flex',
+          alignItems: 'center',
+          gap: 8,
+          padding: '0 12px',
+          overflowX: 'auto',
+          flexShrink: 0,
+        }}>
           {all.map((p) => (
-            <div
-              key={p.peerId}
-              className="h-[68px] aspect-video shrink-0 rounded-lg overflow-hidden"
-            >
+            <div key={p.peerId} style={{ height: 68, aspectRatio: '16/9', flexShrink: 0, borderRadius: 8, overflow: 'hidden' }}>
               <VideoTile
                 peerId={p.peerId}
                 name={p.name}
@@ -113,17 +109,26 @@ export function VideoGrid({
     );
   }
 
-  /* ── Normal grid layout ── */
+  /* ── Normal grid ── */
+  const gridStyle = getGridStyle(all.length);
+
   return (
     <div
-      className={`grid ${gridClass(all.length)} gap-2 w-full h-full p-2 auto-rows-fr`}
-      style={{ minHeight: 0 }}
+      style={{
+        display: 'grid',
+        ...gridStyle,
+        gap: 8,
+        width: '100%',
+        height: '100%',
+        padding: 8,
+        boxSizing: 'border-box',
+        minHeight: 0,
+      }}
     >
       {all.map((p) => (
         <div
           key={p.peerId}
-          className="relative min-h-0 rounded-xl overflow-hidden"
-          style={{ aspectRatio: all.length === 1 ? undefined : '16/9' }}
+          style={{ position: 'relative', minHeight: 0, minWidth: 0, borderRadius: 12, overflow: 'hidden' }}
         >
           <VideoTile
             peerId={p.peerId}

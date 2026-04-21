@@ -1,10 +1,8 @@
 /**
  * VideoTile — Individual participant video tile
- * Google Meet-style with avatar fallback, name label, status indicators, active speaker glow
  */
 
 import { useRef, useEffect, useState } from 'react';
-import { MicOff, VideoOff } from 'lucide-react';
 
 interface VideoTileProps {
   peerId: string;
@@ -19,22 +17,44 @@ interface VideoTileProps {
 }
 
 const AVATAR_COLORS = [
-  'from-violet-500 to-purple-600',
-  'from-blue-500 to-cyan-600',
-  'from-emerald-500 to-teal-600',
-  'from-orange-500 to-amber-600',
-  'from-rose-500 to-pink-600',
-  'from-indigo-500 to-blue-600',
+  ['#7c3aed', '#6d28d9'],
+  ['#2563eb', '#0891b2'],
+  ['#059669', '#0d9488'],
+  ['#d97706', '#b45309'],
+  ['#dc2626', '#db2777'],
+  ['#4f46e5', '#2563eb'],
 ];
 
-function getAvatarColor(name: string) {
+function getAvatarColors(name: string) {
   let hash = 0;
   for (let i = 0; i < name.length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash);
   return AVATAR_COLORS[Math.abs(hash) % AVATAR_COLORS.length];
 }
 
+function MicOffIcon({ size = 10 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+      <line x1="2" y1="2" x2="22" y2="22" />
+      <path d="M18.89 13.23A7.12 7.12 0 0 0 19 12v-2" />
+      <path d="M5 10v2a7 7 0 0 0 12 5" />
+      <path d="M15 9.34V5a3 3 0 0 0-5.68-1.33" />
+      <path d="M9 9v3a3 3 0 0 0 5.12 2.12" />
+      <line x1="12" y1="19" x2="12" y2="22" />
+    </svg>
+  );
+}
+
+function VideoOffIcon({ size = 10 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M10.66 6H14a2 2 0 0 1 2 2v2.34l1 1L22 8v8" />
+      <path d="M16 16a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h2l10 10Z" />
+      <line x1="2" y1="2" x2="22" y2="22" />
+    </svg>
+  );
+}
+
 export function VideoTile({
-  peerId,
   name,
   stream,
   isLocal = false,
@@ -46,141 +66,173 @@ export function VideoTile({
 }: VideoTileProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [videoReady, setVideoReady] = useState(false);
-  const [videoError, setVideoError] = useState(false);
 
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
 
     setVideoReady(false);
-    setVideoError(false);
 
     if (stream && videoEnabled) {
       video.srcObject = stream;
-      
-      // Wait for loadedmetadata before playing
-      const handleLoadedMetadata = () => {
+
+      const onReady = () => {
         setVideoReady(true);
-        video.play().catch(() => {
-          setVideoError(true);
-        });
+        video.play().catch(() => {});
       };
-      
-      // Use 'loadedmetadata' event instead of calling play immediately
-      const metadataListener = () => handleLoadedMetadata();
-      video.addEventListener('loadedmetadata', metadataListener, { once: true });
-      
-      // Timeout fallback in case loadedmetadata doesn't fire
-      const timeout = setTimeout(() => {
-        setVideoReady(true);
-        video.play().catch(() => {
-          setVideoError(true);
-        });
-      }, 2000);
-      
-      return () => {
-        video.removeEventListener('loadedmetadata', metadataListener);
-        clearTimeout(timeout);
-      };
+
+      if (video.readyState >= 1) {
+        onReady();
+      } else {
+        video.addEventListener('loadedmetadata', onReady, { once: true });
+        // Fallback: mark ready after 1.5s regardless
+        const t = setTimeout(onReady, 1500);
+        return () => {
+          video.removeEventListener('loadedmetadata', onReady);
+          clearTimeout(t);
+        };
+      }
     } else {
       video.srcObject = null;
     }
   }, [stream, videoEnabled]);
 
-  const showVideo = videoEnabled && videoReady && !videoError && !!stream;
-  const initials = name
-    .split(' ')
-    .map((w) => w[0])
-    .join('')
-    .toUpperCase()
-    .slice(0, 2);
-  const avatarColor = getAvatarColor(name);
+  const showVideo = videoEnabled && videoReady && !!stream;
+  const initials = name.split(' ').map((w) => w[0] ?? '').join('').toUpperCase().slice(0, 2) || '?';
+  const [c1, c2] = getAvatarColors(name);
+
+  const avatarSize = compact ? 28 : 56;
+  const fontSize = compact ? 11 : 22;
+  const nameFontSize = compact ? 10 : 13;
 
   return (
     <div
-      className={[
-        'relative w-full h-full rounded-xl overflow-hidden bg-[#1c1c1e] select-none',
-        'transition-all duration-300',
-        isActiveSpeaker
-          ? 'ring-2 ring-[#1a73e8] shadow-[0_0_0_2px_rgba(26,115,232,0.4)]'
-          : 'ring-1 ring-white/5',
-      ].join(' ')}
-      aria-label={`${name}${isLocal ? ' (You)' : ''}`}
+      style={{
+        position: 'relative',
+        width: '100%',
+        height: '100%',
+        borderRadius: 12,
+        overflow: 'hidden',
+        background: '#1c1c1e',
+        outline: isActiveSpeaker ? '2px solid #1a73e8' : '1px solid rgba(255,255,255,0.06)',
+        boxShadow: isActiveSpeaker ? '0 0 0 4px rgba(26,115,232,0.25)' : 'none',
+        transition: 'outline 0.2s, box-shadow 0.2s',
+        userSelect: 'none',
+      }}
     >
-      {/* Video element — always mounted, hidden when no video */}
+      {/* Video */}
       <video
         ref={videoRef}
         muted={isLocal}
         playsInline
-        onError={() => {
-          console.warn('[VideoTile] Video error for', name);
-          setVideoError(true);
+        style={{
+          position: 'absolute',
+          inset: 0,
+          width: '100%',
+          height: '100%',
+          objectFit: 'cover',
+          transform: isMirrored ? 'scaleX(-1)' : 'none',
+          opacity: showVideo ? 1 : 0,
+          transition: 'opacity 0.3s',
+          background: '#000',
         }}
-        onEnded={() => setVideoReady(false)}
-        className={[
-          'absolute inset-0 w-full h-full object-cover',
-          isMirrored ? 'scale-x-[-1]' : '',
-          showVideo ? 'opacity-100' : 'opacity-0',
-          'transition-opacity duration-300',
-        ].join(' ')}
       />
 
       {/* Avatar fallback */}
       {!showVideo && (
         <div
-          className={`absolute inset-0 flex items-center justify-center bg-gradient-to-br ${avatarColor}`}
+          style={{
+            position: 'absolute',
+            inset: 0,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            background: `linear-gradient(135deg, ${c1}, ${c2})`,
+          }}
         >
           <div
-            className={[
-              'rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center font-semibold text-white',
-              compact ? 'w-8 h-8 text-xs' : 'w-16 h-16 text-2xl',
-            ].join(' ')}
+            style={{
+              width: avatarSize,
+              height: avatarSize,
+              borderRadius: '50%',
+              background: 'rgba(255,255,255,0.2)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontWeight: 600,
+              fontSize,
+              color: '#fff',
+              fontFamily: 'Inter, system-ui, sans-serif',
+            }}
           >
             {initials}
           </div>
         </div>
       )}
 
-      {/* Loading skeleton overlay */}
-      {videoEnabled && !videoReady && !videoError && !!stream && (
-        <div className="absolute inset-0 bg-[#1c1c1e] animate-pulse" />
+      {/* Loading pulse */}
+      {videoEnabled && !videoReady && !!stream && (
+        <div
+          style={{
+            position: 'absolute',
+            inset: 0,
+            background: '#1c1c1e',
+            animation: 'pulse 1.5s ease-in-out infinite',
+          }}
+        />
       )}
 
-      {/* Bottom gradient + name label */}
-      <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent pt-8 pb-2 px-3">
-        <div className="flex items-center justify-between gap-2">
-          <span
-            className={[
-              'font-medium text-white truncate drop-shadow-sm',
-              compact ? 'text-[10px]' : 'text-sm',
-            ].join(' ')}
-          >
-            {name}
-            {isLocal && (
-              <span className="ml-1.5 text-white/60 font-normal">(You)</span>
-            )}
-          </span>
+      {/* Bottom name bar */}
+      <div
+        style={{
+          position: 'absolute',
+          bottom: 0,
+          left: 0,
+          right: 0,
+          background: 'linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.3) 60%, transparent 100%)',
+          padding: compact ? '12px 8px 4px' : '24px 12px 8px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: 6,
+        }}
+      >
+        <span
+          style={{
+            fontSize: nameFontSize,
+            fontWeight: 500,
+            color: '#fff',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            whiteSpace: 'nowrap',
+            fontFamily: 'Inter, system-ui, sans-serif',
+            textShadow: '0 1px 2px rgba(0,0,0,0.5)',
+          }}
+        >
+          {name}{isLocal ? ' (You)' : ''}
+        </span>
 
-          {/* Status icons */}
-          <div className="flex items-center gap-1 shrink-0">
-            {!audioEnabled && (
-              <span className="flex items-center justify-center w-5 h-5 rounded-full bg-red-500/90">
-                <MicOff className="w-2.5 h-2.5 text-white" />
-              </span>
-            )}
-            {!videoEnabled && (
-              <span className="flex items-center justify-center w-5 h-5 rounded-full bg-red-500/90">
-                <VideoOff className="w-2.5 h-2.5 text-white" />
-              </span>
-            )}
-          </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexShrink: 0 }}>
+          {!audioEnabled && (
+            <span style={{
+              width: 18, height: 18, borderRadius: '50%',
+              background: 'rgba(234,67,53,0.9)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}>
+              <MicOffIcon size={10} />
+            </span>
+          )}
+          {!videoEnabled && (
+            <span style={{
+              width: 18, height: 18, borderRadius: '50%',
+              background: 'rgba(234,67,53,0.9)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}>
+              <VideoOffIcon size={10} />
+            </span>
+          )}
         </div>
       </div>
-
-      {/* Active speaker pulse ring */}
-      {isActiveSpeaker && (
-        <div className="absolute inset-0 rounded-xl ring-2 ring-[#1a73e8] animate-pulse pointer-events-none" />
-      )}
     </div>
   );
 }

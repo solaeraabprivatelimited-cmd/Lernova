@@ -1,9 +1,8 @@
 /**
- * MeetHeader — Top bar: room name, meeting timer, connection status
+ * MeetHeader — Top bar with inline SVG icons
  */
 
 import { useState, useEffect } from 'react';
-import { Wifi, WifiOff, Clock, Shield } from 'lucide-react';
 
 interface MeetHeaderProps {
   roomName: string;
@@ -27,72 +26,103 @@ function useMeetingTimer() {
     : `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
 }
 
-export function MeetHeader({
-  roomName,
-  subject,
-  participantCount,
-  isConnected,
-  roomCode,
-}: MeetHeaderProps) {
+export function MeetHeader({ roomName, subject, participantCount, isConnected, roomCode }: MeetHeaderProps) {
   const timer = useMeetingTimer();
 
   return (
     <header
-      className="h-14 shrink-0 bg-[#202124]/95 backdrop-blur-md border-b border-white/[0.06] px-4 flex items-center justify-between z-40"
       role="banner"
+      style={{
+        height: 56,
+        flexShrink: 0,
+        background: 'rgba(32,33,36,0.97)',
+        backdropFilter: 'blur(12px)',
+        borderBottom: '1px solid rgba(255,255,255,0.06)',
+        padding: '0 16px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        zIndex: 40,
+        fontFamily: 'Inter, system-ui, sans-serif',
+      }}
     >
       {/* Left — room info */}
-      <div className="flex items-center gap-3 min-w-0">
-        <div className="min-w-0">
-          <h1 className="text-[15px] font-semibold text-white truncate leading-tight">
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0, flex: 1 }}>
+        <div style={{ minWidth: 0 }}>
+          <div style={{ fontSize: 15, fontWeight: 600, color: '#fff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', lineHeight: 1.2 }}>
             {roomName}
-          </h1>
+          </div>
           {subject && (
-            <p className="text-[11px] text-white/50 truncate leading-tight mt-0.5">{subject}</p>
+            <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.45)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginTop: 2 }}>
+              {subject}
+            </div>
           )}
         </div>
-
         {roomCode && (
-          <span className="hidden sm:inline-flex items-center gap-1 text-[11px] text-white/40 bg-white/5 border border-white/10 rounded-full px-2.5 py-0.5 font-mono shrink-0">
+          <span style={{
+            fontSize: 11,
+            color: 'rgba(255,255,255,0.35)',
+            background: 'rgba(255,255,255,0.06)',
+            border: '1px solid rgba(255,255,255,0.1)',
+            borderRadius: 20,
+            padding: '2px 10px',
+            fontFamily: 'monospace',
+            flexShrink: 0,
+            display: 'none',
+          }}>
             {roomCode}
           </span>
         )}
       </div>
 
       {/* Center — timer + status */}
-      <div className="flex items-center gap-4 text-sm">
-        <div className="flex items-center gap-1.5 text-white/60">
-          <Clock className="w-3.5 h-3.5" aria-hidden />
-          <span className="font-mono text-[13px] tabular-nums">{timer}</span>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 16, flexShrink: 0 }}>
+        {/* Timer */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 5, color: 'rgba(255,255,255,0.55)' }}>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="12" cy="12" r="10" />
+            <polyline points="12 6 12 12 16 14" />
+          </svg>
+          <span style={{ fontSize: 13, fontFamily: 'monospace', fontVariantNumeric: 'tabular-nums' }}>{timer}</span>
         </div>
 
-        <div
-          className={[
-            'flex items-center gap-1.5 text-[12px] font-medium',
-            isConnected ? 'text-emerald-400' : 'text-amber-400',
-          ].join(' ')}
-          aria-live="polite"
-          aria-label={isConnected ? 'Connected' : 'Connecting'}
-        >
+        {/* Connection */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 5, color: isConnected ? '#34d399' : '#fbbf24' }}>
           {isConnected ? (
-            <Wifi className="w-3.5 h-3.5" aria-hidden />
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M5 12.55a11 11 0 0 1 14.08 0" />
+              <path d="M1.42 9a16 16 0 0 1 21.16 0" />
+              <path d="M8.53 16.11a6 6 0 0 1 6.95 0" />
+              <line x1="12" y1="20" x2="12.01" y2="20" />
+            </svg>
           ) : (
-            <WifiOff className="w-3.5 h-3.5 animate-pulse" aria-hidden />
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ animation: 'pulse 1.5s ease-in-out infinite' }}>
+              <line x1="1" y1="1" x2="23" y2="23" />
+              <path d="M16.72 11.06A10.94 10.94 0 0 1 19 12.55" />
+              <path d="M5 12.55a10.94 10.94 0 0 1 5.17-2.39" />
+              <path d="M10.71 5.05A16 16 0 0 1 22.56 9" />
+              <path d="M1.42 9a15.91 15.91 0 0 1 4.7-2.88" />
+              <path d="M8.53 16.11a6 6 0 0 1 6.95 0" />
+              <line x1="12" y1="20" x2="12.01" y2="20" />
+            </svg>
           )}
-          <span className="hidden sm:inline">
+          <span style={{ fontSize: 12, fontWeight: 500 }}>
             {isConnected ? 'Connected' : 'Connecting…'}
           </span>
         </div>
 
-        <div className="hidden md:flex items-center gap-1.5 text-white/30 text-[12px]">
-          <Shield className="w-3.5 h-3.5" aria-hidden />
+        {/* Encrypted badge */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 4, color: 'rgba(255,255,255,0.25)', fontSize: 12 }}>
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+          </svg>
           <span>Encrypted</span>
         </div>
       </div>
 
-      {/* Right — participant count */}
-      <div className="flex items-center gap-2">
-        <span className="text-[12px] text-white/50 tabular-nums">
+      {/* Right — count */}
+      <div style={{ flex: 1, display: 'flex', justifyContent: 'flex-end' }}>
+        <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.45)', fontVariantNumeric: 'tabular-nums' }}>
           {participantCount} {participantCount === 1 ? 'person' : 'people'}
         </span>
       </div>

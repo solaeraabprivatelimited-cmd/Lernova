@@ -496,7 +496,7 @@ export function CollaborativeModeRoomGoogleMeet({
 
   /* ── Render ── */
   return (
-    <div className="flex flex-col h-screen w-full bg-[#111112] overflow-hidden">
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', width: '100%', background: '#111112', overflow: 'hidden' }}>
       {/* Header */}
       <MeetHeader
         roomName={roomName}
@@ -523,10 +523,10 @@ export function CollaborativeModeRoomGoogleMeet({
         </div>
       )}
 
-      {/* Main content */}
-      <div className="flex flex-1 min-h-0 overflow-hidden">
+      {/* Main content — fills space between header and control bar */}
+      <div style={{ display: 'flex', flex: 1, minHeight: 0, overflow: 'hidden', paddingBottom: 80 }}>
         {/* Video area */}
-        <div className="flex-1 min-w-0 overflow-hidden pb-[72px]">
+        <div style={{ flex: 1, minWidth: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
           <VideoGrid
             localParticipant={{
               peerId: userId,
@@ -543,7 +543,7 @@ export function CollaborativeModeRoomGoogleMeet({
 
         {/* Sidebar panels */}
         {showChat && (
-          <div className="shrink-0 h-full pb-[72px] border-l border-white/[0.06]">
+          <div style={{ flexShrink: 0, height: '100%', borderLeft: '1px solid rgba(255,255,255,0.06)' }}>
             <ChatPanel
               messages={chatForPanel}
               currentUserName={userName}
@@ -557,7 +557,7 @@ export function CollaborativeModeRoomGoogleMeet({
         )}
 
         {showPeople && (
-          <div className="shrink-0 h-full pb-[72px] border-l border-white/[0.06]">
+          <div style={{ flexShrink: 0, height: '100%', borderLeft: '1px solid rgba(255,255,255,0.06)' }}>
             <ParticipantsPanel
               participants={participantsForPanel}
               currentUserId={userId}
