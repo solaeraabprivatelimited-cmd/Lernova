@@ -1,8 +1,8 @@
 /**
- * MeetHeader — Top bar with inline SVG icons
+ * MeetHeader - Top bar with room metadata and sharing controls.
  */
 
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
 interface MeetHeaderProps {
   roomName: string;
@@ -15,41 +15,82 @@ interface MeetHeaderProps {
 
 function useMeetingTimer() {
   const [elapsed, setElapsed] = useState(0);
+
   useEffect(() => {
     const id = setInterval(() => setElapsed((s) => s + 1), 1000);
     return () => clearInterval(id);
   }, []);
+
   const h = Math.floor(elapsed / 3600);
   const m = Math.floor((elapsed % 3600) / 60);
   const s = elapsed % 60;
+
   return h > 0
     ? `${h}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`
     : `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
 }
 
-export function MeetHeader({ roomName, subject, participantCount, isConnected, roomCode, onGoToDashboard }: MeetHeaderProps) {
+export function MeetHeader({
+  roomName,
+  subject,
+  participantCount,
+  isConnected,
+  roomCode,
+  onGoToDashboard,
+}: MeetHeaderProps) {
   const timer = useMeetingTimer();
+  const [codeCopyFeedback, setCodeCopyFeedback] = useState('');
+  const [linkCopyFeedback, setLinkCopyFeedback] = useState('');
+
+  const roomLink =
+    roomCode && typeof window !== 'undefined'
+      ? `${window.location.origin}/room/${roomCode}`
+      : '';
+
+  const handleCopyRoomCode = async () => {
+    if (!roomCode) return;
+
+    try {
+      await navigator.clipboard.writeText(roomCode);
+      setCodeCopyFeedback('Copied');
+    } catch {
+      setCodeCopyFeedback('Copy failed');
+    }
+
+    window.setTimeout(() => setCodeCopyFeedback(''), 1500);
+  };
+
+  const handleCopyRoomLink = async () => {
+    if (!roomLink) return;
+
+    try {
+      await navigator.clipboard.writeText(roomLink);
+      setLinkCopyFeedback('Copied');
+    } catch {
+      setLinkCopyFeedback('Copy failed');
+    }
+
+    window.setTimeout(() => setLinkCopyFeedback(''), 1500);
+  };
 
   return (
     <header
       role="banner"
       style={{
-        height: 56,
         flexShrink: 0,
         background: 'rgba(32,33,36,0.97)',
         backdropFilter: 'blur(12px)',
         borderBottom: '1px solid rgba(255,255,255,0.06)',
-        padding: '0 16px',
+        padding: '10px 16px',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
+        gap: 16,
         zIndex: 40,
         fontFamily: 'Inter, system-ui, sans-serif',
       }}
     >
-      {/* Left — logo + room info */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0, flex: 1 }}>
-        {/* Elm Orbit logo — click to go to dashboard */}
         {onGoToDashboard && (
           <button
             onClick={onGoToDashboard}
@@ -67,47 +108,159 @@ export function MeetHeader({ roomName, subject, participantCount, isConnected, r
               flexShrink: 0,
             }}
           >
-            <div style={{
-              width: 28, height: 28, borderRadius: '50%',
-              background: 'linear-gradient(135deg, #003566, #F77F00)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              flexShrink: 0,
-            }}>
+            <div
+              style={{
+                width: 28,
+                height: 28,
+                borderRadius: '50%',
+                background: 'linear-gradient(135deg, #003566, #F77F00)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexShrink: 0,
+              }}
+            >
               <span style={{ color: '#fff', fontWeight: 700, fontSize: 11, fontFamily: 'Inter, sans-serif' }}>L</span>
             </div>
-            <span style={{ color: 'rgba(255,255,255,0.7)', fontSize: 13, fontFamily: 'Righteous, sans-serif', whiteSpace: 'nowrap' }}>Elm Orbit</span>
+            <span
+              style={{
+                color: 'rgba(255,255,255,0.7)',
+                fontSize: 13,
+                fontFamily: 'Righteous, sans-serif',
+                whiteSpace: 'nowrap',
+              }}
+            >
+              Elm Orbit
+            </span>
           </button>
         )}
-        <div style={{ minWidth: 0 }}>
-          <div style={{ fontSize: 15, fontWeight: 600, color: '#fff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', lineHeight: 1.2 }}>
+
+        <div style={{ minWidth: 0, display: 'flex', flexDirection: 'column', gap: 6 }}>
+          <div
+            style={{
+              fontSize: 15,
+              fontWeight: 600,
+              color: '#fff',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap',
+              lineHeight: 1.2,
+            }}
+          >
             {roomName}
           </div>
+
           {subject && (
-            <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.45)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginTop: 2 }}>
+            <div
+              style={{
+                fontSize: 11,
+                color: 'rgba(255,255,255,0.45)',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap',
+              }}
+            >
               {subject}
             </div>
           )}
+
+          {roomCode && (
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'center' }}>
+              <div
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 8,
+                  borderRadius: 999,
+                  padding: '4px 10px',
+                  border: '1px solid rgba(255,255,255,0.12)',
+                  background: 'rgba(255,255,255,0.05)',
+                }}
+              >
+                <span
+                  style={{
+                    fontSize: 10,
+                    color: 'rgba(255,255,255,0.5)',
+                    textTransform: 'uppercase',
+                    letterSpacing: 0.8,
+                  }}
+                >
+                  Code
+                </span>
+                <span style={{ fontSize: 11, color: '#fff', fontFamily: 'monospace' }}>{roomCode}</span>
+                <button
+                  onClick={handleCopyRoomCode}
+                  style={{
+                    border: 'none',
+                    background: 'transparent',
+                    color: '#8ab4f8',
+                    cursor: 'pointer',
+                    fontSize: 11,
+                    padding: 0,
+                  }}
+                >
+                  {codeCopyFeedback || 'Copy'}
+                </button>
+              </div>
+
+              {roomLink && (
+                <div
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 8,
+                    minWidth: 0,
+                    maxWidth: '100%',
+                    borderRadius: 999,
+                    padding: '4px 10px',
+                    border: '1px solid rgba(255,255,255,0.12)',
+                    background: 'rgba(255,255,255,0.05)',
+                  }}
+                >
+                  <span
+                    style={{
+                      fontSize: 10,
+                      color: 'rgba(255,255,255,0.5)',
+                      textTransform: 'uppercase',
+                      letterSpacing: 0.8,
+                    }}
+                  >
+                    Link
+                  </span>
+                  <span
+                    style={{
+                      fontSize: 11,
+                      color: 'rgba(255,255,255,0.82)',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap',
+                      maxWidth: 240,
+                    }}
+                  >
+                    {roomLink}
+                  </span>
+                  <button
+                    onClick={handleCopyRoomLink}
+                    style={{
+                      border: 'none',
+                      background: 'transparent',
+                      color: '#8ab4f8',
+                      cursor: 'pointer',
+                      fontSize: 11,
+                      padding: 0,
+                      flexShrink: 0,
+                    }}
+                  >
+                    {linkCopyFeedback || 'Copy'}
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
         </div>
-        {roomCode && (
-          <span style={{
-            fontSize: 11,
-            color: 'rgba(255,255,255,0.35)',
-            background: 'rgba(255,255,255,0.06)',
-            border: '1px solid rgba(255,255,255,0.1)',
-            borderRadius: 20,
-            padding: '2px 10px',
-            fontFamily: 'monospace',
-            flexShrink: 0,
-            display: 'none',
-          }}>
-            {roomCode}
-          </span>
-        )}
       </div>
 
-      {/* Center — timer + status */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 16, flexShrink: 0 }}>
-        {/* Timer */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 5, color: 'rgba(255,255,255,0.55)' }}>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <circle cx="12" cy="12" r="10" />
@@ -116,7 +269,6 @@ export function MeetHeader({ roomName, subject, participantCount, isConnected, r
           <span style={{ fontSize: 13, fontFamily: 'monospace', fontVariantNumeric: 'tabular-nums' }}>{timer}</span>
         </div>
 
-        {/* Connection */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 5, color: isConnected ? '#34d399' : '#fbbf24' }}>
           {isConnected ? (
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -126,7 +278,7 @@ export function MeetHeader({ roomName, subject, participantCount, isConnected, r
               <line x1="12" y1="20" x2="12.01" y2="20" />
             </svg>
           ) : (
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ animation: 'pulse 1.5s ease-in-out infinite' }}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <line x1="1" y1="1" x2="23" y2="23" />
               <path d="M16.72 11.06A10.94 10.94 0 0 1 19 12.55" />
               <path d="M5 12.55a10.94 10.94 0 0 1 5.17-2.39" />
@@ -136,12 +288,9 @@ export function MeetHeader({ roomName, subject, participantCount, isConnected, r
               <line x1="12" y1="20" x2="12.01" y2="20" />
             </svg>
           )}
-          <span style={{ fontSize: 12, fontWeight: 500 }}>
-            {isConnected ? 'Connected' : 'Connecting…'}
-          </span>
+          <span style={{ fontSize: 12, fontWeight: 500 }}>{isConnected ? 'Connected' : 'Connecting...'}</span>
         </div>
 
-        {/* Encrypted badge */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 4, color: 'rgba(255,255,255,0.25)', fontSize: 12 }}>
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
@@ -150,7 +299,6 @@ export function MeetHeader({ roomName, subject, participantCount, isConnected, r
         </div>
       </div>
 
-      {/* Right — count */}
       <div style={{ flex: 1, display: 'flex', justifyContent: 'flex-end' }}>
         <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.45)', fontVariantNumeric: 'tabular-nums' }}>
           {participantCount} {participantCount === 1 ? 'person' : 'people'}

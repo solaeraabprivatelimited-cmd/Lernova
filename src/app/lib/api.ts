@@ -16,8 +16,25 @@
 import { projectId, publicAnonKey } from '../../../utils/supabase/info';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
+function resolveApiUrl(): string {
+  const configuredApiUrl = import.meta.env.VITE_API_URL?.trim();
+  if (configuredApiUrl) {
+    return configuredApiUrl.replace(/\/$/, '');
+  }
+
+  if (typeof window !== 'undefined') {
+    const hostname = window.location.hostname;
+    if (hostname === 'localhost' || hostname === '127.0.0.1') {
+      return 'http://localhost:8000';
+    }
+  }
+
+  // Safe production fallback for deployed builds when VITE_API_URL is missing.
+  return 'https://elmorbit-api.onrender.com';
+}
+
 // API_URL must point at Lernova_API. Set VITE_API_URL in deployed frontend envs.
-export const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+export const API_URL = resolveApiUrl();
 export const BASE_URL = API_URL;
 
 // ─── Supabase Auth client (true singleton) ──────────────────────────────────────
