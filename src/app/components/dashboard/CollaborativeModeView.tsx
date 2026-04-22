@@ -184,9 +184,9 @@ export function CollaborativeModeView({}: CollaborativeModeViewProps) {
         <div className="max-w-7xl mx-auto">
           {/* Header */}
           <div className="mb-10 sm:mb-12 md:mb-16">
-            <div className="inline-flex items-center gap-2 mb-3 xs:mb-4 px-3 xs:px-4 py-2 bg-[#c9e5ff] dark:bg-[#003566] rounded-full">
-              <Zap className="w-3.5 xs:w-4 h-3.5 xs:h-4 text-[#003566] dark:text-[#00d4ff]" />
-              <span className="text-xs xs:text-sm font-medium text-[#003566] dark:text-white">Collaborative Learning</span>
+            <div className="inline-flex items-center gap-2 mb-3 xs:mb-4 px-3 xs:px-4 py-2 bg-[#003566] dark:bg-[#003566] rounded-full">
+              <Zap className="w-3.5 xs:w-4 h-3.5 xs:h-4 text-white dark:text-[#00d4ff]" />
+              <span className="text-xs xs:text-sm font-medium text-white dark:text-white">Collaborative Learning</span>
             </div>
             <h1 className="text-3xl xs:text-4xl sm:text-5xl font-bold text-black dark:text-white mb-2 xs:mb-4">Study Together</h1>
             <p className="text-base xs:text-lg sm:text-xl text-black/70 dark:text-white/70">Choose how you want to study with others</p>
@@ -207,8 +207,8 @@ export function CollaborativeModeView({}: CollaborativeModeViewProps) {
               
               <div className="p-6 flex flex-col gap-4">
                 <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-lg bg-[#c9e5ff] dark:bg-[#003566] flex items-center justify-center">
-                    <Plus className="w-6 h-6 text-[#502616] dark:text-[#00d4ff]" />
+                  <div className="w-12 h-12 rounded-lg bg-[#003566] dark:bg-[#003566] flex items-center justify-center">
+                    <Plus className="w-6 h-6 text-white dark:text-[#00d4ff]" />
                   </div>
                   <h3 className="text-2xl font-bold text-black dark:text-white">Create Custom</h3>
                 </div>
@@ -299,8 +299,8 @@ export function CollaborativeModeView({}: CollaborativeModeViewProps) {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
               <div className="flex gap-4">
                 <div className="flex-shrink-0">
-                  <div className="flex items-center justify-center h-12 w-12 rounded-lg bg-[#c9e5ff] dark:bg-[#003566]">
-                    <Users className="w-6 h-6 text-[#003566] dark:text-[#00d4ff]" />
+                  <div className="flex items-center justify-center h-12 w-12 rounded-lg bg-[#003566] dark:bg-[#003566]">
+                    <Users className="w-6 h-6 text-white dark:text-[#00d4ff]" />
                   </div>
                 </div>
                 <div>

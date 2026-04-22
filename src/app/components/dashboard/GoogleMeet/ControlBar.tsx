@@ -18,6 +18,9 @@ interface ControlBarProps {
   onToggleParticipants: () => void;
   onToggleSettings: () => void;
   onLeaveCall: () => void;
+  hidden?: boolean;
+  onMouseEnter?: () => void;
+  onMouseLeave?: () => void;
 }
 
 /* ── Inline SVG icons — guaranteed to render regardless of Tailwind/CSS issues ── */
@@ -232,11 +235,16 @@ export function ControlBar({
   onToggleParticipants,
   onToggleSettings,
   onLeaveCall,
+  hidden = false,
+  onMouseEnter,
+  onMouseLeave,
 }: ControlBarProps) {
   return (
     <div
       role="toolbar"
       aria-label="Meeting controls"
+      onMouseEnter={onMouseEnter}
+      onMouseLeave={onMouseLeave}
       style={{
         position: 'fixed',
         bottom: 0,
@@ -246,6 +254,9 @@ export function ControlBar({
         background: 'rgba(32,33,36,0.97)',
         backdropFilter: 'blur(12px)',
         borderTop: '1px solid rgba(255,255,255,0.06)',
+        transform: hidden ? 'translateY(calc(100% - 18px))' : 'translateY(0)',
+        opacity: hidden ? 0.72 : 1,
+        transition: 'transform 0.25s ease, opacity 0.25s ease',
       }}
     >
       <div style={{

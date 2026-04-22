@@ -75,9 +75,11 @@ export function CollaborativeModeRoomGoogleMeet({
 
   /* room state */
   const [participantId, setParticipantId] = useState<string | null>(null);
+  const [hostUserId, setHostUserId] = useState<string | null>(null);
   const [participantDirectory, setParticipantDirectory] = useState<Record<string, string>>({});
   const [remoteParticipants, setRemoteParticipants] = useState<RemoteParticipant[]>([]);
   const [activeSpeakerId, setActiveSpeakerId] = useState<string | null>(null);
+  const [pinnedParticipantId, setPinnedParticipantId] = useState<string | null>(null);
   const [isConnected, setIsConnected] = useState(false);
   const [joinError, setJoinError] = useState('');
 
@@ -93,12 +95,15 @@ export function CollaborativeModeRoomGoogleMeet({
   const [showChat, setShowChat] = useState(false);
   const [showPeople, setShowPeople] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const [showControlBar, setShowControlBar] = useState(true);
+  const [isHoveringControls, setIsHoveringControls] = useState(false);
 
   /* chat */
   const [chatMessages, setChatMessages] = useState<RoomChatMessage[]>([]);
   const [chatDraft, setChatDraft] = useState('');
   const [sendingChat, setSendingChat] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
+  const lastSeenMsgCount = useRef(0);
 
   /* self-view floating tile */
   const selfViewRef = useRef<HTMLDivElement>(null);
@@ -230,7 +235,13 @@ export function CollaborativeModeRoomGoogleMeet({
             if (p.user_id) dir[p.user_id] = p.display_name || p.user_id.slice(0, 8);
           });
         if (userId && !dir[userId]) dir[userId] = userName;
+        setHostUserId(room.host_id ?? null);
         setParticipantDirectory(dir);
+        setPinnedParticipantId((currentPinnedId) =>
+          currentPinnedId && !Object.prototype.hasOwnProperty.call(dir, currentPinnedId)
+            ? null
+            : currentPinnedId
+        );
       } catch { /* silent */ }
       if (active) timer = setTimeout(sync, 1500); // Increased from 4000ms for faster updates
     };
@@ -270,7 +281,11 @@ export function CollaborativeModeRoomGoogleMeet({
         const msgs = await roomAPI.getRoomChatMessages(roomId, 100);
         if (!active) return;
         setChatMessages(msgs);
-        if (!showChat) setUnreadCount((c) => c + 1);
+        if (!showChat) {
+          const newCount = msgs.length - lastSeenMsgCount.current;
+          if (newCount > 0) setUnreadCount((c) => c + newCount);
+        }
+        lastSeenMsgCount.current = msgs.length;
       } catch { /* silent */ }
       if (active) timer = setTimeout(load, 2500);
     };
@@ -367,6 +382,38 @@ export function CollaborativeModeRoomGoogleMeet({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [audioEnabled, videoEnabled]);
 
+  /* Auto-hide control bar */
+  useEffect(() => {
+    setShowControlBar(true);
+    if (showChat || showPeople || showSettings || isHoveringControls) return;
+    const timeoutId = window.setTimeout(() => setShowControlBar(false), 2200);
+    return () => window.clearTimeout(timeoutId);
+  }, [
+    showChat,
+    showPeople,
+    showSettings,
+    isHoveringControls,
+    audioEnabled,
+    videoEnabled,
+    isScreenSharing,
+    pinnedParticipantId,
+  ]);
+
+  useEffect(() => {
+    const handlePointerMove = (event: MouseEvent) => {
+      if (event.clientY >= window.innerHeight - 120) setShowControlBar(true);
+    };
+    const handleKeyDown = () => setShowControlBar(true);
+
+    window.addEventListener('mousemove', handlePointerMove);
+    window.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      window.removeEventListener('mousemove', handlePointerMove);
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, []);
+
   /* ── Draggable self-view ── */
   const handleDragStart = useCallback((e: React.MouseEvent) => {
     const el = selfViewRef.current;
@@ -416,6 +463,7 @@ export function CollaborativeModeRoomGoogleMeet({
     try {
       if (isScreenSharing) await stopScreenShare();
       else await startScreenShare();
+      setShowControlBar(true);
     } catch { /* silent */ }
   }, [isScreenSharing, startScreenShare, stopScreenShare]);
 
@@ -441,15 +489,27 @@ export function CollaborativeModeRoomGoogleMeet({
 
   const handleToggleChat = useCallback(() => {
     setShowChat((v) => {
-      if (!v) setUnreadCount(0);
+      if (!v) {
+        setUnreadCount(0);
+        lastSeenMsgCount.current = chatMessages.length;
+      }
       return !v;
     });
     setShowPeople(false);
-  }, []);
+    setShowControlBar(true);
+  }, [chatMessages.length]);
 
   const handleTogglePeople = useCallback(() => {
     setShowPeople((v) => !v);
     setShowChat(false);
+    setShowControlBar(true);
+  }, []);
+
+  const handleTogglePinParticipant = useCallback((participantIdToPin: string) => {
+    setPinnedParticipantId((currentPinnedId) =>
+      currentPinnedId === participantIdToPin ? null : participantIdToPin
+    );
+    setShowControlBar(true);
   }, []);
 
   /* ── Derived ── */
@@ -465,12 +525,21 @@ export function CollaborativeModeRoomGoogleMeet({
   }));
 
   const participantsForPanel = [
-    { id: userId, name: userName, audioEnabled, videoEnabled, isHost: true },
+    {
+      id: userId,
+      name: userName,
+      audioEnabled,
+      videoEnabled,
+      isHost: userId === hostUserId,
+      isPinned: pinnedParticipantId === userId,
+    },
     ...remoteParticipants.map((p) => ({
       id: p.peerId,
       name: p.name,
       audioEnabled: p.audioEnabled,
       videoEnabled: p.videoEnabled,
+      isHost: p.peerId === hostUserId,
+      isPinned: pinnedParticipantId === p.peerId,
     })),
   ];
 
@@ -525,7 +594,16 @@ export function CollaborativeModeRoomGoogleMeet({
       )}
 
       {/* Main content — fills space between header and control bar */}
-      <div style={{ display: 'flex', flex: 1, minHeight: 0, overflow: 'hidden', paddingBottom: 80 }}>
+      <div
+        style={{
+          display: 'flex',
+          flex: 1,
+          minHeight: 0,
+          overflow: 'hidden',
+          paddingBottom: showControlBar ? 80 : 28,
+          transition: 'padding-bottom 0.25s ease',
+        }}
+      >
         {/* Video area */}
         <div style={{ flex: 1, minWidth: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
           <VideoGrid
@@ -539,6 +617,8 @@ export function CollaborativeModeRoomGoogleMeet({
             remoteParticipants={remoteParticipants}
             activeSpeakerId={activeSpeakerId}
             isScreenSharing={isScreenSharing}
+            screenShareStream={isScreenSharing ? localStream : null}
+            pinnedParticipantId={pinnedParticipantId}
           />
         </div>
 
@@ -566,6 +646,7 @@ export function CollaborativeModeRoomGoogleMeet({
               subject={subject}
               maxParticipants={maxParticipants}
               onClose={() => setShowPeople(false)}
+              onTogglePinParticipant={handleTogglePinParticipant}
             />
           </div>
         )}
@@ -601,6 +682,18 @@ export function CollaborativeModeRoomGoogleMeet({
       </div>
 
       {/* Control bar */}
+      <div
+        onMouseEnter={() => setShowControlBar(true)}
+        style={{
+          position: 'fixed',
+          left: 0,
+          right: 0,
+          bottom: 0,
+          height: 18,
+          zIndex: 49,
+          background: 'transparent',
+        }}
+      />
       <ControlBar
         audioEnabled={audioEnabled}
         videoEnabled={videoEnabled}
@@ -617,6 +710,12 @@ export function CollaborativeModeRoomGoogleMeet({
         onToggleParticipants={handleTogglePeople}
         onToggleSettings={() => setShowSettings(true)}
         onLeaveCall={() => void handleLeave()}
+        hidden={!showControlBar}
+        onMouseEnter={() => {
+          setIsHoveringControls(true);
+          setShowControlBar(true);
+        }}
+        onMouseLeave={() => setIsHoveringControls(false)}
       />
 
       {/* Settings modal */}

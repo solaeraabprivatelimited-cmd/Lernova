@@ -282,15 +282,12 @@ export function useWebRTC({
           setLocalStream(stream);
         });
 
-        manager.on('local-track-state-changed', async (trackKind: 'audio' | 'video', enabled: boolean) => {
-          // Track state changed, updating UI
-          // Send new offers to all connected peers to notify them of track state changes
-          const peersMap = new Map(peers);
-          for (const [peerId] of peersMap) {
+        manager.on('local-track-state-changed', async (_trackKind: 'audio' | 'video', _enabled: boolean) => {
+          for (const [peerId] of peerConnectionStateRef.current) {
             try {
               await createAndSendOffer(peerId);
-            } catch (error) {
-              console.warn(`[useWebRTC] Failed to send renegotiation offer to ${peerId}:`, error);
+            } catch (err) {
+              console.warn(`[useWebRTC] Failed to send renegotiation offer to ${peerId}:`, err);
             }
           }
         });

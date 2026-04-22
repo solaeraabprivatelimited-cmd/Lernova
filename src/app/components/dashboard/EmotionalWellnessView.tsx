@@ -2,9 +2,9 @@ import React, { useState } from "react";
 import { WellnessResourcesView } from "./WellnessResourcesView";
 import { WorldChatView } from "./WorldChatView";
 import { SkeletonWellnessResources } from "../skeletons/PageSkeletons";
-import { Heart, BookOpen, MessageCircle, ArrowRight, Shield, Brain, Lightbulb, TrendingUp } from "lucide-react";
+import { BookOpen, MessageCircle, ArrowRight, Shield } from "lucide-react";
 
-type SubView = "home" | "wellness-resources" | "world-chat" | "ai-mentor";
+type SubView = "home" | "wellness-resources" | "world-chat";
 
 interface WellnessCardProps {
   icon: React.ReactNode;
@@ -64,8 +64,6 @@ export function EmotionalWellnessView() {
 
   if (subView === "wellness-resources") return <WellnessResourcesView onBack={() => setSubView("home")} />;
   if (subView === "world-chat") return <WorldChatView onBack={() => setSubView("home")} />;
-  if (subView === "ai-mentor") return <AIMentorAdvisor onBack={() => setSubView("home")} />;
-
   return (
     <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }} className="animate-in fade-in duration-300">
       {/* Hero Header */}
@@ -101,15 +99,6 @@ export function EmotionalWellnessView() {
       {/* Cards Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
         <WellnessCard
-          icon={<Brain className="w-5 h-5 text-white" />}
-          title="AI Mentor"
-          description="Get personalized wellness guidance and support powered by AI based on your learning journey."
-          cta="Chat with Mentor"
-          gradient="linear-gradient(135deg, #667eea 0%, #764ba2 100%)"
-          iconBg="rgba(255,255,255,0.2)"
-          onClick={() => setSubView("ai-mentor")}
-        />
-        <WellnessCard
           icon={<BookOpen className="w-5 h-5 text-white" />}
           title="Wellness Resources"
           description="Access articles, guided meditations, videos, and inspiring stories."
@@ -127,183 +116,6 @@ export function EmotionalWellnessView() {
           iconBg="rgba(255,255,255,0.2)"
           onClick={() => setSubView("world-chat")}
         />
-      </div>
-    </div>
-  );
-}
-
-interface AIMentorAdvisorProps {
-  onBack: () => void;
-}
-
-import { ArrowLeft } from 'lucide-react';
-
-function AIMentorAdvisor({ onBack }: AIMentorAdvisorProps) {
-  const [recommendations] = React.useState([
-    {
-      id: 1,
-      title: "Practice Mindfulness Meditation",
-      description: "Based on your recent stress levels, daily 10-minute meditation can help reduce anxiety by 30%.",
-      icon: <Brain className="w-6 h-6" />,
-      gradient: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-      actionText: "Start Session"
-    },
-    {
-      id: 2,
-      title: "Increase Physical Activity",
-      description: "Your mood data shows low energy. 30 minutes of exercise 3x/week can boost mood significantly.",
-      icon: <TrendingUp className="w-6 h-6" />,
-      gradient: "linear-gradient(135deg, #f093fb 0%, #f5576c 100%)",
-      actionText: "View Workouts"
-    },
-    {
-      id: 3,
-      title: "Sleep Optimization Plan",
-      description: "Establishing a consistent sleep schedule can improve your overall wellness score by 25%.",
-      icon: <Heart className="w-6 h-6" />,
-      gradient: "linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)",
-      actionText: "Create Plan"
-    },
-    {
-      id: 4,
-      title: "Social Connection Goals",
-      description: "Regular social interaction has shown to boost your mood positively. Connect with others today!",
-      icon: <MessageCircle className="w-6 h-6" />,
-      gradient: "linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)",
-      actionText: "Find Community"
-    }
-  ]);
-
-  const [wellnessScore] = React.useState(72);
-  const [moodTrend] = React.useState("improving");
-
-  return (
-    <div className="w-full bg-white dark:bg-slate-950" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
-      {/* Header */}
-      <button
-        onClick={onBack}
-        className="flex items-center gap-2 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 mb-6 transition-colors group cursor-pointer"
-      >
-        <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
-        <span className="text-[13px] font-medium">Emotional Wellness</span>
-      </button>
-
-      <div className="flex items-center gap-3 mb-8">
-        <div className="w-10 h-10 rounded-[14px] flex items-center justify-center"
-          style={{ background: 'linear-gradient(135deg, #667eea, #764ba2)' }}>
-          <Brain className="w-5 h-5 text-white" />
-        </div>
-        <div>
-          <h1 className="text-[28px] md:text-[34px] text-slate-900 dark:text-white" style={{ fontFamily: "'DM Serif Display', serif" }}>
-            AI Wellness Advisor
-          </h1>
-          <p className="text-[13px] text-slate-600 dark:text-slate-400">Personalized recommendations based on your wellness data</p>
-        </div>
-      </div>
-
-      {/* Wellness Score Card */}
-      <div className="bg-white dark:bg-slate-800 rounded-[20px] border border-slate-200 dark:border-slate-700 p-6 mb-8 shadow-sm">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="flex items-center gap-4">
-            <div className="relative w-24 h-24">
-              <svg className="w-full h-full" style={{ transform: 'rotate(-90deg)' }}>
-                <circle cx="48" cy="48" r="40" fill="none" stroke="currentColor" strokeWidth="4" className="text-slate-200 dark:text-slate-700" />
-                <circle
-                  cx="48" cy="48" r="40" fill="none" stroke="#667eea"
-                  strokeWidth="4" strokeDasharray={`${(wellnessScore / 100) * 251} 251`}
-                  strokeLinecap="round"
-                />
-              </svg>
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="text-center">
-                  <p className="text-[20px] font-bold text-slate-900 dark:text-white">{wellnessScore}</p>
-                  <p className="text-[10px] text-slate-500 dark:text-slate-400">Score</p>
-                </div>
-              </div>
-            </div>
-            <div>
-              <p className="text-[11px] text-slate-600 dark:text-slate-400 uppercase font-semibold">Wellness Index</p>
-              <p className="text-[13px] font-semibold text-slate-900 dark:text-white mt-1">Good</p>
-              <p className="text-[11px] text-slate-600 dark:text-slate-400 mt-2">Keep up the momentum!</p>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-4">
-            <div className="w-full">
-              <p className="text-[11px] text-slate-600 dark:text-slate-400 uppercase font-semibold mb-3">Mood Trend</p>
-              <div className="flex items-center gap-2">
-                <TrendingUp className="w-5 h-5 text-green-500" />
-                <span className="text-[15px] font-bold text-slate-900 dark:text-white capitalize">{moodTrend}</span>
-              </div>
-              <p className="text-[11px] text-slate-600 dark:text-slate-400 mt-2">Your mood has been improving over the last 7 days</p>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-4">
-            <div className="w-full">
-              <p className="text-[11px] text-slate-600 dark:text-slate-400 uppercase font-semibold mb-3">Recent Check-ins</p>
-              <p className="text-[24px] font-bold text-slate-900 dark:text-white">12</p>
-              <p className="text-[11px] text-slate-600 dark:text-slate-400 mt-2">This month</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Recommendations Section */}
-      <div className="mb-8">
-        <div className="flex items-center gap-3 mb-6">
-          <div className="w-1 h-5 rounded-full bg-indigo-500" />
-          <h2 className="text-[16px] font-bold text-slate-900 dark:text-white">AI-Powered Recommendations</h2>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-          {recommendations.map((rec) => (
-            <div
-              key={rec.id}
-              className="bg-white dark:bg-slate-800 rounded-[18px] border border-slate-200 dark:border-slate-700 p-6 shadow-sm hover:shadow-md transition-all hover:-translate-y-1"
-            >
-              <div className="flex items-start gap-4 mb-4">
-                <div
-                  className="w-12 h-12 rounded-[12px] flex items-center justify-center flex-shrink-0"
-                  style={{ background: rec.gradient }}
-                >
-                  <div className="text-white">{rec.icon}</div>
-                </div>
-                <div className="flex-1">
-                  <h3 className="text-[15px] font-bold text-slate-900 dark:text-white mb-1">{rec.title}</h3>
-                  <p className="text-[12px] text-slate-600 dark:text-slate-400 leading-relaxed">{rec.description}</p>
-                </div>
-              </div>
-              <button
-                className="w-full px-4 py-2.5 rounded-[12px] text-[12px] font-semibold transition-all cursor-pointer bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-700/50 hover:bg-indigo-100 dark:hover:bg-indigo-900/30"
-              >
-                {rec.actionText}
-              </button>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Quick Tips */}
-      <div className="bg-slate-50 dark:bg-slate-800 rounded-[20px] border border-slate-200 dark:border-slate-700 p-6">
-        <div className="flex items-center gap-3 mb-4">
-          <Lightbulb className="w-5 h-5 text-orange-500" />
-          <h3 className="text-[15px] font-bold text-slate-900 dark:text-white">Quick Wellness Tips</h3>
-        </div>
-        <div className="space-y-3">
-          <div className="flex items-start gap-3 p-3 bg-white dark:bg-slate-700 rounded-[12px] border border-slate-200 dark:border-slate-600">
-            <span className="text-[12px] font-bold text-indigo-600 dark:text-indigo-400 flex-shrink-0">1</span>
-            <p className="text-[12px] text-slate-700 dark:text-slate-300">Start your day with 5 minutes of deep breathing to calm your nervous system.</p>
-          </div>
-          <div className="flex items-start gap-3 p-3 bg-white dark:bg-slate-700 rounded-[12px] border border-slate-200 dark:border-slate-600">
-            <span className="text-[12px] font-bold text-indigo-600 dark:text-indigo-400 flex-shrink-0">2</span>
-            <p className="text-[12px] text-slate-700 dark:text-slate-300">Take regular breaks during study sessions (5 min per 25 min) to maintain focus and mood.</p>
-          </div>
-          <div className="flex items-start gap-3 p-3 bg-white dark:bg-slate-700 rounded-[12px] border border-slate-200 dark:border-slate-600">
-            <span className="text-[12px] font-bold text-indigo-600 dark:text-indigo-400 flex-shrink-0">3</span>
-            <p className="text-[12px] text-slate-700 dark:text-slate-300">Connect with someone daily. Share your feelings and listen to others - it improves well-being.</p>
-          </div>
-        </div>
       </div>
     </div>
   );

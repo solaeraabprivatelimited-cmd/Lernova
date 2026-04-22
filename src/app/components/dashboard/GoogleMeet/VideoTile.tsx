@@ -94,6 +94,7 @@ export function VideoTile({
       }
     } else {
       video.srcObject = null;
+      video.load(); // clears the last frame
     }
   }, [stream, videoEnabled]);
 

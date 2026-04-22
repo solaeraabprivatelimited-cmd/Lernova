@@ -4,7 +4,7 @@
  */
 
 import { useMemo } from 'react';
-import { X, Mic, MicOff, Video, VideoOff, Crown, Copy, Check } from 'lucide-react';
+import { X, Mic, MicOff, Video, VideoOff, Crown, Copy, Check, Pin } from 'lucide-react';
 import { useState } from 'react';
 
 interface Participant {
@@ -13,6 +13,7 @@ interface Participant {
   audioEnabled: boolean;
   videoEnabled: boolean;
   isHost?: boolean;
+  isPinned?: boolean;
 }
 
 interface ParticipantsPanelProps {
@@ -22,6 +23,7 @@ interface ParticipantsPanelProps {
   subject?: string;
   maxParticipants?: number;
   onClose: () => void;
+  onTogglePinParticipant?: (id: string) => void;
   onMuteParticipant?: (id: string) => void;
   onRemoveParticipant?: (id: string) => void;
 }
@@ -47,6 +49,7 @@ export function ParticipantsPanel({
   subject,
   maxParticipants,
   onClose,
+  onTogglePinParticipant,
   onMuteParticipant,
   onRemoveParticipant,
 }: ParticipantsPanelProps) {
@@ -164,8 +167,20 @@ export function ParticipantsPanel({
               </div>
 
               {/* Host actions */}
-              {!isMe && (onMuteParticipant || onRemoveParticipant) && (
+              {(onTogglePinParticipant || (!isMe && (onMuteParticipant || onRemoveParticipant))) && (
                 <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                  {onTogglePinParticipant && (
+                    <button
+                      onClick={() => onTogglePinParticipant(p.id)}
+                      className={`w-7 h-7 rounded-full flex items-center justify-center transition-colors ${
+                        p.isPinned ? 'bg-blue-500/20 hover:bg-blue-500/30' : 'hover:bg-white/10'
+                      }`}
+                      aria-label={p.isPinned ? `Unpin ${p.name}` : `Pin ${p.name}`}
+                      title={p.isPinned ? 'Unpin' : 'Pin fullscreen'}
+                    >
+                      <Pin className={`w-3.5 h-3.5 ${p.isPinned ? 'text-blue-300' : 'text-white/50'}`} />
+                    </button>
+                  )}
                   {onMuteParticipant && p.audioEnabled && (
                     <button
                       onClick={() => onMuteParticipant(p.id)}
