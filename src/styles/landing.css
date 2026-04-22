@@ -2156,24 +2156,24 @@
   background: #7c3aed;
 }
 
-.lp-section-label {
+.lp-study-section .lp-section-label {
   color: rgba(183, 219, 255, 0.8);
 }
 
-.lp-section-label .lp-icon {
+.lp-study-section .lp-section-label .lp-icon {
   background: rgba(255, 255, 255, 0.15);
 }
 
-.lp-section-title {
+.lp-study-section .lp-section-title {
   color: white;
 }
 
-.lp-section-title em {
+.lp-study-section .lp-section-title em {
   font-style: italic;
   color: #b7dbff;
 }
 
-.lp-section-sub {
+.lp-study-section .lp-section-sub {
   color: rgba(255, 255, 255, 0.6);
 }
 
@@ -2218,19 +2218,19 @@
   color: #fbbf24;
 }
 
-.lp-testimonial-text {
+.lp-t-card.featured .lp-testimonial-text {
   color: rgba(255, 255, 255, 0.8);
 }
 
-.lp-testimonial-avatar {
+.lp-t-card.featured .lp-testimonial-avatar {
   background: rgba(255, 255, 255, 0.15);
 }
 
-.lp-testimonial-name {
+.lp-t-card.featured .lp-testimonial-name {
   color: white;
 }
 
-.lp-testimonial-role {
+.lp-t-card.featured .lp-testimonial-role {
   color: rgba(255, 255, 255, 0.5);
 }
 
