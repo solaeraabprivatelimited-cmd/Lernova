@@ -10,6 +10,7 @@ interface MeetHeaderProps {
   participantCount: number;
   isConnected: boolean;
   roomCode?: string;
+  onGoToDashboard?: () => void;
 }
 
 function useMeetingTimer() {
@@ -26,7 +27,7 @@ function useMeetingTimer() {
     : `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
 }
 
-export function MeetHeader({ roomName, subject, participantCount, isConnected, roomCode }: MeetHeaderProps) {
+export function MeetHeader({ roomName, subject, participantCount, isConnected, roomCode, onGoToDashboard }: MeetHeaderProps) {
   const timer = useMeetingTimer();
 
   return (
@@ -46,8 +47,37 @@ export function MeetHeader({ roomName, subject, participantCount, isConnected, r
         fontFamily: 'Inter, system-ui, sans-serif',
       }}
     >
-      {/* Left — room info */}
+      {/* Left — logo + room info */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0, flex: 1 }}>
+        {/* Elm Orbit logo — click to go to dashboard */}
+        {onGoToDashboard && (
+          <button
+            onClick={onGoToDashboard}
+            title="Back to Dashboard"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 6,
+              background: 'none',
+              border: 'none',
+              cursor: 'pointer',
+              padding: '4px 8px 4px 0',
+              borderRight: '1px solid rgba(255,255,255,0.1)',
+              marginRight: 4,
+              flexShrink: 0,
+            }}
+          >
+            <div style={{
+              width: 28, height: 28, borderRadius: '50%',
+              background: 'linear-gradient(135deg, #003566, #F77F00)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              flexShrink: 0,
+            }}>
+              <span style={{ color: '#fff', fontWeight: 700, fontSize: 11, fontFamily: 'Inter, sans-serif' }}>L</span>
+            </div>
+            <span style={{ color: 'rgba(255,255,255,0.7)', fontSize: 13, fontFamily: 'Righteous, sans-serif', whiteSpace: 'nowrap' }}>Elm Orbit</span>
+          </button>
+        )}
         <div style={{ minWidth: 0 }}>
           <div style={{ fontSize: 15, fontWeight: 600, color: '#fff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', lineHeight: 1.2 }}>
             {roomName}

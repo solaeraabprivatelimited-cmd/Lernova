@@ -127,7 +127,7 @@ export function ForgotPasswordPage({ onBack }: ForgotPasswordPageProps) {
               <ShieldCheck className="size-3.5" />
               Secure recovery
             </span>
-            <h2 className="max-w-md font-['DM_Serif_Display'] text-5xl leading-none text-white">
+            <h2 className="max-w-md font-semibold tracking-tight text-5xl leading-none text-white">
               Reset access without losing your momentum.
             </h2>
             <p className="max-w-md text-sm leading-7 text-white/65">

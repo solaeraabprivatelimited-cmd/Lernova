@@ -134,7 +134,7 @@ export function GoogleOnboardingPage({
               <ShieldCheck className="size-3.5" />
               Complete your profile
             </span>
-            <h2 className="max-w-md font-['DM_Serif_Display'] text-5xl leading-none text-white">
+            <h2 className="max-w-md font-semibold tracking-tight text-5xl leading-none text-white">
               Welcome to Lernova
             </h2>
             <p className="max-w-md text-sm leading-7 text-white/65">

@@ -80,13 +80,17 @@ export function CollaborativeModeView({}: CollaborativeModeViewProps) {
   const TopNavbar = () => (
     <div className="bg-white dark:bg-[#1a1a2e] border-b border-black/10 dark:border-white/10 sticky top-0 z-40">
       <div className="flex items-center justify-between px-3 xs:px-4 sm:px-6 h-14 sm:h-16">
-        {/* Left: Logo & Branding */}
-        <div className="flex items-center gap-1.5 xs:gap-2 min-w-0">
+        {/* Left: Logo & Branding (clickable) */}
+        <button
+          className="flex items-center gap-1.5 xs:gap-2 min-w-0 focus:outline-none"
+          onClick={() => window.location.assign('/dashboard')}
+          title="Go to Dashboard"
+        >
           <div className="w-7 xs:w-8 h-7 xs:h-8 rounded-full border-2 border-[#003566] flex items-center justify-center bg-gradient-to-br from-[#003566] to-[#F77F00] shrink-0">
             <span className="text-white font-bold text-xs">L</span>
           </div>
           <p className="font-['Righteous'] text-sm xs:text-base text-[#003566] dark:text-[#00d4ff] truncate">Elm Orbit</p>
-        </div>
+        </button>
 
         {/* Center: Simple status */}
         {view !== 'in-room' && (

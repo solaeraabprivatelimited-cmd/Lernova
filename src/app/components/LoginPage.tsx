@@ -123,7 +123,7 @@ export function LoginPage({
               <Sparkles className="size-3.5" />
               Productive learning starts here
             </span>
-            <h2 className="max-w-md font-['DM_Serif_Display'] text-5xl leading-none dark:text-white light:text-slate-900">
+            <h2 className="max-w-md font-semibold tracking-tight text-5xl leading-none dark:text-white light:text-slate-900">
               Step back into your study rhythm.
             </h2>
             <p className="max-w-md text-sm leading-7 dark:text-white/65 light:text-slate-600">
@@ -145,7 +145,7 @@ export function LoginPage({
             {stats.map((stat) => (
               <div key={stat.label} className="rounded-[22px] border dark:border-white/10 light:border-slate-900/20 dark:bg-white/8 light:bg-slate-900/8 px-4 py-4 backdrop-blur">
                 <stat.icon className="mb-3 size-4 dark:text-[#9fd0ff] light:text-blue-600" />
-                <p className="font-['DM_Serif_Display'] text-3xl dark:text-white light:text-slate-900">{stat.value}</p>
+                <p className="font-semibold tracking-tight text-3xl dark:text-white light:text-slate-900">{stat.value}</p>
                 <p className="mt-1 text-xs uppercase tracking-[0.14em] dark:text-white/45 light:text-slate-600">{stat.label}</p>
               </div>
             ))}

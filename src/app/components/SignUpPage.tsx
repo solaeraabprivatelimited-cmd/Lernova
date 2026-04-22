@@ -233,7 +233,7 @@ export function SignUpPage({ onSignUp, onLogin, onBack }: SignUpPageProps) {
               <ShieldCheck className="size-3.5" />
               Thoughtful onboarding
             </span>
-            <h2 className="max-w-md font-['DM_Serif_Display'] text-5xl leading-none text-white">
+            <h2 className="max-w-md font-semibold tracking-tight text-5xl leading-none text-white">
               Build a calmer, smarter study setup from day one.
             </h2>
             <p className="max-w-md text-sm leading-7 text-white/65">

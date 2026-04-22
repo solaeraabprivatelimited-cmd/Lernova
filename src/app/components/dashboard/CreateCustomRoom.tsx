@@ -23,11 +23,13 @@ export function CreateCustomRoom({ onBack, onLaunchRoom }: CreateCustomRoomProps
   const [subject, setSubject] = useState('');
   const [roomType, setRoomType] = useState<'private' | 'public'>('private');
   const [maxParticipants, setMaxParticipants] = useState(6);
+  const [isLaunching, setIsLaunching] = useState(false);
   const roomCodePreview = 'STUDY-XXXXXX';
 
   const handleLaunchRoom = async () => {
     if (roomName.trim() && subject.trim()) {
       try {
+        setIsLaunching(true);
         // Create room in database
         const createdRoom = await roomAPI.createRoom({
           name: roomName,
@@ -50,6 +52,8 @@ export function CreateCustomRoom({ onBack, onLaunchRoom }: CreateCustomRoomProps
         console.error('Failed to create room:', error);
         const message = error instanceof Error ? error.message : 'Unknown error';
         alert(`Failed to create room: ${message}`);
+      } finally {
+        setIsLaunching(false);
       }
     }
   };

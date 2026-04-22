@@ -504,6 +504,7 @@ export function CollaborativeModeRoomGoogleMeet({
         participantCount={participantCount}
         isConnected={isConnected}
         roomCode={roomCode}
+        onGoToDashboard={onLeaveRoom}
       />
 
       {/* Error banner */}

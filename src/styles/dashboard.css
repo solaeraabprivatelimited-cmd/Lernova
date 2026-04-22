@@ -319,11 +319,7 @@
 
 /* Font family utilities */
 .font-jakarta {
-    font-family: 'Plus Jakarta Sans', sans-serif;
-}
-
-.font-serif-display {
-    font-family: 'DM Serif Display', serif;
+    font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
 }
 
 /* Additional text color utilities */

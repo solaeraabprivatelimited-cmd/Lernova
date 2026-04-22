@@ -929,7 +929,7 @@ export function StudyRoomDashboard({ onLogout }: { onLogout?: () => void }) {
   // Profile Settings full-screen
   if (activeSection === "Profile Settings") {
     return (
-      <div className="flex w-full min-h-screen bg-background text-foreground font-['Poppins']">
+      <div className="flex w-full min-h-screen bg-background text-foreground font-sans">
         <React.Suspense fallback={sectionLoader}>
           <OnboardingWalkthrough
             open={showOnboarding}
@@ -952,7 +952,7 @@ export function StudyRoomDashboard({ onLogout }: { onLogout?: () => void }) {
   }
 
   return (
-    <div className="flex w-full min-h-screen bg-background text-foreground font-['Poppins']">
+    <div className="flex w-full min-h-screen bg-background text-foreground font-sans">
       <React.Suspense fallback={null}>
         <OnboardingWalkthrough
           open={showOnboarding}
