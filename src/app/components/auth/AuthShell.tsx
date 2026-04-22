@@ -17,7 +17,7 @@ export function AuthShell({ onBack, visual, children, contentClassName }: AuthSh
   return (
     <div className="relative min-h-screen overflow-hidden bg-background text-foreground">
       {/* Subtle radial glow */}
-      <div className="pointer-events-none absolute inset-0 dark:bg-[radial-gradient(circle_at_top,rgba(59,130,246,0.07),transparent_35%)] light:bg-[radial-gradient(circle_at_top,rgba(0,53,102,0.04),transparent_35%)]" />
+      <div className="pointer-events-none absolute inset-0 dark:bg-[radial-gradient(circle_at_top,rgba(59,130,246,0.07),transparent_35%)] bg-[radial-gradient(circle_at_top,rgba(0,53,102,0.04),transparent_35%)]" />
 
       <div className="relative flex min-h-screen flex-col lg:flex-row">
         {/* ── Left panel (desktop only) ── */}

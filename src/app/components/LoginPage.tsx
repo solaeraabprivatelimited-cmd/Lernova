@@ -119,19 +119,19 @@ export function LoginPage({
       visual={
         <div className="space-y-8">
           <div className="space-y-3">
-            <span className="inline-flex items-center gap-2 rounded-full border dark:border-white/10 light:border-slate-900/20 dark:bg-white/10 light:bg-slate-900/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em] dark:text-white/70 light:text-slate-700">
+            <span className="inline-flex items-center gap-2 rounded-full border border-slate-900/20 dark:border-white/10 bg-slate-900/8 dark:bg-white/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-slate-700 dark:text-white/70">
               <Sparkles className="size-3.5" />
               Productive learning starts here
             </span>
-            <h2 className="max-w-md font-semibold tracking-tight text-5xl leading-none dark:text-white light:text-slate-900">
+            <h2 className="max-w-md font-semibold tracking-tight text-5xl leading-none text-slate-900 dark:text-white">
               Step back into your study rhythm.
             </h2>
-            <p className="max-w-md text-sm leading-7 dark:text-white/65 light:text-slate-600">
+            <p className="max-w-md text-sm leading-7 text-slate-600 dark:text-white/65">
               Join focused rooms, mentor sessions, and calmer study workflows from the same polished workspace.
             </p>
           </div>
 
-          <div className="overflow-hidden rounded-[32px] border dark:border-white/10 light:border-slate-900/20 dark:bg-white/5 light:bg-slate-900/5 shadow-2xl backdrop-blur">
+          <div className="overflow-hidden rounded-[32px] border border-slate-900/15 dark:border-white/10 bg-slate-900/5 dark:bg-white/5 shadow-2xl backdrop-blur">
             <img
               src={LOGIN_IMG}
               alt="Students collaborating in a library"
@@ -143,15 +143,15 @@ export function LoginPage({
 
           <div className="grid gap-3 sm:grid-cols-3">
             {stats.map((stat) => (
-              <div key={stat.label} className="rounded-[22px] border dark:border-white/10 light:border-slate-900/20 dark:bg-white/8 light:bg-slate-900/8 px-4 py-4 backdrop-blur">
-                <stat.icon className="mb-3 size-4 dark:text-[#9fd0ff] light:text-blue-600" />
-                <p className="font-semibold tracking-tight text-3xl dark:text-white light:text-slate-900">{stat.value}</p>
-                <p className="mt-1 text-xs uppercase tracking-[0.14em] dark:text-white/45 light:text-slate-600">{stat.label}</p>
+              <div key={stat.label} className="rounded-[22px] border border-slate-900/15 dark:border-white/10 bg-slate-900/5 dark:bg-white/8 px-4 py-4 backdrop-blur">
+                <stat.icon className="mb-3 size-4 text-blue-600 dark:text-[#9fd0ff]" />
+                <p className="font-semibold tracking-tight text-3xl text-slate-900 dark:text-white">{stat.value}</p>
+                <p className="mt-1 text-xs uppercase tracking-[0.14em] text-slate-600 dark:text-white/45">{stat.label}</p>
               </div>
             ))}
           </div>
 
-          <blockquote className="rounded-[24px] border dark:border-white/10 light:border-slate-900/20 dark:bg-white/8 light:bg-slate-900/8 px-5 py-4 text-sm leading-7 dark:text-white/70 light:text-slate-700 backdrop-blur">
+          <blockquote className="rounded-[24px] border border-slate-900/15 dark:border-white/10 bg-slate-900/5 dark:bg-white/8 px-5 py-4 text-sm leading-7 text-slate-700 dark:text-white/70 backdrop-blur">
             "Elm Orbit helped me turn irregular effort into a routine I could actually sustain."
           </blockquote>
         </div>
@@ -215,7 +215,7 @@ export function LoginPage({
                 <button
                   type="button"
                   onClick={() => setShowPassword((value) => !value)}
-                  className="rounded-full p-1 dark:text-slate-500 dark:hover:text-slate-300 light:text-slate-600 light:hover:text-slate-900 transition-colors"
+                  className="rounded-full p-1 text-slate-500 hover:text-slate-900 dark:text-slate-500 dark:hover:text-slate-300 transition-colors"
                   aria-label={showPassword ? 'Hide password' : 'Show password'}
                 >
                   {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}

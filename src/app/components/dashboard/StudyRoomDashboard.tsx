@@ -353,7 +353,7 @@ const StudyModeCard = ({
         <div>
           {number && (
             <span className="text-4xl2 font-bold leading-none text-white/10 block mb-1"
-              style={{ fontFamily: "'DM Serif Display', serif" }}>
+              style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
               {number}
             </span>
           )}
@@ -1203,7 +1203,7 @@ export function StudyRoomDashboard({ onLogout }: { onLogout?: () => void }) {
                         <span className="text-[12px] font-semibold text-[#f77f00]">230 learners studying now</span>
                       </div>
                       <h1 className="text-xl4 md:text-2xl2 lg:text-3xl2 text-white mb-3 leading-1.1"
-                        style={{ fontFamily: "'DM Serif Display', serif" }}>
+                        style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
                         Your Study<br className="hidden md:block" /> Command Center
                       </h1>
                       <p className="text-[14px] md:text-[15px] text-white/50 max-w-[420px] leading-relaxed">
@@ -1222,7 +1222,7 @@ export function StudyRoomDashboard({ onLogout }: { onLogout?: () => void }) {
                           className="flex flex-col items-center px-3 md:px-5 py-3 md:py-4 rounded-[14px] md:rounded-[18px]"
                           style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.08)', backdropFilter: 'blur(10px)' }}>
                           <span className="text-xl2 md:text-xl3 font-bold text-white leading-none mb-1"
-                            style={{ fontFamily: "'DM Serif Display', serif" }}>
+                            style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
                             {stat.value}
                           </span>
                           <span className="text-[8px] md:text-[10px] font-semibold text-white/35 uppercase tracking-[0.12em]">{stat.label}</span>
@@ -1277,14 +1277,14 @@ export function StudyRoomDashboard({ onLogout }: { onLogout?: () => void }) {
                     <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
                       <div className="flex-1">
                         <span className="srd-text-56px srd-md\:text-72px font-bold leading-none srd-text-white-opacity-6 block srd--mb-3"
-                          style={{ fontFamily: "'DM Serif Display', serif" }}>01</span>
+                          style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>01</span>
                         <div className="flex items-center gap-3.5 mb-2.5">
                           <div className="srd-w-11 srd-h-11 srd-rounded-14 flex items-center justify-center"
                             style={{ background: modes[0].accentColor }}>
                             {modes[0].iconSvg}
                           </div>
                           <h3 className="font-bold srd-text-24px srd-md\:text-28px text-white srd-leading-tight"
-                            style={{ fontFamily: "'DM Serif Display', serif" }}>
+                            style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
                             {modes[0].title}
                           </h3>
                         </div>
@@ -1323,7 +1323,7 @@ export function StudyRoomDashboard({ onLogout }: { onLogout?: () => void }) {
                         {/* Top */}
                         <div className="flex items-start justify-between">
                           <span className="text-3xl2 font-bold leading-none text-white/7"
-                            style={{ fontFamily: "'DM Serif Display', serif" }}>
+                            style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
                             {mode.number}
                           </span>
                           <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full"
@@ -1437,7 +1437,7 @@ export function StudyRoomDashboard({ onLogout }: { onLogout?: () => void }) {
                     <circle cx="12" cy="12" r="10" /><path d="M12 6v6l4 2" />
                   </svg>
                 </div>
-                <h2 className="text-xl2 font-bold text-foreground mb-2 font-serif-display">Coming Soon</h2>
+                <h2 className="text-xl2 font-bold text-foreground mb-2 font-sans">Coming Soon</h2>
                 <p className="text-[14px] text-muted-foreground max-w-[320px]">The <span className="font-semibold">{activeSection}</span> feature is currently under development.</p>
               </div>
             )}
