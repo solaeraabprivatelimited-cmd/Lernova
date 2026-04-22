@@ -1,6 +1,4 @@
-import React, { useState } from 'react';
-import { Bell } from 'lucide-react';
-import imgEllipse1 from "figma:asset/798eac6e288222603807db12d070c52d1a145785.png";
+import { useState } from 'react';
 import svgPaths from "../../../imports/svg-r9h2tu6cre";
 import { roomAPI } from '@/utils/api/roomAPI';
 
@@ -18,227 +16,193 @@ interface RoomData {
   maxParticipants?: number;
 }
 
+const inputCls =
+  'w-full h-11 rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 px-3.5 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-white/30 outline-none focus:border-[#003566] dark:focus:border-[#00d4ff] focus:ring-2 focus:ring-[#003566]/10 dark:focus:ring-[#00d4ff]/10 transition-all';
+
+const labelCls = 'block text-sm font-medium text-slate-700 dark:text-white/80 mb-1.5';
+
 export function CreateCustomRoom({ onBack, onLaunchRoom }: CreateCustomRoomProps) {
   const [roomName, setRoomName] = useState('');
   const [subject, setSubject] = useState('');
   const [roomType, setRoomType] = useState<'private' | 'public'>('private');
   const [maxParticipants, setMaxParticipants] = useState(6);
   const [isLaunching, setIsLaunching] = useState(false);
-  const roomCodePreview = 'STUDY-XXXXXX';
+  const [error, setError] = useState('');
 
   const handleLaunchRoom = async () => {
-    if (roomName.trim() && subject.trim()) {
-      try {
-        setIsLaunching(true);
-        // Create room in database
-        const createdRoom = await roomAPI.createRoom({
-          name: roomName,
-          subject: subject,
-          mode: 'collaborative',
-          description: `${roomType} study room`,
-          maxParticipants: maxParticipants,
-        });
-
-        // Launch room with real database ID while exposing the shareable room code in UI
-        onLaunchRoom({
-          roomName: createdRoom.name,
-          subject: createdRoom.subject || subject,
-          roomType,
-          roomId: createdRoom.id,
-          roomCode: createdRoom.code,
-          maxParticipants: createdRoom.max_participants,
-        });
-      } catch (error) {
-        console.error('Failed to create room:', error);
-        const message = error instanceof Error ? error.message : 'Unknown error';
-        alert(`Failed to create room: ${message}`);
-      } finally {
-        setIsLaunching(false);
-      }
+    if (!roomName.trim() || !subject.trim()) return;
+    setError('');
+    setIsLaunching(true);
+    try {
+      const createdRoom = await roomAPI.createRoom({
+        name: roomName.trim(),
+        subject: subject.trim(),
+        mode: 'collaborative',
+        description: `${roomType} study room`,
+        maxParticipants,
+      });
+      onLaunchRoom({
+        roomName: createdRoom.name,
+        subject: createdRoom.subject || subject,
+        roomType,
+        roomId: createdRoom.id,
+        roomCode: createdRoom.code,
+        maxParticipants: createdRoom.max_participants,
+      });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to create room. Please try again.');
+    } finally {
+      setIsLaunching(false);
     }
   };
 
+  const canLaunch = roomName.trim().length > 0 && subject.trim().length > 0 && !isLaunching;
+
   return (
-    <>
-      {/* Breadcrumb & Title */}
-      <div className="px-4 xs:px-6 sm:px-8 lg:px-20 pb-6 sm:pb-10">
-        <button 
-          onClick={onBack}
-          className="text-xs xs:text-sm sm:text-base text-black/70 dark:text-white/70 mb-4 sm:mb-6 hover:text-black dark:hover:text-white transition-colors"
-        >
-          &lt; Back
-        </button>
-          
-        <div className="mb-8 sm:mb-12">
-          <h1 className="text-2xl xs:text-3xl sm:text-4xl font-medium text-black dark:text-white mb-1.5 sm:mb-2">Create Custom Room</h1>
-          <p className="text-xs xs:text-sm text-black/60 dark:text-white/60">Build your own space to learn your way.</p>
+    <div className="px-4 sm:px-8 lg:px-16 pb-10 max-w-2xl">
+      {/* Back */}
+      <button
+        onClick={onBack}
+        className="inline-flex items-center gap-1.5 text-sm text-slate-500 dark:text-white/50 hover:text-slate-900 dark:hover:text-white mb-6 transition-colors"
+      >
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M19 12H5M12 5l-7 7 7 7" />
+        </svg>
+        Back
+      </button>
+
+      {/* Header */}
+      <div className="mb-8">
+        <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white mb-1">Create Custom Room</h1>
+        <p className="text-sm text-slate-500 dark:text-white/50">Build your own space to learn your way.</p>
+      </div>
+
+      {/* Form Card */}
+      <div className="bg-white dark:bg-[#111827] rounded-2xl border border-slate-200 dark:border-white/8 shadow-sm p-6 sm:p-8 space-y-6">
+
+        {/* Room Name */}
+        <div>
+          <label className={labelCls}>Room Name</label>
+          <input
+            type="text"
+            value={roomName}
+            onChange={(e) => setRoomName(e.target.value)}
+            placeholder="e.g. Physics Study Group"
+            className={inputCls}
+          />
         </div>
 
-        {/* Form Card */}
-        <div className="bg-white dark:bg-[#1a1a2e] rounded-xl sm:rounded-[20px] shadow-[0px_4px_50px_5px_rgba(0,0,0,0.1)] dark:shadow-[0px_4px_50px_5px_rgba(0,0,0,0.3)] p-4 sm:p-6 w-full sm:w-[515px]">
-          <div className="flex flex-col gap-6">
-            {/* Room Name */}
-            <div className="flex flex-col gap-2.5">
-              <label className="text-[16px] text-black dark:text-white">Room Name</label>
-              <div className="h-[39px] rounded-[10px] border border-black/40 dark:border-white/20 dark:bg-white/5 flex items-center gap-2.5 px-2.5">
-                <svg width="27" height="27" viewBox="0 0 27 27" fill="none">
-                  <path d={svgPaths.p6efe00} fill="currentColor" className="text-black dark:text-white" />
-                    <path d={svgPaths.p1e94b00} fill="currentColor" className="text-black dark:text-white" />
-                  </svg>
-                  <input
-                    type="text"
-                    value={roomName}
-                    onChange={(e) => setRoomName(e.target.value)}
-                    placeholder="Name your study space"
-                    className="flex-1 outline-none text-[14px] text-black dark:text-white placeholder:text-black/60 dark:placeholder:text-white/60 bg-transparent"
-                  />
-                </div>
-              </div>
+        {/* Subject */}
+        <div>
+          <label className={labelCls}>Subject / Topic</label>
+          <input
+            type="text"
+            value={subject}
+            onChange={(e) => setSubject(e.target.value)}
+            placeholder="e.g. Quantum Mechanics"
+            className={inputCls}
+          />
+        </div>
 
-              {/* Subject/Topic */}
-              <div className="flex flex-col gap-2.5">
-                <label className="text-[16px] text-black dark:text-white">Subject/Topic</label>
-                <div className="h-[39px] rounded-[10px] border border-black/40 dark:border-white/20 dark:bg-white/5 flex items-center gap-2.5 px-2.5">
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-                    <path d={svgPaths.p2ea8b700} fill="currentColor" className="text-black dark:text-white" />
-                  </svg>
-                  <input
-                    type="text"
-                    value={subject}
-                    onChange={(e) => setSubject(e.target.value)}
-                    placeholder="Enter Subject/Topic"
-                    className="flex-1 outline-none text-[14px] text-black dark:text-white placeholder:text-black/60 dark:placeholder:text-white/60 bg-transparent"
-                  />
-                </div>
-              </div>
+        {/* Max Participants */}
+        <div>
+          <div className="flex items-center justify-between mb-1.5">
+            <label className={labelCls.replace('mb-1.5', '')}>Max Participants</label>
+            <span className="text-sm font-semibold text-[#003566] dark:text-[#00d4ff]">{maxParticipants}</span>
+          </div>
+          <input
+            type="range"
+            min="2"
+            max="20"
+            value={maxParticipants}
+            onChange={(e) => setMaxParticipants(parseInt(e.target.value))}
+            className="w-full h-1.5 rounded-full appearance-none cursor-pointer accent-[#003566] dark:accent-[#00d4ff] bg-slate-200 dark:bg-white/10"
+          />
+          <p className="text-xs text-slate-400 dark:text-white/30 mt-1.5">2–20 participants (recommended: 4–8)</p>
+        </div>
 
-              {/* Max Participants */}
-              <div className="flex flex-col gap-2.5">
-                <label className="text-[16px] text-black dark:text-white">Max Participants</label>
-                <div className="flex gap-2.5 items-center">
-                  <input
-                    type="range"
-                    min="2"
-                    max="20"
-                    value={maxParticipants}
-                    onChange={(e) => setMaxParticipants(parseInt(e.target.value))}
-                    className="flex-1 h-2 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer accent-[#003566]"
-                  />
-                  <div className="bg-[#003566] dark:bg-[#F77F00] text-white rounded-[8px] px-3 py-1.5 min-w-[50px] text-center text-[14px] font-medium">
-                    {maxParticipants}
+        {/* Room Type */}
+        <div>
+          <label className={labelCls}>Room Type</label>
+          <div className="grid grid-cols-2 gap-3">
+            {(['private', 'public'] as const).map((type) => (
+              <button
+                key={type}
+                type="button"
+                onClick={() => setRoomType(type)}
+                className={[
+                  'rounded-xl p-4 text-left border-2 transition-all',
+                  roomType === type
+                    ? 'border-[#003566] dark:border-[#00d4ff] bg-[#003566]/5 dark:bg-[#00d4ff]/5'
+                    : 'border-slate-200 dark:border-white/10 hover:border-slate-300 dark:hover:border-white/20',
+                ].join(' ')}
+              >
+                <div className="flex items-center gap-2 mb-1.5">
+                  <div className={[
+                    'w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0',
+                    roomType === type
+                      ? 'border-[#003566] dark:border-[#00d4ff]'
+                      : 'border-slate-300 dark:border-white/30',
+                  ].join(' ')}>
+                    {roomType === type && (
+                      <div className="w-2 h-2 rounded-full bg-[#003566] dark:bg-[#00d4ff]" />
+                    )}
                   </div>
+                  <span className="text-sm font-semibold text-slate-900 dark:text-white capitalize">{type}</span>
                 </div>
-                <p className="text-[12px] text-black/60 dark:text-white/60">2–50 participants (recommended: 4–8)</p>
-              </div>
-
-              {/* Select Room Type */}
-              <div className="flex flex-col gap-2.5">
-                <label className="text-[16px] text-black dark:text-white">Select Room Type</label>
-                <div className="flex gap-2.5">
-                  {/* Private */}
-                  <button
-                    onClick={() => setRoomType('private')}
-                    className={`flex-1 rounded-[10px] p-2.5 text-left transition-all ${
-                      roomType === 'private' 
-                        ? 'bg-[#c9e5ff] dark:bg-[#003566] border-0' 
-                        : 'border border-black/40 dark:border-white/20 dark:bg-white/5'
-                    }`}
-                  >
-                    <div className="flex items-center gap-2.5 mb-2.5">
-                      <div className="w-[24px] h-[24px] overflow-clip relative">
-                        <div className="absolute inset-[8.33%_12.5%]">
-                          <div className="absolute inset-[-3.75%_-4.17%]">
-                            <svg className="block size-full" fill="none" viewBox="0 0 19.5002 21.5">
-                              <g>
-                                <path d={svgPaths.p28b4a900} stroke="currentColor" className={roomType === 'private' ? 'text-black dark:text-white' : 'text-black dark:text-white'} strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" />
-                                <path d={svgPaths.p24cceb00} stroke="currentColor" className={roomType === 'private' ? 'text-black dark:text-white' : 'text-black dark:text-white'} strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" />
-                                <path d={svgPaths.p2baa9800} stroke="currentColor" className={roomType === 'private' ? 'text-black dark:text-white' : 'text-black dark:text-white'} strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" />
-                              </g>
-                            </svg>
-                          </div>
-                        </div>
-                      </div>
-                      <span className={`text-[14px] font-medium ${
-                        roomType === 'private' ? 'text-black dark:text-white' : 'text-black dark:text-white'
-                      }`}>Private</span>
-                    </div>
-                    <p className={`text-[12px] leading-relaxed ${
-                      roomType === 'private' ? 'text-black dark:text-white' : 'text-black/60 dark:text-white/60'
-                    }`}>
-                      Accessible only through a<br />
-                      Room Code or invitation link.
-                    </p>
-                  </button>
-
-                  {/* Public */}
-                  <button
-                    onClick={() => setRoomType('public')}
-                    className={`flex-1 rounded-[10px] p-2.5 text-left transition-all ${
-                      roomType === 'public' 
-                        ? 'bg-[#c9e5ff] dark:bg-[#003566] border-0' 
-                        : 'border border-black/40 dark:border-white/20 dark:bg-white/5'
-                    }`}
-                  >
-                    <div className="flex items-center gap-2.5 mb-2.5">
-                      <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                        <path d={svgPaths.p39fda200} fill="currentColor" className="text-black dark:text-white" />
-                      </svg>
-                      <span className={`text-[14px] font-medium ${
-                        roomType === 'public' ? 'text-black dark:text-white' : 'text-black dark:text-white'
-                      }`}>Public</span>
-                    </div>
-                    <p className={`text-[12px] leading-relaxed ${
-                      roomType === 'public' ? 'text-black dark:text-white' : 'text-black/60 dark:text-white/60'
-                    }`}>
-                      Open to all learners and listed<br />
-                      in Join Random Room Page.
-                    </p>
-                  </button>
-                </div>
-              </div>
-
-              {/* Your Room Code */}
-              <div className="flex flex-col gap-2.5">
-                <label className="text-[16px] text-black dark:text-white">Your Room Code</label>
-                <div className="h-[39px] rounded-[10px] border border-black/40 dark:border-white/20 flex items-center gap-2.5 px-2.5 bg-gray-50 dark:bg-white/5">
-                  <div className="w-[20px] h-[20px] overflow-clip relative">
-                    <div className="absolute inset-[3.83%_3.74%_3.82%_3.73%]">
-                      <div className="absolute inset-[-4.06%_-4.05%_-4.05%_-4.05%]">
-                        <svg className="block size-full" fill="none" viewBox="0 0 20.0064 19.9685">
-                          <g>
-                            <path d={svgPaths.p13b8b400} stroke="currentColor" className="text-black dark:text-white" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" />
-                            <path d={svgPaths.p2cf36200} stroke="currentColor" className="text-black dark:text-white" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" />
-                            <path d={svgPaths.p267f9b00} stroke="currentColor" className="text-black dark:text-white" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" />
-                          </g>
-                        </svg>
-                      </div>
-                    </div>
-                  </div>
-                  <span className="text-[14px] font-medium text-gray-500 dark:text-white/60">{roomCodePreview}</span>
-                </div>
-                <p className="text-[12px] text-black/60 dark:text-white/60">A real room code is generated on launch and can be pasted into Join Custom Room.</p>
-              </div>
-
-              {/* Buttons */}
-              <div className="flex gap-6 items-center w-[299px] ml-auto">
-                <button
-                  disabled
-                  className="flex-1 h-[42px] rounded-[20px] border-2 border-gray-300 text-[14px] font-medium text-gray-400 cursor-not-allowed opacity-50"
-                  title="Room code will be available after launching"
-                >
-                  Share Room
-                </button>
-                <button
-                  onClick={handleLaunchRoom}
-                  disabled={!roomName.trim() || !subject.trim() || isLaunching}
-                  className="flex-1 h-[42px] rounded-[20px] bg-[#003566] text-[14px] font-medium text-white hover:bg-[#002849] disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-                >
-                  {isLaunching ? 'Creating...' : 'Launch Room'}
-                </button>
-              </div>
-            </div>
+                <p className="text-xs text-slate-500 dark:text-white/40 leading-relaxed">
+                  {type === 'private'
+                    ? 'Invite-only via room code or link.'
+                    : 'Listed publicly in Join Random Room.'}
+                </p>
+              </button>
+            ))}
           </div>
         </div>
-      </>
-    );
-  }
+
+        {/* Room Code Preview */}
+        <div>
+          <label className={labelCls}>Room Code (generated on launch)</label>
+          <div className="h-11 rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 px-3.5 flex items-center">
+            <span className="text-sm font-mono text-slate-400 dark:text-white/30">STUDY-XXXXXX</span>
+          </div>
+          <p className="text-xs text-slate-400 dark:text-white/30 mt-1.5">Share this code after launching so others can join.</p>
+        </div>
+
+        {/* Error */}
+        {error && (
+          <div className="rounded-xl bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800/40 px-4 py-3 text-sm text-red-600 dark:text-red-400">
+            {error}
+          </div>
+        )}
+
+        {/* Actions */}
+        <div className="flex gap-3 pt-2">
+          <button
+            type="button"
+            onClick={onBack}
+            className="flex-1 h-11 rounded-xl border-2 border-slate-200 dark:border-white/10 text-sm font-semibold text-slate-600 dark:text-white/60 hover:border-slate-300 dark:hover:border-white/20 hover:text-slate-900 dark:hover:text-white transition-all"
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            onClick={handleLaunchRoom}
+            disabled={!canLaunch}
+            className="flex-1 h-11 rounded-xl bg-[#003566] hover:bg-[#002849] dark:bg-[#1a73e8] dark:hover:bg-[#1765cc] text-white text-sm font-semibold disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+          >
+            {isLaunching ? (
+              <span className="inline-flex items-center gap-2">
+                <svg className="w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                </svg>
+                Creating…
+              </span>
+            ) : 'Launch Room'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}

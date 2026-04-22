@@ -10,50 +10,24 @@
    ───────────────────────────────────────────────────────────────────────────── */
 
 :root {
-    /* Light mode colors */
-    --color-primary: #003566;
-    --color-accent: #0967bd;
-    --color-secondary: #f77f00;
+    /* Legacy variables mapped to the shared theme tokens */
+    --color-primary: var(--primary);
+    --color-accent: var(--ring);
+    --color-secondary: var(--brand-accent);
     --color-success: #16a34a;
     --color-error: #dc2626;
     --color-warning: #ea580c;
 
-    /* Light mode backgrounds */
-    --bg-primary: #ffffff;
-    --bg-secondary: #f8fafc;
-    --bg-tertiary: #f1f5f9;
-    --border-color: #e2e8f0;
+    /* Theme-aware surfaces */
+    --bg-primary: var(--background);
+    --bg-secondary: var(--card);
+    --bg-tertiary: var(--secondary);
+    --border-color: var(--border);
 
-    /* Light mode text */
-    --text-primary: #1e293b;
-    --text-secondary: #475569;
-    --text-tertiary: #64748b;
-}
-
-@media (prefers-color-scheme: dark) {
-    :root {
-        /* Dark mode backgrounds */
-        --bg-primary: #0f172a;
-        --bg-secondary: #1e293b;
-        --bg-tertiary: #334155;
-        --border-color: #475569;
-
-        /* Dark mode text */
-        --text-primary: #f1f5f9;
-        --text-secondary: #cbd5e1;
-        --text-tertiary: #94a3b8;
-    }
-}
-
-html.dark {
-    /* Force dark mode when dark class is present */
-    --bg-primary: #0f172a;
-    --bg-secondary: #1e293b;
-    --bg-tertiary: #334155;
-    --border-color: #475569;
-    --text-primary: #f1f5f9;
-    --text-secondary: #cbd5e1;
-    --text-tertiary: #94a3b8;
+    /* Theme-aware text */
+    --text-primary: var(--foreground);
+    --text-secondary: var(--muted-foreground);
+    --text-tertiary: color-mix(in oklab, var(--muted-foreground) 82%, var(--background));
 }
 
 /* ─────────────────────────────────────────────────────────────────────────────
@@ -117,9 +91,9 @@ small,
    ───────────────────────────────────────────────────────────────────────────── */
 
 /* Form inputs — mobile optimized, scoped to avoid breaking inline inputs */
-:not([data-room-ui]) input:not([type="range"]):not([type="checkbox"]):not([type="radio"]),
-:not([data-room-ui]) textarea,
-:not([data-room-ui]) select {
+:not([data-room-ui]) input:not([type="range"]):not([type="checkbox"]):not([type="radio"]):not([class]),
+:not([data-room-ui]) textarea:not([class]),
+:not([data-room-ui]) select:not([class]) {
     padding: clamp(0.625rem, 2vw, 0.75rem) clamp(0.75rem, 2.5vw, 1rem);
     border: 1px solid var(--border-color);
     border-radius: 0.5rem;
@@ -130,17 +104,17 @@ small,
     transition: all 0.2s ease;
 }
 
-:not([data-room-ui]) input:not([type="range"]):focus,
-:not([data-room-ui]) textarea:focus,
-:not([data-room-ui]) select:focus {
+:not([data-room-ui]) input:not([type="range"]):not([class]):focus,
+:not([data-room-ui]) textarea:not([class]):focus,
+:not([data-room-ui]) select:not([class]):focus {
     outline: none;
     border-color: var(--color-accent);
     box-shadow: 0 0 0 3px rgba(9, 103, 189, 0.1);
 }
 
-:not([data-room-ui]) input:disabled,
-:not([data-room-ui]) textarea:disabled,
-:not([data-room-ui]) select:disabled {
+:not([data-room-ui]) input:not([class]):disabled,
+:not([data-room-ui]) textarea:not([class]):disabled,
+:not([data-room-ui]) select:not([class]):disabled {
     background-color: var(--bg-tertiary);
     color: var(--text-tertiary);
     cursor: not-allowed;

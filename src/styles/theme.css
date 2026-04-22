@@ -1,4 +1,5 @@
 @custom-variant dark (&:is(.dark *));
+@custom-variant light (&:is(.light *));
 
 :root {
   --font-size: 16px;
@@ -396,27 +397,27 @@
 }
 
 /* Dark mode form enhancements */
-.dark input,
-.dark textarea,
-.dark select {
+.dark input:not([class]),
+.dark textarea:not([class]),
+.dark select:not([class]) {
   @apply bg-input border-border text-foreground;
 }
 
-.dark input::placeholder,
-.dark textarea::placeholder {
+.dark input:not([class])::placeholder,
+.dark textarea:not([class])::placeholder {
   @apply text-muted-foreground/60;
 }
 
-/* Light mode form enhancements */
-input,
-textarea,
-select {
+/* Light mode form enhancements — only for inputs without Tailwind classes */
+input:not([class]),
+textarea:not([class]),
+select:not([class]) {
   @apply bg-input-background border border-border text-foreground placeholder:text-muted-foreground/70;
 }
 
-input:focus,
-textarea:focus,
-select:focus {
+input:not([class]):focus,
+textarea:not([class]):focus,
+select:not([class]):focus {
   @apply border-ring/70 ring-2 ring-ring/20 outline-hidden transition-all;
 }
 
