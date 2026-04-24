@@ -175,7 +175,7 @@ async function apiFetch<T>(url: string, options: RequestInit = {}): Promise<T> {
     } else if (Array.isArray(detail)) {
       detailMsg = detail.map((d: any) => d?.msg ?? String(d)).join('; ');
     }
-    const message = detailMsg ?? body?.error ?? body?.message ?? `API error ${response.status}`;
+    const message = detailMsg ?? (typeof body?.error === 'string' ? body.error : (body?.error?.message ?? (body?.error ? JSON.stringify(body.error) : undefined))) ?? body?.message ?? `API error ${response.status}`;
     throw new Error(String(message));
   }
 
