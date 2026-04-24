@@ -479,7 +479,7 @@ async function apiFetch<T = any>(
 
   if (!res.ok) {
     // Handle both our server's { error: "..." } and Supabase gateway's { message: "..." }
-    const message = body?.error ?? body?.message ?? `API error ${res.status}`;
+    const message = body?.detail ?? body?.error ?? body?.message ?? `API error ${res.status}`;
     throw new Error(message);
   }
   return body as T;
@@ -497,11 +497,12 @@ export const auth = {
     });
     
     if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.error || 'Failed to send OTP');
+              let errMsg = 'Failed to send OTP. Please try again.';
+              try { const err = await response.json(); errMsg = String(err.detail ?? err.error ?? err.message ?? errMsg); } catch { /* non-JSON */ }
+              throw new Error(errMsg);
     }
     
-    return response.json();
+    return response.json();h
   },
 
   /** Step 2: Verify OTP and create account */
@@ -513,8 +514,9 @@ export const auth = {
     });
     
     if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.error || 'Invalid or expired OTP');
+              let errMsg = 'Invalid or expired OTP. Please try again.';
+              try { const err = await response.json(); errMsg = String(err.detail ?? err.error ?? err.message ?? errMsg); } catch { /* non-JSON */ }
+              throw new Error(errMsg);
     }
     
     const data = await response.json();
@@ -656,8 +658,9 @@ export const auth = {
     });
     
     if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.error || 'Failed to send reset code');
+              let errMsg = 'Failed to send reset code. Please try again.';
+              try { const err = await response.json(); errMsg = String(err.detail ?? err.error ?? err.message ?? errMsg); } catch { /* non-JSON */ }
+              throw new Error(errMsg);
     }
     
     return response.json();
@@ -672,8 +675,9 @@ export const auth = {
     });
     
     if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.error || 'Invalid or expired code');
+              let errMsg = 'Invalid or expired code. Please try again.';
+              try { const err = await response.json(); errMsg = String(err.detail ?? err.error ?? err.message ?? errMsg); } catch { /* non-JSON */ }
+              throw new Error(errMsg);
     }
     
     return response.json();
