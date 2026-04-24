@@ -22,12 +22,21 @@ export interface RoomContextType {
 
 const RoomContext = createContext<RoomContextType | undefined>(undefined);
 
+const DEFAULT_ROOM_CONTEXT: RoomContextType = {
+  roomId: '',
+  roomName: '',
+  subject: '',
+  participants: [],
+  isHost: false,
+  currentUserId: null,
+  elapsedTime: 0,
+  maxParticipants: undefined,
+};
+
 export function useRoom() {
   const context = useContext(RoomContext);
-  if (!context) {
-    throw new Error('useRoom must be used within RoomProvider');
-  }
-  return context;
+  // Return safe defaults instead of throwing — lets mode views render standalone
+  return context ?? DEFAULT_ROOM_CONTEXT;
 }
 
 interface RoomProviderProps {
