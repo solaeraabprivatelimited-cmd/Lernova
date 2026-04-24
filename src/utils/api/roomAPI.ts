@@ -90,8 +90,12 @@ export interface RoomChatMessage {
 function extractRoomIdentifier(input: string): string {
   const value = input.trim();
   if (!value) return value;
+
   const roomCodeMatch = value.match(/(?:STUDY|WEBRTC)-[A-Z0-9]+/i);
-  if (roomCodeMatch) return roomCodeMatch[0].toUpperCase();
+  if (roomCodeMatch) {
+    return roomCodeMatch[0].toUpperCase();
+  }
+
   const slashParts = value.split('/').filter(Boolean);
   return slashParts[slashParts.length - 1] ?? value;
 }
@@ -164,7 +168,14 @@ async function apiFetch<T>(url: string, options: RequestInit = {}): Promise<T> {
   }
 
   if (!response.ok) {
-    const message = body?.detail ?? body?.error ?? body?.message ?? `API error ${response.status}`;
+    let detail = body?.detail;
+    let detailMsg: string | undefined;
+    if (typeof detail === 'string') {
+      detailMsg = detail;
+    } else if (Array.isArray(detail)) {
+      detailMsg = detail.map((d: any) => d?.msg ?? String(d)).join('; ');
+    }
+    const message = detailMsg ?? body?.error ?? body?.message ?? `API error ${response.status}`;
     throw new Error(String(message));
   }
 
@@ -177,6 +188,7 @@ export const roomAPI = {
       ...request,
       maxParticipants: Math.min(request.maxParticipants ?? 6, 20),
     };
+
     return apiFetch<Room>(API_BASE, {
       method: 'POST',
       body: JSON.stringify(normalizedRequest),
@@ -252,7 +264,10 @@ export const roomAPI = {
     return apiFetch<RoomNoteEntry[]>(`${API_BASE}/${identifier}/notes`, { method: 'GET' });
   },
 
-  createRoomNote: async (roomId: string, input: { heading: string; body: string }): Promise<RoomNoteEntry> => {
+  createRoomNote: async (
+    roomId: string,
+    input: { heading: string; body: string }
+  ): Promise<RoomNoteEntry> => {
     const identifier = extractRoomIdentifier(roomId);
     return apiFetch<RoomNoteEntry>(`${API_BASE}/${identifier}/notes`, {
       method: 'POST',
@@ -260,7 +275,11 @@ export const roomAPI = {
     });
   },
 
-  updateRoomNote: async (roomId: string, noteId: string, input: { heading: string; body: string }): Promise<RoomNoteEntry> => {
+  updateRoomNote: async (
+    roomId: string,
+    noteId: string,
+    input: { heading: string; body: string }
+  ): Promise<RoomNoteEntry> => {
     const identifier = extractRoomIdentifier(roomId);
     return apiFetch<RoomNoteEntry>(`${API_BASE}/${identifier}/notes/${noteId}`, {
       method: 'PUT',
@@ -268,7 +287,10 @@ export const roomAPI = {
     });
   },
 
-  deleteRoomNote: async (roomId: string, noteId: string): Promise<{ success: boolean; deleted_note_id: string }> => {
+  deleteRoomNote: async (
+    roomId: string,
+    noteId: string
+  ): Promise<{ success: boolean; deleted_note_id: string }> => {
     const identifier = extractRoomIdentifier(roomId);
     return apiFetch<{ success: boolean; deleted_note_id: string }>(
       `${API_BASE}/${identifier}/notes/${noteId}`,
@@ -279,7 +301,9 @@ export const roomAPI = {
   getRoomChatMessages: async (roomId: string, limit = 100): Promise<RoomChatMessage[]> => {
     const identifier = extractRoomIdentifier(roomId);
     const boundedLimit = Math.max(1, Math.min(limit, 200));
-    return apiFetch<RoomChatMessage[]>(`${API_BASE}/${identifier}/chat?limit=${boundedLimit}`, { method: 'GET' });
+    return apiFetch<RoomChatMessage[]>(`${API_BASE}/${identifier}/chat?limit=${boundedLimit}`, {
+      method: 'GET',
+    });
   },
 
   sendRoomChatMessage: async (roomId: string, message: string): Promise<RoomChatMessage> => {
