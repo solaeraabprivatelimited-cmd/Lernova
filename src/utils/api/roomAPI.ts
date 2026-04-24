@@ -90,12 +90,8 @@ export interface RoomChatMessage {
 function extractRoomIdentifier(input: string): string {
   const value = input.trim();
   if (!value) return value;
-
   const roomCodeMatch = value.match(/(?:STUDY|WEBRTC)-[A-Z0-9]+/i);
-  if (roomCodeMatch) {
-    return roomCodeMatch[0].toUpperCase();
-  }
-
+  if (roomCodeMatch) return roomCodeMatch[0].toUpperCase();
   const slashParts = value.split('/').filter(Boolean);
   return slashParts[slashParts.length - 1] ?? value;
 }
@@ -109,35 +105,38 @@ function decodeJwtPayload(value: string) {
   }
 }
 
-function isUsableJwt(value: string | null | undefined, minValidityMs = 0) {
-  if (!value) return false;
+function isTokenExpired(value: string | null | undefined, minValidityMs = 0): boolean {
+  if (!value) return true;
   const parts = value.split('.');
-  if (parts.length !== 3 || parts.some((part) => part.length === 0)) return false;
-
-  const payload = decodeJwtPayload(value);
-  const expMs = typeof payload?.exp === 'number' ? payload.exp * 1000 : 0;
-  const iss = typeof payload?.iss === 'string' ? payload.iss : '';
-  return iss.startsWith(`https://${projectId}.supabase.co/auth/v1`) && expMs > Date.now() + minValidityMs;
+  if (parts.length !== 3) return true;
+  try {
+    const payload = decodeJwtPayload(value);
+    const expMs = typeof payload?.exp === 'number' ? payload.exp * 1000 : 0;
+    return expMs <= Date.now() + minValidityMs;
+  } catch {
+    return true;
+  }
 }
 
 async function getApiToken(): Promise<string> {
   const supabase = getSupabaseClient();
+
+  // Try to get existing session first
   const { data: sessionData } = await supabase.auth.getSession();
   let session = sessionData.session;
 
+  // Refresh if missing or close to expiry (within 60 seconds)
   const expiresAtMs = (session?.expires_at ?? 0) * 1000;
-  if (!session || expiresAtMs <= Date.now() + 30_000) {
+  if (!session || expiresAtMs <= Date.now() + 60_000) {
     const { data: refreshed } = await supabase.auth.refreshSession();
-    session = refreshed.session ?? session;
+    if (refreshed.session) {
+      session = refreshed.session;
+    }
   }
 
-  let token = session?.access_token ?? null;
-  if (!isUsableJwt(token, 30_000)) {
-    const cached = getAccessToken();
-    token = isUsableJwt(cached, 30_000) ? cached : null;
-  }
+  const token = session?.access_token ?? getAccessToken();
 
-  if (!isUsableJwt(token, 30_000)) {
+  if (!token || isTokenExpired(token, 0)) {
     setAccessToken(null);
     throw new Error('Authentication expired. Please log in again.');
   }
@@ -178,7 +177,6 @@ export const roomAPI = {
       ...request,
       maxParticipants: Math.min(request.maxParticipants ?? 6, 20),
     };
-
     return apiFetch<Room>(API_BASE, {
       method: 'POST',
       body: JSON.stringify(normalizedRequest),
@@ -254,10 +252,7 @@ export const roomAPI = {
     return apiFetch<RoomNoteEntry[]>(`${API_BASE}/${identifier}/notes`, { method: 'GET' });
   },
 
-  createRoomNote: async (
-    roomId: string,
-    input: { heading: string; body: string }
-  ): Promise<RoomNoteEntry> => {
+  createRoomNote: async (roomId: string, input: { heading: string; body: string }): Promise<RoomNoteEntry> => {
     const identifier = extractRoomIdentifier(roomId);
     return apiFetch<RoomNoteEntry>(`${API_BASE}/${identifier}/notes`, {
       method: 'POST',
@@ -265,11 +260,7 @@ export const roomAPI = {
     });
   },
 
-  updateRoomNote: async (
-    roomId: string,
-    noteId: string,
-    input: { heading: string; body: string }
-  ): Promise<RoomNoteEntry> => {
+  updateRoomNote: async (roomId: string, noteId: string, input: { heading: string; body: string }): Promise<RoomNoteEntry> => {
     const identifier = extractRoomIdentifier(roomId);
     return apiFetch<RoomNoteEntry>(`${API_BASE}/${identifier}/notes/${noteId}`, {
       method: 'PUT',
@@ -277,10 +268,7 @@ export const roomAPI = {
     });
   },
 
-  deleteRoomNote: async (
-    roomId: string,
-    noteId: string
-  ): Promise<{ success: boolean; deleted_note_id: string }> => {
+  deleteRoomNote: async (roomId: string, noteId: string): Promise<{ success: boolean; deleted_note_id: string }> => {
     const identifier = extractRoomIdentifier(roomId);
     return apiFetch<{ success: boolean; deleted_note_id: string }>(
       `${API_BASE}/${identifier}/notes/${noteId}`,
@@ -291,9 +279,7 @@ export const roomAPI = {
   getRoomChatMessages: async (roomId: string, limit = 100): Promise<RoomChatMessage[]> => {
     const identifier = extractRoomIdentifier(roomId);
     const boundedLimit = Math.max(1, Math.min(limit, 200));
-    return apiFetch<RoomChatMessage[]>(`${API_BASE}/${identifier}/chat?limit=${boundedLimit}`, {
-      method: 'GET',
-    });
+    return apiFetch<RoomChatMessage[]>(`${API_BASE}/${identifier}/chat?limit=${boundedLimit}`, { method: 'GET' });
   },
 
   sendRoomChatMessage: async (roomId: string, message: string): Promise<RoomChatMessage> => {
