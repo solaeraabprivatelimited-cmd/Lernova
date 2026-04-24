@@ -5,7 +5,7 @@
  */
 
 import { BASE_URL, getAccessToken, getSupabaseClient, setAccessToken } from '../../app/lib/api';
-import { projectId } from '/utils/supabase/info';
+import { projectId } from '../supabase/info';
 
 const API_BASE = `${BASE_URL}/webrtc/rooms`;
 
