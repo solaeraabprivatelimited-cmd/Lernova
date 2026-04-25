@@ -91,12 +91,13 @@ export function MentorSupport({ onStartAiMentor, onStartHumanMentor }: MentorSup
                   <Bot className="w-5 h-5 text-white" />
                 </div>
                 <h3 className="font-bold text-[24px] md:text-[28px] text-white leading-tight"
-                  style={{ fontFamily: "'DM Serif Display', serif" }}>
+                  style={{ fontFamily: "'DM Serif Display', serif", color: 'white' }}>
                   AI Mentor
                 </h3>
               </div>
 
-              <p className="text-[14px] text-white/55 leading-relaxed mb-5 max-w-[380px]">
+              <p className="text-[14px] text-white/55 leading-relaxed mb-5 max-w-[380px]"
+                style={{ color: 'rgba(255,255,255,0.55)' }}>
                 Get instant answers, explanations, and study help from our AI-powered mentor — available 24/7 with voice and text modes.
               </p>
 
@@ -171,12 +172,13 @@ export function MentorSupport({ onStartAiMentor, onStartHumanMentor }: MentorSup
                   <Users className="w-5 h-5 text-white" />
                 </div>
                 <h3 className="font-bold text-[24px] md:text-[28px] text-white leading-tight"
-                  style={{ fontFamily: "'DM Serif Display', serif" }}>
+                  style={{ fontFamily: "'DM Serif Display', serif", color: 'white' }}>
                   Human Mentor
                 </h3>
               </div>
 
-              <p className="text-[14px] text-white/55 leading-relaxed mb-5 max-w-[380px]">
+              <p className="text-[14px] text-white/55 leading-relaxed mb-5 max-w-[380px]"
+                style={{ color: 'rgba(255,255,255,0.55)' }}>
                 Connect with verified mentors for personalized guidance, live sessions, and progress feedback tailored to your goals.
               </p>
 
@@ -220,11 +222,11 @@ export function MentorSupport({ onStartAiMentor, onStartHumanMentor }: MentorSup
             <Sparkles className="w-5 h-5 text-[#f77f00]" />
           </div>
           <div className="flex-1 relative z-10">
-            <p className="text-[15px] font-bold text-white mb-1">
+            <p className="text-[15px] font-bold text-white mb-1" style={{ color: 'white' }}>
               Not sure which to pick?
             </p>
-            <p className="text-[13px] text-white/45 leading-relaxed">
-              Try the <strong className="text-[#f77f00] font-semibold">AI Mentor</strong> for quick concept checks and instant help, or book a <strong className="text-white/70 font-semibold">Human Mentor</strong> for in-depth guidance.
+            <p className="text-[13px] text-white/45 leading-relaxed" style={{ color: 'rgba(255,255,255,0.45)' }}>
+              Try the <strong className="text-[#f77f00] font-semibold">AI Mentor</strong> for quick concept checks and instant help, or book a <strong style={{ color: 'rgba(255,255,255,0.7)', fontWeight: 600 }}>Human Mentor</strong> for in-depth guidance.
             </p>
           </div>
           <button

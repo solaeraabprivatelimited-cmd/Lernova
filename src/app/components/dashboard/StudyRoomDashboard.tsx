@@ -1379,10 +1379,10 @@ export function StudyRoomDashboard({ onLogout }: { onLogout?: () => void }) {
                       </svg>
                     </div>
                     <div className="flex-1 relative z-10">
-                      <p className="text-[15px] font-bold text-white mb-1">
+                      <p className="text-[15px] font-bold text-white mb-1" style={{ color: 'white' }}>
                         New to Elm Origin?
                       </p>
-                      <p className="text-[13px] text-white/45 leading-relaxed">
+                      <p className="text-[13px] text-white/45 leading-relaxed" style={{ color: 'rgba(255,255,255,0.45)' }}>
                         Start with <strong className="text-[#f77f00] font-semibold">Focus Mode</strong> — it's the most popular choice for deep, distraction-free study sessions with built-in Pomodoro timers.
                       </p>
                     </div>

@@ -104,10 +104,11 @@ export function ProductivityToolsView() {
 
               <div>
                 <h3 className="text-[22px] md:text-[26px] font-bold text-white mb-2 leading-tight"
-                  style={{ fontFamily: "'DM Serif Display', serif" }}>
+                  style={{ fontFamily: "'DM Serif Display', serif", color: 'white' }}>
                   {tool.title}
                 </h3>
-                <p className="text-[13px] text-white/50 mb-4 leading-relaxed">{tool.description}</p>
+                <p className="text-[13px] text-white/50 mb-4 leading-relaxed"
+                  style={{ color: 'rgba(255,255,255,0.5)' }}>{tool.description}</p>
                 <div className="flex flex-wrap gap-2">
                   {tool.features.map((f) => (
                     <span key={f} className="px-3 py-1.5 rounded-full text-[10px] font-medium text-white/60"

@@ -36,16 +36,18 @@ function WellnessCard({ icon, title, description, cta, gradient, iconBg, onClick
             {icon}
           </div>
           <h3 className="text-[22px] font-bold text-white mb-2 leading-tight"
-            style={{ fontFamily: "'DM Serif Display', serif" }}>
+            style={{ fontFamily: "'DM Serif Display', serif", color: 'white' }}>
             {title}
           </h3>
-          <p className="text-[13px] text-white/60 leading-relaxed max-w-[280px]">
+          <p className="text-[13px] text-white/60 leading-relaxed max-w-[280px]"
+            style={{ color: 'rgba(255,255,255,0.6)' }}>
             {description}
           </p>
         </div>
 
         <div className="flex items-center gap-2 group/cta">
-          <span className="text-[13px] font-semibold text-white/80 group-hover/cta:text-white transition-colors">{cta}</span>
+          <span className="text-[13px] font-semibold text-white/80 group-hover/cta:text-white transition-colors"
+            style={{ color: 'rgba(255,255,255,0.8)' }}>{cta}</span>
           <ArrowRight className="w-4 h-4 text-white/50 group-hover:text-white group-hover:translate-x-1 transition-all" />
         </div>
       </div>
