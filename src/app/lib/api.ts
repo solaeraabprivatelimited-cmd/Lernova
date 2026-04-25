@@ -16,6 +16,24 @@
 import { projectId, publicAnonKey } from '../../../utils/supabase/info';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
+/** Safely extract a human-readable error string from any backend response shape.
+ *  Handles FastAPI arrays  → { detail: [{msg,...}] }
+ *  plain strings           → { detail: "string" } | { error: "string" } | { message: "string" }
+ *  nested objects          → { error: { message, code } }
+ */
+function extractErrorMessage(err, fallback) {
+  if (!err) return fallback;
+  if (Array.isArray(err.detail)) return err.detail.map(d => d.msg || JSON.stringify(d)).join('; ');
+  if (err.detail && typeof err.detail === 'string') return err.detail;
+  if (err.error) {
+    if (typeof err.error === 'string') return err.error;
+    if (typeof err.error.message === 'string') return err.error.message;
+    return JSON.stringify(err.error);
+  }
+  if (err.message) return typeof err.message === 'string' ? err.message : JSON.stringify(err.message);
+  return fallback;
+}
+
 function resolveApiUrl(): string {
   const configuredApiUrl = import.meta.env.VITE_API_URL?.trim();
   if (configuredApiUrl) {
@@ -468,7 +486,7 @@ async function apiFetch<T = any>(
       if (retryRes.ok) {
         return retryBody as T;
       }
-      const message = retryBody?.error ?? retryBody?.message ?? `API error ${retryRes.status}`;
+      const message = extractErrorMessage(retryBody, `API error ${retryRes.status}`);
       throw new Error(message);
     }
 
@@ -479,7 +497,7 @@ async function apiFetch<T = any>(
 
   if (!res.ok) {
     // Handle both our server's { error: "..." } and Supabase gateway's { message: "..." }
-    const message = body?.detail ?? body?.error ?? body?.message ?? `API error ${res.status}`;
+  const message = extractErrorMessage(body, `API error ${res.status}`);
     throw new Error(message);
   }
   return body as T;
