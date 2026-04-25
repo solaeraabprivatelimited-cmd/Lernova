@@ -28,10 +28,11 @@ export function MentorSupport({ onStartAiMentor, onStartHumanMentor }: MentorSup
             <span className="text-[12px] font-semibold text-[#f77f00]">Personalized Learning Support</span>
           </div>
           <h1 className="text-[28px] md:text-[36px] lg:text-[40px] text-white mb-3 leading-[1.1]"
-            style={{ fontFamily: "'DM Serif Display', serif" }}>
+            style={{ fontFamily: "'DM Serif Display', serif", color: 'white' }}>
             Mentor Support
           </h1>
-          <p className="text-[14px] md:text-[15px] text-white/50 max-w-[480px] leading-relaxed">
+          <p className="text-[14px] md:text-[15px] text-white/50 max-w-[480px] leading-relaxed"
+            style={{ color: 'rgba(255,255,255,0.5)' }}>
             Get instant AI-powered help or connect with experienced human mentors for personalized guidance on your learning journey.
           </p>
         </div>
@@ -40,7 +41,7 @@ export function MentorSupport({ onStartAiMentor, onStartHumanMentor }: MentorSup
       {/* Section Label */}
       <div className="flex items-center gap-3 mb-6">
         <div className="w-1 h-5 rounded-full bg-[#f77f00]" />
-        <h2 className="text-[16px] font-bold text-white">Choose Your Mentor</h2>
+        <h2 className="text-[16px] font-bold text-white" style={{ color: 'white' }}>Choose Your Mentor</h2>
       </div>
 
       {/* Cards Container */}

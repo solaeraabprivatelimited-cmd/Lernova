@@ -116,7 +116,7 @@ function SectionHeader({
 }) {
   return (
     <div className="flex items-start justify-between leading-normal w-full">
-      <p className="font-['Poppins'] font-medium text-[20px] text-black dark:text-white">{title}</p>
+      <p className="font-['Poppins'] font-medium text-[20px] text-foreground" style={{ color: 'var(--foreground)' }}>{title}</p>
       <button
         type="button"
         onClick={onToggle}
@@ -177,11 +177,18 @@ export function CommunityView() {
   return (
     <div className="w-full flex flex-col gap-0">
       {/* ── Page Header ── */}
-      <div className="flex flex-col items-start pb-[6px] mb-[60px]">
-        <p className="font-['Poppins'] font-medium text-[40px] text-black dark:text-white leading-normal">Community</p>
-        <p className="font-['Poppins'] text-[14px] text-[rgba(0,0,0,0.6)] dark:text-slate-400 leading-normal">
-          Discover upcoming and recent events from the Elm Origin community.
-        </p>
+      <div className="relative rounded-[24px] overflow-hidden mb-10"
+        style={{ background: 'linear-gradient(135deg, #001d3d 0%, #003566 50%, #0967bd 100%)' }}>
+        <div className="absolute -top-20 -right-20 w-[300px] h-[300px] rounded-full opacity-[0.06]"
+          style={{ background: 'radial-gradient(circle, white, transparent 70%)' }} />
+        <div className="relative z-10 px-6 md:px-10 py-8 md:py-10">
+          <p className="font-['Poppins'] font-bold text-[28px] md:text-[36px] lg:text-[40px] leading-[1.1] mb-3"
+            style={{ color: 'white' }}>Community</p>
+          <p className="font-['Poppins'] text-[14px] max-w-[480px] leading-relaxed"
+            style={{ color: 'rgba(255,255,255,0.5)' }}>
+            Discover upcoming and recent events from the Elm Origin community.
+          </p>
+        </div>
       </div>
 
       {isLoading && (

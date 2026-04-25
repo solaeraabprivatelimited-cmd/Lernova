@@ -81,10 +81,11 @@ export function EmotionalWellnessView() {
             <span className="text-[12px] font-semibold text-[#f77f00]">Safe Space</span>
           </div>
           <h1 className="text-[28px] md:text-[36px] lg:text-[40px] text-white mb-3 leading-[1.1]"
-            style={{ fontFamily: "'DM Serif Display', serif" }}>
+            style={{ fontFamily: "'DM Serif Display', serif", color: 'white' }}>
             Emotional Wellness
           </h1>
-          <p className="text-[14px] text-white/45 max-w-[460px] leading-relaxed">
+          <p className="text-[14px] text-white/45 max-w-[460px] leading-relaxed"
+            style={{ color: 'rgba(255,255,255,0.45)' }}>
             Your mental health matters. Check in on your mood, find resources, connect with others, and stay inspired.
           </p>
         </div>
@@ -93,7 +94,7 @@ export function EmotionalWellnessView() {
       {/* Section Label */}
       <div className="flex items-center gap-3 mb-6">
         <div className="w-1 h-5 rounded-full bg-orange-500" />
-        <h2 className="text-[16px] font-bold text-white">Explore Wellness</h2>
+        <h2 className="text-[16px] font-bold text-white" style={{ color: 'white' }}>Explore Wellness</h2>
       </div>
 
       {/* Cards Grid */}

@@ -62,10 +62,11 @@ export function ProductivityToolsView() {
             <span className="text-[12px] font-semibold text-[#f77f00]">Stay Organized</span>
           </div>
           <h1 className="text-[28px] md:text-[36px] lg:text-[40px] text-white mb-3 leading-[1.1]"
-            style={{ fontFamily: "'DM Serif Display', serif" }}>
+            style={{ fontFamily: "'DM Serif Display', serif", color: 'white' }}>
             Productivity Tools
           </h1>
-          <p className="text-[14px] text-white/50 max-w-[460px] leading-relaxed">
+          <p className="text-[14px] text-white/50 max-w-[460px] leading-relaxed"
+            style={{ color: 'rgba(255,255,255,0.5)' }}>
             Everything you need to manage your learning efficiently — capture ideas, plan study sessions, and track progress.
           </p>
         </div>
@@ -74,7 +75,7 @@ export function ProductivityToolsView() {
       {/* Section Label */}
       <div className="flex items-center gap-3 mb-6">
         <div className="w-1 h-5 rounded-full bg-[#f77f00]" />
-        <h2 className="text-[16px] font-bold text-white">Choose a Tool</h2>
+        <h2 className="text-[16px] font-bold text-white" style={{ color: 'white' }}>Choose a Tool</h2>
       </div>
 
       {/* Tool Cards */}

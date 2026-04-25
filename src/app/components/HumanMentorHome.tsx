@@ -515,10 +515,11 @@ export function HumanMentorHome({ onBack }: HumanMentorHomeProps) {
               <span className="text-[12px] font-semibold text-[#f77f00]">Verified Human Experts</span>
             </div>
             <h1 className="text-[28px] md:text-[36px] text-white mb-3 leading-[1.1]"
-              style={{ fontFamily: "'DM Serif Display', serif" }}>
+              style={{ fontFamily: "'DM Serif Display', serif", color: 'white' }}>
               Human Mentors
             </h1>
-            <p className="text-[14px] text-white/50 max-w-[420px] leading-relaxed">
+            <p className="text-[14px] text-white/50 max-w-[420px] leading-relaxed"
+              style={{ color: 'rgba(255,255,255,0.5)' }}>
               Learn directly from real mentors who guide, motivate, and inspire — book 1:1 or group sessions.
             </p>
           </div>
