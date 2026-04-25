@@ -19,6 +19,7 @@ import { X, VideoOff } from 'lucide-react';
 import { useWebRTC } from '@/utils/webrtc/useWebRTC';
 import { getSupabaseClient } from '../../../lib/api';
 import { roomAPI, type RoomChatMessage } from '@/utils/api/roomAPI';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 import { MeetHeader } from './MeetHeader';
 import { VideoGrid } from './VideoGrid';
@@ -110,6 +111,22 @@ export function CollaborativeModeRoomGoogleMeet({
   const selfViewRef = useRef<HTMLDivElement>(null);
   const dragOffset = useRef({ x: 0, y: 0 });
   const isDragging = useRef(false);
+
+  /* ── Sync browser URL to room without reloading ── */
+  const navigate = useNavigate();
+  const location = useLocation();
+  useEffect(() => {
+    if (!roomCode) return;
+    const target = `/room/${roomCode}`;
+    if (location.pathname !== target) {
+      navigate(target, { replace: true });
+    }
+    return () => {
+      // Restore previous path on leave without reloading
+      navigate(location.pathname === target ? -1 as any : location.pathname, { replace: true });
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [roomCode]);
 
   /* ── Auth ── */
   useEffect(() => {

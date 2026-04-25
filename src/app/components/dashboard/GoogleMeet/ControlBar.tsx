@@ -3,17 +3,8 @@
  */
 
 import {
-  Mic,
-  MicOff,
-  Video,
-  VideoOff,
-  ScreenShare,
-  ScreenShareOff,
-  Hand,
-  MessageSquare,
-  Users,
-  Settings,
-  PhoneOff,
+  Mic, MicOff, Video, VideoOff, Monitor, MonitorOff,
+  Hand, MessageSquare, Users, Settings, PhoneOff,
 } from 'lucide-react';
 
 interface ControlBarProps {
@@ -37,25 +28,19 @@ interface ControlBarProps {
   onMouseLeave?: () => void;
 }
 
-/* ── Individual control button ── */
-
 interface BtnProps {
   icon: React.ReactNode;
   label: string;
   onClick: () => void;
-  /** Button is in an "on" / active state (blue) */
   active?: boolean;
-  /** Button is in a toggled/pressed state (blue) */
   pressed?: boolean;
-  /** Destructive action (red) */
   danger?: boolean;
-  /** Notification badge count */
   badge?: number;
 }
 
 function Btn({ icon, label, onClick, active, danger, badge, pressed }: BtnProps) {
   const isHighlighted = active || pressed;
-  const bg     = danger ? '#ea4335' : isHighlighted ? '#1a73e8' : '#3c4043';
+  const bg      = danger ? '#ea4335' : isHighlighted ? '#1a73e8' : '#3c4043';
   const hoverBg = danger ? '#d93025' : isHighlighted ? '#1765cc' : '#4a4d51';
 
   return (
@@ -86,7 +71,6 @@ function Btn({ icon, label, onClick, active, danger, badge, pressed }: BtnProps)
       >
         {icon}
 
-        {/* Unread badge */}
         {badge !== undefined && badge > 0 && (
           <span style={{
             position: 'absolute',
@@ -110,7 +94,6 @@ function Btn({ icon, label, onClick, active, danger, badge, pressed }: BtnProps)
         )}
       </button>
 
-      {/* Label */}
       <span style={{
         fontSize: 10,
         color: 'rgba(255,255,255,0.5)',
@@ -123,8 +106,6 @@ function Btn({ icon, label, onClick, active, danger, badge, pressed }: BtnProps)
     </div>
   );
 }
-
-/* ── Control bar ── */
 
 export function ControlBar({
   audioEnabled,
@@ -176,7 +157,7 @@ export function ControlBar({
         gap: 8,
       }}>
 
-        {/* Left — media controls */}
+        {/* Left — media */}
         <div style={{ display: 'flex', alignItems: 'flex-end', gap: 12 }}>
           <Btn
             icon={audioEnabled ? <Mic size={20} /> : <MicOff size={20} />}
@@ -191,14 +172,14 @@ export function ControlBar({
             active={videoEnabled}
           />
           <Btn
-            icon={isScreenSharing ? <ScreenShareOff size={20} /> : <ScreenShare size={20} />}
+            icon={isScreenSharing ? <MonitorOff size={20} /> : <Monitor size={20} />}
             label={isScreenSharing ? 'Stop sharing' : 'Present'}
             onClick={onScreenShare}
             pressed={isScreenSharing}
           />
         </div>
 
-        {/* Center — interaction controls */}
+        {/* Center — interactions */}
         <div style={{ display: 'flex', alignItems: 'flex-end', gap: 12 }}>
           <Btn
             icon={<Hand size={20} />}
@@ -235,7 +216,7 @@ export function ControlBar({
         />
       </div>
 
-      {/* Keyboard shortcut hints */}
+      {/* Keyboard hints */}
       <div style={{
         display: 'flex',
         justifyContent: 'center',
@@ -245,7 +226,7 @@ export function ControlBar({
         color: 'rgba(255,255,255,0.2)',
         fontFamily: 'Inter, system-ui, sans-serif',
       }}>
-        {[['M', 'mic'], ['V', 'video'], ['C', 'chat']].map(([key, label]) => (
+        {[['M', 'mic'], ['V', 'video'], ['C', 'chat']].map(([key, lbl]) => (
           <span key={key}>
             <kbd style={{
               background: 'rgba(255,255,255,0.1)',
@@ -253,10 +234,7 @@ export function ControlBar({
               borderRadius: 3,
               fontSize: 10,
               fontFamily: 'monospace',
-            }}>
-              {key}
-            </kbd>
-            {' '}{label}
+            }}>{key}</kbd>{' '}{lbl}
           </span>
         ))}
       </div>
