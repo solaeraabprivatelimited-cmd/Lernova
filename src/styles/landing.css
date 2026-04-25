@@ -1238,6 +1238,57 @@
   border: 1px solid rgba(247, 127, 0, 0.3);
 }
 
+/* ── ROOM TILE TEXT — scoped + !important so global h*/p/body resets can't win ── */
+/* The study section always has a dark navy background (both light & dark mode).    */
+/* Global responsive-dark-mode.css sets body/h1-h6/p colours which can override    */
+/* same-specificity class rules depending on bundle injection order. Fix: double    */
+/* the specificity AND add !important as a last-resort backstop.                    */
+.lp-study-section .lp-room-card .lp-room-num {
+  color: rgba(255, 255, 255, 0.15) !important;
+}
+
+.lp-study-section .lp-room-card .lp-room-name {
+  color: #ffffff !important;
+}
+
+.lp-study-section .lp-room-card .lp-room-desc {
+  color: rgba(255, 255, 255, 0.65) !important;
+}
+
+.lp-study-section .lp-room-card .lp-room-tag {
+  color: #f77f00 !important;
+}
+
+.lp-study-section .lp-room-card .lp-room-icon svg {
+  fill: white !important;
+}
+
+/* ── LOGO AVATAR (replaces initial-letter dummy circles) ── */
+.lp-avatar-logo {
+  background: rgba(255, 255, 255, 0.15) !important;
+  padding: 4px;
+}
+
+.lp-avatar-logo img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  border-radius: 0;
+  display: block;
+}
+
+.lp-mentor-avatar-logo {
+  background: rgba(255, 255, 255, 0.15);
+  padding: 5px;
+}
+
+.lp-mentor-avatar-logo img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
 /* ── MENTOR SECTION ── */
 .lp-mentor-section {
   background: #f8fafd;

@@ -182,17 +182,19 @@ export function LandingPage({ onLogin, onSignUp }: LandingPageProps) {
               Live in room
             </div>
             <div className="lp-users-avatars">
-              <div className="lp-avatar lp-avatar-primary">A</div>
-              <div className="lp-avatar lp-avatar-accent">R</div>
-              <div className="lp-avatar lp-avatar-blue-700">P</div>
-              <div className="lp-avatar lp-avatar-purple">S</div>
+              <div className="lp-avatar lp-avatar-logo"><img src="/Blue Png.png" alt="" draggable={false} /></div>
+              <div className="lp-avatar lp-avatar-logo" style={{background:'rgba(0,53,102,0.85)'}}><img src="/Black Png.png" alt="" draggable={false} style={{filter:'brightness(0) invert(1)'}} /></div>
+              <div className="lp-avatar lp-avatar-logo"><img src="/elm origin logo.svg" alt="" draggable={false} style={{filter:'brightness(0) invert(1) sepia(1) saturate(3) hue-rotate(185deg)'}} /></div>
+              <div className="lp-avatar lp-avatar-logo" style={{background:'rgba(9,103,189,0.85)'}}><img src="/Blue Png.png" alt="" draggable={false} style={{filter:'brightness(0) invert(1)'}} /></div>
               <div className="lp-avatar more">+12</div>
             </div>
             <div className="lp-users-count"><span>16 people</span> studying now</div>
           </div>
           <div className="lp-floating-card lp-card-mentor">
             <div className="lp-mentor-row">
-              <div className="lp-mentor-avatar">DS</div>
+              <div className="lp-mentor-avatar lp-mentor-avatar-logo">
+                <img src="/Blue Png.png" alt="Elm Origin" draggable={false} />
+              </div>
               <div>
                 <div className="lp-mentor-name">Dr. Singh</div>
                 <div className="lp-mentor-title">IIT Mentor</div>
@@ -245,8 +247,8 @@ export function LandingPage({ onLogin, onSignUp }: LandingPageProps) {
             </button>
             <div className="flex items-center gap-3 md:gap-4 mt-8">
               <div className="lp-users-avatars">
-                <div className="lp-avatar lp-avatar-with-border">A</div>
-                <div className="lp-avatar lp-avatar-accent-border">R</div>
+                <div className="lp-avatar lp-avatar-logo"><img src="/Blue Png.png" alt="" draggable={false} style={{filter:'brightness(0) invert(1)'}} /></div>
+                <div className="lp-avatar lp-avatar-logo" style={{background:'rgba(9,103,189,0.85)'}}><img src="/Black Png.png" alt="" draggable={false} style={{filter:'brightness(0) invert(1)'}} /></div>
               </div>
               <span className="lp-guided-text">Guided by experienced mentors</span>
             </div>
@@ -409,7 +411,7 @@ export function LandingPage({ onLogin, onSignUp }: LandingPageProps) {
                 &ldquo;Elm Origin completely changed the way I study. My mentor guided me through every step, and the focus sessions helped me stay on track. I&rsquo;ve become more confident and disciplined.&rdquo;
               </p>
               <div className="lp-t-author">
-                <div className="lp-t-avatar lp-testimonial-avatar">AM</div>
+                <div className="lp-t-avatar lp-testimonial-avatar lp-avatar-logo"><img src="/Blue Png.png" alt="" draggable={false} style={{filter:'brightness(0) invert(1)'}} /></div>
                 <div>
                   <div className="lp-t-name lp-testimonial-name">Aarav Mehta</div>
                   <div className="lp-t-role lp-testimonial-role">Computer Science Student</div>
@@ -423,7 +425,7 @@ export function LandingPage({ onLogin, onSignUp }: LandingPageProps) {
                 &ldquo;The collaborative rooms are amazing &mdash; I finally found a study group that keeps me accountable. The AI mentor is like having a tutor available 24/7.&rdquo;
               </p>
               <div className="lp-t-author">
-                <div className="lp-t-avatar lp-testimonial-avatar lp-avatar-gradient-orange">PK</div>
+                <div className="lp-t-avatar lp-testimonial-avatar lp-avatar-logo" style={{background:'rgba(247,127,0,0.85)'}}><img src="/Black Png.png" alt="" draggable={false} style={{filter:'brightness(0) invert(1)'}} /></div>
                 <div>
                   <div className="lp-t-name">Priya Kumar</div>
                   <div className="lp-t-role">UPSC Aspirant</div>
@@ -437,7 +439,7 @@ export function LandingPage({ onLogin, onSignUp }: LandingPageProps) {
                 &ldquo;Booked my first mentor session and it was a game changer. The payment was smooth and the session quality was excellent. Highly recommend!&rdquo;
               </p>
               <div className="lp-t-author">
-                <div className="lp-t-avatar lp-testimonial-avatar lp-avatar-gradient-blue">RS</div>
+                <div className="lp-t-avatar lp-testimonial-avatar lp-avatar-logo" style={{background:'rgba(9,103,189,0.85)'}}><img src="/Blue Png.png" alt="" draggable={false} style={{filter:'brightness(0) invert(1)'}} /></div>
                 <div>
                   <div className="lp-t-name">Rahul Sharma</div>
                   <div className="lp-t-role">Engineering Student</div>
