@@ -506,61 +506,43 @@ async function apiFetch<T = any>(
 // ─── AUTH ───────────────────────────────────────────────────────────────────────
 
 export const auth = {
-  /** Step 1: Send OTP for signup */
+  /** Step 1: Send OTP for signup — uses Supabase Auth directly (no edge function required) */
   async requestSignupOtp(name: string, email: string, role: 'student' | 'mentor') {
-    const response = await fetch(`${API_URL}/auth/request-signup-otp`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, name, role }),
+    const supabase = getSupabaseClient();
+    const { error } = await supabase.auth.signInWithOtp({
+      email,
+      options: {
+        shouldCreateUser: true,
+        data: { name, role },
+      },
     });
-    
-    if (!response.ok) {
-              let errMsg = 'Failed to send OTP. Please try again.';
-              try { const err = await response.json(); errMsg = String(err.detail ?? err.error ?? err.message ?? errMsg); } catch { /* non-JSON */ }
-              throw new Error(errMsg);
-    }
-    
-    return response.json();h
+    if (error) throw new Error(error.message);
   },
 
-  /** Step 2: Verify OTP and create account */
+  /** Step 2: Verify OTP, complete account creation, and set password */
   async verifySignupOtp(email: string, otp: string, password: string) {
-    const response = await fetch(`${API_URL}/auth/verify-auth-otp`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, otp, password, type: 'signup' }),
+    const supabase = getSupabaseClient();
+
+    const { data, error } = await supabase.auth.verifyOtp({
+      email,
+      token: otp,
+      type: 'email',
     });
-    
-    if (!response.ok) {
-              let errMsg = 'Invalid or expired OTP. Please try again.';
-              try { const err = await response.json(); errMsg = String(err.detail ?? err.error ?? err.message ?? errMsg); } catch { /* non-JSON */ }
-              throw new Error(errMsg);
-    }
-    
-    const data = await response.json();
-    
-    // After user is created, sign them in to get a session
-    if (data.user) {
-      const supabase = getSupabaseClient();
-      const { data: loginData, error: loginError } = await supabase.auth.signInWithPassword({
-        email: data.user.email,
-        password,
-      });
+    if (error) throw new Error(error.message);
+    if (!data.user) throw new Error('Account creation failed. Please try again.');
 
-      if (loginError) {
-        throw new Error(loginError.message);
-      }
+    const { error: pwErr } = await supabase.auth.updateUser({ password });
+    if (pwErr) console.warn('[auth] password setup:', pwErr.message);
 
-      if (loginData.session) {
-        setAccessToken(loginData.session.access_token);
-        setCurrentUser(mapSessionUser(loginData.session));
-      }
+    if (data.session) {
+      setAccessToken(data.session.access_token);
+      setCurrentUser(mapSessionUser(data.session));
     }
-    
+
     return data;
   },
 
-  /** Sign in using Supabase Auth directly */
+    /** Sign in using Supabase Auth directly */
   async login(email: string, password: string) {
     const supabase = getSupabaseClient();
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
