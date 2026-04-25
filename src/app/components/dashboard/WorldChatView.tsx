@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
+import { toast } from 'sonner';
 import imgEllipse1 from "figma:asset/798eac6e288222603807db12d070c52d1a145785.png";
 import { ImageWithFallback } from "../figma/ImageWithFallback";
 import { worldChat, getCurrentUser, getSupabaseClient } from "@/app/lib/api";
@@ -317,10 +318,10 @@ export function WorldChatView({ onBack }: { onBack: () => void }) {
               });
               setReportModalOpen(false);
               setReportTarget(null);
-              setTimeout(() => alert(`${reportTarget.senderName} has been reported. Our team will review this.`), 100);
+              toast.success(`${reportTarget.senderName} has been reported. Our team will review this.`);
             } catch (error) {
               console.log("Report submission error:", error);
-              setTimeout(() => alert("Unable to submit the report right now. Please try again."), 100);
+              toast.error('Unable to submit the report right now. Please try again.');
             }
           }} />
       )}

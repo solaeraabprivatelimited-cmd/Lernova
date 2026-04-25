@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { X, Send } from 'lucide-react';
+import { toast } from 'sonner';
 
 interface Message {
   id: string;
@@ -73,7 +74,7 @@ export function MessagesPanel({ onClose, currentUserId, currentUserName, current
       setInputText('');
     } catch (err) {
       console.error('Failed to send message:', err);
-      alert('Failed to send message');
+      toast.error('Failed to send message');
     } finally {
       setIsSending(false);
     }

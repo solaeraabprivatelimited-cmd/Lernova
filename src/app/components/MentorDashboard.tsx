@@ -1686,7 +1686,7 @@ function CreateStudyRoomView() {
   const [isLaunching, setIsLaunching] = useState(false);
   const [launchError, setLaunchError] = useState('');
 
-const joinLink = `elmorbit.co.in/room/${roomId}`;
+const joinLink = `${window.location.origin}/room/${roomId}`;
 
   const handleLaunch = async () => {
     // Validation

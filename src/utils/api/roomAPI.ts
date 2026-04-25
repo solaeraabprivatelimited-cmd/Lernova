@@ -5,7 +5,6 @@
  */
 
 import { BASE_URL, getAccessToken, getSupabaseClient, setAccessToken } from '../../app/lib/api';
-import { projectId } from '../supabase/info';
 
 const API_BASE = `${BASE_URL}/webrtc/rooms`;
 
@@ -37,7 +36,7 @@ export interface Room {
   id: string;
   code: string;
   name: string;
-  mode: string;
+  mode: 'focus' | 'silent' | 'collaborative' | 'live';
   host_id: string;
   subject?: string;
   is_active: boolean;
@@ -46,6 +45,7 @@ export interface Room {
   ends_at?: string;
   description?: string;
   max_participants?: number;
+  participant_count?: number;
   password_protected?: boolean;
   host?: {
     id: string;

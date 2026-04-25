@@ -1,4 +1,5 @@
 import React, { Suspense, useState } from 'react';
+import { toast } from 'sonner';
 import { Bell, Plus, Users, Zap } from 'lucide-react';
 import imgImage17 from "figma:asset/1dab6d19afb3878b8ebec0d7a0fc2a196c946a7c.png";
 import imgImage18 from "figma:asset/4c03b875da24497740f219b6c1322d1ce76023cb.png";
@@ -56,7 +57,7 @@ export function CollaborativeModeView({}: CollaborativeModeViewProps) {
       setView('in-room');
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unable to join room';
-      alert(message);
+      toast.error('Could not join room', { description: message });
     }
   };
 
