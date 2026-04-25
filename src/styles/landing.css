@@ -1617,6 +1617,19 @@
   border-color: transparent;
 }
 
+/* Light-mode: featured card is dark navy, so force all child text to white */
+.lp-t-card.featured .lp-t-text {
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.lp-t-card.featured .lp-t-name {
+  color: #ffffff;
+}
+
+.lp-t-card.featured .lp-t-role {
+  color: rgba(255, 255, 255, 0.75);
+}
+
 :root.dark .lp-t-card.featured {
   background: #2563eb;
 }
@@ -1806,11 +1819,19 @@
   max-width: 280px;
 }
 
+:root.dark .lp-footer-brand p {
+  color: rgba(229, 237, 248, 0.6);
+}
+
 .lp-footer-col h4 {
   font-size: 14px;
   font-weight: 700;
   color: #0d1b2a;
   margin-bottom: 16px;
+}
+
+:root.dark .lp-footer-col h4 {
+  color: #f0f4ff;
 }
 
 .lp-footer-col ul {
@@ -1836,6 +1857,14 @@
 
 .lp-footer-link:hover {
   color: #003566;
+}
+
+:root.dark .lp-footer-link {
+  color: rgba(229, 237, 248, 0.6);
+}
+
+:root.dark .lp-footer-link:hover {
+  color: #93c5fd;
 }
 
 .lp-newsletter-form {
