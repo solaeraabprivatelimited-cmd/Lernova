@@ -1203,10 +1203,11 @@ export function StudyRoomDashboard({ onLogout }: { onLogout?: () => void }) {
                         <span className="text-[12px] font-semibold text-[#f77f00]">230 learners studying now</span>
                       </div>
                       <h1 className="text-xl4 md:text-2xl2 lg:text-3xl2 text-white mb-3 leading-1.1"
-                        style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+                        style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", color: '#ffffff' }}>
                         Your Study<br className="hidden md:block" /> Command Center
                       </h1>
-                      <p className="text-[14px] md:text-[15px] text-white/50 max-w-[420px] leading-relaxed">
+                      <p className="text-[14px] md:text-[15px] text-white/50 max-w-[420px] leading-relaxed"
+                        style={{ color: 'rgba(255,255,255,0.7)' }}>
                         Four distinct room modes tailored to every learning style — pick the one that fits your vibe today.
                       </p>
                     </div>
@@ -1277,18 +1278,19 @@ export function StudyRoomDashboard({ onLogout }: { onLogout?: () => void }) {
                     <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
                       <div className="flex-1">
                         <span className="srd-text-56px srd-md\:text-72px font-bold leading-none srd-text-white-opacity-6 block srd--mb-3"
-                          style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>01</span>
+                          style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", color: 'rgba(255,255,255,0.82)' }}>01</span>
                         <div className="flex items-center gap-3.5 mb-2.5">
                           <div className="srd-w-11 srd-h-11 srd-rounded-14 flex items-center justify-center"
                             style={{ background: modes[0].accentColor }}>
                             {modes[0].iconSvg}
                           </div>
                           <h3 className="font-bold srd-text-24px srd-md\:text-28px text-white srd-leading-tight"
-                            style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+                            style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", color: '#ffffff' }}>
                             {modes[0].title}
                           </h3>
                         </div>
-                        <p className="text-[14px] text-white/60 leading-relaxed max-w-[500px]">
+                        <p className="text-[14px] text-white/60 leading-relaxed max-w-[500px]"
+                          style={{ color: 'rgba(255,255,255,0.78)' }}>
                           {modes[0].description}
                         </p>
                       </div>
@@ -1323,7 +1325,7 @@ export function StudyRoomDashboard({ onLogout }: { onLogout?: () => void }) {
                         {/* Top */}
                         <div className="flex items-start justify-between">
                           <span className="text-3xl2 font-bold leading-none text-white/7"
-                            style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+                            style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", color: 'rgba(255,255,255,0.72)' }}>
                             {mode.number}
                           </span>
                           <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full"
@@ -1340,11 +1342,13 @@ export function StudyRoomDashboard({ onLogout }: { onLogout?: () => void }) {
                               style={{ background: mode.accentColor }}>
                               {mode.iconSvg}
                             </div>
-                            <h3 className="font-bold text-[18px] text-white leading-tight">
+                            <h3 className="font-bold text-[18px] text-white leading-tight"
+                              style={{ color: '#ffffff' }}>
                               {mode.title}
                             </h3>
                           </div>
-                          <p className="text-[12px] text-white/55 leading-relaxed line-clamp-2 mb-3">
+                          <p className="text-[12px] text-white/55 leading-relaxed line-clamp-2 mb-3"
+                            style={{ color: 'rgba(255,255,255,0.76)' }}>
                             {mode.description}
                           </p>
                           <div className="opacity-0 group-hover:opacity-100 transition-all duration-300">
