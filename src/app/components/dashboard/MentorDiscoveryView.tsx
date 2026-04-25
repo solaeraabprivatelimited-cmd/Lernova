@@ -213,7 +213,7 @@ export function MentorDiscoveryView({
             </div>
             <div className="flex-1">
               <div className="flex items-center gap-3 mb-2">
-                <h2 className="text-[28px] font-bold text-[#003566] dark:text-white">
+                <h2 className="text-[28px] font-bold text-white">
                   {selectedMentor.name}
                 </h2>
                 {selectedMentor.isVerified && (

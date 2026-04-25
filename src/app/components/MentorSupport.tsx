@@ -40,7 +40,7 @@ export function MentorSupport({ onStartAiMentor, onStartHumanMentor }: MentorSup
       {/* Section Label */}
       <div className="flex items-center gap-3 mb-6">
         <div className="w-1 h-5 rounded-full bg-[#f77f00]" />
-        <h2 className="text-[16px] font-bold text-[#003566]">Choose Your Mentor</h2>
+        <h2 className="text-[16px] font-bold text-white">Choose Your Mentor</h2>
       </div>
 
       {/* Cards Container */}

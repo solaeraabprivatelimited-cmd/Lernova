@@ -93,7 +93,7 @@ export function EmotionalWellnessView() {
       {/* Section Label */}
       <div className="flex items-center gap-3 mb-6">
         <div className="w-1 h-5 rounded-full bg-orange-500" />
-        <h2 className="text-[16px] font-bold text-slate-900 dark:text-white">Explore Wellness</h2>
+        <h2 className="text-[16px] font-bold text-white">Explore Wellness</h2>
       </div>
 
       {/* Cards Grid */}

@@ -74,7 +74,7 @@ export function ProductivityToolsView() {
       {/* Section Label */}
       <div className="flex items-center gap-3 mb-6">
         <div className="w-1 h-5 rounded-full bg-[#f77f00]" />
-        <h2 className="text-[16px] font-bold text-[#003566]">Choose a Tool</h2>
+        <h2 className="text-[16px] font-bold text-white">Choose a Tool</h2>
       </div>
 
       {/* Tool Cards */}
