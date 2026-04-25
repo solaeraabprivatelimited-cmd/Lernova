@@ -1,7 +1,39 @@
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { roomAPI, Room } from '@/utils/api/roomAPI';
-import { CollaborativeModeRoom } from './CollaborativeModeRoom';
+
+/* ── Lazy-load every room component (same pattern as StudyRoomDashboard) ── */
+const CollaborativeModeRoomGoogleMeet = React.lazy(async () => {
+  const m = await import('./GoogleMeet/CollaborativeModeRoomGoogleMeet');
+  return { default: m.CollaborativeModeRoomGoogleMeet };
+});
+
+const FocusMode = React.lazy(async () => {
+  const m = await import('./FocusMode');
+  return { default: m.FocusMode };
+});
+
+const LiveModeRoom = React.lazy(async () => {
+  const m = await import('./LiveModeRoom');
+  return { default: m.LiveModeRoom };
+});
+
+const SilentModeView = React.lazy(async () => {
+  const m = await import('./SilentModeView');
+  return { default: m.SilentModeView };
+});
+
+/* ── Spinner shown while the bundle chunk loads ── */
+function RoomSuspenseFallback() {
+  return (
+    <div className="flex min-h-screen items-center justify-center bg-[#202124] px-6 text-white">
+      <div className="text-center">
+        <div className="mx-auto mb-4 h-10 w-10 animate-spin rounded-full border-4 border-white/30 border-t-white" />
+        <p className="text-sm text-white/80">Loading room...</p>
+      </div>
+    </div>
+  );
+}
 
 interface RoomLinkEntryProps {
   onExit: () => void;
@@ -53,6 +85,7 @@ export function RoomLinkEntry({ onExit }: RoomLinkEntryProps) {
     };
   }, [roomCode]);
 
+  /* ── Loading state ── */
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-[#202124] px-6 text-white">
@@ -64,6 +97,7 @@ export function RoomLinkEntry({ onExit }: RoomLinkEntryProps) {
     );
   }
 
+  /* ── Error state ── */
   if (error || !room) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-[#202124] px-6 text-white">
@@ -81,14 +115,34 @@ export function RoomLinkEntry({ onExit }: RoomLinkEntryProps) {
     );
   }
 
+  /* ── Render the correct room UI based on mode ── */
+  const mode = (room as any).mode as string | undefined;
+  const commonProps = {
+    roomName: room.name,
+    roomId: room.id,
+    subject: room.subject || 'General',
+  };
+
   return (
-    <CollaborativeModeRoom
-      roomName={room.name}
-      roomId={room.id}
-      roomCode={room.code}
-      maxParticipants={room.max_participants}
-      subject={room.subject || 'General'}
-      onLeaveRoom={onExit}
-    />
+    <React.Suspense fallback={<RoomSuspenseFallback />}>
+      {mode === 'focus' ? (
+        <FocusMode onLeave={onExit} />
+      ) : mode === 'silent' ? (
+        <SilentModeView onLeave={onExit} />
+      ) : mode === 'live' ? (
+        <LiveModeRoom
+          {...commonProps}
+          onLeaveRoom={onExit}
+        />
+      ) : (
+        /* 'collaborative' or any unknown mode → Google Meet UI */
+        <CollaborativeModeRoomGoogleMeet
+          {...commonProps}
+          roomCode={room.code}
+          maxParticipants={room.max_participants}
+          onLeaveRoom={onExit}
+        />
+      )}
+    </React.Suspense>
   );
 }

@@ -133,6 +133,7 @@ export function VideoGrid({
             videoEnabled={pinnedParticipant.videoEnabled}
             isActiveSpeaker={pinnedParticipant.peerId === activeSpeakerId}
             isMirrored={pinnedParticipant.peerId === localParticipant.peerId}
+            isPinned
           />
         </div>
 

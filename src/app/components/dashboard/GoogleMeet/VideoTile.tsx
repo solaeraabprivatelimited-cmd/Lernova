@@ -3,6 +3,7 @@
  */
 
 import { useRef, useEffect, useState } from 'react';
+import { MicOff, VideoOff, Volume2, Pin } from 'lucide-react';
 
 interface VideoTileProps {
   peerId: string;
@@ -14,6 +15,7 @@ interface VideoTileProps {
   isActiveSpeaker?: boolean;
   isMirrored?: boolean;
   compact?: boolean;
+  isPinned?: boolean;
 }
 
 const AVATAR_COLORS = [
@@ -31,26 +33,36 @@ function getAvatarColors(name: string) {
   return AVATAR_COLORS[Math.abs(hash) % AVATAR_COLORS.length];
 }
 
-function MicOffIcon({ size = 10 }: { size?: number }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-      <line x1="2" y1="2" x2="22" y2="22" />
-      <path d="M18.89 13.23A7.12 7.12 0 0 0 19 12v-2" />
-      <path d="M5 10v2a7 7 0 0 0 12 5" />
-      <path d="M15 9.34V5a3 3 0 0 0-5.68-1.33" />
-      <path d="M9 9v3a3 3 0 0 0 5.12 2.12" />
-      <line x1="12" y1="19" x2="12" y2="22" />
-    </svg>
-  );
-}
+/** Animated speaking bars — three bars that bounce at different speeds */
+function SpeakingWave({ size = 14 }: { size?: number }) {
+  const barStyle = (delay: string): React.CSSProperties => ({
+    width: Math.round(size * 0.2),
+    borderRadius: 99,
+    background: '#1a73e8',
+    animation: `speakBar 0.9s ease-in-out ${delay} infinite alternate`,
+  });
 
-function VideoOffIcon({ size = 10 }: { size?: number }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M10.66 6H14a2 2 0 0 1 2 2v2.34l1 1L22 8v8" />
-      <path d="M16 16a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h2l10 10Z" />
-      <line x1="2" y1="2" x2="22" y2="22" />
-    </svg>
+    <>
+      <style>{`
+        @keyframes speakBar {
+          0%   { height: ${Math.round(size * 0.3)}px; opacity: 0.7; }
+          100% { height: ${size}px;                   opacity: 1;   }
+        }
+      `}</style>
+      <div
+        style={{
+          display: 'inline-flex',
+          alignItems: 'flex-end',
+          gap: Math.round(size * 0.15),
+          height: size,
+        }}
+      >
+        <div style={barStyle('0s')} />
+        <div style={barStyle('0.18s')} />
+        <div style={barStyle('0.36s')} />
+      </div>
+    </>
   );
 }
 
@@ -63,6 +75,7 @@ export function VideoTile({
   isActiveSpeaker = false,
   isMirrored = false,
   compact = false,
+  isPinned = false,
 }: VideoTileProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [videoReady, setVideoReady] = useState(false);
@@ -85,7 +98,6 @@ export function VideoTile({
         onReady();
       } else {
         video.addEventListener('loadedmetadata', onReady, { once: true });
-        // Fallback: mark ready after 1.5s regardless
         const t = setTimeout(onReady, 1500);
         return () => {
           video.removeEventListener('loadedmetadata', onReady);
@@ -94,7 +106,7 @@ export function VideoTile({
       }
     } else {
       video.srcObject = null;
-      video.load(); // clears the last frame
+      video.load();
     }
   }, [stream, videoEnabled]);
 
@@ -116,7 +128,7 @@ export function VideoTile({
         overflow: 'hidden',
         background: '#1c1c1e',
         outline: isActiveSpeaker ? '2px solid #1a73e8' : '1px solid rgba(255,255,255,0.06)',
-        boxShadow: isActiveSpeaker ? '0 0 0 4px rgba(26,115,232,0.25)' : 'none',
+        boxShadow: isActiveSpeaker ? '0 0 0 4px rgba(26,115,232,0.22)' : 'none',
         transition: 'outline 0.2s, box-shadow 0.2s',
         userSelect: 'none',
       }}
@@ -168,10 +180,32 @@ export function VideoTile({
           >
             {initials}
           </div>
+          {/* Camera-off indicator beneath avatar */}
+          {!videoEnabled && (
+            <div
+              style={{
+                position: 'absolute',
+                bottom: compact ? 24 : 40,
+                display: 'flex',
+                alignItems: 'center',
+                gap: 4,
+                background: 'rgba(0,0,0,0.45)',
+                borderRadius: 999,
+                padding: '2px 8px',
+              }}
+            >
+              <VideoOff size={compact ? 10 : 12} color="rgba(255,255,255,0.6)" />
+              {!compact && (
+                <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.55)', fontFamily: 'Inter, system-ui, sans-serif' }}>
+                  Camera off
+                </span>
+              )}
+            </div>
+          )}
         </div>
       )}
 
-      {/* Loading pulse */}
+      {/* Loading pulse overlay */}
       {videoEnabled && !videoReady && !!stream && (
         <div
           style={{
@@ -181,6 +215,50 @@ export function VideoTile({
             animation: 'pulse 1.5s ease-in-out infinite',
           }}
         />
+      )}
+
+      {/* Pin badge (top-right) */}
+      {isPinned && !compact && (
+        <div
+          style={{
+            position: 'absolute',
+            top: 8,
+            right: 8,
+            background: 'rgba(26,115,232,0.85)',
+            borderRadius: 6,
+            padding: '3px 6px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 3,
+          }}
+        >
+          <Pin size={10} color="#fff" />
+          <span style={{ fontSize: 9, color: '#fff', fontFamily: 'Inter, system-ui, sans-serif', fontWeight: 600 }}>
+            Pinned
+          </span>
+        </div>
+      )}
+
+      {/* Active-speaker speaking wave (top-left) */}
+      {isActiveSpeaker && audioEnabled && !compact && (
+        <div
+          style={{
+            position: 'absolute',
+            top: 8,
+            left: 8,
+            background: 'rgba(26,115,232,0.18)',
+            border: '1px solid rgba(26,115,232,0.4)',
+            borderRadius: 8,
+            padding: '4px 8px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 6,
+            backdropFilter: 'blur(4px)',
+          }}
+        >
+          <Volume2 size={11} color="#1a73e8" />
+          <SpeakingWave size={12} />
+        </div>
       )}
 
       {/* Bottom name bar */}
@@ -215,21 +293,33 @@ export function VideoTile({
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexShrink: 0 }}>
           {!audioEnabled && (
-            <span style={{
-              width: 18, height: 18, borderRadius: '50%',
-              background: 'rgba(234,67,53,0.9)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-            }}>
-              <MicOffIcon size={10} />
+            <span
+              style={{
+                width: compact ? 16 : 20,
+                height: compact ? 16 : 20,
+                borderRadius: '50%',
+                background: 'rgba(234,67,53,0.88)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <MicOff size={compact ? 8 : 11} color="white" />
             </span>
           )}
           {!videoEnabled && (
-            <span style={{
-              width: 18, height: 18, borderRadius: '50%',
-              background: 'rgba(234,67,53,0.9)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-            }}>
-              <VideoOffIcon size={10} />
+            <span
+              style={{
+                width: compact ? 16 : 20,
+                height: compact ? 16 : 20,
+                borderRadius: '50%',
+                background: 'rgba(234,67,53,0.88)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <VideoOff size={compact ? 8 : 11} color="white" />
             </span>
           )}
         </div>

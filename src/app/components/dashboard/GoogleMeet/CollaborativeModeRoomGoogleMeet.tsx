@@ -15,6 +15,7 @@
  */
 
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { X, VideoOff } from 'lucide-react';
 import { useWebRTC } from '@/utils/webrtc/useWebRTC';
 import { getSupabaseClient } from '../../../lib/api';
 import { roomAPI, type RoomChatMessage } from '@/utils/api/roomAPI';
@@ -565,10 +566,28 @@ export function CollaborativeModeRoomGoogleMeet({
   if (!userId || (!initialized && !initTimeout)) {
     return (
       <div className="flex h-screen w-full items-center justify-center bg-[#111112]">
-        <div className="text-center space-y-4">
-          <div className="mx-auto w-12 h-12 rounded-full border-4 border-white/10 border-t-[#1a73e8] animate-spin" />
-          <p className="text-white/80 text-sm font-medium">Joining room…</p>
-          <p className="text-white/40 text-xs">{userName || 'Preparing your session'}</p>
+        <div className="text-center space-y-5">
+          {/* Spinner with real logo overlay */}
+          <div className="relative mx-auto w-16 h-16">
+            <div className="absolute inset-0 rounded-full border-4 border-white/[0.06] border-t-[#1a73e8] animate-spin" />
+            <div className="absolute inset-[10px] flex items-center justify-center">
+              <svg width="36" height="36" viewBox="0 0 64 64" aria-hidden="true">
+                <defs>
+                  <linearGradient id="loading-logo-bg" x1="8" x2="56" y1="6" y2="58" gradientUnits="userSpaceOnUse">
+                    <stop offset="0" stopColor="#003566" />
+                    <stop offset="1" stopColor="#001d3d" />
+                  </linearGradient>
+                </defs>
+                <rect width="64" height="64" rx="14" fill="url(#loading-logo-bg)" />
+                <path fill="#f8fbff" d="M32 13 14 22.5 32 32l14.727-7.774V35h3.273V22.5L32 13Zm0 23.273L20.182 30 32 23.727 43.818 30 32 36.273ZM14 36.545v3.273L32 49.273l18-9.455v-3.273L32 46Z" />
+                <circle cx="49.5" cy="17.5" r="5.5" fill="#f77f00" />
+              </svg>
+            </div>
+          </div>
+          <div className="space-y-1">
+            <p className="text-white/80 text-sm font-medium">Joining room…</p>
+            <p className="text-white/35 text-xs">{userName || 'Preparing your session'}</p>
+          </div>
         </div>
       </div>
     );
@@ -596,10 +615,10 @@ export function CollaborativeModeRoomGoogleMeet({
           <span>{joinError}</span>
           <button
             onClick={() => setJoinError('')}
-            className="text-[#f28b82]/60 hover:text-[#f28b82] ml-4"
+            className="text-[#f28b82]/60 hover:text-[#f28b82] ml-4 flex items-center justify-center w-6 h-6 rounded-full hover:bg-[#ea4335]/20 transition-colors"
             aria-label="Dismiss"
           >
-            ✕
+            <X size={14} />
           </button>
         </div>
       )}
@@ -683,8 +702,9 @@ export function CollaborativeModeRoomGoogleMeet({
             }}
           />
         ) : (
-          <div className="w-full h-full bg-[#2d2e30] flex items-center justify-center">
-            <span className="text-white/40 text-xs">Camera off</span>
+          <div className="w-full h-full bg-[#2d2e30] flex flex-col items-center justify-center gap-1">
+            <VideoOff size={18} className="text-white/25" />
+            <span className="text-white/30 text-[10px]">Camera off</span>
           </div>
         )}
         <div className="absolute bottom-1 left-2 text-[10px] text-white/70 font-medium drop-shadow">
