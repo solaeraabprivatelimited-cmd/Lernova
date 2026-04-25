@@ -516,8 +516,17 @@ export function CollaborativeModeRoom({
         }
 
         if (hasErrorCode(err, 'ALREADY_JOINED_THIS_ROOM')) {
+          // User is already a member (e.g. room creator auto-joined, or a duplicate call).
+          // Treat as success — fetch participant ID from room roster.
           if (!cancelled) {
-            setRoomJoinError('You already joined this room from another tab/device. Leave that session first.');
+            try {
+              const room = await roomAPI.getRoom(roomId);
+              const existing = (room.participants ?? []).find(
+                (p) => p.user_id === userId && p.disconnected_at == null
+              );
+              if (existing?.id) setParticipantId(existing.id);
+            } catch { /* roster fetch is best-effort */ }
+            setRoomJoinError('');
           }
           return;
         }

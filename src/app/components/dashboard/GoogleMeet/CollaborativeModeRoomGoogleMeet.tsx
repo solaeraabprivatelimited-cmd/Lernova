@@ -204,7 +204,18 @@ export function CollaborativeModeRoomGoogleMeet({
       } catch (err) {
         if (cancelled) return;
         if (hasCode(err, 'ALREADY_JOINED_THIS_ROOM')) {
-          setIsConnected(true);
+          // Already a member (e.g. creator auto-joined). Treat as success.
+          try {
+            const room = await roomAPI.getRoom(roomId);
+            const existing = (room.participants ?? []).find(
+              (p: any) => p.user_id === userId && p.disconnected_at == null
+            );
+            if (existing?.id && !cancelled) setParticipantId(existing.id);
+          } catch { /* best-effort */ }
+          if (!cancelled) {
+            setIsConnected(true);
+            setJoinError('');
+          }
           return;
         }
         if (hasCode(err, 'ALREADY_IN_ANOTHER_ROOM')) {
