@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+﻿import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getCurrentUser, mentorDashboard, profile as profileApi, notifications as notificationsApi, setCurrentUser } from '../lib/api';
 import { roomAPI } from '../../utils/api/roomAPI';
@@ -78,7 +78,7 @@ function ElmOrbitLogo({ onClick }: { onClick?: () => void }) {
           </defs>
         </svg>
       </div>
-      <span className="font-['Righteous'] text-blue-600 dark:text-blue-400 text-[20px]">Elm Orbit</span>
+      <span className="font-['Righteous'] text-blue-600 dark:text-blue-400 text-[20px]">Elm Origin</span>
     </button>
   );
 }

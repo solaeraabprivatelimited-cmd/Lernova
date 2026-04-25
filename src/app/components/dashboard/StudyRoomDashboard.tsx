@@ -1,4 +1,4 @@
-/* stylelint-disable no-descending-specificity */
+﻿/* stylelint-disable no-descending-specificity */
 /* CSS inline styles should not be used - suppressed for Tailwind CSS utility classes */
 import { NotificationsPopup } from "./NotificationsPopup";
 import { ProfilePopup } from "./ProfilePopup";
@@ -402,7 +402,7 @@ const SidebarContent = ({
     {/* Logo */}
     <div className="flex items-center gap-3 mb-12">
        <LogoIcon />
-       <span className="font-['Righteous'] text-[#003566] text-[20px]">Elm Orbit</span>
+       <span className="font-['Righteous'] text-[#003566] text-[20px]">Elm Origin</span>
     </div>
 
     {/* Menu Label */}
@@ -984,7 +984,7 @@ export function StudyRoomDashboard({ onLogout }: { onLogout?: () => void }) {
           {/* Logo */}
           <div className="flex items-center gap-3 mb-10">
             <LogoIconLight />
-            <span className="font-['Righteous'] text-white text-[20px]">Elm Orbit</span>
+            <span className="font-['Righteous'] text-white text-[20px]">Elm Origin</span>
           </div>
 
           {/* Menu Label */}
@@ -1376,7 +1376,7 @@ export function StudyRoomDashboard({ onLogout }: { onLogout?: () => void }) {
                     </div>
                     <div className="flex-1 relative z-10">
                       <p className="text-[15px] font-bold text-white mb-1">
-                        New to Elm Orbit?
+                        New to Elm Origin?
                       </p>
                       <p className="text-[13px] text-white/45 leading-relaxed">
                         Start with <strong className="text-[#f77f00] font-semibold">Focus Mode</strong> — it's the most popular choice for deep, distraction-free study sessions with built-in Pomodoro timers.

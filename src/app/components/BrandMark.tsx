@@ -11,17 +11,24 @@ interface BrandMarkProps {
 export function BrandMark({ light = false, className, compact = false }: BrandMarkProps) {
   return (
     <div className={cn("inline-flex items-center gap-3", className)}>
+      {/* Logo icon — Blue Png on light bg, brightness-invert on dark bg */}
       <div
         className={cn(
-          "flex size-10 items-center justify-center rounded-2xl border shadow-sm",
+          "flex size-10 shrink-0 items-center justify-center rounded-2xl border shadow-sm overflow-hidden",
           light
-            ? "border-white/15 bg-white/10 text-white"
-            : "border-primary/10 bg-primary text-primary-foreground",
+            ? "border-white/15 bg-white/10"
+            : "border-primary/10 bg-white",
         )}
       >
-        <svg aria-hidden="true" className="size-5" viewBox="0 0 24 24" fill="currentColor">
-          <path d="M12 3 1 9l11 6 9-4.91V17h2V9L12 3Zm0 12.54L4.38 11 12 6.46 19.62 11 12 15.54ZM1 17v2l11 6 11-6v-2l-11 6L1 17Z" />
-        </svg>
+        <img
+          src="/Blue Png.png"
+          alt="Elm Origin"
+          className={cn(
+            "size-7 object-contain",
+            light && "brightness-0 invert",
+          )}
+          draggable={false}
+        />
       </div>
       {!compact && (
         <span
@@ -30,7 +37,7 @@ export function BrandMark({ light = false, className, compact = false }: BrandMa
             light ? "text-white" : "text-primary",
           )}
         >
-          Elm Orbit
+          Elm Origin
         </span>
       )}
     </div>

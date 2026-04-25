@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { ArrowLeft, Plus, Search, Mic, Send, Image as ImageIcon, FileText, X, MessageSquare, Sparkles, Clock, Bot, User, Zap, Copy, Check, ThumbsUp, ThumbsDown, RotateCcw, Trash2, Archive } from 'lucide-react';
 import { getAiMentorResponse, formatChatHistory } from '@/app/lib/groq';
 import { FormattedMessage } from '@/app/components/common/FormattedMessage';
@@ -559,7 +559,7 @@ export function AiMentorChat({ onBack, onVoiceMode }: AiMentorChatProps) {
               <h2 className="text-[18px] font-bold text-white" style={{ fontFamily: "'DM Serif Display', serif" }}>
                 AI Mentor
               </h2>
-              <span className="text-[10px] text-white/30 font-medium">Powered by Elm Orbit AI</span>
+              <span className="text-[10px] text-white/30 font-medium">Powered by Elm Origin AI</span>
             </div>
           </div>
 

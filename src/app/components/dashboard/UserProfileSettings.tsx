@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+﻿import React, { useState, useRef, useEffect } from "react";
 import imgEllipse1 from "figma:asset/798eac6e288222603807db12d070c52d1a145785.png";
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid,
@@ -1326,7 +1326,7 @@ export function UserProfileSettings({ onBack }: UserProfileSettingsProps) {
             <p className="text-[13px] font-bold text-[#003566] dark:text-blue-400">{currentUser?.name || "Student"}</p>
             <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-semibold text-[#0967bd] dark:text-blue-300 mt-1"
               style={{ background: 'rgba(9,103,189,0.06)', border: '1px solid rgba(9,103,189,0.1)' }}>
-              {currentUser?.gradeLevel || "Elm Orbit Student"}
+              {currentUser?.gradeLevel || "Elm Origin Student"}
             </span>
           </div>
         </div>

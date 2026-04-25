@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 
 import { RouteLoader } from '@/app/components/RouteLoader';
@@ -19,7 +19,7 @@ interface ProtectedRouteProps {
 }
 
 function LoadingScreen() {
-  return <RouteLoader label="Restoring your Elm Orbit session..." />;
+  return <RouteLoader label="Restoring your Elm Origin session..." />;
 }
 
 function resolveHomeRoute(user: AppUser | null): string {

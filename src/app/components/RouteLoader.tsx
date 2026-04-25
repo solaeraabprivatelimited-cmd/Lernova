@@ -1,4 +1,4 @@
-import * as React from "react";
+﻿import * as React from "react";
 import { cn } from "@/app/components/ui/utils";
 
 interface RouteLoaderProps {
@@ -7,7 +7,7 @@ interface RouteLoaderProps {
 }
 
 export function RouteLoader({
-  label = "Loading Elm Orbit...",
+  label = "Loading Elm Origin...",
   fullscreen = true,
 }: RouteLoaderProps) {
   return (

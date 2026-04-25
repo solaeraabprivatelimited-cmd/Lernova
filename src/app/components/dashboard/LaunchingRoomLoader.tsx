@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { Bell } from 'lucide-react';
 import imgEllipse1 from "figma:asset/798eac6e288222603807db12d070c52d1a145785.png";
 import imgHourglass1 from "figma:asset/eb624bd5f3e1c42d82f6e9570de44aa3d2f7b4b1.png";
@@ -38,7 +38,7 @@ export function LaunchingRoomLoader() {
               </defs>
             </svg>
           </div>
-          <span className="font-['Righteous'] text-[20.472px] text-[#003566]">Elm Orbit</span>
+          <span className="font-['Righteous'] text-[20.472px] text-[#003566]">Elm Origin</span>
         </div>
 
         {/* Main Menu */}

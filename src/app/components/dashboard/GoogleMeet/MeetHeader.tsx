@@ -1,4 +1,4 @@
-/**
+﻿/**
  * MeetHeader - Top bar with room metadata and sharing controls.
  */
 
@@ -130,7 +130,7 @@ export function MeetHeader({
                 whiteSpace: 'nowrap',
               }}
             >
-              Elm Orbit
+              Elm Origin
             </span>
           </button>
         )}

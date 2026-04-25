@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import {
   ArrowRight,
   BookOpenText,
@@ -152,7 +152,7 @@ export function LoginPage({
           </div>
 
           <blockquote className="rounded-[24px] border border-slate-900/15 dark:border-white/10 bg-slate-900/5 dark:bg-white/8 px-5 py-4 text-sm leading-7 text-slate-700 dark:text-white/70 backdrop-blur">
-            "Elm Orbit helped me turn irregular effort into a routine I could actually sustain."
+            "Elm Origin helped me turn irregular effort into a routine I could actually sustain."
           </blockquote>
         </div>
       }

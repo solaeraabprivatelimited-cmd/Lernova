@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { ArrowLeft, Plus, Search, Mic, Send, MessageSquare, Sparkles, Clock, Bot, Zap, BookOpen, HelpCircle, Brain, ListChecks } from 'lucide-react';
 import { ImageWithFallback } from "./figma/ImageWithFallback";
 import { getCurrentUser } from '@/app/lib/api';
@@ -33,7 +33,7 @@ const SidebarPanel = ({ onBack, onChatMode }: { onBack: () => void; onChatMode?:
           <h2 className="text-[18px] font-bold text-white" style={{ fontFamily: "'DM Serif Display', serif" }}>
             AI Mentor
           </h2>
-          <span className="text-[10px] text-white/30 font-medium">Powered by Elm Orbit AI</span>
+          <span className="text-[10px] text-white/30 font-medium">Powered by Elm Origin AI</span>
         </div>
       </div>
 

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+﻿import React, { useState, useEffect } from "react";
 import imgFrame1171275609 from "figma:asset/d0b5e8618139abd2e6c665600d3134442c6ea4a3.png";
 import imgImage27 from "figma:asset/f0a250ad1361e9247b086e20f69a2980c11fcc14.png";
 import { community as communityApi, getCurrentUser } from "@/app/lib/api";
@@ -170,7 +170,7 @@ export function CommunityView() {
   // Normalize event for display
   const normalizeEvent = (e: CommunityEvent): CommunityEvent => ({
     ...e,
-    author: e.authorName || e.author || "Elm Orbit Team",
+    author: e.authorName || e.author || "Elm Origin Team",
     date: e.createdAt ? new Date(e.createdAt).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" }) : (e.date || ""),
   });
 
@@ -180,7 +180,7 @@ export function CommunityView() {
       <div className="flex flex-col items-start pb-[6px] mb-[60px]">
         <p className="font-['Poppins'] font-medium text-[40px] text-black dark:text-white leading-normal">Community</p>
         <p className="font-['Poppins'] text-[14px] text-[rgba(0,0,0,0.6)] dark:text-slate-400 leading-normal">
-          Discover upcoming and recent events from the Elm Orbit community.
+          Discover upcoming and recent events from the Elm Origin community.
         </p>
       </div>
 

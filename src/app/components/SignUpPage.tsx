@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import {
   ArrowRight,
   BookOpenText,
@@ -445,7 +445,7 @@ export function SignUpPage({ onSignUp, onLogin, onBack }: SignUpPageProps) {
           <>
             <AuthHeading
               title="You’re all set"
-              description="Your account is ready. Head to login and start using Elm Orbit."
+              description="Your account is ready. Head to login and start using Elm Origin."
             />
             <AuthSubmitButton type="button" onClick={onLogin}>
               <span className="inline-flex items-center gap-2">

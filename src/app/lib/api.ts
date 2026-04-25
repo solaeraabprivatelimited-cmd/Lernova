@@ -1,5 +1,5 @@
-/**
- * Elm Orbit API Client
+﻿/**
+ * Elm Origin API Client
  * Central place for all backend API calls.
  * Attaches Supabase auth tokens to requests sent to the Lernova_API service.
  * 

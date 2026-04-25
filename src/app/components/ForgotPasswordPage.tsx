@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { ArrowRight, Eye, EyeOff, LockKeyhole, Mail, ShieldCheck } from 'lucide-react';
 
 import {
@@ -141,7 +141,7 @@ export function ForgotPasswordPage({ onBack }: ForgotPasswordPageProps) {
               {[
                 'Send a one-time code to your email address.',
                 'Verify the code in six quick taps.',
-                'Choose a new password and return to Elm Orbit.',
+                'Choose a new password and return to Elm Origin.',
               ].map((step, index) => (
                 <div key={step} className="flex gap-3">
                   <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-white/10 text-sm font-semibold text-white">

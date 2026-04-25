@@ -1,6 +1,6 @@
-# Elm Orbit
+﻿# Elm Origin
 
-Elm Orbit is a student and mentor learning platform built around focused study rooms, live collaboration, and guided support.
+Elm Origin is a student and mentor learning platform built around focused study rooms, live collaboration, and guided support.
 
 ## What You Can Do
 
@@ -12,7 +12,7 @@ Elm Orbit is a student and mentor learning platform built around focused study r
 
 ## Getting Started
 
-1. Open Elm Orbit in your browser.
+1. Open Elm Origin in your browser.
 2. Sign up as a student or mentor.
 3. Log in to continue to your dashboard.
 4. Start a study room or book a session depending on your role.
@@ -21,11 +21,11 @@ Elm Orbit is a student and mentor learning platform built around focused study r
 
 ### Landing Page
 
-The landing page introduces Elm Orbit, explains the study modes, and gives quick access to login and sign-up.
+The landing page introduces Elm Origin, explains the study modes, and gives quick access to login and sign-up.
 
 ### Login and Sign Up
 
-Use the login and sign-up screens to enter Elm Orbit as a student or mentor.
+Use the login and sign-up screens to enter Elm Origin as a student or mentor.
 
 ### Student Dashboard
 
@@ -37,7 +37,7 @@ The mentor dashboard is where mentors can manage sessions, availability, student
 
 ### Room Access
 
-If you join a shared room link, Elm Orbit opens the room experience directly after you sign in.
+If you join a shared room link, Elm Origin opens the room experience directly after you sign in.
 
 ## Support
 

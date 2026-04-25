@@ -1,4 +1,4 @@
-import React, { Suspense, useState } from 'react';
+﻿import React, { Suspense, useState } from 'react';
 import { toast } from 'sonner';
 import { Bell, Plus, Users, Zap } from 'lucide-react';
 import imgImage17 from "figma:asset/1dab6d19afb3878b8ebec0d7a0fc2a196c946a7c.png";
@@ -90,7 +90,7 @@ export function CollaborativeModeView({}: CollaborativeModeViewProps) {
           <div className="w-7 xs:w-8 h-7 xs:h-8 rounded-full border-2 border-[#003566] flex items-center justify-center bg-gradient-to-br from-[#003566] to-[#F77F00] shrink-0">
             <span className="text-white font-bold text-xs">L</span>
           </div>
-          <p className="font-['Righteous'] text-sm xs:text-base text-[#003566] dark:text-[#00d4ff] truncate">Elm Orbit</p>
+          <p className="font-['Righteous'] text-sm xs:text-base text-[#003566] dark:text-[#00d4ff] truncate">Elm Origin</p>
         </button>
 
         {/* Center: Simple status */}
