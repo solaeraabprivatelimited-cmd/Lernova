@@ -1238,11 +1238,9 @@
   border: 1px solid rgba(247, 127, 0, 0.3);
 }
 
-/* ── ROOM TILE TEXT — scoped + !important so global h*/p/body resets can't win ── */
-/* The study section always has a dark navy background (both light & dark mode).    */
-/* Global responsive-dark-mode.css sets body/h1-h6/p colours which can override    */
-/* same-specificity class rules depending on bundle injection order. Fix: double    */
-/* the specificity AND add !important as a last-resort backstop.                    */
+/* ── ROOM TILE TEXT — force white on dark navy section ── */
+/* Scoped + !important so global body/heading/paragraph colour resets from         */
+/* responsive-dark-mode.css cannot win regardless of bundle injection order.       */
 .lp-study-section .lp-room-card .lp-room-num {
   color: rgba(255, 255, 255, 0.15) !important;
 }
