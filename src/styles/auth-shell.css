@@ -1,5 +1,25 @@
 /* ── AUTH SHELL STYLES ── */
 
+/*
+ * The left panel always has a dark gradient background in both light and
+ * dark modes. Override the global heading/paragraph colour rules from
+ * responsive-dark-mode.css so all copy inside the panel is always white.
+ */
+.auth-left-panel h1,
+.auth-left-panel h2,
+.auth-left-panel h3,
+.auth-left-panel h4,
+.auth-left-panel h5,
+.auth-left-panel h6 {
+  color: white;
+}
+
+.auth-left-panel p,
+.auth-left-panel span,
+.auth-left-panel blockquote {
+  color: inherit;
+}
+
 .auth-grid-overlay {
     pointer-events: none;
     position: absolute;

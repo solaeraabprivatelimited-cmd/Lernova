@@ -22,7 +22,7 @@ export function AuthShell({ onBack, visual, children, contentClassName }: AuthSh
       <div className="relative flex min-h-screen flex-col lg:flex-row">
         {/* ── Left panel (desktop only) ── */}
         <aside className="hidden lg:flex lg:w-[46%] lg:min-w-[420px] xl:min-w-[480px]">
-          <div className="relative flex w-full flex-col overflow-hidden px-10 py-9 text-white
+          <div className="auth-left-panel relative flex w-full flex-col overflow-hidden px-10 py-9 text-white
             bg-[linear-gradient(160deg,#001d3d_0%,#003566_45%,#0967bd_100%)]
             dark:bg-[linear-gradient(160deg,#0a0f1e_0%,#0d1424_50%,#111827_100%)]">
 
