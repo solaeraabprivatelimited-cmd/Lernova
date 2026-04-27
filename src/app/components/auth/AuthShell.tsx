@@ -33,7 +33,7 @@ export function AuthShell({ onBack, visual, children, contentClassName }: AuthSh
 
             <div className="relative z-10 flex h-full flex-col">
               <BrandMark light />
-              <div className="my-auto py-10">{visual}</div>
+              <div className="my-auto py-10" style={{ color: 'white' }}>{visual}</div>
               <p className="text-xs text-white/50 leading-relaxed">
                 Built for focused study, mentor support, and calmer progress.
               </p>
