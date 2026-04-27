@@ -391,11 +391,17 @@ export function CollaborativeModeRoomGoogleMeet({
     };
   }, []);
 
-  /* ── Beforeunload ── */
+  /* ── Tab close / navigation cleanup ── */
   useEffect(() => {
-    const handler = () => { roomAPI.leaveRoom(roomId).catch(() => {}); };
+    const handler = () => {
+      void roomAPI.leaveRoom(roomId, { keepalive: true });
+    };
     window.addEventListener('beforeunload', handler);
-    return () => window.removeEventListener('beforeunload', handler);
+    window.addEventListener('pagehide', handler);
+    return () => {
+      window.removeEventListener('beforeunload', handler);
+      window.removeEventListener('pagehide', handler);
+    };
   }, [roomId]);
 
   /* ── Keyboard shortcuts ── */

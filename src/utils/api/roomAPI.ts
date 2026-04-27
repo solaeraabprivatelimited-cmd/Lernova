@@ -182,6 +182,22 @@ async function apiFetch<T>(url: string, options: RequestInit = {}): Promise<T> {
   return body as T;
 }
 
+function leaveRoomWithKeepalive(roomId: string) {
+  const token = getAccessToken();
+  if (!token || isTokenExpired(token, 0)) return;
+
+  const identifier = extractRoomIdentifier(roomId);
+  void fetch(`${API_BASE}/${identifier}/leave`, {
+    method: 'POST',
+    keepalive: true,
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({}),
+  }).catch(() => {});
+}
+
 export const roomAPI = {
   createRoom: async (request: CreateRoomRequest): Promise<Room> => {
     const normalizedRequest = {
@@ -212,8 +228,12 @@ export const roomAPI = {
     });
   },
 
-  leaveRoom: async (roomId: string) => {
+  leaveRoom: async (roomId: string, options?: { keepalive?: boolean }) => {
     const identifier = extractRoomIdentifier(roomId);
+    if (options?.keepalive) {
+      leaveRoomWithKeepalive(identifier);
+      return { success: true };
+    }
     return apiFetch(`${API_BASE}/${identifier}/leave`, {
       method: 'POST',
       body: JSON.stringify({}),
