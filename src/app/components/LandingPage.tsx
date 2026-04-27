@@ -473,7 +473,6 @@ export function LandingPage({ onLogin, onSignUp }: LandingPageProps) {
               onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
             >
               <img src="/Blue Png.png" alt="Elm Origin" className="lp-nav-logo-img" draggable={false} />
-              <span className="lp-nav-logo-text">Elm Origin</span>
             </button>
             <p>Empowering learners worldwide with expert-led, interactive, and goal-driven education.</p>
           </div>

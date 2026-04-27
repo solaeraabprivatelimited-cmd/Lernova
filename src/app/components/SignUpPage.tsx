@@ -245,7 +245,7 @@ export function SignUpPage({ onSignUp, onLogin, onBack }: SignUpPageProps) {
             <img
               src={SIGNUP_IMG}
               alt="Creative learning workspace"
-              className="h-[260px] w-full object-cover"
+              className="w-full aspect-[16/9] object-cover object-center"
               loading="eager"
               decoding="async"
             />
