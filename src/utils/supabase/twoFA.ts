@@ -6,11 +6,7 @@ export interface TwoFAConfig {
 }
 
 /**
- * ✅ SECURE: Generate cryptographically strong OTP
- * Uses Web Crypto API for random number generation
- * New length: 8 digits instead of 6 (more secure)
- * @param length Number of digits in OTP (default: 8)
- * @returns Cryptographically secure OTP digit string
+ * Generate cryptographically strong OTP using Web Crypto API.
  */
 export function generateOTP(length: number = 8): string {
   const array = new Uint8Array(length);
@@ -21,6 +17,7 @@ export function generateOTP(length: number = 8): string {
   }
   return otp;
 }
+
 export interface SendOTPResult {
   success: boolean;
   expiresInSeconds: number;
@@ -45,8 +42,6 @@ export async function sendOTP(email: string, userID: string): Promise<SendOTPRes
     });
 
     if (!response.ok) {
-      // ✅ SECURE: Don't expose internal error details in user-facing messages
-      const errorBody = await response.json().catch(() => ({}));
       console.error('[2FA] OTP send failed with status:', response.status);
       throw new Error('Unable to send OTP. Please try again.');
     }
@@ -60,59 +55,26 @@ export async function sendOTP(email: string, userID: string): Promise<SendOTPRes
   } catch (err) {
     const error = err instanceof Error ? err.message : String(err);
     console.error('[2FA] Send OTP error:', error);
-    return {
-      success: false,
-      expiresInSeconds: 0,
-      error,
-    };
+    return { success: false, expiresInSeconds: 0, error };
   }
 }
 
+/**
+ * Verify an OTP code for a given user.
+ * Table: user_2fa_otps — columns: profile_id, otp_hash, expires_at, used
+ * Verification is delegated to the API backend which holds the hash algorithm.
+ */
 export async function verifyOTP(userId: string, otpCode: string): Promise<{ success: boolean; error?: string }> {
-  const supabase = getSupabaseClient();
-
   try {
-    const { data: otpRecord, error: fetchError } = await supabase
-      .from('user_2fa_otps')
-      .select('*')
-      .eq('user_id', userId)
-      .eq('otp_code', otpCode)
-      .is('verified_at', null)
-      .gt('expires_at', new Date().toISOString())
-      .order('created_at', { ascending: false })
-      .limit(1)
-      .single();
+    const response = await fetch(`${API_URL}/auth/verify-2fa-otp`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId, otp: otpCode }),
+    });
 
-    if (fetchError || !otpRecord) {
-      const { data: latestOtp, error: latestOtpError } = await supabase
-        .from('user_2fa_otps')
-        .select('id, attempts')
-        .eq('user_id', userId)
-        .is('verified_at', null)
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .single();
-
-      if (latestOtp && !latestOtpError) {
-        await supabase
-          .from('user_2fa_otps')
-          .update({ attempts: (latestOtp.attempts || 0) + 1 })
-          .eq('id', latestOtp.id);
-      }
-      return { success: false, error: 'Invalid or expired OTP' };
-    }
-
-    if (otpRecord.attempts >= 5) {
-      return { success: false, error: 'Too many attempts. Please request a new OTP.' };
-    }
-
-    const { error: updateError } = await supabase
-      .from('user_2fa_otps')
-      .update({ verified_at: new Date().toISOString() })
-      .eq('id', otpRecord.id);
-
-    if (updateError) {
-      return { success: false, error: updateError.message };
+    if (!response.ok) {
+      const body = await response.json().catch(() => ({}));
+      return { success: false, error: body?.error || 'Invalid or expired OTP' };
     }
 
     return { success: true };
@@ -123,27 +85,25 @@ export async function verifyOTP(userId: string, otpCode: string): Promise<{ succ
   }
 }
 
+/**
+ * Enable 2FA for the current user.
+ * Table: user_2fa_settings — columns: profile_id, enabled, method
+ */
 export async function enable2FA(email: string): Promise<{ success: boolean; error?: string }> {
   try {
     const supabase = getSupabaseClient();
-    const user = (await supabase.auth.getUser()).data.user;
+    const { data: { user } } = await supabase.auth.getUser();
 
-    if (!user) {
-      return { success: false, error: 'Not authenticated' };
-    }
+    if (!user) return { success: false, error: 'Not authenticated' };
 
     const { error } = await supabase
       .from('user_2fa_settings')
-      .upsert({
-        user_id: user.id,
-        is_enabled: true,
-        email,
-      }, { onConflict: 'user_id' });
+      .upsert(
+        { profile_id: user.id, enabled: true, method: 'email' },
+        { onConflict: 'profile_id' }
+      );
 
-    if (error) {
-      return { success: false, error: error.message };
-    }
-
+    if (error) return { success: false, error: error.message };
     return { success: true };
   } catch (err) {
     const error = err instanceof Error ? err.message : String(err);
@@ -152,24 +112,23 @@ export async function enable2FA(email: string): Promise<{ success: boolean; erro
   }
 }
 
+/**
+ * Disable 2FA for the current user.
+ * Table: user_2fa_settings — columns: profile_id, enabled
+ */
 export async function disable2FA(): Promise<{ success: boolean; error?: string }> {
   try {
     const supabase = getSupabaseClient();
-    const user = (await supabase.auth.getUser()).data.user;
+    const { data: { user } } = await supabase.auth.getUser();
 
-    if (!user) {
-      return { success: false, error: 'Not authenticated' };
-    }
+    if (!user) return { success: false, error: 'Not authenticated' };
 
     const { error } = await supabase
       .from('user_2fa_settings')
-      .update({ is_enabled: false })
-      .eq('user_id', user.id);
+      .update({ enabled: false })
+      .eq('profile_id', user.id);
 
-    if (error) {
-      return { success: false, error: error.message };
-    }
-
+    if (error) return { success: false, error: error.message };
     return { success: true };
   } catch (err) {
     const error = err instanceof Error ? err.message : String(err);
@@ -178,24 +137,32 @@ export async function disable2FA(): Promise<{ success: boolean; error?: string }
   }
 }
 
+/**
+ * Get 2FA settings for the current user.
+ * Table: user_2fa_settings — columns: profile_id, enabled
+ * Email is sourced from the auth user, not the table.
+ */
 export async function get2FASettings(): Promise<TwoFAConfig | null> {
   try {
     const supabase = getSupabaseClient();
-    const user = (await supabase.auth.getUser()).data.user;
+    const { data: { user } } = await supabase.auth.getUser();
 
     if (!user) return null;
 
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('user_2fa_settings')
-      .select('*')
-      .eq('user_id', user.id)
-      .single();
+      .select('enabled')
+      .eq('profile_id', user.id)
+      .maybeSingle();
 
-    if (!data) return null;
+    if (error) {
+      console.error('[2FA] Get settings error:', error.message);
+      return null;
+    }
 
     return {
-      isEnabled: data.is_enabled,
-      email: data.email,
+      isEnabled: data?.enabled ?? false,
+      email: user.email ?? '',
     };
   } catch {
     return null;
