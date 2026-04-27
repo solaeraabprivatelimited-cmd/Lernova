@@ -119,19 +119,19 @@ export function LoginPage({
       visual={
         <div className="space-y-8">
           <div className="space-y-3">
-            <span className="inline-flex items-center gap-2 rounded-full border border-slate-900/20 dark:border-white/10 bg-slate-900/8 dark:bg-white/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-slate-700 dark:text-white/70">
+            <span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-white/70">
               <Sparkles className="size-3.5" />
               Productive learning starts here
             </span>
-            <h2 className="max-w-md font-semibold tracking-tight text-5xl leading-none text-slate-900 dark:text-white">
+            <h2 className="max-w-md font-semibold tracking-tight text-5xl leading-none text-white">
               Step back into your study rhythm.
             </h2>
-            <p className="max-w-md text-sm leading-7 text-slate-600 dark:text-white/65">
+            <p className="max-w-md text-sm leading-7 text-white/65">
               Join focused rooms, mentor sessions, and calmer study workflows from the same polished workspace.
             </p>
           </div>
 
-          <div className="overflow-hidden rounded-[32px] border border-slate-900/15 dark:border-white/10 bg-slate-900/5 dark:bg-white/5 shadow-2xl backdrop-blur">
+          <div className="overflow-hidden rounded-[32px] border border-white/10 bg-white/5 shadow-2xl backdrop-blur">
             <img
               src={LOGIN_IMG}
               alt="Students collaborating in a library"
@@ -143,15 +143,15 @@ export function LoginPage({
 
           <div className="grid gap-3 sm:grid-cols-3">
             {stats.map((stat) => (
-              <div key={stat.label} className="rounded-[22px] border border-slate-900/15 dark:border-white/10 bg-slate-900/5 dark:bg-white/8 px-4 py-4 backdrop-blur">
-                <stat.icon className="mb-3 size-4 text-blue-600 dark:text-[#9fd0ff]" />
-                <p className="font-semibold tracking-tight text-3xl text-slate-900 dark:text-white">{stat.value}</p>
-                <p className="mt-1 text-xs uppercase tracking-[0.14em] text-slate-600 dark:text-white/45">{stat.label}</p>
+              <div key={stat.label} className="rounded-[22px] border border-white/10 bg-white/8 px-4 py-4 backdrop-blur">
+                <stat.icon className="mb-3 size-4 text-[#9fd0ff]" />
+                <p className="font-semibold tracking-tight text-3xl text-white">{stat.value}</p>
+                <p className="mt-1 text-xs uppercase tracking-[0.14em] text-white/45">{stat.label}</p>
               </div>
             ))}
           </div>
 
-          <blockquote className="rounded-[24px] border border-slate-900/15 dark:border-white/10 bg-slate-900/5 dark:bg-white/8 px-5 py-4 text-sm leading-7 text-slate-700 dark:text-white/70 backdrop-blur">
+          <blockquote className="rounded-[24px] border border-white/10 bg-white/8 px-5 py-4 text-sm leading-7 text-white/70 backdrop-blur">
             "Elm Origin helped me turn irregular effort into a routine I could actually sustain."
           </blockquote>
         </div>
