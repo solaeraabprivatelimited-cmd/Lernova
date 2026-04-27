@@ -69,7 +69,6 @@ export function LandingPage({ onLogin, onSignUp }: LandingPageProps) {
           }}
         >
           <img src="/Blue Png.png" alt="Elm Origin" className="lp-nav-logo-img" draggable={false} />
-          <span className="lp-nav-logo-text">Elm Origin</span>
         </button>
         <ul className="lp-nav-links">
           {navItems.map((item) => (
