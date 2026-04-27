@@ -16,6 +16,7 @@ import { ImageWithFallback } from "@/app/components/figma/ImageWithFallback";
 import { Sheet, SheetContent, SheetTrigger, SheetTitle, SheetDescription } from "@/app/components/ui/sheet";
 import { Menu, LogOut } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
+import { ElmOriginLogo } from "@/app/components/ElmOriginLogo";
 import { matchSorter } from 'match-sorter';
 
 const FocusMode = React.lazy(async () => {
@@ -90,73 +91,7 @@ const OnboardingWalkthrough = React.lazy(async () => {
 
 // --- Icons Components based on Figma Import ---
 
-function LogoIcon() {
-  return (
-    <div className="size-[35px] relative">
-      <svg className="block size-full" fill="none" viewBox="0 0 35 35">
-        <g id="Frame 26">
-          <g id="Vector 10">
-            <path d={svgPaths.p3781200} fill="#003566" />
-            <path d={svgPaths.p1c6f2500} stroke="#003566" strokeWidth="0.245515" />
-          </g>
-          <g id="Vector 9">
-            <path d={svgPaths.p31318300} fill="#003566" />
-            <path d={svgPaths.p275764f0} stroke="#003566" strokeWidth="0.23811" />
-          </g>
-          <circle cx="17.5" cy="17.5" id="Ellipse 7" r="15.8594" stroke="#003566" strokeWidth="3.28125" />
-          <g clipPath="url(#clip0_1_784_local)">
-            <path clipRule="evenodd" d={svgPaths.p2338ef00} fill="#F77F00" fillRule="evenodd" />
-          </g>
-          <g clipPath="url(#clip1_1_784_local)">
-            <path clipRule="evenodd" d={svgPaths.p17aefc80} fill="#F77F00" fillRule="evenodd" />
-          </g>
-        </g>
-        <defs>
-          <clipPath id="clip0_1_784_local">
-            <rect fill="white" height="10.5795" transform="translate(10.4914 20.704) rotate(-11.508)" width="10.5795" />
-          </clipPath>
-          <clipPath id="clip1_1_784_local">
-            <rect fill="white" height="10.2012" transform="translate(11.5055 10.7851) rotate(-11.508)" width="10.2012" />
-          </clipPath>
-        </defs>
-      </svg>
-    </div>
-  );
-}
-
-function LogoIconLight() {
-  return (
-    <div className="size-[35px] relative">
-      <svg className="block size-full" fill="none" viewBox="0 0 35 35">
-        <g>
-          <g>
-            <path d={svgPaths.p3781200} fill="white" />
-            <path d={svgPaths.p1c6f2500} stroke="white" strokeWidth="0.245515" />
-          </g>
-          <g>
-            <path d={svgPaths.p31318300} fill="white" />
-            <path d={svgPaths.p275764f0} stroke="white" strokeWidth="0.23811" />
-          </g>
-          <circle cx="17.5" cy="17.5" r="15.8594" stroke="white" strokeWidth="3.28125" />
-          <g clipPath="url(#clip0_light)">
-            <path clipRule="evenodd" d={svgPaths.p2338ef00} fill="#F77F00" fillRule="evenodd" />
-          </g>
-          <g clipPath="url(#clip1_light)">
-            <path clipRule="evenodd" d={svgPaths.p17aefc80} fill="#F77F00" fillRule="evenodd" />
-          </g>
-        </g>
-        <defs>
-          <clipPath id="clip0_light">
-            <rect fill="white" height="10.5795" transform="translate(10.4914 20.704) rotate(-11.508)" width="10.5795" />
-          </clipPath>
-          <clipPath id="clip1_light">
-            <rect fill="white" height="10.2012" transform="translate(11.5055 10.7851) rotate(-11.508)" width="10.2012" />
-          </clipPath>
-        </defs>
-      </svg>
-    </div>
-  );
-}
+// LogoIcon and LogoIconLight replaced by <ElmOriginLogo> — see import above
 
 function IconStudyRooms({ active, light }: { active?: boolean; light?: boolean }) {
   return (
@@ -401,8 +336,7 @@ const SidebarContent = ({
   <div className="flex flex-col h-full">
     {/* Logo */}
     <div className="flex items-center gap-3 mb-12">
-       <LogoIcon />
-       <span className="font-['Righteous'] text-[#003566] text-[20px]">Elm Origin</span>
+      <ElmOriginLogo size={34} wordmarkSize={20} />
     </div>
 
     {/* Menu Label */}
@@ -629,7 +563,7 @@ export function StudyRoomDashboard({ onLogout }: { onLogout?: () => void }) {
           audioContext.close().catch(() => {});
         };
       } catch (error) {
-        console.log('Notification sound error:', error);
+        console.error('Notification sound error:', error);
       }
     };
 
@@ -736,13 +670,13 @@ export function StudyRoomDashboard({ onLogout }: { onLogout?: () => void }) {
               actionUrl: '/dashboard/productivity-tools',
             });
           } catch (notificationError) {
-            console.log('Reminder notification insert error:', notificationError);
+            console.error('Reminder notification insert error:', notificationError);
           }
 
           localStorage.setItem(reminderKey, new Date(now).toISOString());
         }
       } catch (error) {
-        console.log('Reminder notification check error:', error);
+        console.error('Reminder notification check error:', error);
       }
     };
 
@@ -983,8 +917,7 @@ export function StudyRoomDashboard({ onLogout }: { onLogout?: () => void }) {
         <div className="relative flex flex-col h-full p-7">
           {/* Logo */}
           <div className="flex items-center gap-3 mb-10">
-            <LogoIconLight />
-            <span className="font-['Righteous'] text-white text-[20px]">Elm Origin</span>
+            <ElmOriginLogo light size={34} wordmarkSize={20} />
           </div>
 
           {/* Menu Label */}

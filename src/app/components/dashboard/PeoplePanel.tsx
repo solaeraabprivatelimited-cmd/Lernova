@@ -46,14 +46,8 @@ export function PeoplePanel({
     setOpenMenuId(null);
   };
 
-  const handleReportSubmit = (reason: string, description: string) => {
-    console.log('Report submitted:', {
-      participantId: reportingParticipant?.id,
-      participantName: reportingParticipant?.name,
-      reason,
-      description
-    });
-    // Here you would send the report to the backend
+  const handleReportSubmit = (_reason: string, _description: string) => {
+    // TODO: send report to backend
     setReportingParticipant(null);
     setShowSuccessNotification(true);
   };
@@ -63,11 +57,7 @@ export function PeoplePanel({
   };
 
   const handleKickSubmit = () => {
-    console.log('Kick submitted:', {
-      participantId: kickingParticipant?.id,
-      participantName: kickingParticipant?.name
-    });
-    // Here you would send the kick to the backend
+    // TODO: send kick to backend
     setKickingParticipant(null);
     setShowSuccessNotification(true);
   };

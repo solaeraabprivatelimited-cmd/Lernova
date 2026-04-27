@@ -8,6 +8,7 @@ import svgWellness from '../../imports/svg-fui5khiao7';
 import { ImageWithFallback } from './figma/ImageWithFallback';
 import { RouteLoader } from './RouteLoader';
 import { Building2, AlignLeft, Lock, Globe, Hash, Link2 } from 'lucide-react';
+import { ElmOriginLogo } from './ElmOriginLogo';
 import { toast } from 'sonner';
 import imgUserAvatar from 'figma:asset/1d3b37310d86db33d00fb05038f712cfa0e01556.png';
 import imgSayHi from 'figma:asset/5e91c4f0fbdda278a8c62c9c5428eca49ba69e08.png';
@@ -49,36 +50,13 @@ interface MentorDashboardProps {
 
 function ElmOrbitLogo({ onClick }: { onClick?: () => void }) {
   return (
-    <button 
-      onClick={onClick} 
-      className="flex items-center gap-2 hover:opacity-80 transition-opacity"
+    <button
+      onClick={onClick}
       type="button"
       aria-label="Go to homepage"
+      className="hover:opacity-80 transition-opacity"
     >
-      <div className="size-[35px] shrink-0">
-        <svg className="block size-full" fill="none" viewBox="0 0 35 35">
-          <path d={svgPaths.p3781200} fill="#003566" />
-          <path d={svgPaths.p1c6f2500} stroke="#003566" strokeWidth="0.245515" />
-          <path d={svgPaths.p31318300} fill="#003566" />
-          <path d={svgPaths.p275764f0} stroke="#003566" strokeWidth="0.23811" />
-          <circle cx="17.5" cy="17.5" r="15.8594" stroke="#003566" strokeWidth="3.28125" />
-          <g clipPath="url(#clip0_m)">
-            <path clipRule="evenodd" d={svgPaths.p2338ef00} fill="#F77F00" fillRule="evenodd" />
-          </g>
-          <g clipPath="url(#clip1_m)">
-            <path clipRule="evenodd" d={svgPaths.p17aefc80} fill="#F77F00" fillRule="evenodd" />
-          </g>
-          <defs>
-            <clipPath id="clip0_m">
-              <rect fill="white" height="10.5795" transform="translate(10.4914 20.704) rotate(-11.508)" width="10.5795" />
-            </clipPath>
-            <clipPath id="clip1_m">
-              <rect fill="white" height="10.2012" transform="translate(11.5055 10.7851) rotate(-11.508)" width="10.2012" />
-            </clipPath>
-          </defs>
-        </svg>
-      </div>
-      <span className="font-['Righteous'] text-blue-600 dark:text-blue-400 text-[20px]">Elm Origin</span>
+      <ElmOriginLogo size={34} wordmarkSize={20} />
     </button>
   );
 }

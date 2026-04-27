@@ -82,7 +82,7 @@ export function GoogleOnboardingPage({
           setCurrentUser(prof);
         }
       } catch (profileErr) {
-        console.log('Profile fetch failed (non-fatal):', profileErr);
+        // non-fatal: user is authenticated, profile enrichment failed
       }
 
       if (onComplete) {

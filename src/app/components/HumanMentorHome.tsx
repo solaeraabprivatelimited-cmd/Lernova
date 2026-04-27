@@ -427,7 +427,6 @@ export function HumanMentorHome({ onBack }: HumanMentorHomeProps) {
         console.warn('[HumanMentorHome] Confirmation notification skipped:', notifyErr);
       }
 
-      console.log('[HumanMentorHome] Booking confirmed:', { bookingId, ...bookingData });
 
       // Temporary bypass: treat this as a confirmed booking without payment gateway integration.
       setTimeout(() => {

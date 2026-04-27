@@ -298,7 +298,7 @@ export function MotivationCornerView({ onBack }: { onBack: () => void }) {
         })));
       })
       .catch((error) => {
-        console.log("Motivation posts load error:", error);
+        console.error("Motivation posts load error:", error);
       })
       .finally(() => {
         if (mounted) setLoadingPosts(false);
@@ -350,7 +350,7 @@ export function MotivationCornerView({ onBack }: { onBack: () => void }) {
       }, ...prev]);
       setShowPostModal(false);
     } catch (error) {
-      console.log("Create motivation post error:", error);
+      console.error("Create motivation post error:", error);
     }
   };
 

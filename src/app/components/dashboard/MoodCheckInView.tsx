@@ -138,7 +138,7 @@ export function MoodCheckInView({ onBack }: MoodCheckInViewProps) {
 
   useEffect(() => { messagesEndRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages, isTyping]);
   useEffect(() => { return () => { if (listeningTimerRef.current) clearInterval(listeningTimerRef.current); }; }, []);
-  useEffect(() => { moodCheckins.list().then(setSavedCheckins).catch(console.log); }, []);
+  useEffect(() => { moodCheckins.list().then(setSavedCheckins).catch(() => {}); }, []);
 
   const persistMoodCheckin = useCallback(async (message: string, forcedMood?: { mood: string; emoji: string }) => {
     const detected = forcedMood ?? inferMoodFromText(message);
@@ -147,7 +147,7 @@ export function MoodCheckInView({ onBack }: MoodCheckInViewProps) {
             const saved = await moodCheckins.create({ mood: detected.mood, note: message });
       setSavedCheckins((prev) => [saved, ...prev].slice(0, 20));
     } catch (error) {
-      console.log("Mood check-in save error:", error);
+      console.error("Mood check-in save error:", error);
     }
   }, []);
 

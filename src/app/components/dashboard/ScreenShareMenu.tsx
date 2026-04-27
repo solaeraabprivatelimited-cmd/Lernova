@@ -11,7 +11,7 @@ export function ScreenShareMenu({ onScreenShareStart, onScreenShareStop, isShari
   const [showMenu, setShowMenu] = useState(false);
 
   const handleOptionClick = (option: 'screen' | 'window' | 'tab') => {
-    console.log(`Screen sharing: ${option}`);
+    // option is handled by the caller via onScreenShareStart
     setShowMenu(false);
     onScreenShareStart?.();
   };

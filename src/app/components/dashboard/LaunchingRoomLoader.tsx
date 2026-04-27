@@ -3,6 +3,7 @@ import { Bell } from 'lucide-react';
 import imgEllipse1 from "figma:asset/798eac6e288222603807db12d070c52d1a145785.png";
 import imgHourglass1 from "figma:asset/eb624bd5f3e1c42d82f6e9570de44aa3d2f7b4b1.png";
 import svgPaths from "../../../imports/svg-e3ici8y0e";
+import { ElmOriginLogo } from "@/app/components/ElmOriginLogo";
 
 export function LaunchingRoomLoader() {
   return (
@@ -10,35 +11,8 @@ export function LaunchingRoomLoader() {
       {/* Sidebar */}
       <div className="bg-white w-[278px] shadow-[0px_4px_18px_-1px_rgba(0,0,0,0.1)] flex flex-col sticky top-0 h-screen">
         {/* Logo */}
-        <div className="flex items-center gap-2 px-8 pt-8 pb-6">
-          <div className="w-[35px] h-[35px] relative">
-            <svg viewBox="0 0 35 35" className="w-full h-full">
-              <g>
-                <path d={svgPaths.p3781200} fill="#003566" />
-                <path d={svgPaths.p1c6f2500} stroke="#003566" strokeWidth="0.245515" fill="none" />
-              </g>
-              <g>
-                <path d={svgPaths.p31318300} fill="#003566" />
-                <path d={svgPaths.p275764f0} stroke="#003566" strokeWidth="0.23811" fill="none" />
-              </g>
-              <circle cx="17.5" cy="17.5" r="15.8594" stroke="#003566" strokeWidth="3.28125" fill="none" />
-              <g clipPath="url(#clip0_launching)">
-                <path clipRule="evenodd" d={svgPaths.p2338ef00} fill="#F77F00" fillRule="evenodd" />
-              </g>
-              <g clipPath="url(#clip1_launching)">
-                <path clipRule="evenodd" d={svgPaths.p17aefc80} fill="#F77F00" fillRule="evenodd" />
-              </g>
-              <defs>
-                <clipPath id="clip0_launching">
-                  <rect fill="white" height="10.5795" transform="translate(10.4914 20.704) rotate(-11.508)" width="10.5795" />
-                </clipPath>
-                <clipPath id="clip1_launching">
-                  <rect fill="white" height="10.2012" transform="translate(11.5055 10.7851) rotate(-11.508)" width="10.2012" />
-                </clipPath>
-              </defs>
-            </svg>
-          </div>
-          <span className="font-['Righteous'] text-[20.472px] text-[#003566]">Elm Origin</span>
+        <div className="flex items-center px-8 pt-8 pb-6">
+          <ElmOriginLogo size={34} wordmarkSize={20} />
         </div>
 
         {/* Main Menu */}

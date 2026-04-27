@@ -118,7 +118,7 @@ export function WorldChatView({ onBack }: { onBack: () => void }) {
         time: formatChatTime(m.time),
         isOwn: m.senderId === myId,
       })));
-    } catch (e) { console.log("WorldChat load error:", e); }
+    } catch (e) { console.error("WorldChat load error:", e); }
   };
 
   useEffect(() => {
@@ -181,7 +181,7 @@ export function WorldChatView({ onBack }: { onBack: () => void }) {
       });
       await loadMessages();
     } catch (e) {
-      console.log("Send message error:", e);
+      console.error("Send message error:", e);
       setMessages((prev) => [...prev, {
         id: Date.now().toString(),
         senderId: currentUser?.id || "local-user",
@@ -320,7 +320,7 @@ export function WorldChatView({ onBack }: { onBack: () => void }) {
               setReportTarget(null);
               toast.success(`${reportTarget.senderName} has been reported. Our team will review this.`);
             } catch (error) {
-              console.log("Report submission error:", error);
+              console.error("Report submission error:", error);
               toast.error('Unable to submit the report right now. Please try again.');
             }
           }} />

@@ -96,7 +96,7 @@ export function NotesPanel({ onClose, isOpen, roomId, userId }: NotesPanelProps)
       notesApi.list()
         .then((data: any[]) => setNotesList(data.map(mapApiNote)))
         .catch((e) => {
-          console.log('NotesPanel: failed to load notes', e);
+          console.error('NotesPanel: failed to load notes', e);
           toast.error('Failed to load notes');
         })
         .finally(() => setIsLoading(false));
@@ -158,7 +158,7 @@ export function NotesPanel({ onClose, isOpen, roomId, userId }: NotesPanelProps)
         }
       }
     } catch (e) {
-      console.log('NotesPanel: save error', e);
+      console.error('NotesPanel: save error', e);
       toast.error('Failed to save note');
     } finally {
       setIsSaving(false);
@@ -179,7 +179,7 @@ export function NotesPanel({ onClose, isOpen, roomId, userId }: NotesPanelProps)
       setNotesList((prev) => prev.filter((n) => n.id !== id));
       toast.success('Note deleted');
     } catch (e) {
-      console.log('NotesPanel: delete error', e);
+      console.error('NotesPanel: delete error', e);
       toast.error('Failed to delete note');
     }
   };

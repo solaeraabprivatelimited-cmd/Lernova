@@ -75,7 +75,7 @@ export function LoginPage({
           actualRole = prof.role === 'mentor' ? 'mentor' : 'student';
         }
       } catch (profileErr: any) {
-        console.log('Login: profile fetch failed (non-fatal):', profileErr.message);
+        // non-fatal: user is authenticated, profile enrichment failed
       }
 
       if (actualRole === 'mentor') {

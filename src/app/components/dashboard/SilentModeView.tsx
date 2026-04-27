@@ -297,8 +297,7 @@ export function SilentModeView({ onLeave, onBackToFocus, onReportSubmitted }: Si
   };
 
   const handleReactionSelect = (emoji: string) => {
-    console.log('Reaction selected:', emoji);
-    // Here you would typically send the reaction to other participants
+    // TODO: broadcast reaction to other participants
     setReactions(prev => [...prev, { emoji, timestamp: Date.now() }]);
     setIsReactionBarVisible(false);
   };
@@ -720,8 +719,7 @@ export function SilentModeView({ onLeave, onBackToFocus, onReportSubmitted }: Si
         <ModeConfigurationPanel
           mode="silent"
           onClose={() => setShowSettings(false)}
-          onSave={(config) => {
-            console.log('Silent Mode Configuration Saved:', config);
+          onSave={() => {
             setShowSettings(false);
           }}
         />

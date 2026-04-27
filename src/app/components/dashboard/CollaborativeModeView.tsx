@@ -1,6 +1,7 @@
 ﻿import React, { Suspense, useState } from 'react';
 import { toast } from 'sonner';
 import { Bell, Plus, Users, Zap } from 'lucide-react';
+import { ElmOriginLogo } from "@/app/components/ElmOriginLogo";
 import imgImage17 from "figma:asset/1dab6d19afb3878b8ebec0d7a0fc2a196c946a7c.png";
 import imgImage18 from "figma:asset/4c03b875da24497740f219b6c1322d1ce76023cb.png";
 import imgImage19 from "figma:asset/97aed589e8ee3b4f317112befff4385af448de2f.png";
@@ -83,14 +84,11 @@ export function CollaborativeModeView({}: CollaborativeModeViewProps) {
       <div className="flex items-center justify-between px-3 xs:px-4 sm:px-6 h-14 sm:h-16">
         {/* Left: Logo & Branding (clickable) */}
         <button
-          className="flex items-center gap-1.5 xs:gap-2 min-w-0 focus:outline-none"
+          className="flex items-center focus:outline-none hover:opacity-80 transition-opacity"
           onClick={() => window.location.assign('/dashboard')}
           title="Go to Dashboard"
         >
-          <div className="w-7 xs:w-8 h-7 xs:h-8 rounded-full border-2 border-[#003566] flex items-center justify-center bg-gradient-to-br from-[#003566] to-[#F77F00] shrink-0">
-            <span className="text-white font-bold text-xs">L</span>
-          </div>
-          <p className="font-['Righteous'] text-sm xs:text-base text-[#003566] dark:text-[#00d4ff] truncate">Elm Origin</p>
+          <ElmOriginLogo size={30} wordmarkSize={16} />
         </button>
 
         {/* Center: Simple status */}

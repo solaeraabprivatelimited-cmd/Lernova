@@ -150,7 +150,7 @@ export function CommunityView() {
       const evts = await communityApi.getEvents();
       setAllEvents(evts);
     } catch (e) {
-      console.log("Community events load error:", e);
+      console.error("Community events load error:", e);
     } finally {
       setIsLoading(false);
     }

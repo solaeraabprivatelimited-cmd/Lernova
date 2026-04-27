@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import { WellnessResourcesView } from "./WellnessResourcesView";
 import { WorldChatView } from "./WorldChatView";
-import { SkeletonWellnessResources } from "../skeletons/PageSkeletons";
 import { BookOpen, MessageCircle, ArrowRight, Shield } from "lucide-react";
 
 type SubView = "home" | "wellness-resources" | "world-chat";
@@ -57,12 +56,6 @@ function WellnessCard({ icon, title, description, cta, gradient, iconBg, onClick
 
 export function EmotionalWellnessView() {
   const [subView, setSubView] = useState<SubView>("home");
-  const [isLoading, setIsLoading] = useState(false);
-
-  // Show skeleton while loading sub-views
-  if (isLoading) {
-    return <SkeletonWellnessResources />;
-  }
 
   if (subView === "wellness-resources") return <WellnessResourcesView onBack={() => setSubView("home")} />;
   if (subView === "world-chat") return <WorldChatView onBack={() => setSubView("home")} />;

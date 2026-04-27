@@ -109,7 +109,6 @@ export function LiveModeRoom({
 
   const handleReactionSelect = (emoji: string) => {
     const burstId = Date.now().toString();
-    console.log('Reaction sent:', emoji);
     setShowReactionPicker(false);
     setReactionBursts(prev => [...prev, { id: burstId, emoji }]);
     
@@ -575,8 +574,7 @@ export function LiveModeRoom({
         <ModeConfigurationPanel
           mode="live"
           onClose={() => setShowSettings(false)}
-          onSave={(config) => {
-            console.log('Live Mode Configuration Saved:', config);
+          onSave={() => {
             setShowSettings(false);
           }}
         />

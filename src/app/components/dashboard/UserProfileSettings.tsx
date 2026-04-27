@@ -116,7 +116,7 @@ function BasicInfoPage() {
           if (avatarUrl) setAvatarSrc(avatarUrl);
         }
       } catch (err: any) {
-        console.log("Failed to load profile:", err);
+        console.error("Failed to load profile:", err);
         toast.error("Failed to load profile data");
       } finally {
         setIsLoading(false);
@@ -339,7 +339,7 @@ function MySessionsPage() {
           }
         }
       } catch (err: any) {
-        console.log("Failed to load sessions:", err);
+        console.error("Failed to load sessions:", err);
       } finally {
         setIsLoading(false);
       }
@@ -551,7 +551,7 @@ function StudyHistoryPage() {
   const [history, setHistory] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => { studySessions.list().then(setHistory).catch(console.log).finally(() => setIsLoading(false)); }, []);
+  useEffect(() => { studySessions.list().then(setHistory).catch(() => {}).finally(() => setIsLoading(false)); }, []);
 
   const totalMin = history.reduce((acc, s) => acc + (s.durationMinutes || 0), 0);
   const totalHrs = Math.round(totalMin / 60 * 10) / 10;
@@ -664,7 +664,7 @@ function MoodHistoryPage() {
   const [checkins, setCheckins] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => { moodCheckins.list().then(setCheckins).catch(console.log).finally(() => setIsLoading(false)); }, []);
+  useEffect(() => { moodCheckins.list().then(setCheckins).catch(() => {}).finally(() => setIsLoading(false)); }, []);
 
   const moodCounts: Record<string, number> = {};
   checkins.forEach((c) => { moodCounts[c.mood] = (moodCounts[c.mood] || 0) + 1; });
@@ -1008,7 +1008,7 @@ function NotificationsPage() {
           }));
         }
       } catch (err) {
-        console.log('Failed to load notification preferences:', err);
+        console.error('Failed to load notification preferences:', err);
       }
     };
     loadPreferences();

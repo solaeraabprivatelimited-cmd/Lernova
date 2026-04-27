@@ -160,7 +160,7 @@ function NotesApp({ onBack }: { onBack: () => void }) {
           }))
         );
       })
-      .catch(console.log)
+      .catch(() => {})
       .finally(() => setIsLoading(false));
   }, []);
 
@@ -182,7 +182,7 @@ function NotesApp({ onBack }: { onBack: () => void }) {
       setNewContent("");
       setIsCreating(false);
     } catch (e) {
-      console.log("Save note error:", e);
+      console.error("Save note error:", e);
     } finally {
       setIsSaving(false);
     }
@@ -203,7 +203,7 @@ function NotesApp({ onBack }: { onBack: () => void }) {
       )));
       setEditingNote(null);
     } catch (e) {
-      console.log("Update note error:", e);
+      console.error("Update note error:", e);
     } finally {
       setIsSaving(false);
     }
@@ -215,7 +215,7 @@ function NotesApp({ onBack }: { onBack: () => void }) {
       setNotes(notes.filter((n) => n.id !== id));
       if (editingNote?.id === id) setEditingNote(null);
     } catch (e) {
-      console.log("Delete note error:", e);
+      console.error("Delete note error:", e);
     }
   };
 
@@ -545,7 +545,7 @@ function PlannerApp({ onBack }: { onBack: () => void }) {
             }))
           );
         } else {
-          console.log("Reminder load error:", remindersResult.reason);
+          console.error("Reminder load error:", remindersResult.reason);
         }
 
         if (studyPlansResult.status === "fulfilled") {
@@ -555,7 +555,7 @@ function PlannerApp({ onBack }: { onBack: () => void }) {
           setCompletedPlans(done.map((x: any) => ({ id: x.id, title: x.subject, date: x.startDate || "", time: x.timeStr || "" })));
         }
       })
-      .catch(console.log)
+      .catch(() => {})
       .finally(() => setIsLoading(false));
   }, []);
 
@@ -565,18 +565,18 @@ function PlannerApp({ onBack }: { onBack: () => void }) {
     if (!task) return;
     const updated = { ...task, completed: !task.completed };
     setTasks(tasks.map((t) => (t.id === id ? updated : t)));
-    try { await tasksApi.update(id, { completed: updated.completed }); } catch (e) { console.log("Toggle task error:", e); }
+    try { await tasksApi.update(id, { completed: updated.completed }); } catch (e) { console.error("Toggle task error:", e); }
   };
   const deleteTask = async (id: string) => {
     setTasks(tasks.filter((t) => t.id !== id));
-    try { await tasksApi.delete(id); } catch (e) { console.log("Delete task error:", e); }
+    try { await tasksApi.delete(id); } catch (e) { console.error("Delete task error:", e); }
   };
   const handleAddTask = async () => {
     const title = newTaskTitle.trim();
     if (!title) return;
     setIsSavingTask(true); setNewTaskTitle(""); setShowAddTaskInput(false);
     try { const saved = await tasksApi.create(title); setTasks((prev) => [{ id: saved.id, title: saved.title, completed: false }, ...prev]); }
-    catch (e) { console.log("Add task error:", e); }
+    catch (e) { console.error("Add task error:", e); }
     finally { setIsSavingTask(false); }
   };
 
@@ -586,11 +586,11 @@ function PlannerApp({ onBack }: { onBack: () => void }) {
     if (!r) return;
     const updated = { ...r, completed: !r.completed };
     setReminders(reminders.map((x) => (x.id === id ? updated : x)));
-    try { await remindersApi.update(id, { completed: updated.completed }); } catch (e) { console.log("Toggle reminder error:", e); }
+    try { await remindersApi.update(id, { completed: updated.completed }); } catch (e) { console.error("Toggle reminder error:", e); }
   };
   const deleteReminder = async (id: string) => {
     setReminders(reminders.filter((r) => r.id !== id));
-    try { await remindersApi.delete(id); } catch (e) { console.log("Delete reminder error:", e); }
+    try { await remindersApi.delete(id); } catch (e) { console.error("Delete reminder error:", e); }
   };
   const handleAddReminder = async () => {
     const name = newReminderTitle.trim();
@@ -608,7 +608,7 @@ function PlannerApp({ onBack }: { onBack: () => void }) {
         try {
           await Notification.requestPermission();
         } catch (permissionError) {
-          console.log("Notification permission request error:", permissionError);
+          console.error("Notification permission request error:", permissionError);
         }
       }
       const saved = await remindersApi.create({ title: name, frequency: freqStr, reminderDate, reminderTime });
@@ -621,7 +621,7 @@ function PlannerApp({ onBack }: { onBack: () => void }) {
         actionUrl: "/dashboard/productivity-tools",
       });
     } catch (e) {
-      console.log("Add reminder error:", e);
+      console.error("Add reminder error:", e);
     } finally { setIsSavingReminder(false); }
   };
 
@@ -641,7 +641,7 @@ function PlannerApp({ onBack }: { onBack: () => void }) {
         actionUrl: "/dashboard/productivity-tools",
       });
       resetForm(); setShowCreateModal(false);
-    } catch (e) { console.log("Create study plan error:", e); } finally { setIsSavingPlan(false); }
+    } catch (e) { console.error("Create study plan error:", e); } finally { setIsSavingPlan(false); }
   };
   const handleCompleteStudyPlan = async (planId: string) => {
     const plan = studyPlans.find((p) => p.id === planId);
@@ -660,11 +660,11 @@ function PlannerApp({ onBack }: { onBack: () => void }) {
         actionUrl: "/dashboard/productivity-tools",
       });
     }
-    catch (e) { console.log("Complete study plan error:", e); setStudyPlans((prev) => [plan, ...prev]); setCompletedPlans((prev) => prev.filter((p) => p.id !== planId)); }
+    catch (e) { console.error("Complete study plan error:", e); setStudyPlans((prev) => [plan, ...prev]); setCompletedPlans((prev) => prev.filter((p) => p.id !== planId)); }
   };
   const deleteStudyPlan = async (planId: string) => {
     setStudyPlans((prev) => prev.filter((p) => p.id !== planId));
-    try { await studyPlansApi.delete(planId); } catch (e) { console.log("Delete study plan error:", e); }
+    try { await studyPlansApi.delete(planId); } catch (e) { console.error("Delete study plan error:", e); }
   };
 
   const visibleTasks = showAllTasks ? tasks : tasks.slice(0, 3);

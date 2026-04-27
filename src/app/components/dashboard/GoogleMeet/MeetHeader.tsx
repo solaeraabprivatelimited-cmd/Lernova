@@ -14,6 +14,7 @@ import {
   ShieldCheck,
   BookOpen,
 } from 'lucide-react';
+import { ElmOriginLogo } from "@/app/components/ElmOriginLogo";
 
 interface MeetHeaderProps {
   roomName: string;
@@ -121,40 +122,7 @@ export function MeetHeader({
             onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = 'none'; }}
           >
             <ChevronLeft size={15} style={{ color: 'rgba(255,255,255,0.45)', flexShrink: 0 }} />
-
-            {/* Real brand logo — favicon SVG inlined */}
-            <svg
-              width="28"
-              height="28"
-              viewBox="0 0 64 64"
-              role="img"
-              aria-label="Elm Origin"
-              style={{ flexShrink: 0 }}
-            >
-              <defs>
-                <linearGradient id="hdr-logo-bg" x1="8" x2="56" y1="6" y2="58" gradientUnits="userSpaceOnUse">
-                  <stop offset="0" stopColor="#003566" />
-                  <stop offset="1" stopColor="#001d3d" />
-                </linearGradient>
-              </defs>
-              <rect width="64" height="64" rx="14" fill="url(#hdr-logo-bg)" />
-              <path
-                fill="#f8fbff"
-                d="M32 13 14 22.5 32 32l14.727-7.774V35h3.273V22.5L32 13Zm0 23.273L20.182 30 32 23.727 43.818 30 32 36.273ZM14 36.545v3.273L32 49.273l18-9.455v-3.273L32 46Z"
-              />
-              <circle cx="49.5" cy="17.5" r="5.5" fill="#f77f00" />
-            </svg>
-
-            <span
-              style={{
-                color: 'rgba(255,255,255,0.72)',
-                fontSize: 13,
-                fontFamily: 'Righteous, sans-serif',
-                whiteSpace: 'nowrap',
-              }}
-            >
-              Elm Origin
-            </span>
+            <ElmOriginLogo light size={26} wordmarkSize={13} />
           </button>
         )}
 

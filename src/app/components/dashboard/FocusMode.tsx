@@ -231,7 +231,7 @@ function NotesPanel({ onClose }: { onClose: () => void }) {
           date: n.createdAt ? new Date(n.createdAt).toLocaleString("en-US", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }) : "Just now",
         })));
       })
-      .catch((e) => { console.log("Error loading notes:", e); toast.error("Failed to load notes"); })
+      .catch((e) => { console.error("Error loading notes:", e); toast.error("Failed to load notes"); })
       .finally(() => setIsLoading(false));
   }, []);
 
@@ -251,14 +251,14 @@ function NotesPanel({ onClose }: { onClose: () => void }) {
         setNotesList((prev) => prev.map((n) => n.id === editingId ? { ...n, title: editTitle.trim() || "Untitled", content: editContent.trim() } : n));
         toast.success("Note updated");
       }
-    } catch (e) { console.log("Error saving note:", e); toast.error("Failed to save note"); }
+    } catch (e) { console.error("Error saving note:", e); toast.error("Failed to save note"); }
     finally { setIsSaving(false); setEditingId(null); }
   };
 
   const deleteNote = async (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
     try { await notesApi.delete(id); setNotesList((prev) => prev.filter((n) => n.id !== id)); toast.success("Note deleted"); }
-    catch (e) { console.log("Error deleting note:", e); toast.error("Failed to delete note"); }
+    catch (e) { console.error("Error deleting note:", e); toast.error("Failed to delete note"); }
   };
 
   const filteredNotes = notesList.filter((n) => n.title.toLowerCase().includes(search.toLowerCase()) || n.content.toLowerCase().includes(search.toLowerCase()));
@@ -683,8 +683,7 @@ export function FocusMode({ onLeave }: FocusModeProps) {
         <ModeConfigurationPanel
           mode="focus"
           onClose={() => setShowSettings(false)}
-          onSave={(config) => {
-            console.log('Focus Mode Configuration Saved:', config);
+          onSave={() => {
             setShowSettings(false);
           }}
         />
