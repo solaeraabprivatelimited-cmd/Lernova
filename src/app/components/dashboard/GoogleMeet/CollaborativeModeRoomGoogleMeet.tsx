@@ -111,6 +111,7 @@ export function CollaborativeModeRoomGoogleMeet({
   const selfViewRef = useRef<HTMLDivElement>(null);
   const dragOffset = useRef({ x: 0, y: 0 });
   const isDragging = useRef(false);
+  const hasLeftRoomRef = useRef(false);
 
   /* ── Sync browser URL to room without reloading ── */
   const navigate = useNavigate();
@@ -513,14 +514,32 @@ export function CollaborativeModeRoomGoogleMeet({
     finally { setSendingChat(false); }
   }, [roomId, userId]);
 
-  const handleLeave = useCallback(async () => {
+  const leaveRoomSession = useCallback(async (options?: { keepalive?: boolean }) => {
+    if (hasLeftRoomRef.current) return;
+    hasLeftRoomRef.current = true;
     try {
       localStream?.getTracks().forEach((t) => t.stop());
-      if (roomId) await roomAPI.leaveRoom(roomId);
+      if (roomId) {
+        await roomAPI.leaveRoom(roomId, options);
+      }
+    } catch {
+      /* silent */
+    }
+  }, [localStream, roomId]);
+
+  const handleLeave = useCallback(async () => {
+    try {
+      await leaveRoomSession();
     } finally {
       onLeaveRoom();
     }
-  }, [localStream, roomId, onLeaveRoom]);
+  }, [leaveRoomSession, onLeaveRoom]);
+
+  useEffect(() => {
+    return () => {
+      void leaveRoomSession({ keepalive: true });
+    };
+  }, [leaveRoomSession]);
 
   const handleToggleChat = useCallback(() => {
     setShowChat((v) => {
@@ -626,7 +645,7 @@ export function CollaborativeModeRoomGoogleMeet({
         participantCount={participantCount}
         isConnected={isConnected}
         roomCode={roomCode}
-        onGoToDashboard={onLeaveRoom}
+        onGoToDashboard={() => void handleLeave()}
       />
 
       {/* Error banner */}

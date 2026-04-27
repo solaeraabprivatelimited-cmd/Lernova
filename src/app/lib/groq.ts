@@ -8,21 +8,26 @@
  */
 
 import { createAppError, ERROR_CODES, type AppError } from '@/errors';
+import { BASE_URL } from './api';
 
-// Backend endpoint for AI mentor chat - uses VITE_API_URL environment variable
-// Falls back to relative path for same-domain deployments
-const getBackendEndpoint = (path: string): string => {
-  const apiUrl = import.meta.env.VITE_API_URL || '';
-  return apiUrl ? `${apiUrl}${path}` : path;
-};
-
-const BACKEND_AI_MENTOR_ENDPOINT = () => getBackendEndpoint('/api/ai-mentor/chat');
+const BACKEND_AI_MENTOR_ENDPOINT = `${BASE_URL}/api/ai-mentor/chat`;
 
 type MessageRole = 'user' | 'assistant' | 'system';
 
 interface ChatMessage {
   role: MessageRole;
   content: string;
+}
+
+function buildAiMentorUrl(options?: { type?: string; stream?: boolean }): string {
+  const url = new URL(BACKEND_AI_MENTOR_ENDPOINT);
+  if (options?.type) {
+    url.searchParams.set('type', options.type);
+  }
+  if (options?.stream) {
+    url.searchParams.set('stream', 'true');
+  }
+  return url.toString();
 }
 
 /**
@@ -33,14 +38,15 @@ export async function getAiMentorResponse(
   conversationHistory: ChatMessage[] = []
 ): Promise<string> {
   try {
-    const response = await fetch(BACKEND_AI_MENTOR_ENDPOINT(), {
+    const response = await fetch(buildAiMentorUrl(), {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
         message: userMessage,
-        history: conversationHistory
+        history: conversationHistory,
+        type: 'explanation',
       })
     });
 
@@ -76,14 +82,15 @@ export async function getAiTutoringExplanation(
   level: 'beginner' | 'intermediate' | 'advanced' = 'beginner'
 ): Promise<string> {
   try {
-    const response = await fetch(`${BACKEND_AI_MENTOR_ENDPOINT()}?type=explanation`, {
+    const response = await fetch(buildAiMentorUrl({ type: 'explanation' }), {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        topic,
-        level
+        message: `Explain ${topic} for a ${level} learner.`,
+        history: [],
+        type: 'explanation',
       })
     });
 
@@ -117,14 +124,15 @@ export async function *streamAiMentorResponse(
   conversationHistory: ChatMessage[] = []
 ): AsyncGenerator<string, void, unknown> {
   try {
-    const response = await fetch(`${BACKEND_AI_MENTOR_ENDPOINT()}?stream=true`, {
+    const response = await fetch(buildAiMentorUrl({ stream: true }), {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
         message: userMessage,
-        history: conversationHistory
+        history: conversationHistory,
+        type: 'explanation',
       })
     });
 
@@ -183,14 +191,15 @@ export async function getMoodCheckInResponse(
   conversationHistory: ChatMessage[] = []
 ): Promise<string> {
   try {
-    const response = await fetch(`${BACKEND_AI_MENTOR_ENDPOINT()}?type=mood-checkin`, {
+    const response = await fetch(buildAiMentorUrl({ type: 'mood-checkin' }), {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
         message: userMessage,
-        history: conversationHistory
+        history: conversationHistory,
+        type: 'mood-checkin',
       })
     });
 
@@ -224,14 +233,15 @@ export async function *streamMoodCheckInResponse(
   conversationHistory: ChatMessage[] = []
 ): AsyncGenerator<string, void, unknown> {
   try {
-    const response = await fetch(`${BACKEND_AI_MENTOR_ENDPOINT()}?type=mood-checkin&stream=true`, {
+    const response = await fetch(buildAiMentorUrl({ type: 'mood-checkin', stream: true }), {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
         message: userMessage,
-        history: conversationHistory
+        history: conversationHistory,
+        type: 'mood-checkin',
       })
     });
 
