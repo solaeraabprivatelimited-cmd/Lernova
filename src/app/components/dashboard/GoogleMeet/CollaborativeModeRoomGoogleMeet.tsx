@@ -394,9 +394,10 @@ export function CollaborativeModeRoomGoogleMeet({
 
   /* ── Tab close / navigation cleanup ── */
   useEffect(() => {
-    const handler = () => {
-      void roomAPI.leaveRoom(roomId, { keepalive: true });
-    };
+    // keepalive:true on both events guarantees the browser sends the request
+    // even when the page is being torn down. Uses dual-beacon: API backend
+    // + direct Supabase RPC as fallback.
+    const handler = () => roomAPI.leaveRoom(roomId, { keepalive: true });
     window.addEventListener('beforeunload', handler);
     window.addEventListener('pagehide', handler);
     return () => {

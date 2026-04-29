@@ -49,7 +49,7 @@ export function CreateCustomRoom({ onBack, onLaunchRoom }: CreateCustomRoomProps
     setError('');
     setIsLaunching(true);
 
-    try {
+    const doCreate = async () => {
       const createdRoom = await roomAPI.createRoom({
         name:            roomName.trim(),
         subject:         subject.trim(),
@@ -57,9 +57,7 @@ export function CreateCustomRoom({ onBack, onLaunchRoom }: CreateCustomRoomProps
         description:     undefined,
         maxParticipants,
       });
-
       toast.success('Room created!', { description: `Code: ${createdRoom.code}` });
-
       onLaunchRoom({
         roomName:        createdRoom.name,
         subject:         createdRoom.subject ?? subject.trim(),
@@ -69,8 +67,28 @@ export function CreateCustomRoom({ onBack, onLaunchRoom }: CreateCustomRoomProps
         maxParticipants: createdRoom.max_participants,
         mode:            createdRoom.mode,
       });
+    };
+
+    try {
+      await doCreate();
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Failed to create room. Please try again.';
+
+      // If stuck in a previous room (e.g. tab was closed without leaving),
+      // force-clear all active participant records then retry once automatically.
+      if (/ALREADY_IN|already.*(in|joined).*room/i.test(msg)) {
+        try {
+          await roomAPI.forceLeaveAllRooms();
+          await doCreate();
+          return; // retry succeeded — don't fall through to setError
+        } catch (retryErr) {
+          const retryMsg = retryErr instanceof Error ? retryErr.message : msg;
+          setError(retryMsg);
+          toast.error('Room creation failed', { description: retryMsg });
+          return;
+        }
+      }
+
       setError(msg);
       toast.error('Room creation failed', { description: msg });
     } finally {

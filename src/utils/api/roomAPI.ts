@@ -5,6 +5,7 @@
  */
 
 import { BASE_URL, getAccessToken, getSupabaseClient, setAccessToken } from '../../app/lib/api';
+import { projectId, publicAnonKey } from '../supabase/info';
 
 const API_BASE = `${BASE_URL}/webrtc/rooms`;
 
@@ -182,20 +183,45 @@ async function apiFetch<T>(url: string, options: RequestInit = {}): Promise<T> {
   return body as T;
 }
 
-function leaveRoomWithKeepalive(roomId: string) {
+/**
+ * Fires TWO parallel keepalive fetch requests on tab close so the browser
+ * cannot cancel either before they land:
+ *
+ *  1. API backend  — removes the user from the specific room
+ *  2. Supabase RPC — calls force_leave_all_rooms() as a belt-and-suspenders
+ *                    backup in case the API call fails or the token is expired
+ *
+ * Both use keepalive:true which guarantees delivery even during page unload.
+ * Neither throws — all errors are silently swallowed.
+ */
+function fireLeaveBeacon(roomId: string): void {
   const token = getAccessToken();
-  if (!token || isTokenExpired(token, 0)) return;
+  if (!token) return;
 
   const identifier = extractRoomIdentifier(roomId);
-  void fetch(`${API_BASE}/${identifier}/leave`, {
+  const headers = {
+    'Content-Type': 'application/json',
+    Authorization: `Bearer ${token}`,
+  };
+  const body = JSON.stringify({});
+
+  // 1 — API backend (specific room)
+  fetch(`${API_BASE}/${identifier}/leave`, {
+    method: 'POST', keepalive: true, headers, body,
+  }).catch(() => {});
+
+  // 2 — Supabase RPC (all rooms, direct to DB — works even if API is down)
+  fetch(`https://${projectId}.supabase.co/rest/v1/rpc/force_leave_all_rooms`, {
     method: 'POST',
     keepalive: true,
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`,
-    },
-    body: JSON.stringify({}),
+    headers: { ...headers, apikey: publicAnonKey },
+    body,
   }).catch(() => {});
+}
+
+/** @deprecated use fireLeaveBeacon */
+function leaveRoomWithKeepalive(roomId: string) {
+  fireLeaveBeacon(roomId);
 }
 
 export const roomAPI = {
@@ -231,13 +257,24 @@ export const roomAPI = {
   leaveRoom: async (roomId: string, options?: { keepalive?: boolean }) => {
     const identifier = extractRoomIdentifier(roomId);
     if (options?.keepalive) {
-      leaveRoomWithKeepalive(identifier);
+      fireLeaveBeacon(identifier);
       return { success: true };
     }
     return apiFetch(`${API_BASE}/${identifier}/leave`, {
       method: 'POST',
       body: JSON.stringify({}),
     });
+  },
+
+  /**
+   * Mark every active room_participants row for the current user as left.
+   * Use this to recover from a stale "ALREADY_IN_ANOTHER_ROOM" state before
+   * creating a new room.
+   */
+  forceLeaveAllRooms: async (): Promise<void> => {
+    const supabase = getSupabaseClient();
+    const { error } = await supabase.rpc('force_leave_all_rooms');
+    if (error) throw new Error(error.message);
   },
 
   closeRoom: async (roomId: string) => {
