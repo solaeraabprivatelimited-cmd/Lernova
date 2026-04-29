@@ -11,6 +11,8 @@ interface Participant {
   stream?: MediaStream | null;
   audioEnabled: boolean;
   videoEnabled: boolean;
+  /** True while the WebRTC connection is being negotiated (no stream yet) */
+  isConnecting?: boolean;
 }
 
 interface VideoGridProps {
@@ -111,6 +113,7 @@ export function VideoGrid({
                 videoEnabled={participant.videoEnabled}
                 isActiveSpeaker={participant.peerId === activeSpeakerId}
                 isMirrored={participant.peerId === localParticipant.peerId}
+                isConnecting={participant.isConnecting}
                 compact
               />
             </div>
@@ -133,6 +136,7 @@ export function VideoGrid({
             videoEnabled={pinnedParticipant.videoEnabled}
             isActiveSpeaker={pinnedParticipant.peerId === activeSpeakerId}
             isMirrored={pinnedParticipant.peerId === localParticipant.peerId}
+            isConnecting={pinnedParticipant.isConnecting}
             isPinned
           />
         </div>
@@ -159,6 +163,7 @@ export function VideoGrid({
                 videoEnabled={participant.videoEnabled}
                 isActiveSpeaker={participant.peerId === activeSpeakerId}
                 isMirrored={participant.peerId === localParticipant.peerId}
+                isConnecting={participant.isConnecting}
                 compact
               />
             </div>
@@ -197,6 +202,7 @@ export function VideoGrid({
             videoEnabled={participant.videoEnabled}
             isActiveSpeaker={participant.peerId === activeSpeakerId}
             isMirrored={participant.peerId === localParticipant.peerId}
+            isConnecting={participant.isConnecting}
           />
         </div>
       ))}

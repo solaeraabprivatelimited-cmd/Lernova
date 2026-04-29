@@ -45,6 +45,7 @@ interface RemoteParticipant {
   stream?: MediaStream | null;
   audioEnabled: boolean;
   videoEnabled: boolean;
+  isConnecting?: boolean;
 }
 
 /* ─── Helpers ────────────────────────────────────────────────────────────── */
@@ -199,6 +200,8 @@ export function CollaborativeModeRoomGoogleMeet({
         stream: p.stream,
         audioEnabled: p.audioEnabled ?? true,
         videoEnabled: p.videoEnabled ?? true,
+        // Show spinner on the tile while the peer has no stream yet
+        isConnecting: !p.stream,
       }))
     );
     // Update connection status when peers are found
@@ -681,6 +684,33 @@ export function CollaborativeModeRoomGoogleMeet({
       >
         {/* Video area */}
         <div style={{ flex: 1, minWidth: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+
+          {/* Joining banner — shown while waiting for room join to complete */}
+          {!isConnected && !joinError && (
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 10,
+                padding: '8px 16px',
+                background: 'rgba(26,115,232,0.12)',
+                borderBottom: '1px solid rgba(26,115,232,0.2)',
+                flexShrink: 0,
+              }}
+            >
+              {/* Spinner */}
+              <div style={{ position: 'relative', width: 16, height: 16, flexShrink: 0 }}>
+                <div style={{ position: 'absolute', inset: 0, borderRadius: '50%', border: '2px solid rgba(255,255,255,0.1)' }} />
+                <div style={{ position: 'absolute', inset: 0, borderRadius: '50%', border: '2px solid transparent', borderTopColor: '#1a73e8', animation: 'rtcSpin 0.9s linear infinite' }} />
+              </div>
+              <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.7)', fontFamily: 'Inter, system-ui, sans-serif' }}>
+                Joining room…
+              </span>
+              <style>{`@keyframes rtcSpin { to { transform: rotate(360deg); } }`}</style>
+            </div>
+          )}
+
           <VideoGrid
             localParticipant={{
               peerId: userId,

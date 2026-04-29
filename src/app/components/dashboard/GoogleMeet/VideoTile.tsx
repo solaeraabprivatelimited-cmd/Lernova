@@ -16,6 +16,8 @@ interface VideoTileProps {
   isMirrored?: boolean;
   compact?: boolean;
   isPinned?: boolean;
+  /** True while WebRTC is negotiating and no stream has arrived yet */
+  isConnecting?: boolean;
 }
 
 const AVATAR_COLORS = [
@@ -76,6 +78,7 @@ export function VideoTile({
   isMirrored = false,
   compact = false,
   isPinned = false,
+  isConnecting = false,
 }: VideoTileProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [videoReady, setVideoReady] = useState(false);
@@ -151,8 +154,83 @@ export function VideoTile({
         }}
       />
 
-      {/* Avatar fallback */}
-      {!showVideo && (
+      {/* ── State 1: Connecting — peer discovered, stream not yet arrived ── */}
+      {!showVideo && (isConnecting || (!stream && videoEnabled)) && (
+        <div
+          style={{
+            position: 'absolute',
+            inset: 0,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: compact ? 6 : 10,
+            background: '#111112',
+          }}
+        >
+          <style>{`
+            @keyframes rtcSpin {
+              to { transform: rotate(360deg); }
+            }
+            @keyframes rtcPulse {
+              0%, 100% { opacity: 0.35; }
+              50%       { opacity: 0.7; }
+            }
+          `}</style>
+          {/* Spinner ring */}
+          <div style={{ position: 'relative', width: compact ? 24 : 36, height: compact ? 24 : 36 }}>
+            <div
+              style={{
+                position: 'absolute',
+                inset: 0,
+                borderRadius: '50%',
+                border: `${compact ? 2 : 3}px solid rgba(255,255,255,0.08)`,
+              }}
+            />
+            <div
+              style={{
+                position: 'absolute',
+                inset: 0,
+                borderRadius: '50%',
+                border: `${compact ? 2 : 3}px solid transparent`,
+                borderTopColor: '#1a73e8',
+                animation: 'rtcSpin 0.9s linear infinite',
+              }}
+            />
+          </div>
+          {/* Label */}
+          {!compact && (
+            <span
+              style={{
+                fontSize: 11,
+                color: 'rgba(255,255,255,0.4)',
+                fontFamily: 'Inter, system-ui, sans-serif',
+                letterSpacing: '0.02em',
+                animation: 'rtcPulse 2s ease-in-out infinite',
+              }}
+            >
+              Connecting…
+            </span>
+          )}
+          {/* Name pill */}
+          <div
+            style={{
+              position: 'absolute',
+              bottom: compact ? 20 : 32,
+              background: 'rgba(0,0,0,0.5)',
+              borderRadius: 999,
+              padding: compact ? '1px 6px' : '2px 10px',
+            }}
+          >
+            <span style={{ fontSize: compact ? 9 : 11, color: 'rgba(255,255,255,0.55)', fontFamily: 'Inter, system-ui, sans-serif' }}>
+              {name}
+            </span>
+          </div>
+        </div>
+      )}
+
+      {/* ── State 2: Camera off — avatar with gradient ── */}
+      {!showVideo && !isConnecting && (!videoEnabled || !!stream) && (
         <div
           style={{
             position: 'absolute',
@@ -180,7 +258,6 @@ export function VideoTile({
           >
             {initials}
           </div>
-          {/* Camera-off indicator beneath avatar */}
           {!videoEnabled && (
             <div
               style={{
@@ -205,16 +282,23 @@ export function VideoTile({
         </div>
       )}
 
-      {/* Loading pulse overlay */}
+      {/* ── State 3: Stream received, video decoding ── */}
       {videoEnabled && !videoReady && !!stream && (
         <div
           style={{
             position: 'absolute',
             inset: 0,
-            background: '#1c1c1e',
-            animation: 'pulse 1.5s ease-in-out infinite',
+            background: '#111112',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
           }}
-        />
+        >
+          <div style={{ position: 'relative', width: 28, height: 28 }}>
+            <div style={{ position: 'absolute', inset: 0, borderRadius: '50%', border: '2px solid rgba(255,255,255,0.08)' }} />
+            <div style={{ position: 'absolute', inset: 0, borderRadius: '50%', border: '2px solid transparent', borderTopColor: '#1a73e8', animation: 'rtcSpin 0.9s linear infinite' }} />
+          </div>
+        </div>
       )}
 
       {/* Pin badge (top-right) */}
