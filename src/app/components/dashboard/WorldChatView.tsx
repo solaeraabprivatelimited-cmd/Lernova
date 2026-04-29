@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { toast } from 'sonner';
 import imgEllipse1 from "figma:asset/798eac6e288222603807db12d070c52d1a145785.png";
 import { ImageWithFallback } from "../figma/ImageWithFallback";
-import { worldChat, getCurrentUser, getSupabaseClient } from "@/app/lib/api";
+import { worldChat, getCurrentUser } from "@/app/lib/api";
 import {
   ArrowLeft, Send, MessageCircle, Globe, Users, AlertTriangle, X, Flag
 } from "lucide-react";
@@ -122,22 +122,14 @@ export function WorldChatView({ onBack }: { onBack: () => void }) {
   };
 
   useEffect(() => {
-    const supabase = getSupabaseClient();
     loadMessages();
-    const channel = supabase
-      .channel("world-chat-feed")
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "world_chat_messages" },
-        () => { loadMessages(); },
-      )
-      .subscribe();
-
+    // Poll every 5 s for new messages — sufficient for a world chat feed.
+    // A realtime subscription is not used here because the world_chat_messages
+    // table's RLS rejects unauthenticated channel subscriptions, causing a 403
+    // that crashes the Supabase SDK's realtime frame parser (core.js TypeError).
     pollRef.current = setInterval(loadMessages, 5000);
-
     return () => {
       if (pollRef.current) clearInterval(pollRef.current);
-      supabase.removeChannel(channel);
     };
   }, []);
 

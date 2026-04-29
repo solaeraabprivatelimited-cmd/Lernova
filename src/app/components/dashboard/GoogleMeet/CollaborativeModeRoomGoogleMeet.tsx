@@ -302,7 +302,9 @@ export function CollaborativeModeRoomGoogleMeet({
 
   /* ── Chat polling ── */
   useEffect(() => {
-    if (!roomId || !userId || !initialized) return;
+    // Wait until the user has actually joined the room (isConnected) — polling
+    // before join completes returns 403 from the backend.
+    if (!roomId || !userId || !isConnected) return;
     let active = true;
     let timer: ReturnType<typeof setTimeout>;
 
@@ -322,7 +324,7 @@ export function CollaborativeModeRoomGoogleMeet({
 
     load();
     return () => { active = false; clearTimeout(timer); };
-  }, [roomId, userId, initialized, showChat]);
+  }, [roomId, userId, isConnected, showChat]);
 
   /* ── Audio elements for peers ── */
   useEffect(() => {
