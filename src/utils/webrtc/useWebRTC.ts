@@ -474,26 +474,32 @@ export function useWebRTC({
 
         if (!response.ok) {
           if (response.status === 401) {
-            console.error('[useWebRTC] Authorization failed (401):');
-            console.error('  - Token starts with:', token.substring(0, 30) + '...');
-            console.error('  - Your token may be invalid/expired or the backend rejected it');
-            console.error('  - Stopping signaling polling');
+            // Token genuinely invalid — no point retrying.
+            console.error('[useWebRTC] Authorization failed (401) — stopping signaling');
             isPolling = false;
             return;
           }
           if (response.status === 404) {
-            console.log('[useWebRTC] Signaling stopped (404)');
+            // Room closed or doesn't exist — stop polling.
             isPolling = false;
             return;
           }
-          console.warn('[useWebRTC] Failed to fetch signals:', response.statusText);
+          if (response.status === 403) {
+            // 403 = room join not yet processed by the backend (race condition
+            // between useWebRTC init and the joinRoom API call completing).
+            // Retry with normal interval — do NOT count toward consecutiveErrors
+            // so we never permanently stop polling before joining succeeds.
+            pollTimer = setTimeout(pollForSignals, pollInterval);
+            return;
+          }
+          // Other transient errors (5xx, network blip) — back off after too many.
           consecutiveErrors++;
-          if (consecutiveErrors > 5) {
-            console.log('[useWebRTC] Too many errors, stopping');
+          if (consecutiveErrors > 10) {
+            console.warn('[useWebRTC] Too many signal fetch errors, stopping polling');
             isPolling = false;
             return;
           }
-          pollTimer = setTimeout(pollForSignals, pollInterval);
+          pollTimer = setTimeout(pollForSignals, pollInterval * (consecutiveErrors < 5 ? 1 : 3));
           return;
         }
 

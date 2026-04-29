@@ -1630,34 +1630,25 @@ export const notifications = {
     return inserted;
   },
   subscribe: async (onChange: (items: any[]) => void) => {
-    const supabase = getSupabaseClient();
-    const user = await getCurrentSessionUser();
-    if (!user) return () => {};
-
-    const channel = supabase
-      .channel(`notifications-${user.id}`)
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'notifications',
-          filter: `user_id=eq.${user.id}`,
-        },
-        async () => {
-          try {
-            const items = await notifications.list();
-            onChange(items);
-          } catch (error) {
-            console.log('Notifications subscription refresh error:', error);
-          }
-        },
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
+    // Poll every 30 s instead of using a Supabase realtime channel.
+    // The realtime `postgres_changes` subscription on the `notifications`
+    // table is rejected with a 403 by Supabase's realtime server (RLS /
+    // realtime not enabled on the table), which causes the Supabase SDK's
+    // core.js to crash with "Cannot read properties of undefined ('payload')"
+    // when it tries to parse the error frame.
+    const poll = async () => {
+      try {
+        const items = await notifications.list();
+        onChange(items);
+      } catch {
+        // silent — network hiccup, not critical
+      }
     };
+
+    // Immediate first fetch, then every 30 s
+    await poll();
+    const timer = setInterval(poll, 30_000);
+    return () => clearInterval(timer);
   },
   markRead: async (id: string) => {
     const supabase = getSupabaseClient();
