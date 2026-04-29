@@ -13,6 +13,7 @@ interface Mentor {
   name: string;
   avatarUrl?: string;
   bio?: string;
+  educationDetails?: string;
   qualifications?: string[];
   hourlyRate: number;
   subjects: string[];
@@ -69,6 +70,12 @@ function MentorCard({
       {mentor.bio && (
         <p className="text-[13px] text-slate-600 dark:text-slate-300 mb-4 line-clamp-2">
           {mentor.bio}
+        </p>
+      )}
+
+      {mentor.educationDetails && (
+        <p className="text-[12px] text-slate-500 dark:text-slate-400 mb-4 line-clamp-1">
+          {mentor.educationDetails}
         </p>
       )}
 
@@ -229,6 +236,11 @@ export function MentorDiscoveryView({
               {selectedMentor.bio && (
                 <p className="text-[14px] text-slate-700 dark:text-slate-400 leading-relaxed">
                   {selectedMentor.bio}
+                </p>
+              )}
+              {selectedMentor.educationDetails && (
+                <p className="text-[13px] text-slate-600 dark:text-slate-400 leading-relaxed mt-3">
+                  {selectedMentor.educationDetails}
                 </p>
               )}
             </div>

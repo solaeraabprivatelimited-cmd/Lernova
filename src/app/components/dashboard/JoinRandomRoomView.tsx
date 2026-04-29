@@ -15,6 +15,7 @@ interface Room {
   mode?: string;
   participant_count?: number;
   max_participants?: number;
+  is_private?: boolean;
 }
 
 const MODE_LABELS: Record<string, string> = {
@@ -109,7 +110,7 @@ export function JoinRandomRoomView({ onBack, onJoinRoom }: JoinRandomRoomViewPro
 
     roomAPI.listRooms()
       .then((data) => {
-        if (active) setRooms((data as Room[]) ?? []);
+        if (active) setRooms(((data as Room[]) ?? []).filter((room) => !room.is_private));
       })
       .catch((err) => {
         if (active) {

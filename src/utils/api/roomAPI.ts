@@ -15,6 +15,7 @@ interface CreateRoomRequest {
   subject?: string;
   description?: string;
   maxParticipants?: number;
+  visibility?: 'private' | 'public';
 }
 
 export interface RoomParticipant {
@@ -48,6 +49,7 @@ export interface Room {
   max_participants?: number;
   participant_count?: number;
   password_protected?: boolean;
+  is_private?: boolean;
   host?: {
     id: string;
     name: string;

@@ -2687,6 +2687,9 @@ export function MentorProfileSettings({ onBack }: MentorProfileSettingsProps) {
   const [email,      setEmail]      = useState("");
   const [grade,      setGrade]      = useState("5-10 years");
   const [expertise,  setExpertise]  = useState("");
+  const [educationDetails, setEducationDetails] = useState("");
+  const [qualifications, setQualifications] = useState<string[]>([]);
+  const [newQualification, setNewQualification] = useState("");
   const [languages,  setLanguages]  = useState<string[]>([]);
   const [newLang,    setNewLang]    = useState("");
   const [bio,        setBio]        = useState("");
@@ -2754,7 +2757,7 @@ export function MentorProfileSettings({ onBack }: MentorProfileSettingsProps) {
         const supabase = getSupabaseClient();
         const { data: prof } = await supabase
           .from('profiles')
-          .select('name, bio, avatar_url, mentor_grade, expertise, languages, mentor_documents, notification_preferences')
+          .select('name, bio, avatar_url, mentor_grade, expertise, education_details, qualifications, languages, mentor_documents, notification_preferences')
           .eq('id', currentUser.id)
           .maybeSingle();
 
@@ -2765,6 +2768,8 @@ export function MentorProfileSettings({ onBack }: MentorProfileSettingsProps) {
         setBio(prof?.bio || "");
         setGrade(prof?.mentor_grade || "5-10 years");
         setExpertise(prof?.expertise || "");
+        setEducationDetails(prof?.education_details || "");
+        setQualifications(Array.isArray(prof?.qualifications) ? prof.qualifications : []);
         setLanguages(Array.isArray(prof?.languages) ? prof.languages : []);
         setDocs(Array.isArray(prof?.mentor_documents) ? prof.mentor_documents : []);
         if (prof?.avatar_url) setAvatarSrc(prof.avatar_url);
@@ -2806,6 +2811,8 @@ export function MentorProfileSettings({ onBack }: MentorProfileSettingsProps) {
           bio: bio.trim(),
           mentor_grade: grade,
           expertise: expertise.trim(),
+          education_details: educationDetails.trim(),
+          qualifications,
           languages,
           mentor_documents: docs,
           avatar_url: avatarSrc,
@@ -2814,6 +2821,40 @@ export function MentorProfileSettings({ onBack }: MentorProfileSettingsProps) {
 
       if (updateError) {
         toast.error('Failed to save profile: ' + updateError.message);
+        return;
+      }
+
+      const mentorDetails = {
+        bio: bio.trim(),
+        education_details: educationDetails.trim(),
+        qualifications,
+      };
+      const { data: existingMentorProfile, error: existingMentorProfileError } = await supabase
+        .from('mentor_profiles')
+        .select('user_id')
+        .eq('user_id', currentUser.id)
+        .maybeSingle();
+
+      if (existingMentorProfileError) {
+        toast.error('Failed to save mentor details: ' + existingMentorProfileError.message);
+        return;
+      }
+
+      const { error: mentorProfileError } = existingMentorProfile
+        ? await supabase
+            .from('mentor_profiles')
+            .update(mentorDetails)
+            .eq('user_id', currentUser.id)
+        : await supabase
+            .from('mentor_profiles')
+            .insert({
+              user_id: currentUser.id,
+              ...mentorDetails,
+              hourly_rate: 1,
+            });
+
+      if (mentorProfileError) {
+        toast.error('Failed to save mentor details: ' + mentorProfileError.message);
         return;
       }
 
@@ -2865,6 +2906,18 @@ export function MentorProfileSettings({ onBack }: MentorProfileSettingsProps) {
       setLanguages((prev) => [...prev, trimmed]);
     }
     setNewLang("");
+  }
+
+  function handleDeleteQualification(qualification: string) {
+    setQualifications((prev) => prev.filter((q) => q !== qualification));
+  }
+
+  function handleAddQualification() {
+    const trimmed = newQualification.trim();
+    if (trimmed && !qualifications.includes(trimmed)) {
+      setQualifications((prev) => [...prev, trimmed]);
+    }
+    setNewQualification("");
   }
 
   function handleDeleteDoc(id: string) {
@@ -3345,6 +3398,63 @@ export function MentorProfileSettings({ onBack }: MentorProfileSettingsProps) {
                     </div>
 
                     {/* Row 4: Bio */}
+                    <div className="flex flex-col gap-[10px] w-full">
+                      <p className="font-['Poppins'] text-[16px] text-black dark:text-white leading-normal">Education Details</p>
+                      <div className="min-h-[92px] rounded-[10px] border border-[rgba(0,0,0,0.4)] dark:border-[#3a3f47] dark:bg-[#2b3139] flex gap-[10px] items-start p-[10px]">
+                        <IconBrain />
+                        <textarea
+                          value={educationDetails}
+                          onChange={(e) => setEducationDetails(e.target.value)}
+                          disabled={isSaving}
+                          placeholder="Degree, institution, graduation year, certifications, or academic background"
+                          className="flex-1 min-h-[72px] bg-transparent font-['Poppins'] text-[14px] text-[rgba(0,0,0,0.8)] dark:text-white outline-none resize-none leading-normal disabled:opacity-60 placeholder:text-[rgba(0,0,0,0.35)] dark:placeholder:text-slate-500"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="flex flex-col gap-[10px]">
+                      <p className="font-['Poppins'] text-[16px] text-black dark:text-white leading-normal">Qualifications</p>
+                      <div className="flex flex-wrap gap-[10px] items-start">
+                        {qualifications.map((qualification) => (
+                          <div
+                            key={qualification}
+                            className="bg-white dark:bg-[#2b3139] min-h-[39px] px-[10px] py-[8px] rounded-[10px] shadow-[0px_4px_11.4px_0px_rgba(0,0,0,0.1)] dark:shadow-none flex items-center gap-[6px]"
+                          >
+                            <span className="font-['Poppins'] font-medium text-[14px] text-black dark:text-white">{qualification}</span>
+                            <button
+                              type="button"
+                              onClick={() => handleDeleteQualification(qualification)}
+                              className="text-[rgba(0,0,0,0.4)] hover:text-[rgba(0,0,0,0.7)] dark:text-slate-500 dark:hover:text-slate-400 text-[16px] leading-none transition-colors cursor-pointer"
+                            >
+                              x
+                            </button>
+                          </div>
+                        ))}
+                        <div className="flex items-center gap-[6px]">
+                          <input
+                            type="text"
+                            value={newQualification}
+                            onChange={(e) => setNewQualification(e.target.value)}
+                            onKeyDown={(e) => { if (e.key === "Enter") handleAddQualification(); }}
+                            placeholder="Add qualification"
+                            className="h-[39px] px-[10px] rounded-[10px] border border-[rgba(0,0,0,0.2)] dark:bg-[#2b3139] dark:border-[#3a3f47] dark:text-white dark:placeholder:text-slate-500 font-['Poppins'] text-[14px] text-black outline-none w-[180px] placeholder:text-[rgba(0,0,0,0.3)]"
+                          />
+                          <button
+                            type="button"
+                            onClick={handleAddQualification}
+                            style={{
+                              backgroundColor: '#003566',
+                              color: 'white',
+                              width: '43px'
+                            }}
+                            className="h-[39px] rounded-[20px] flex items-center justify-center hover:opacity-80 transition-opacity"
+                          >
+                            <IconPlus white />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+
                     <div className="flex flex-col gap-[10px] w-full">
                       <p className="font-['Poppins'] text-[16px] text-black dark:text-white leading-normal">Bio</p>
                       <div className="h-[112px] rounded-[10px] border border-[rgba(0,0,0,0.4)] dark:border-[#3a3f47] dark:bg-[#2b3139] flex gap-[10px] items-start p-[10px]">

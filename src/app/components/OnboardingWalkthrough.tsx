@@ -1,6 +1,8 @@
 ﻿import React from 'react';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/app/components/ui/dialog';
 import { type OnboardingRole } from '@/app/lib/onboarding';
+import { getCurrentUser, getSupabaseClient } from '@/app/lib/api';
+import { toast } from 'sonner';
 
 interface OnboardingStep {
   eyebrow: string;
@@ -71,6 +73,9 @@ export function OnboardingWalkthrough({
 }: OnboardingWalkthroughProps) {
   const steps = STEP_COPY[role];
   const [activeIndex, setActiveIndex] = React.useState(0);
+  const [educationDetails, setEducationDetails] = React.useState('');
+  const [qualificationsText, setQualificationsText] = React.useState('');
+  const [savingMentorDetails, setSavingMentorDetails] = React.useState(false);
   const activeStep = steps[activeIndex];
 
   React.useEffect(() => {
@@ -89,6 +94,65 @@ export function OnboardingWalkthrough({
 
   const handleStepAction = () => {
     onStepAction(activeIndex);
+  };
+
+  const handleSaveMentorDetails = async () => {
+    const user = getCurrentUser();
+    if (!user?.id) {
+      toast.error('Please sign in again before saving mentor details.');
+      return;
+    }
+
+    const qualifications = qualificationsText
+      .split('\n')
+      .map((item) => item.trim())
+      .filter(Boolean);
+
+    setSavingMentorDetails(true);
+    try {
+      const supabase = getSupabaseClient();
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .update({
+          education_details: educationDetails.trim(),
+          qualifications,
+        })
+        .eq('id', user.id);
+
+      if (profileError) throw profileError;
+
+      const mentorDetails = {
+        education_details: educationDetails.trim(),
+        qualifications,
+      };
+      const { data: existingMentorProfile, error: existingMentorProfileError } = await supabase
+        .from('mentor_profiles')
+        .select('user_id')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      if (existingMentorProfileError) throw existingMentorProfileError;
+
+      const { error: mentorProfileError } = existingMentorProfile
+        ? await supabase
+            .from('mentor_profiles')
+            .update(mentorDetails)
+            .eq('user_id', user.id)
+        : await supabase
+            .from('mentor_profiles')
+            .insert({
+              user_id: user.id,
+              ...mentorDetails,
+              hourly_rate: 1,
+            });
+
+      if (mentorProfileError) throw mentorProfileError;
+      toast.success('Mentor details saved.');
+    } catch (err: any) {
+      toast.error(err?.message || 'Failed to save mentor details.');
+    } finally {
+      setSavingMentorDetails(false);
+    }
   };
 
   const isLastStep = activeIndex === steps.length - 1;
@@ -142,6 +206,30 @@ export function OnboardingWalkthrough({
                 <p className="text-[15px] leading-7 text-[#5a7089]">
                   {activeStep.description}
                 </p>
+                {role === 'mentor' && activeIndex === 2 && (
+                  <div className="mt-5 grid gap-3">
+                    <textarea
+                      value={educationDetails}
+                      onChange={(event) => setEducationDetails(event.target.value)}
+                      placeholder="Education details"
+                      className="min-h-[82px] rounded-[16px] border border-[#d5e3f0] bg-white px-4 py-3 text-[14px] text-[#0d1b2a] outline-none transition focus:border-[#0967bd]"
+                    />
+                    <textarea
+                      value={qualificationsText}
+                      onChange={(event) => setQualificationsText(event.target.value)}
+                      placeholder="Qualifications, one per line"
+                      className="min-h-[82px] rounded-[16px] border border-[#d5e3f0] bg-white px-4 py-3 text-[14px] text-[#0d1b2a] outline-none transition focus:border-[#0967bd]"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleSaveMentorDetails}
+                      disabled={savingMentorDetails}
+                      className="w-fit rounded-full bg-[#003566] px-5 py-2.5 text-[13px] font-semibold text-white transition hover:bg-[#00284c] disabled:cursor-not-allowed disabled:opacity-60"
+                    >
+                      {savingMentorDetails ? 'Saving...' : 'Save mentor details'}
+                    </button>
+                  </div>
+                )}
               </div>
 
               <div className="rounded-[24px] border border-[#dbe7f3] bg-[#f8fbff] p-5">

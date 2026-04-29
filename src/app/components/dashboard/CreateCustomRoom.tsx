@@ -56,6 +56,7 @@ export function CreateCustomRoom({ onBack, onLaunchRoom }: CreateCustomRoomProps
         mode,
         description:     undefined,
         maxParticipants,
+        visibility:      roomType,
       });
       toast.success('Room created!', { description: `Code: ${createdRoom.code}` });
       onLaunchRoom({
